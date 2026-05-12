@@ -46,7 +46,7 @@
                                         <img src="{{ get_lazy_image_url($item['thumbnail']) }}" alt="{{ $item['name'] }}" class="w-16 h-16 object-cover border border-gray-100">
                                     </td>
                                     <td class="p-4 border border-gray-100 font-bold text-primary">
-                                        <a href="#">{{ $item['name'] }}</a>
+                                        <a href="{{ get_lazy_permalink($item) }}">{{ $item['name'] }}</a>
                                     </td>
                                     <td class="p-4 border border-gray-100">
                                         {{ lazy_price_format($item['sale_price'] ?: $item['price']) }}

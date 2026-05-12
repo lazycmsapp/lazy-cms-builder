@@ -55,7 +55,7 @@ return new class extends Migration
         // 2. Shop Menu
         $shopId = DB::table('menus')->insertGetId([
             'title' => 'Shop',
-            'route' => 'admin.dashboard.index', // Temporary until ShopController created
+            'route' => 'admin.shop.orders.index',
             'icon' => '<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>',
             'group' => 'Main',
             'order' => 5
@@ -65,22 +65,33 @@ return new class extends Migration
             [
                 'parent_id' => $shopId,
                 'title' => 'Orders',
-                'route' => 'admin.dashboard.index', // Temporary
+                'route' => 'admin.shop.orders.index',
+                'params' => null,
                 'order' => 1,
+                'created_at' => now(), 'updated_at' => now()
+            ],
+            [
+                'parent_id' => $shopId,
+                'title' => 'Reviews',
+                'route' => 'admin.shop.reviews.index',
+                'params' => null,
+                'order' => 2,
                 'created_at' => now(), 'updated_at' => now()
             ],
             [
                 'parent_id' => $shopId,
                 'title' => 'Customers',
                 'route' => 'admin.users.index',
-                'order' => 2,
+                'params' => null,
+                'order' => 3,
                 'created_at' => now(), 'updated_at' => now()
             ],
             [
                 'parent_id' => $shopId,
                 'title' => 'Settings',
-                'route' => 'admin.settings.index',
-                'order' => 3,
+                'route' => 'admin.shop.settings',
+                'params' => null,
+                'order' => 4,
                 'created_at' => now(), 'updated_at' => now()
             ],
         ]);

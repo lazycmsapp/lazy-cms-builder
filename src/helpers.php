@@ -291,9 +291,16 @@ if (!function_exists('get_lazy_permalink')) {
     function get_lazy_permalink($post) {
         if (!$post) return '#';
         
-        $postLang = $post->lang_code ?? 'en';
-        $homePageId = get_cms_option('home_page_id');
+        $type = is_array($post) ? ($post['type'] ?? 'product') : ($post->type ?? 'post');
+        $slug = is_array($post) ? ($post['slug'] ?? '') : ($post->slug ?? '');
+        $postLang = is_array($post) ? ($post['lang_code'] ?? 'en') : ($post->lang_code ?? 'en');
         
+        // Homepage logic
+        if (!is_array($post) && is_lazy_homepage($post)) {
+            $homePageId = get_cms_option('home_page_id');
+            // ... (rest of homepage logic)
+        }
+
         // Find actual default language from DB
         $defaultLang = 'en';
         try {
@@ -304,18 +311,16 @@ if (!function_exists('get_lazy_permalink')) {
         // Language prefix logic: If it's not the default language, we MUST add the prefix
         $langPrefix = ($postLang === $defaultLang) ? '' : '/' . $postLang;
 
-        // Homepage logic
-        if (is_lazy_homepage($post)) {
-            if ($postLang === $defaultLang) {
-                return url('/');
-            }
+        // Homepage check again for safety
+        if (!is_array($post) && is_lazy_homepage($post)) {
+            if ($postLang === $defaultLang) return url('/');
             return url($postLang);
         }
 
-        if ($post->type === 'page') {
-            return url($langPrefix . '/' . $post->slug);
+        if ($type === 'page') {
+            return url($langPrefix . '/' . $slug);
         }
-        return url($langPrefix . '/' . $post->type . '/' . $post->slug);
+        return url($langPrefix . '/' . $type . '/' . $slug);
     }
 }
 

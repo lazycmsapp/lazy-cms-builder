@@ -235,7 +235,7 @@ class PostController extends Controller
         foreach ($taxonomies as $tax) {
             if (is_array($tax->post_types) && in_array($type, $tax->post_types)) {
                 $slugLower = strtolower($tax->slug);
-                if (in_array($slugLower, ['categories', 'tags', 'category', 'post_tag']) && !in_array($slugLower, $overriddenTaxonomies)) continue;
+                if (in_array($slugLower, ['categories', 'tags', 'category', 'post_tag']) && !in_array($slugLower, $overriddenTaxonomies) && $type !== 'product') continue;
                 
                 $tax->terms = \Acme\CmsDashboard\Models\TaxonomyTerm::where('taxonomy_slug', $tax->slug)
                     ->where('cpt_slug', $type)

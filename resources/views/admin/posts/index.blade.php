@@ -103,7 +103,7 @@
                 <th class="wp-table-header text-left">Author</th>
                 <th class="wp-table-header text-left">Slug</th>
 
-                @if(!in_array('categories', $overriddenTaxonomies) && ($type ?? 'post') !== 'product')
+                @if(!in_array('categories', $overriddenTaxonomies) && in_array($type ?? 'post', ['post', 'product']))
                     <th class="wp-table-header text-left">Categories</th>
                 @endif
 
@@ -125,7 +125,7 @@
                     @endif
                 @endforeach
 
-                @if(!in_array('tags', $overriddenTaxonomies) && ($type ?? 'post') !== 'product')
+                @if(!in_array('tags', $overriddenTaxonomies) && in_array($type ?? 'post', ['post', 'product']))
                     <th class="wp-table-header text-left">Tags</th>
                 @endif
                 <th class="wp-table-header text-center w-8"><svg class="w-4 h-4 mx-auto text-[#8c8f94]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg></th>
@@ -163,7 +163,7 @@
                     <td class="wp-table-cell text-[#2271b1] text-left">{{ $post->user?->username ?? $post->user?->name ?? 'admin' }}</td>
                     <td class="wp-table-cell text-[#646970] text-left">{{ $post->slug }}</td>
                     
-                    @if(!in_array('categories', $overriddenTaxonomies) && ($type ?? 'post') !== 'product')
+                    @if(!in_array('categories', $overriddenTaxonomies) && in_array($type ?? 'post', ['post', 'product']))
                     <td class="wp-table-cell text-left">
                         @if($post->categories->count() > 0)
                             {{ $post->categories->pluck('name')->implode(', ') }}
@@ -200,7 +200,7 @@
                         @endif
                     @endforeach
 
-                    @if(!in_array('tags', $overriddenTaxonomies) && ($type ?? 'post') !== 'product')
+                    @if(!in_array('tags', $overriddenTaxonomies) && in_array($type ?? 'post', ['post', 'product']))
                     <td class="wp-table-cell text-[#2c3338] text-left">
                         @if($post->tags->count() > 0)
                             {{ $post->tags->pluck('name')->implode(', ') }}
@@ -239,7 +239,7 @@
                 <th class="wp-table-header text-left border-t">Title</th>
                 <th class="wp-table-header text-left border-t">Author</th>
                 <th class="wp-table-header text-left border-t">Slug</th>
-                @if(!in_array('categories', $overriddenTaxonomies) && ($type ?? 'post') !== 'product')
+                @if(!in_array('categories', $overriddenTaxonomies) && in_array($type ?? 'post', ['post', 'product']))
                     <th class="wp-table-header text-left border-t">Categories</th>
                 @endif
 
@@ -261,7 +261,7 @@
                     @endif
                 @endforeach
 
-                @if(!in_array('tags', $overriddenTaxonomies) && ($type ?? 'post') !== 'product')
+                @if(!in_array('tags', $overriddenTaxonomies) && in_array($type ?? 'post', ['post', 'product']))
                     <th class="wp-table-header text-left border-t">Tags</th>
                 @endif
                 <th class="wp-table-header text-center w-8 border-t"><svg class="w-4 h-4 mx-auto text-[#8c8f94]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg></th>
