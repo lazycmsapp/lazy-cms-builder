@@ -199,15 +199,17 @@ class MenuSeeder extends Seeder
         // 15. eCommerce Menu
         $ecommerceMenu = Menu::create([
             'title' => 'Shop',
-            'route' => '#',
+            'route' => 'admin.shop.orders.index',
             'params' => null,
             'icon'  => 'storefront',
             'group' => 'Main',
             'order' => 60,
         ]);
         $ecommerceMenu->children()->createMany([
-            ['title' => 'Orders',   'route' => 'admin.shop.orders.index', 'order' => 1],
-            ['title' => 'Settings', 'route' => 'admin.shop.settings',     'order' => 2],
+            ['title' => 'Orders',          'route' => 'admin.shop.orders.index', 'order' => 1],
+            ['title' => 'Product Reviews',  'route' => 'admin.shop.reviews.index', 'order' => 2],
+            ['title' => 'Customers',        'route' => 'admin.users.index',        'order' => 3],
+            ['title' => 'Settings',         'route' => 'admin.shop.settings',      'order' => 4],
         ]);
 
         // Dynamic CPTs
