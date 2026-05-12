@@ -42,25 +42,26 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('parent_id')->nullable()->constrained('posts')->nullOnDelete();
             $table->string('title');
-            $table->string('slug'); // Unique check handled by composite or manual logic if needed, but usually unique
+            $table->string('slug'); 
             $table->longText('content')->nullable();
             $table->text('excerpt')->nullable();
             $table->string('type')->default('post')->index();
             $table->string('status')->default('draft')->index();
+            $table->string('lang_code', 5)->default('en')->index();
+            $table->unsignedBigInteger('origin_id')->nullable()->index();
             $table->string('featured_image')->nullable();
-            $table->string('editor_type')->default('rich'); // rich, builder
+            $table->string('editor_type')->default('rich'); 
             $table->string('template')->nullable();
             $table->integer('menu_order')->default(0);
             $table->timestamp('published_at')->nullable();
             
-            // Media & SEO Meta
             $table->json('gallery')->nullable();
             $table->json('seo_meta')->nullable();
 
             $table->softDeletes();
             $table->timestamps();
 
-            $table->unique(['slug', 'type', 'deleted_at']); // Better unique constraint
+            $table->unique(['slug', 'type', 'lang_code'], 'posts_slug_type_lang_unique');
         });
 
         // 3. Menus Table
@@ -69,8 +70,10 @@ return new class extends Migration
             $table->foreignId('parent_id')->nullable()->constrained('menus')->cascadeOnDelete();
             $table->string('title');
             $table->string('route')->nullable();
+            $table->text('params')->nullable();
             $table->text('icon')->nullable();
             $table->string('group')->nullable();
+            $table->string('permission')->nullable();
             $table->integer('order')->default(0);
             $table->timestamps();
         });
@@ -80,9 +83,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('parent_id')->nullable()->constrained('categories')->nullOnDelete();
             $table->string('name');
-            $table->string('slug')->unique();
+            $table->string('slug');
+            $table->string('lang_code', 10)->default('en')->index();
+            $table->unsignedBigInteger('origin_id')->nullable()->index();
             $table->text('description')->nullable();
             $table->timestamps();
+
+            $table->unique(['slug', 'lang_code']);
         });
 
         Schema::create('category_post', function (Blueprint $table) {
@@ -94,9 +101,13 @@ return new class extends Migration
         Schema::create('tags', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('slug')->unique();
+            $table->string('slug');
+            $table->string('lang_code', 10)->default('en')->index();
+            $table->unsignedBigInteger('origin_id')->nullable()->index();
             $table->text('description')->nullable();
             $table->timestamps();
+
+            $table->unique(['slug', 'lang_code']);
         });
 
         Schema::create('post_tag', function (Blueprint $table) {

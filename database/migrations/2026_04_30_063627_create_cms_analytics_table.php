@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('cms_analytics', function (Blueprint $table) {
             $table->id();
             $table->string('ip_address', 45)->nullable();
-            $table->string('url')->nullable();
-            $table->string('referrer')->nullable();
+            $table->text('url')->nullable();
+            $table->text('referrer')->nullable();
             $table->string('user_agent')->nullable();
             $table->string('browser')->nullable();
             $table->string('os')->nullable();
@@ -22,7 +22,6 @@ return new class extends Migration
             $table->timestamp('created_at')->useCurrent();
             
             $table->index('created_at');
-            $table->index('url');
         });
     }
 

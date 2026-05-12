@@ -13,6 +13,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('code', 5)->unique(); // en, bn, fr, etc.
+            $table->string('flag', 20)->nullable();
             $table->boolean('is_default')->default(false);
             $table->boolean('status')->default(true);
             $table->timestamps();
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->foreignId('post_id')->constrained()->onDelete('cascade');
             $table->string('locale', 5);
             $table->string('title')->nullable();
+            $table->string('slug')->nullable();
             $table->longText('content')->nullable();
             $table->text('excerpt')->nullable();
             

@@ -10,16 +10,17 @@ return new class extends Migration
     {
         Schema::create('taxonomy_terms', function (Blueprint $table) {
             $table->id();
-            $table->string('taxonomy_slug');       // e.g. 'categories' (custom taxonomy slug)
-            $table->string('cpt_slug');             // e.g. 'dramas'
+            $table->foreignId('taxonomy_id')->constrained('custom_taxonomies')->cascadeOnDelete();
+            $table->foreignId('parent_id')->nullable()->constrained('taxonomy_terms')->nullOnDelete();
             $table->string('name');
-            $table->string('slug')->index();
+            $table->string('slug');
+            $table->string('lang_code', 10)->default('en')->index();
+            $table->unsignedBigInteger('origin_id')->nullable()->index();
             $table->text('description')->nullable();
-            $table->unsignedBigInteger('parent_id')->nullable();
             $table->integer('order')->default(0);
             $table->timestamps();
 
-            $table->index(['taxonomy_slug', 'cpt_slug']);
+            $table->unique(['slug', 'taxonomy_id', 'lang_code'], 'terms_slug_tax_lang_unique');
         });
     }
 

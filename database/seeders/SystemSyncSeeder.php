@@ -26,6 +26,11 @@ class SystemSyncSeeder extends Seeder
             ['name' => 'Manage Tags',       'slug' => 'manage_tags'],
             ['name' => 'View Analytics',    'slug' => 'manage_analytics'],
             ['name' => 'Manage Comments',   'slug' => 'manage_comments'],
+            ['name' => 'Manage Forms',      'slug' => 'manage_forms'],
+            ['name' => 'Manage Appearance', 'slug' => 'manage_appearance'],
+            ['name' => 'Manage ACPT',       'slug' => 'manage_acpt'],
+            ['name' => 'Manage Tools',      'slug' => 'manage_tools'],
+            ['name' => 'Manage SEO',        'slug' => 'manage_seo'],
         ];
 
         foreach ($permissions as $p) {
@@ -93,10 +98,10 @@ class SystemSyncSeeder extends Seeder
         foreach ($roleAssignments as $roleSlug => $perms) {
             $role = Role::where('slug', $roleSlug)->first();
             if ($role) {
-                if ($perms === 'all') {
+                if ($perms === 'all' || $roleSlug === 'administrator') {
                     $role->permissions()->sync($allPermissionIds);
                 } else {
-                    // Only sync if role has NO permissions yet, to preserve user's hard work
+                    // Only sync if role has NO permissions yet
                     if ($role->permissions()->count() === 0) {
                         $ids = Permission::whereIn('slug', $perms)->pluck('id')->toArray();
                         $role->permissions()->sync($ids);

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('area')->index(); // sidebar, footer-1, etc.
             $table->string('type');          // search, recent_posts, custom_html, etc.
             $table->string('title')->nullable();
+            $table->string('lang_code', 5)->default('en')->index();
             $table->json('settings')->nullable();
             $table->integer('order')->default(0);
             $table->boolean('is_active')->default(true);

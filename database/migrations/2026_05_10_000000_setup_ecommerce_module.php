@@ -44,7 +44,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('order_number')->unique();
-            $table->string('status')->default('pending')->index(); // pending, processing, completed, cancelled, refunded
+            $table->string('status')->default('pending')->index(); 
             $table->decimal('subtotal', 15, 2);
             $table->decimal('shipping_total', 15, 2)->default(0);
             $table->decimal('tax_total', 15, 2)->default(0);
@@ -52,7 +52,6 @@ return new class extends Migration
             $table->string('coupon_code')->nullable();
             $table->decimal('total', 15, 2)->index();
             
-            // Customer Info (to handle guest checkout or snapshot of user info)
             $table->string('customer_email');
             $table->string('customer_phone')->nullable();
             $table->string('first_name');
@@ -77,13 +76,42 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained('shop_orders')->cascadeOnDelete();
             $table->foreignId('product_id')->nullable()->constrained('posts')->nullOnDelete();
-            $table->string('product_name'); // Snapshot in case product name changes
+            $table->string('product_name'); 
             $table->integer('quantity');
             $table->decimal('price', 15, 2);
             $table->decimal('subtotal', 15, 2);
-            $table->json('meta')->nullable(); // Variation info etc.
+            $table->json('meta')->nullable(); 
             $table->timestamps();
         });
+
+        // 5. Register Product Taxonomies
+        $catExists = DB::table('custom_taxonomies')->where('slug', 'product_cat')->exists();
+        if (!$catExists) {
+            DB::table('custom_taxonomies')->insert([
+                'name' => 'Product Categories',
+                'slug' => 'product_cat',
+                'singular_name' => 'Product Category',
+                'post_types' => json_encode(['product']),
+                'hierarchical' => true,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $tagExists = DB::table('custom_taxonomies')->where('slug', 'product_tag')->exists();
+        if (!$tagExists) {
+            DB::table('custom_taxonomies')->insert([
+                'name' => 'Product Tags',
+                'slug' => 'product_tag',
+                'singular_name' => 'Product Tag',
+                'post_types' => json_encode(['product']),
+                'hierarchical' => false,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
     }
 
     public function down(): void
