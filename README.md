@@ -1,0 +1,106 @@
+# Lazy CMS Rebuild v4.0.0
+
+A powerful, modular, and easy-to-use CMS package for Laravel applications with built-in multi-language support, robust Role-Based Access Control (RBAC), and a WordPress-like theme & hook system.
+
+## 🚀 Installation
+
+To install the package in a fresh Laravel project:
+
+1. **Require the package via Composer:**
+   ```bash
+   composer require tareqcodex/lazy-cms-rebuild
+   ```
+
+2. **Run the Automated Installation:**
+   ```bash
+   php artisan lazy:install
+   ```
+   *This command handles migrations, asset publishing, theme distribution, storage linking, and default admin creation.*
+
+---
+
+## 🛠 Commands Summary
+
+Lazy CMS comes with a set of automated commands to make development easier.
+
+| Command | Description |
+| :--- | :--- |
+| `php artisan lazy` | **Help Menu:** Lists all available Lazy CMS commands in CLI. |
+| `php artisan lazy:install` | **Full Setup:** Migrations, Assets, Themes, User and seeds. |
+| `php artisan lazy:update` | **Sync Update:** Refreshes assets, themes, and permissions. |
+| `php artisan lazy:seed` | **Demo Data:** Seeds default menus and initial demo data. |
+| `php artisan make:lazy-page` | **Scaffold:** Creates a new dashboard page, controller, and menu item. |
+
+---
+
+## 🔐 Role-Based Access Control (RBAC)
+
+Version 4.0.0 introduces a granular permission system with several predefined roles:
+
+- **Administrator**: Full access to all settings, content, and system configurations.
+- **Editor**: Can publish and manage all posts and pages, access media library, and moderate comments.
+- **Author**: Can publish and manage **only their own** posts.
+- **Contributor**: Can write and manage their own posts but **cannot** publish them (pending review).
+- **Subscriber**: Access to their own profile and basic dashboard view.
+- **User**: Custom role with access to Posts, Pages, Media, Comments, and Language Tools.
+
+> **Note:** Content ownership is strictly enforced. Authors and Contributors are isolated from other users' content.
+
+---
+
+## 🎨 Theme Development & Isolation
+
+### 📂 Strict Theme Structure
+Frontend views **MUST** be located in `resources/views/themes/{theme-name}/`. 
+For security and organization, any view file created directly in the root `resources/views/` folder will be blocked from frontend rendering (returns a 404).
+
+### 🪄 Automated Theme Sync
+When you update the package, your themes are automatically refreshed. To ensure this works, add the following to your `composer.json` scripts:
+```json
+"post-autoload-dump": [
+    "@php artisan vendor:publish --tag=lazy-themes --force"
+]
+```
+
+---
+
+## 🌐 Multi-Language Support
+
+Lazy CMS supports dynamic localization. You can enable or disable multi-language support from the Admin Settings.
+
+- **Clean URLs:** When multi-language is disabled, URLs are clean (e.g., `/my-post`).
+- **ISO Prefixes:** When enabled, URLs include the language code (e.g., `/en/my-post`).
+- **Dynamic Admin UI:** The language selection metabox automatically hides when multi-language is disabled.
+
+---
+
+## 🛠 Features
+
+- **Consolidated Migrations:** Optimized database structure.
+- **Dynamic Post Types (CPT):** Create custom post types from the dashboard.
+- **Advanced Hook System:** WordPress-like Action and Filter hooks.
+- **Headless Mode:** Full REST API support for decoupled apps.
+- **Theme Isolation:** High-security frontend view resolution.
+
+---
+
+## ⚓ Hook System Examples
+
+### Adding a Filter
+```php
+add_lazy_filter('lazy_general_settings_fields', function($fields) {
+    $fields['my_custom_option'] = ['type' => 'text', 'label' => 'Custom Option'];
+    return $fields;
+});
+```
+
+### Adding an Action
+```php
+add_lazy_action('lazy_after_post_content', function($post) {
+    echo "<div>Related Content Here</div>";
+});
+```
+
+---
+
+Developed by **Tareq Codex**

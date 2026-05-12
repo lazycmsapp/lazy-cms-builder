@@ -1,0 +1,47 @@
+<?php
+
+namespace Acme\CmsDashboard\Models;
+
+use Illuminate\Database\Eloquent\Builder;
+
+class Product extends Post
+{
+    protected $table = 'posts';
+
+    protected static function booted()
+    {
+        static::addGlobalScope('product', function (Builder $builder) {
+            $builder->where('type', 'product');
+        });
+
+        static::creating(function ($product) {
+            $product->type = 'product';
+        });
+    }
+
+    public function shopData()
+    {
+        return $this->hasOne(ProductData::class, 'post_id');
+    }
+
+    // Helpers for quick access
+    public function getPriceAttribute()
+    {
+        return $this->shopData?->price ?? 0;
+    }
+
+    public function getSalePriceAttribute()
+    {
+        return $this->shopData?->sale_price;
+    }
+
+    public function getSkuAttribute()
+    {
+        return $this->shopData?->sku;
+    }
+
+    public function getStockStatusAttribute()
+    {
+        return $this->shopData?->stock_status ?? 'instock';
+    }
+}

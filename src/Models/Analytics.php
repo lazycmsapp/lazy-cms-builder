@@ -1,0 +1,17 @@
+<?php
+
+namespace Acme\CmsDashboard\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Analytics extends Model
+{
+    protected $table = 'cms_analytics';
+    
+    public $timestamps = false;
+
+    protected $fillable = [
+        'ip_address', 'url', 'referrer', 'user_agent', 
+        'browser', 'os', 'device_type', 'country', 'city'
+    ];
+}

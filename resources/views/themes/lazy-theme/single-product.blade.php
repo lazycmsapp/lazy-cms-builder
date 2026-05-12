@@ -1,0 +1,532 @@
+@extends('cms-dashboard::themes.lazy-theme.layouts.app')
+
+@section('title', $post->title)
+
+@section('content')
+<div class="bg-white py-12 min-h-screen font-sans">
+    <div class="container-custom">
+        <!-- Breadcrumbs -->
+        <nav class="text-[14px] text-gray-400 mb-8" aria-label="Breadcrumb">
+            <ol class="list-none p-0 inline-flex flex-wrap items-center">
+                <li class="flex items-center">
+                    <a href="{{ url('/') }}" class="hover:text-gray-900">Home</a>
+                </li>
+                @php 
+                    $primaryCat = $post->taxonomyTerms()->whereIn('taxonomy_slug', ['product_category', 'product_cat'])->first();
+                    $cat = $primaryCat; // For use in other sections
+                    $breadcrumb = [];
+                    if ($primaryCat) {
+                        $term = $primaryCat;
+                        while ($term) {
+                            $breadcrumb[] = [
+                                'name' => $term->name,
+                                'url' => url($term->taxonomy_slug . '/' . $term->slug)
+                            ];
+                            $term = $term->parent;
+                        }
+                        $breadcrumb = array_reverse($breadcrumb);
+                    }
+                @endphp
+                @foreach($breadcrumb as $crumb)
+                    <li class="flex items-center">
+                        <span class="mx-2">/</span>
+                        <a href="{{ $crumb['url'] }}" class="hover:text-gray-900">{{ $crumb['name'] }}</a>
+                    </li>
+                @endforeach
+                <li class="flex items-center">
+                    <span class="mx-2">/</span>
+                    <span class="text-gray-900 font-medium">{{ $post->title }}</span>
+                </li>
+            </ol>
+        </nav>
+
+        <div class="flex flex-col lg:flex-row gap-12 mb-20">
+            <div class="w-full lg:w-1/2">
+                <div class="relative bg-[#f8f8f8] rounded-sm overflow-hidden mb-4 group cursor-zoom-in">
+                    @if($post->featured_image)
+                        <img id="main-product-image" src="{{ str_starts_with($post->featured_image, 'http') ? $post->featured_image : asset('storage/'.$post->featured_image) }}" alt="{{ $post->title }}" class="w-full h-auto object-cover transition-all duration-500 hover:scale-125">
+                    @else
+                        <img id="main-product-image" src="{{ asset('assets/images/placeholder.jpg') }}" alt="Placeholder" class="w-full h-auto object-cover mix-blend-multiply opacity-70">
+                    @endif
+                    
+                    @if($post->shopData && $post->shopData->sale_price)
+                        <span class="absolute top-4 left-4 bg-white text-gray-700 text-[11px] font-bold px-3 py-1 rounded-full shadow-sm uppercase z-10">Sale!</span>
+                    @endif
+                </div>
+                
+                @if($post->gallery && count($post->gallery) > 0)
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="aspect-square cursor-pointer border border-transparent hover:border-blue-500 rounded-sm overflow-hidden bg-[#f8f8f8]" onclick="changeProductImage('{{ str_starts_with($post->featured_image, 'http') ? $post->featured_image : asset('storage/'.$post->featured_image) }}')">
+                        <img src="{{ str_starts_with($post->featured_image, 'http') ? $post->featured_image : asset('storage/'.$post->featured_image) }}" class="w-full h-full object-cover">
+                    </div>
+                    @foreach($post->gallery as $img)
+                    <div class="aspect-square cursor-pointer border border-transparent hover:border-blue-500 rounded-sm overflow-hidden bg-[#f8f8f8]" onclick="changeProductImage('{{ str_starts_with($img, 'http') ? $img : asset('storage/'.$img) }}')">
+                        <img src="{{ str_starts_with($img, 'http') ? $img : asset('storage/'.$img) }}" class="w-full h-full object-cover">
+                    </div>
+                    @endforeach
+                </div>
+                @endif
+            </div>
+
+            <!-- Right: Product Info -->
+            <div class="w-full lg:w-1/2 flex flex-col">
+
+                <h1 class="text-[36px] font-bold text-[#2c3338] mb-4 leading-tight">{{ $post->title }}</h1>
+                
+                <div class="text-[24px] font-medium text-gray-900 mb-6 flex items-center gap-3">
+                    @if($post->shopData && $post->shopData->sale_price)
+                        <span class="line-through text-gray-300 font-normal">${{ number_format($post->shopData->price, 2) }}</span>
+                        <span class="text-gray-900 font-bold">${{ number_format($post->shopData->sale_price, 2) }}</span>
+                    @else
+                        <span class="text-gray-900 font-bold">${{ number_format($post->shopData->price ?? 0, 2) }}</span>
+                    @endif
+                </div>
+                
+                <div class="text-[15px] text-gray-600 mb-8 leading-relaxed">
+                    {{ $post->excerpt ?: get_lazy_excerpt($post, 250) }}
+                </div>
+
+                <form id="add-to-cart-form" action="{{ route('shop.cart.add') }}" method="POST" class="flex items-center gap-4 mb-10 pb-8 border-b border-gray-100">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $post->id }}">
+                    
+                    <div class="flex items-center border border-gray-200 rounded-sm h-11 w-20">
+                        <input type="number" id="qty" name="quantity" value="1" min="1" class="w-full h-full text-center border-none focus:ring-0 text-[15px] font-medium">
+                    </div>
+                    
+                    <button type="submit" id="add-to-cart-btn" class="bg-[#1363df] text-white px-8 h-11 rounded-sm font-bold text-[14px] hover:bg-[#005ba6] transition-colors uppercase flex items-center gap-2">
+                        <span>Add to cart</span>
+                    </button>
+                </form>
+
+                <div class="text-[13px] text-gray-500 space-y-2">
+                    @if($post->shopData && $post->shopData->sku)
+                    <p><span class="uppercase font-bold text-gray-800">SKU:</span> {{ $post->shopData->sku }}</p>
+                    @endif
+                    <p><span class="uppercase font-bold text-gray-800">Category:</span> 
+                        @php 
+                            $categories = $post->taxonomyTerms()->whereIn('taxonomy_slug', ['product_category', 'product_cat'])->get();
+                        @endphp
+                        @foreach($categories as $cat)
+                            <a href="{{ url('/' . $cat->taxonomy_slug . '/' . $cat->slug) }}" class="text-blue-600 hover:underline">{{ $cat->name }}</a>{{ $loop->last ? '' : ', ' }}
+                        @endforeach
+                        @if($categories->isEmpty())
+                            <span class="text-gray-400">Uncategorized</span>
+                        @endif
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Section -->
+        <div class="mt-16 border-t border-gray-100 pt-10">
+            <div class="flex gap-8 mb-8 border-b border-gray-100 tab-headers">
+                <button onclick="switchTab('description')" id="tab-btn-description" class="pb-4 text-[14px] font-bold text-gray-900 border-b-2 border-gray-900 uppercase transition-all">Description</button>
+                <button onclick="switchTab('info')" id="tab-btn-info" class="pb-4 text-[14px] font-bold text-gray-400 hover:text-gray-900 uppercase border-b-2 border-transparent transition-all">Additional information</button>
+                <button onclick="switchTab('reviews')" id="tab-btn-reviews" class="pb-4 text-[14px] font-bold text-gray-400 hover:text-gray-900 uppercase border-b-2 border-transparent transition-all">Reviews ({{ $post->reviews()->count() }})</button>
+            </div>
+            
+            <div id="tab-content-description" class="tab-pane prose max-w-none text-gray-600 text-[15px] leading-relaxed">
+                {!! $post->content !!}
+            </div>
+
+            <div id="tab-content-info" class="tab-pane hidden">
+                <table class="w-full border-collapse">
+                    <tbody>
+                        @if($post->shopData && $post->shopData->weight)
+                        <tr class="border-b border-gray-100">
+                            <th class="text-left py-3 w-1/4 text-gray-800 font-bold uppercase text-[12px]">Weight</th>
+                            <td class="py-3 text-gray-600">{{ $post->shopData->weight }} kg</td>
+                        </tr>
+                        @endif
+                        @if($post->shopData && $post->shopData->dimensions)
+                        <tr class="border-b border-gray-100">
+                            <th class="text-left py-3 w-1/4 text-gray-800 font-bold uppercase text-[12px]">Dimensions</th>
+                            <td class="py-3 text-gray-600">{{ $post->shopData->dimensions }}</td>
+                        </tr>
+                        @endif
+                        <tr class="border-b border-gray-100">
+                            <th class="text-left py-3 w-1/4 text-gray-800 font-bold uppercase text-[12px]">Category</th>
+                            <td class="py-3 text-gray-600">
+                                @foreach($post->taxonomyTerms()->where('taxonomy_slug', 'product_category')->get() as $cat)
+                                    {{ $cat->name }}{{ $loop->last ? '' : ', ' }}
+                                @endforeach
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="tab-content-reviews" class="tab-pane hidden">
+                @if(session('success'))
+                    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-sm mb-6 text-[14px]">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <!-- Left: Reviews List -->
+                    <div class="space-y-8">
+                        <h3 class="text-[18px] font-bold text-gray-900 mb-6 flex items-center gap-3">
+                            Reviews ({{ $post->reviews->count() }})
+                            @if($post->reviews->count() > 0)
+                                @php $avgRating = round($post->reviews->avg('rating'), 1); @endphp
+                                <div class="flex items-center gap-1 border-l border-gray-200 pl-3">
+                                    <div class="flex items-center gap-0.5">
+                                        @for($i=1; $i<=5; $i++)
+                                            <svg class="w-3.5 h-3.5 {{ $i <= $avgRating ? 'text-yellow-400' : 'text-gray-200' }} fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        @endfor
+                                    </div>
+                                    <span class="text-[14px] font-bold text-gray-900">{{ $avgRating }}</span>
+                                </div>
+                            @endif
+                        </h3>
+                        @forelse($post->reviews as $review)
+                            <div class="pb-6 border-b border-gray-50 last:border-0">
+                                <div class="flex gap-4 mb-4">
+                                    <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-400 shrink-0">
+                                        {{ substr($review->name, 0, 1) }}
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-bold text-gray-900">{{ $review->name }}</span>
+                                                <span class="text-gray-400 text-xs">{{ $review->created_at->format('M d, Y') }}</span>
+                                            </div>
+                                            <button onclick="setReplyTo({{ $review->id }}, '{{ $review->name }}')" class="text-[12px] text-blue-600 font-bold hover:underline">Reply</button>
+                                        </div>
+                                        <div class="flex items-center gap-1 mb-2">
+                                            @for($i=1; $i<=5; $i++)
+                                                <svg class="w-3 h-3 {{ $i <= $review->rating ? 'text-yellow-400' : 'text-gray-200' }} fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                            @endfor
+                                        </div>
+                                        <p class="text-[14px] text-gray-600 leading-relaxed">{{ $review->comment }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Nested Replies -->
+                                @if($review->replies->count() > 0)
+                                    <div class="ml-16 mt-4 space-y-6 border-l-2 border-gray-50 pl-6">
+                                        @foreach($review->replies as $reply)
+                                            <div class="flex gap-4">
+                                                <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center font-bold text-blue-300 shrink-0 text-sm">
+                                                    {{ substr($reply->name, 0, 1) }}
+                                                </div>
+                                                <div>
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <span class="font-bold text-gray-800 text-[13px]">{{ $reply->name }}</span>
+                                                        <span class="text-gray-400 text-[11px]">{{ $reply->created_at->format('M d, Y') }}</span>
+                                                    </div>
+                                                    <p class="text-[13px] text-gray-600 leading-relaxed">{{ $reply->comment }}</p>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @empty
+                            <p class="text-gray-500">There are no reviews yet. Be the first to review "{{ $post->title }}"</p>
+                        @endforelse
+                    </div>
+
+                    <!-- Right: Review Form -->
+                    <div class="bg-[#fcfcfc] p-8 rounded-sm border border-gray-100 h-fit sticky top-24">
+                        <div id="reply-to-alert" class="hidden bg-blue-50 text-blue-700 px-4 py-2 rounded-sm mb-4 text-[13px] flex justify-between items-center">
+                            <span>Replying to <span id="reply-to-name" class="font-bold"></span></span>
+                            <button onclick="cancelReply()" class="text-blue-400 hover:text-blue-700 font-bold">×</button>
+                        </div>
+
+                        <h3 id="form-title" class="text-[18px] font-bold text-gray-900 mb-2">Add a review</h3>
+                        <p class="text-[13px] text-gray-500 mb-6">Your email address will not be published. Required fields are marked *</p>
+                        
+                        <form id="review-form" action="{{ route('shop.review.store') }}" method="POST" class="space-y-4">
+                            @csrf
+                            <input type="hidden" name="post_id" value="{{ $post->id }}">
+                            <input type="hidden" name="parent_id" id="parent_id" value="">
+                            
+                            <div id="rating-container">
+                                <label class="block text-[13px] font-bold text-gray-700 uppercase mb-2">Your rating *</label>
+                                <input type="hidden" name="rating" id="rating-value" value="5">
+                                <div class="flex gap-1 text-gray-300 rating-stars">
+                                    @for($i=1; $i<=5; $i++)
+                                        <button type="button" onclick="setRating({{ $i }})" class="star-btn transition-colors {{ $i <= 5 ? 'text-yellow-400' : '' }}" data-value="{{ $i }}">
+                                            <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        </button>
+                                    @endfor
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[13px] font-bold text-gray-700 uppercase mb-2">Your review *</label>
+                                <textarea name="comment" rows="6" required class="w-full border border-gray-200 rounded-sm p-3 text-[14px] focus:ring-0 focus:border-gray-900 outline-none"></textarea>
+                            </div>
+
+                            @guest
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[13px] font-bold text-gray-700 uppercase mb-2">Name *</label>
+                                    <input type="text" name="name" required class="w-full border border-gray-200 rounded-sm p-3 text-[14px] focus:ring-0 focus:border-gray-900 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-[13px] font-bold text-gray-700 uppercase mb-2">Email *</label>
+                                    <input type="email" name="email" required class="w-full border border-gray-200 rounded-sm p-3 text-[14px] focus:ring-0 focus:border-gray-900 outline-none">
+                                </div>
+                            </div>
+                            @endguest
+
+                            <button type="submit" id="review-submit-btn" class="bg-[#1363df] text-white px-8 py-3 rounded-sm font-bold text-[13px] hover:bg-[#005ba6] transition-colors uppercase mt-4">
+                                Submit
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function setRating(n) {
+                document.getElementById('rating-value').value = n;
+                const stars = document.querySelectorAll('.rating-stars .star-btn');
+                stars.forEach((s, index) => {
+                    if (index < n) {
+                        s.classList.add('text-yellow-400');
+                        s.classList.remove('text-gray-300');
+                    } else {
+                        s.classList.remove('text-yellow-400');
+                        s.classList.add('text-gray-300');
+                    }
+                });
+            }
+
+            function changeProductImage(src) {
+                const mainImg = document.getElementById('main-product-image');
+                mainImg.style.opacity = '0';
+                setTimeout(() => {
+                    mainImg.src = src;
+                    mainImg.style.opacity = '1';
+                }, 150);
+            }
+
+            function switchTab(tab) {
+                // Hide all panes
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+                // Show active pane
+                document.getElementById('tab-content-' + tab).classList.remove('hidden');
+                
+                // Update button styles
+                document.querySelectorAll('.tab-headers button').forEach(b => {
+                    b.classList.remove('text-gray-900', 'border-gray-900');
+                    b.classList.add('text-gray-400', 'border-transparent');
+                });
+                
+                const activeBtn = document.getElementById('tab-btn-' + tab);
+                activeBtn.classList.remove('text-gray-400', 'border-transparent');
+                activeBtn.classList.add('text-gray-900', 'border-gray-900');
+            }
+
+            // AJAX Add to Cart
+            document.getElementById('add-to-cart-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const form = this;
+                const btn = document.getElementById('add-to-cart-btn');
+                const btnText = btn.querySelector('span');
+                const originalText = btnText.innerText;
+
+                // Loading state
+                btn.disabled = true;
+                btnText.innerText = 'Adding...';
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: new FormData(form)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btnText.innerText = originalText;
+
+                    if (data.success) {
+                        // Show Success Message
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message,
+                            icon: 'success',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+
+                        // Update Cart Count
+                        const badge = document.querySelector('.cart-count-badge');
+                        if (badge) {
+                            badge.innerText = data.cart_count;
+                            badge.classList.remove('hidden');
+                        }
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message || 'Something went wrong!',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    btn.disabled = false;
+                    btnText.innerText = originalText;
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to add product to cart.',
+                        icon: 'error'
+                    });
+                });
+            });
+
+            // Auto-open reviews tab if there is a success message
+            @if(session('success'))
+                window.onload = function() {
+                    switchTab('reviews');
+                    document.getElementById('tab-content-reviews').scrollIntoView({ behavior: 'smooth' });
+                };
+            @endif
+
+            function setReplyTo(id, name) {
+                document.getElementById('parent_id').value = id;
+                document.getElementById('reply-to-name').innerText = name;
+                document.getElementById('reply-to-alert').classList.remove('hidden');
+                document.getElementById('form-title').innerText = 'Reply to ' + name;
+                
+                // Hide star rating for replies as rating is only for main review
+                document.getElementById('rating-container').style.display = 'none';
+                document.getElementById('rating-value').value = '5'; // Default for replies
+                
+                document.getElementById('form-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function cancelReply() {
+                document.getElementById('parent_id').value = '';
+                document.getElementById('reply-to-alert').classList.add('hidden');
+                document.getElementById('form-title').innerText = 'Add a review';
+                
+                // Show star rating back
+                document.getElementById('rating-container').style.display = 'block';
+                document.getElementById('rating-value').value = '5';
+            }
+
+            // AJAX Review Submission
+            document.getElementById('review-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const form = this;
+                const btn = document.getElementById('review-submit-btn');
+                const originalText = btn.innerText;
+
+                // Loading state
+                btn.disabled = true;
+                btn.innerText = 'Submitting...';
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: new FormData(form)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            // Clear form or reload to show review if approved
+                            if (data.message.includes('posted successfully')) {
+                                location.reload(); // Reload to show new approved review
+                            } else {
+                                form.reset();
+                                cancelReply();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message || 'Something went wrong!',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to submit review.',
+                        icon: 'error'
+                    });
+                });
+            });
+        </script>
+
+        <!-- Related Products Section -->
+        @php 
+            $related = \Acme\CmsDashboard\Models\Post::where('type', 'product')
+                ->where('id', '!=', $post->id)
+                ->limit(4)
+                ->get();
+        @endphp
+        @if($related->count() > 0)
+        <div class="mt-24">
+            <h2 class="text-[32px] font-bold text-[#2c3338] mb-10">Related products</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+                @foreach($related as $item)
+                <div class="group">
+                    <div class="aspect-square relative bg-[#f8f8f8] rounded-sm overflow-hidden mb-4">
+                        <a href="{{ get_lazy_permalink($item) }}">
+                            <img src="{{ str_starts_with($item->featured_image, 'http') ? $item->featured_image : asset('storage/'.$item->featured_image) }}" class="w-full h-full object-cover">
+                        </a>
+                        @if($item->shopData && $item->shopData->sale_price)
+                            <span class="absolute top-3 left-3 bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Sale!</span>
+                        @endif
+                    </div>
+                    <div class="text-[12px] text-gray-400 mb-1">
+                        @php $itemCat = $item->taxonomyTerms()->where('taxonomy_slug', 'product_category')->first(); @endphp
+                        {{ $itemCat->name ?? 'Accessories' }}
+                    </div>
+                    <h3 class="text-[15px] font-bold text-gray-900 mb-1 hover:text-blue-600">
+                        <a href="{{ get_lazy_permalink($item) }}">{{ $item->title }}</a>
+                    </h3>
+                    <div class="text-[14px] font-medium text-gray-900 mb-4">
+                        @if($item->shopData && $item->shopData->sale_price)
+                            <span class="line-through text-gray-300 font-normal mr-1">${{ number_format($item->shopData->price, 2) }}</span>
+                            <span>${{ number_format($item->shopData->sale_price, 2) }}</span>
+                        @else
+                            <span>${{ number_format($item->shopData->price ?? 0, 2) }}</span>
+                        @endif
+                    </div>
+                    <button class="w-full bg-[#1363df] text-white py-2.5 rounded-sm text-[12px] font-bold uppercase hover:bg-[#005ba6] transition-colors">
+                        Add to cart
+                    </button>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+    </div>
+</div>
+@stop

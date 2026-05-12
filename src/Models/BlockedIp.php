@@ -1,0 +1,10 @@
+<?php
+
+namespace Acme\CmsDashboard\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class BlockedIp extends Model
+{
+    protected $fillable = ['ip_address', 'country', 'country_code', 'attempts', 'reason'];
+}

@@ -1,0 +1,26 @@
+<?php
+
+namespace Acme\CmsDashboard\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class CustomTaxonomy extends Model
+{
+    use SoftDeletes;
+
+    protected $table = 'custom_taxonomies';
+
+    protected $guarded = [];
+
+    protected $casts = [
+        'post_types' => 'array',
+        'is_active' => 'boolean',
+        'hierarchical' => 'boolean',
+    ];
+
+    public function terms()
+    {
+        return $this->hasMany(TaxonomyTerm::class, 'taxonomy_slug', 'slug');
+    }
+}

@@ -1,0 +1,196 @@
+<?php
+
+namespace Acme\CmsDashboard\Http\Controllers\Admin;
+
+use Illuminate\Routing\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+
+class ThemeController extends Controller
+{
+    public function index()
+    {
+        if (!auth()->user()->hasPermission('access_themes') && !auth()->user()->hasPermission('manage_settings')) {
+            abort(403);
+        }
+
+        $settings = DB::table('cms_settings')->pluck('value', 'key')->toArray();
+        $activeTheme = $settings['active_theme'] ?? 'lazy-theme';
+
+        $themes = [];
+        
+        // 1. Check Package Themes
+        $packageThemesPath = __DIR__ . '/../../../../resources/views/themes';
+        
+        // 2. Check Main App Themes
+        $appThemesPath = resource_path('views/themes');
+
+        $paths = array_unique([$packageThemesPath, $appThemesPath]);
+
+        foreach ($paths as $path) {
+            if (File::isDirectory($path)) {
+                $directories = File::directories($path);
+                foreach ($directories as $dir) {
+                    $slug = basename($dir);
+                    
+                    // Skip if already added
+                    if (isset($themes[$slug])) continue;
+
+                    $screenshot = null;
+                    if (File::exists($dir . '/screenshot.png')) {
+                        $screenshot = asset('themes/' . $slug . '/screenshot.png');
+                    } elseif (File::exists($dir . '/screenshot.jpg')) {
+                        $screenshot = asset('themes/' . $slug . '/screenshot.jpg');
+                    }
+
+                    // Check if activatable (must have index.blade.php)
+                    $isActivatable = File::exists($dir . '/index.blade.php');
+
+                    $themes[$slug] = [
+                        'name' => ucfirst(str_replace('-', ' ', $slug)),
+                        'slug' => $slug,
+                        'screenshot' => $screenshot,
+                        'is_active' => ($slug === $activeTheme),
+                        'is_activatable' => $isActivatable
+                    ];
+                }
+            }
+        }
+
+        return view('cms-dashboard::admin.themes.index', compact('themes', 'activeTheme'));
+    }
+
+    public function activate($slug)
+    {
+        if (!auth()->user()->hasPermission('access_themes') && !auth()->user()->hasPermission('manage_settings')) {
+            abort(403);
+        }
+
+        $themePath = $this->findThemePath($slug);
+        if (!$themePath) {
+            return redirect()->back()->with('error', 'Theme not found!');
+        }
+
+        // Validate criteria: Must have index.blade.php
+        if (!File::exists($themePath . '/index.blade.php')) {
+            return redirect()->back()->with('error', "Theme '{$slug}' is invalid! It must contain an 'index.blade.php' file.");
+        }
+
+        DB::table('cms_settings')->updateOrInsert(
+            ['key' => 'active_theme'],
+            ['value' => $slug, 'updated_at' => now()]
+        );
+
+        lazy_log_activity('theme_activated', "Activated theme: {$slug}");
+
+        return redirect()->back()->with('success', "Theme '{$slug}' activated successfully!");
+    }
+
+    public function destroy($slug)
+    {
+        if (!auth()->user()->hasPermission('access_themes') && !auth()->user()->hasPermission('manage_settings')) {
+            abort(403);
+        }
+
+        // Prevent deleting core theme or active theme
+        $settings = DB::table('cms_settings')->pluck('value', 'key')->toArray();
+        $activeTheme = $settings['active_theme'] ?? 'lazy-theme';
+
+        if ($slug === 'lazy-theme') {
+            return redirect()->back()->with('error', "The core 'Lazy Theme' cannot be deleted!");
+        }
+
+        if ($slug === $activeTheme) {
+            return redirect()->back()->with('error', "Active theme cannot be deleted!");
+        }
+
+        $themePath = $this->findThemePath($slug);
+        if ($themePath) {
+            File::deleteDirectory($themePath);
+            
+            // Also delete assets if they exist
+            $assetsPath = public_path('themes/' . $slug);
+            if (File::isDirectory($assetsPath)) {
+                File::deleteDirectory($assetsPath);
+            }
+
+            lazy_log_activity('theme_deleted', "Deleted theme: {$slug}");
+            return redirect()->back()->with('success', "Theme '{$slug}' deleted successfully!");
+        }
+
+        return redirect()->back()->with('error', 'Theme not found!');
+    }
+
+    public function upload(Request $request)
+    {
+        if (!auth()->user()->hasPermission('access_themes') && !auth()->user()->hasPermission('manage_settings')) {
+            abort(403);
+        }
+
+        $request->validate([
+            'theme_zip' => 'required|file|mimes:zip|max:20480', // 20MB Max
+        ]);
+
+        $zipFile = $request->file('theme_zip');
+        $zip = new \ZipArchive();
+        
+        if ($zip->open($zipFile->getRealPath()) === TRUE) {
+            // We want to extract to a temporary directory first to validate
+            $tempPath = storage_path('app/temp_theme_' . time());
+            File::makeDirectory($tempPath);
+            $zip->extractTo($tempPath);
+            $zip->close();
+
+            // Find the theme folder (sometimes zip contains a folder, sometimes files directly)
+            $files = File::directories($tempPath);
+            if (count($files) === 0) {
+                // Files are directly in zip, use a name based on zip file
+                $themeSlug = Str::slug(pathinfo($zipFile->getClientOriginalName(), PATHINFO_FILENAME));
+                $sourcePath = $tempPath;
+            } else {
+                // Zip contains a folder
+                $sourcePath = $files[0];
+                $themeSlug = basename($sourcePath);
+            }
+
+            // Target path (Main App)
+            $targetPath = resource_path('views/themes/' . $themeSlug);
+            
+            if (File::isDirectory($targetPath)) {
+                File::deleteDirectory($tempPath);
+                return redirect()->back()->with('error', "Theme '{$themeSlug}' already exists!");
+            }
+
+            // Move to resources/views/themes
+            File::ensureDirectoryExists(resource_path('views/themes'));
+            File::moveDirectory($sourcePath, $targetPath);
+            
+            // Clean up temp
+            if (File::isDirectory($tempPath)) File::deleteDirectory($tempPath);
+
+            lazy_log_activity('theme_uploaded', "Uploaded theme: {$themeSlug}");
+
+            return redirect()->back()->with('success', "Theme '{$themeSlug}' uploaded successfully!");
+        }
+
+        return redirect()->back()->with('error', 'Could not open ZIP file!');
+    }
+
+    protected function findThemePath($slug)
+    {
+        $paths = [
+            resource_path('views/themes/' . $slug),
+            __DIR__ . '/../../../../resources/views/themes/' . $slug
+        ];
+
+        foreach ($paths as $path) {
+            if (File::isDirectory($path)) {
+                return $path;
+            }
+        }
+
+        return null;
+    }
+}

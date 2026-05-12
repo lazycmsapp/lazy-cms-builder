@@ -1,0 +1,52 @@
+<x-cms-dashboard::layouts.admin>
+    <x-slot name="title">Edit User - Lazy CMS</x-slot>
+
+    <div class="px-2">
+        <h1 class="text-[23px] font-normal text-[#1d2327] mb-6">Edit User</h1>
+
+        <form action="{{ route('admin.users.update', $user) }}" method="POST" class="max-w-[800px]">
+            @csrf
+            @method('PUT')
+            <table class="w-full border-separate border-spacing-y-6">
+                <tr>
+                    <th scope="row" class="w-[200px] text-left align-top pt-2"><label for="username" class="text-[14px] font-semibold text-[#1d2327]">Username</label></th>
+                    <td><input type="text" name="username" id="username" value="{{ $user->username }}" class="wp-input w-[400px] h-8 shadow-sm" required></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="w-[200px] text-left align-top pt-2"><label for="name" class="text-[14px] font-semibold text-[#1d2327]">Name</label></th>
+                    <td><input type="text" name="name" id="name" value="{{ $user->name }}" class="wp-input w-[400px] h-8 shadow-sm" required></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="w-[200px] text-left align-top pt-2"><label for="email" class="text-[14px] font-semibold text-[#1d2327]">Email</label></th>
+                    <td><input type="email" name="email" id="email" value="{{ $user->email }}" class="wp-input w-[400px] h-8 shadow-sm" required></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="w-[200px] text-left align-top pt-2"><label for="password" class="text-[14px] font-semibold text-[#1d2327]">New Password</label></th>
+                    <td>
+                        <input type="password" name="password" id="password" class="wp-input w-[400px] h-8 shadow-sm mb-1" required>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row" class="w-[200px] text-left align-top pt-2"><label for="password_confirmation" class="text-[14px] font-semibold text-[#1d2327]">Confirm New Password</label></th>
+                    <td><input type="password" name="password_confirmation" id="password_confirmation" class="wp-input w-[400px] h-8 shadow-sm" required></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="w-[200px] text-left align-top pt-2"><label for="role_id" class="text-[14px] font-semibold text-[#1d2327]">Role</label></th>
+                    <td>
+                        <select name="role_id" id="role_id" class="wp-input w-[200px] h-8 shadow-sm">
+                            @foreach($roles as $role)
+                                <option value="{{ $role->id }}" {{ $user->role_id == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
+                            @endforeach
+                        </select>
+                    </td>
+                </tr>
+            </table>
+
+            @include('cms-dashboard::components.admin.dynamic-fields')
+
+            <div class="mt-8 pt-6 border-t border-[#c3c4c7]">
+                <button type="submit" class="wp-btn-primary h-[32px] px-4 font-semibold">Update User</button>
+            </div>
+        </form>
+    </div>
+</x-cms-dashboard::layouts.admin>
