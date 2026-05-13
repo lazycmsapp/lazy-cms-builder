@@ -7,6 +7,12 @@
             <h1 class="text-[23px] font-normal text-[#1d2327]">Order #{{ $order->order_number ?: $order->id }}</h1>
             <span class="text-[#646970] text-[13px] mt-1">{{ $order->created_at->format('M d, Y \a\t H:i') }}</span>
         </div>
+        <div class="flex items-center space-x-2">
+            <a href="{{ route('admin.shop.orders.invoice', $order->id) }}" target="_blank" class="wp-btn-secondary h-8 flex items-center space-x-2">
+                <span class="material-symbols-outlined text-[18px]">print</span>
+                <span>Print Invoice</span>
+            </a>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">

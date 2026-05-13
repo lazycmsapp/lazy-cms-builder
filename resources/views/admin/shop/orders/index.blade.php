@@ -3,90 +3,193 @@
         <h1 class="text-[23px] font-normal text-[#1d2327]">Orders</h1>
     </div>
 
-    <div class="bg-white border border-[#c3c4c7] shadow-sm">
-        <div class="p-3 border-b border-[#c3c4c7] flex justify-between items-center bg-[#f6f7f7]">
-            <div class="flex items-center space-x-2">
-                <select class="wp-input h-8 py-0 text-[13px]" onchange="window.location.href='?status=' + this.value">
-                    <option value="">All Statuses</option>
-                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="processing" {{ request('status') === 'processing' ? 'selected' : '' }}>Processing</option>
-                    <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
-                    <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                </select>
-            </div>
-            <form action="" method="GET" class="flex items-center space-x-2">
-                <input type="text" name="s" value="{{ request('s') }}" class="wp-input h-8 text-[13px]" placeholder="Search orders...">
-                <button type="submit" class="wp-btn-secondary h-8">Search</button>
-            </form>
+    @if(session('success'))
+        <div class="bg-[#edfaef] border-l-4 border-[#46b450] p-3 mb-5 text-[13px] text-[#1d2327]">
+            {{ session('success') }}
         </div>
+    @endif
 
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-[#f6f7f7]">
-                    <th class="wp-table-header w-12 text-center">#</th>
-                    <th class="wp-table-header">Order</th>
-                    <th class="wp-table-header">Date</th>
-                    <th class="wp-table-header">Status</th>
-                    <th class="wp-table-header">Total</th>
-                    <th class="wp-table-header text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($orders as $order)
-                    <tr class="hover:bg-[#f6f7f7] transition-colors">
-                        <td class="wp-table-cell text-center text-[#646970]">{{ $order->id }}</td>
-                        <td class="wp-table-cell">
-                            <a href="{{ route('admin.shop.orders.show', $order->id) }}" class="text-[#2271b1] font-bold hover:text-[#135e96]">
-                                #{{ $order->order_number ?: $order->id }} {{ $order->billing_first_name }} {{ $order->billing_last_name }}
-                            </a>
-                            <div class="text-[11px] text-[#646970]">{{ $order->billing_email }}</div>
-                        </td>
-                        <td class="wp-table-cell text-[#646970]">
-                            {{ $order->created_at->format('M d, Y') }}
-                            <div class="text-[11px]">{{ $order->created_at->format('H:i') }}</div>
-                        </td>
-                        <td class="wp-table-cell">
-                            @php
-                                $statusColors = [
-                                    'pending' => 'bg-[#ffb900] text-black',
-                                    'processing' => 'bg-[#2271b1] text-white',
-                                    'completed' => 'bg-[#46b450] text-white',
-                                    'cancelled' => 'bg-[#d63638] text-white',
-                                    'on-hold' => 'bg-[#ffb900] text-black',
-                                    'refunded' => 'bg-[#646970] text-white',
-                                    'failed' => 'bg-[#d63638] text-white',
-                                ];
-                                $color = $statusColors[$order->status] ?? 'bg-gray-200 text-gray-800';
-                            @endphp
-                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold uppercase {{ $color }}">
-                                {{ str_replace('-', ' ', $order->status) }}
-                            </span>
-                        </td>
-                        <td class="wp-table-cell font-bold">
-                            {{ lazy_price_format($order->total, $order) }}
-                        </td>
-                        <td class="wp-table-cell text-right">
-                            <div class="flex justify-end space-x-2">
-                                <a href="{{ route('admin.shop.orders.show', $order->id) }}" class="text-[#2271b1] hover:text-[#135e96]" title="View Order">
-                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="wp-table-cell text-center py-10 text-[#646970] italic">
-                            No orders found.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-
-        @if($orders->hasPages())
-            <div class="p-3 border-t border-[#c3c4c7] bg-[#f6f7f7]">
-                {{ $orders->links('cms-dashboard::components.admin.pagination') }}
-            </div>
-        @endif
+    <!-- Search Section (Above everything) -->
+    <div class="mb-4 flex justify-end">
+        <form action="" method="GET" class="flex items-center space-x-2">
+            <input type="hidden" name="status" value="{{ request('status') }}">
+            <input type="text" name="s" value="{{ request('s') }}" class="wp-input h-8 text-[13px] w-64" placeholder="Search orders...">
+            <button type="submit" class="wp-btn-secondary h-8">Search Orders</button>
+        </form>
     </div>
+
+    <div class="bg-white border border-[#c3c4c7] shadow-sm">
+        <form action="{{ route('admin.shop.orders.bulk') }}" method="POST" id="bulk-form">
+            @csrf
+            <!-- Top Bulk Actions & Pagination -->
+            <div class="p-3 border-b border-[#c3c4c7] flex flex-wrap gap-3 justify-between items-center bg-[#f6f7f7]">
+                <div class="flex items-center space-x-2">
+                    <select name="action" class="wp-input h-8 py-0 text-[13px] w-48 bulk-action-select">
+                        <option value="">Bulk Actions</option>
+                        <option value="status_pending">Mark as Pending</option>
+                        <option value="status_processing">Mark as Processing</option>
+                        <option value="status_on-hold">Mark as On Hold</option>
+                        <option value="status_completed">Mark as Completed</option>
+                        <option value="delete">Delete Permanently</option>
+                    </select>
+                    <button type="submit" class="wp-btn-secondary h-8">Apply</button>
+
+                    <div class="h-6 w-[1px] bg-gray-300 mx-2"></div>
+
+                    <select class="wp-input h-8 py-0 text-[13px]" onchange="window.location.href='?status=' + this.value">
+                        <option value="">All Statuses</option>
+                        @foreach(['pending', 'processing', 'on-hold', 'completed', 'cancelled', 'refunded', 'failed'] as $st)
+                            <option value="{{ $st }}" {{ request('status') === $st ? 'selected' : '' }}>{{ ucfirst(str_replace('-', ' ', $st)) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div class="hidden md:block">
+                    {{ $orders->links('cms-dashboard::components.admin.pagination') }}
+                </div>
+            </div>
+
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-[#f6f7f7]">
+                        <th class="wp-table-header w-10 text-center">
+                            <input type="checkbox" id="select-all" class="rounded border-gray-300">
+                        </th>
+                        <th class="wp-table-header">Order ID</th>
+                        <th class="wp-table-header">Date</th>
+                        <th class="wp-table-header">Status</th>
+                        <th class="wp-table-header">Total</th>
+                        <th class="wp-table-header text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($orders as $order)
+                        <tr class="hover:bg-[#f6f7f7] transition-colors {{ !$order->is_read ? 'bg-[#fcf5f5]' : '' }}">
+                            <td class="wp-table-cell text-center">
+                                <input type="checkbox" name="ids[]" value="{{ $order->id }}" class="order-checkbox rounded border-gray-300">
+                            </td>
+                            <td class="wp-table-cell">
+                                <a href="{{ route('admin.shop.orders.show', $order->id) }}" class="text-[#2271b1] font-bold hover:text-[#135e96]">
+                                    #{{ $order->order_number ?: $order->id }}
+                                </a>
+                            </td>
+                            <td class="wp-table-cell text-[#646970]">
+                                {{ $order->created_at->format('M d, Y') }}
+                                <div class="text-[11px]">{{ $order->created_at->format('H:i') }}</div>
+                            </td>
+                            <td class="wp-table-cell">
+                                @php
+                                    $statusColors = [
+                                        'pending' => 'bg-[#ffb900] text-black',
+                                        'processing' => 'bg-[#2271b1] text-white',
+                                        'completed' => 'bg-[#46b450] text-white',
+                                        'cancelled' => 'bg-[#d63638] text-white',
+                                        'on-hold' => 'bg-[#ffb900] text-black',
+                                        'refunded' => 'bg-[#646970] text-white',
+                                        'failed' => 'bg-[#d63638] text-white',
+                                    ];
+                                    $color = $statusColors[$order->status] ?? 'bg-gray-200 text-gray-800';
+                                @endphp
+                                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold uppercase {{ $color }}">
+                                    {{ str_replace('-', ' ', $order->status) }}
+                                </span>
+                            </td>
+                            <td class="wp-table-cell font-bold">
+                                {{ lazy_price_format($order->total, $order) }}
+                            </td>
+                            <td class="wp-table-cell text-right">
+                                <div class="flex justify-end space-x-3">
+                                    <a href="{{ route('admin.shop.orders.show', $order->id) }}" class="text-[#2271b1] hover:text-[#135e96]" title="View Order">
+                                        <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                    </a>
+                                    <a href="{{ route('admin.shop.orders.invoice', $order->id) }}" target="_blank" class="text-[#2271b1] hover:text-[#135e96]" title="Print Invoice">
+                                        <span class="material-symbols-outlined text-[20px]">print</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="wp-table-cell text-center py-10 text-[#646970] italic">
+                                No orders found.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+
+            <!-- Bottom Bulk Actions & Pagination -->
+            <div class="p-3 border-t border-[#c3c4c7] flex flex-wrap gap-3 justify-between items-center bg-[#f6f7f7]">
+                <div class="flex items-center space-x-2">
+                    <select name="action_bottom" class="wp-input h-8 py-0 text-[13px] w-48 bulk-action-select">
+                        <option value="">Bulk Actions</option>
+                        <option value="status_pending">Mark as Pending</option>
+                        <option value="status_processing">Mark as Processing</option>
+                        <option value="status_on-hold">Mark as On Hold</option>
+                        <option value="status_completed">Mark as Completed</option>
+                        <option value="delete">Delete Permanently</option>
+                    </select>
+                    <button type="submit" class="wp-btn-secondary h-8">Apply</button>
+                </div>
+                
+                <div>
+                    {{ $orders->links('cms-dashboard::components.admin.pagination') }}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <x-cms-dashboard::admin.delete-modal />
+
+    <script>
+        document.getElementById('select-all').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.order-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        });
+
+        document.getElementById('bulk-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const topSelect = this.querySelector('select[name="action"]');
+            const bottomSelect = this.querySelector('select[name="action_bottom"]');
+            
+            let action = topSelect.value;
+            if (!action && bottomSelect) action = bottomSelect.value;
+            
+            if (!action) {
+                alert('Please select an action.');
+                return;
+            }
+            
+            const checkedCount = document.querySelectorAll('.order-checkbox:checked').length;
+            if (checkedCount === 0) {
+                alert('Please select at least one order.');
+                return;
+            }
+
+            topSelect.value = action;
+
+            if (action === 'delete') {
+                const confirmed = await window.lazyConfirm({
+                    title: 'Delete Orders',
+                    message: `Are you sure you want to permanently delete ${checkedCount} selected orders? This action cannot be undone.`,
+                    confirmText: 'Delete Permanently',
+                    isDanger: true
+                });
+                
+                if (confirmed) {
+                    this.submit();
+                }
+            } else {
+                this.submit();
+            }
+        });
+
+        const selects = document.querySelectorAll('.bulk-action-select');
+        selects.forEach(select => {
+            select.addEventListener('change', function() {
+                selects.forEach(s => s.value = this.value);
+            });
+        });
+    </script>
 </x-cms-dashboard::layouts.admin>

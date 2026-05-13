@@ -41,16 +41,22 @@ class ShopFrontendController extends Controller
         $product = Product::with('shopData')->findOrFail($productId);
         $shopData = $product->shopData;
 
+        $variation = null;
+        if ($variationId) {
+            $variation = \Acme\CmsDashboard\Models\ProductVariation::find($variationId);
+        }
+
         // Inventory Check
-        if ($shopData && $shopData->manage_stock) {
+        $stockSource = ($variation && $variation->manage_stock) ? $variation : $shopData;
+        if ($stockSource && $stockSource->manage_stock) {
             $cart = Session::get('lazy_cart', []);
             $cartKey = $variationId ? "{$productId}_{$variationId}" : $productId;
             $currentInCart = isset($cart[$cartKey]) ? $cart[$cartKey]['quantity'] : 0;
             
-            if (($currentInCart + $quantity) > $shopData->stock_quantity) {
-                $errorMsg = $shopData->stock_quantity <= 0 
+            if (($currentInCart + $quantity) > $stockSource->stock_quantity) {
+                $errorMsg = $stockSource->stock_quantity <= 0 
                     ? 'Sorry, this product is currently out of stock.' 
-                    : 'Sorry, only ' . $shopData->stock_quantity . ' items available in stock.';
+                    : 'Sorry, only ' . $stockSource->stock_quantity . ' items available in stock.';
 
                 if ($request->ajax()) {
                     return response()->json([
@@ -69,16 +75,23 @@ class ShopFrontendController extends Controller
         if (isset($cart[$cartKey])) {
             $cart[$cartKey]['quantity'] += $quantity;
         } else {
+            // Determine name and attributes for variation
+            $itemName = $product->title;
+            if ($variation) {
+                $attrString = collect($variation->attributes_data)->map(fn($v, $k) => "$k: $v")->implode(', ');
+                $itemName .= " - " . $attrString;
+            }
+
             $cart[$cartKey] = [
                 'id' => $product->id,
-                'name' => $product->title,
+                'name' => $itemName,
                 'slug' => $product->slug,
-                'price' => $product->price,
-                'sale_price' => $product->sale_price,
+                'price' => $variation ? $variation->price : $product->price,
+                'sale_price' => $variation ? $variation->sale_price : $product->sale_price,
                 'quantity' => $quantity,
-                'thumbnail' => $product->featured_image,
+                'thumbnail' => ($variation && $variation->image) ? $variation->image : $product->featured_image,
                 'variation_id' => $variationId,
-                'sku' => $product->sku
+                'sku' => $variation ? $variation->sku : $product->sku
             ];
         }
 
@@ -538,6 +551,7 @@ class ShopFrontendController extends Controller
             OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $item['id'],
+                'variation_id' => $item['variation_id'] ?? null,
                 'product_name' => $item['name'],
                 'quantity' => $item['quantity'],
                 'price' => $item['sale_price'] ?? $item['price'],
@@ -545,9 +559,16 @@ class ShopFrontendController extends Controller
             ]);
 
             // Decrement Stock
-            $product = Product::with('shopData')->find($item['id']);
-            if ($product && $product->shopData && $product->shopData->manage_stock) {
-                $product->shopData->decrement('stock_quantity', $item['quantity']);
+            if (!empty($item['variation_id'])) {
+                $variation = \Acme\CmsDashboard\Models\ProductVariation::find($item['variation_id']);
+                if ($variation && $variation->manage_stock) {
+                    $variation->decrement('stock_quantity', $item['quantity']);
+                }
+            } else {
+                $product = Product::with('shopData')->find($item['id']);
+                if ($product && $product->shopData && $product->shopData->manage_stock) {
+                    $product->shopData->decrement('stock_quantity', $item['quantity']);
+                }
             }
         }
 

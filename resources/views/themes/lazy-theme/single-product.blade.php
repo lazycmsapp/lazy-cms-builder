@@ -49,7 +49,9 @@
                         <img id="main-product-image" src="{{ asset('assets/images/placeholder.jpg') }}" alt="Placeholder" class="w-full h-auto object-cover mix-blend-multiply opacity-70">
                     @endif
                     
-                    @if($post->shopData && $post->shopData->sale_price)
+                    @if($post->shopData && $post->shopData->stock_status === 'outofstock')
+                        <span class="absolute top-4 left-4 bg-red-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-sm uppercase tracking-wider shadow-lg z-10">Out of Stock</span>
+                    @elseif($post->shopData && $post->shopData->sale_price)
                         <span class="absolute top-4 left-4 bg-white text-gray-700 text-[11px] font-bold px-3 py-1 rounded-full shadow-sm uppercase z-10">Sale!</span>
                     @endif
                 </div>
@@ -536,9 +538,15 @@
                             <span>{{ lazy_price_format($item->shopData->price ?? 0) }}</span>
                         @endif
                     </div>
-                    <button class="w-full bg-[#1363df] text-white py-2.5 rounded-sm text-[12px] font-bold uppercase hover:bg-[#005ba6] transition-colors">
-                        Add to cart
-                    </button>
+                    @if($item->shopData && $item->shopData->product_type === 'variable')
+                        <a href="{{ get_lazy_permalink($item) }}" class="block w-full text-center bg-[#1363df] text-white py-2.5 rounded-sm text-[12px] font-bold uppercase hover:bg-[#005ba6] transition-colors">
+                            Select Options
+                        </a>
+                    @else
+                        <button class="w-full bg-[#1363df] text-white py-2.5 rounded-sm text-[12px] font-bold uppercase hover:bg-[#005ba6] transition-colors">
+                            Add to cart
+                        </button>
+                    @endif
                 </div>
                 @endforeach
             </div>

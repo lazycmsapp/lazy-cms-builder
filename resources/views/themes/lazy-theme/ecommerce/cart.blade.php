@@ -54,10 +54,10 @@
                                         {{ lazy_price_format($item['sale_price'] ?: $item['price']) }}
                                     </td>
                                     <td class="p-4 border border-gray-100">
-                                        <div class="flex items-center border border-gray-300 w-fit">
-                                            <button type="button" onclick="this.nextElementSibling.stepDown();" class="px-2 py-1 hover:bg-gray-100">-</button>
-                                            <input type="number" name="quantity[{{ $key }}]" value="{{ $item['quantity'] }}" min="1" class="w-12 text-center border-0 focus:ring-0 p-1 text-sm font-bold">
-                                            <button type="button" onclick="this.previousElementSibling.stepUp();" class="px-2 py-1 hover:bg-gray-100">+</button>
+                                        <div class="flex items-center border border-gray-200 rounded-sm h-10 w-fit bg-white overflow-hidden">
+                                            <button type="button" onclick="const input = this.nextElementSibling; input.value = Math.max(1, parseInt(input.value) - 1);" class="w-8 h-full flex items-center justify-center text-gray-500 hover:bg-gray-50 border-r border-gray-100 font-bold select-none">-</button>
+                                            <input type="text" name="quantity[{{ $key }}]" value="{{ $item['quantity'] }}" readonly class="w-10 h-full text-center border-none focus:ring-0 text-sm font-bold text-gray-800 p-0 cursor-default">
+                                            <button type="button" onclick="const input = this.previousElementSibling; input.value = parseInt(input.value) + 1;" class="w-8 h-full flex items-center justify-center text-gray-500 hover:bg-gray-50 border-l border-gray-100 font-bold select-none">+</button>
                                         </div>
                                     </td>
                                     <td class="p-4 border border-gray-100 font-bold text-gray-900">

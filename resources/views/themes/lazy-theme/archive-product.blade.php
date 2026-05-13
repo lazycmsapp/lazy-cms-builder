@@ -81,12 +81,18 @@
                             @endif
                         </div>
                         <div class="mt-auto flex flex-wrap gap-2">
-                            <button onclick="addToCart({{ $product->id }})" class="flex-1 bg-[#0070cd] text-white px-4 py-2.5 rounded-[3px] text-[13px] font-semibold hover:bg-[#005ba6] transition-colors duration-200">
-                                Add to cart
-                            </button>
-                            <a href="{{ get_lazy_permalink($product) }}" class="flex-1 text-center bg-white text-[#0070cd] border border-[#0070cd] px-4 py-2.5 rounded-[3px] text-[13px] font-semibold hover:bg-gray-50 transition-colors duration-200">
-                                See Detail
-                            </a>
+                            @if($product->shopData && $product->shopData->product_type === 'variable')
+                                <a href="{{ get_lazy_permalink($product) }}" class="w-full text-center bg-[#1363df] text-white px-4 py-2.5 rounded-[3px] text-[13px] font-semibold hover:bg-[#005ba6] transition-colors duration-200">
+                                    Select Options
+                                </a>
+                            @else
+                                <button onclick="addToCart({{ $product->id }})" class="flex-1 bg-[#0070cd] text-white px-4 py-2.5 rounded-[3px] text-[13px] font-semibold hover:bg-[#005ba6] transition-colors duration-200">
+                                    Add to cart
+                                </button>
+                                <a href="{{ get_lazy_permalink($product) }}" class="flex-1 text-center bg-white text-[#0070cd] border border-[#0070cd] px-4 py-2.5 rounded-[3px] text-[13px] font-semibold hover:bg-gray-50 transition-colors duration-200">
+                                    See Detail
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>

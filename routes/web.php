@@ -62,6 +62,7 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     Route::resource('posts', PostController::class);
     Route::get('lazy-builder/{id}', [PostController::class, 'builder'])->name('lazy-builder');
     Route::post('lazy-builder/{id}/save', [PostController::class, 'saveBuilder'])->name('lazy-builder.save');
+    Route::post('posts/{id}/variations/ajax', [PostController::class, 'ajaxSaveVariations'])->name('posts.variations.ajax-save');
     Route::get('lazy-builder/{id}/preview', [PostController::class, 'previewBuilder'])->name('lazy-builder.preview');
  
     Route::post('pages/bulk', [\Acme\CmsDashboard\Http\Controllers\Admin\PageController::class, 'bulk'])->name('pages.bulk');
@@ -232,7 +233,9 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     // Shop Management
     Route::prefix('shop')->name('shop.')->group(function() {
         Route::get('orders', [ShopController::class, 'orders'])->name('orders.index');
+        Route::post('orders/bulk', [ShopController::class, 'ordersBulk'])->name('orders.bulk');
         Route::get('orders/{id}', [ShopController::class, 'orderShow'])->name('orders.show');
+        Route::get('orders/{id}/invoice', [ShopController::class, 'orderInvoice'])->name('orders.invoice');
         Route::post('orders/{id}/status', [ShopController::class, 'orderUpdateStatus'])->name('orders.status');
         Route::get('settings', [ShopController::class, 'settings'])->name('settings');
         Route::post('settings', [ShopController::class, 'saveSettings'])->name('settings.save');

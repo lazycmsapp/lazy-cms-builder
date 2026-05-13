@@ -30,7 +30,9 @@
                     @else
                         <div class="absolute inset-0 flex items-center justify-center text-gray-400">No Image</div>
                     @endif
-                    @if($post->sale_price)
+                    @if($post->shopData && $post->shopData->stock_status === 'outofstock')
+                        <span class="absolute top-4 left-4 bg-red-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-sm uppercase tracking-wider shadow-lg z-10">Out of Stock</span>
+                    @elseif($post->sale_price)
                         <span class="absolute top-4 left-4 bg-red-500 text-white text-sm font-bold px-3 py-1 rounded">Sale!</span>
                     @endif
                 </div>

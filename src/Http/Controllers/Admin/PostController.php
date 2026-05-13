@@ -43,6 +43,65 @@ class PostController extends Controller
         return response()->json(['success' => true, 'message' => 'Page layout saved successfully.']);
     }
 
+    public function ajaxSaveVariations(Request $request, $id)
+    {
+        $post = Post::findOrFail($id);
+        $request->validate([
+            'variations' => 'nullable|array',
+            'variations.*.price' => 'required|numeric|min:0',
+            'variations.*.sale_price' => 'nullable|numeric|min:0|lt:variations.*.price',
+            'attributes_data' => 'nullable|array',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $shopData = $post->shopData;
+            if (!$shopData) {
+                return response()->json(['success' => false, 'message' => 'Product data not found.'], 404);
+            }
+
+            // Update attributes if provided
+            if ($request->has('attributes_data')) {
+                $shopData->update(['attributes_data' => $request->attributes_data]);
+            }
+
+            // Always clear and recreate for variable products
+            $shopData->variations()->delete();
+            if ($request->has('variations')) {
+                foreach ($request->variations as $vData) {
+                        $shopData->variations()->create([
+                            'attributes_data' => $vData['attributes_data'] ?? [],
+                            'price' => $vData['price'] ?? null,
+                            'sale_price' => $vData['sale_price'] ?? null,
+                            'sku' => $vData['sku'] ?? null,
+                            'weight' => $vData['weight'] ?? null,
+                            'length' => $vData['length'] ?? null,
+                            'width' => $vData['width'] ?? null,
+                            'height' => $vData['height'] ?? null,
+                            'stock_status' => $vData['stock_status'] ?? 'instock',
+                            'stock_quantity' => $vData['stock_quantity'] ?? 0,
+                            'manage_stock' => $vData['manage_stock'] ?? false,
+                            'image' => $vData['image'] ?? null,
+                        ]);
+                }
+            }
+
+            DB::commit();
+
+            // After commit, sync parent stock status based on variations
+            $anyInStock = $shopData->variations()->where('stock_status', 'instock')->exists();
+            $shopData->update(['stock_status' => $anyInStock ? 'instock' : 'outofstock']);
+
+            clear_page_cache();
+
+            return response()->json(['success' => true, 'message' => 'Variations saved successfully.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function previewBuilder($id)
     {
         $post = Post::findOrFail($id);
@@ -300,13 +359,18 @@ class PostController extends Controller
         ];
 
         if ($type === 'product') {
-            $rules['price'] = 'required|numeric|min:0';
+            $rules['attributes_data'] = 'nullable|array';
+            $rules['product_type'] = 'required|string|in:simple,variable';
+            $rules['price'] = 'required_if:product_type,simple|nullable|numeric|min:0';
             $rules['sale_price'] = 'nullable|numeric|min:0|lt:price';
             $rules['sku'] = 'nullable|string|max:100';
             $rules['stock_quantity'] = 'nullable|integer|min:0';
             $rules['stock_status'] = 'nullable|string|in:instock,outofstock,onbackorder';
             $rules['manage_stock'] = 'nullable|boolean';
             $rules['short_description'] = 'nullable|string';
+            $rules['variations'] = 'nullable|array';
+            $rules['variations.*.price'] = 'required|numeric|min:0';
+            $rules['variations.*.sale_price'] = 'nullable|numeric|min:0|lt:variations.*.price';
         }
 
         $validated = $request->validate($rules);
@@ -320,7 +384,14 @@ class PostController extends Controller
             unset($postData['seo']);
         }
 
-        $productFieldKeys = ['price', 'sale_price', 'sku', 'stock_quantity', 'stock_status', 'manage_stock', 'short_description'];
+        $productFieldKeys = ['price', 'sale_price', 'sku', 'stock_quantity', 'stock_status', 'manage_stock', 'short_description', 'attributes_data'];
+        
+        // Map product_type to type in database
+        if (isset($postData['product_type'])) {
+            $productData['type'] = $postData['product_type'];
+            unset($postData['product_type']);
+        }
+
         foreach ($productFieldKeys as $key) {
             if (array_key_exists($key, $postData)) {
                 $productData[$key] = $postData[$key];
@@ -329,6 +400,9 @@ class PostController extends Controller
                 $productData[$key] = 0;
             }
         }
+
+        // Explicitly remove variations from post data as it's handled separately
+        unset($postData['variations']);
 
         $lang = $postData['lang_code'] ?? null;
         if (!$lang || $lang === 'all') {
@@ -364,7 +438,23 @@ class PostController extends Controller
 
         // Save Product Data
         if ($type === 'product') {
-            $post->shopData()->create($productData);
+            $shopData = $post->shopData()->create($productData);
+            
+            // Save Variations if product type is variable
+            if ($productData['type'] === 'variable' && $request->has('variations')) {
+                foreach ($request->variations as $vData) {
+                    $shopData->variations()->create([
+                        'attributes_data' => $vData['attributes'] ?? [],
+                        'price' => $vData['price'] ?? null,
+                        'sale_price' => $vData['sale_price'] ?? null,
+                        'sku' => $vData['sku'] ?? null,
+                        'stock_status' => $vData['stock_status'] ?? 'instock',
+                        'stock_quantity' => $vData['stock_quantity'] ?? 0,
+                        'manage_stock' => ($vData['stock_quantity'] ?? 0) > 0,
+                        'image' => $vData['image'] ?? null,
+                    ]);
+                }
+            }
         }
 
         // Sync Built-in Categories
@@ -602,13 +692,18 @@ class PostController extends Controller
         ];
 
         if ($type === 'product') {
-            $rules['price'] = 'required|numeric|min:0';
+            $rules['attributes_data'] = 'nullable|array';
+            $rules['product_type'] = 'required|string|in:simple,variable';
+            $rules['price'] = 'required_if:product_type,simple|nullable|numeric|min:0';
             $rules['sale_price'] = 'nullable|numeric|min:0|lt:price';
             $rules['sku'] = 'nullable|string|max:100';
             $rules['stock_quantity'] = 'nullable|integer|min:0';
             $rules['stock_status'] = 'nullable|string|in:instock,outofstock,onbackorder';
             $rules['manage_stock'] = 'nullable|boolean';
             $rules['short_description'] = 'nullable|string';
+            $rules['variations'] = 'nullable|array';
+            $rules['variations.*.price'] = 'required|numeric|min:0';
+            $rules['variations.*.sale_price'] = 'nullable|numeric|min:0|lt:variations.*.price';
         }
 
         $validated = $request->validate($rules);
@@ -622,7 +717,14 @@ class PostController extends Controller
             unset($postData['seo']);
         }
 
-        $productFieldKeys = ['price', 'sale_price', 'sku', 'stock_quantity', 'stock_status', 'manage_stock', 'short_description'];
+        $productFieldKeys = ['price', 'sale_price', 'sku', 'stock_quantity', 'stock_status', 'manage_stock', 'short_description', 'attributes_data'];
+
+        // Map product_type to type in database
+        if (isset($postData['product_type'])) {
+            $productData['type'] = $postData['product_type'];
+            unset($postData['product_type']);
+        }
+
         foreach ($productFieldKeys as $key) {
             if (array_key_exists($key, $postData)) {
                 $productData[$key] = $postData[$key];
@@ -631,6 +733,9 @@ class PostController extends Controller
                 $productData[$key] = 0;
             }
         }
+
+        // Explicitly remove variations from post data as it's handled separately
+        unset($postData['variations']);
 
         $slugSource = !empty($postData['slug']) ? $postData['slug'] : (!empty($postData['title']) ? $postData['title'] : 'no-title');
         $postData['slug'] = $this->generateUniqueSlug($slugSource, $post->id, $post->type, $postData['lang_code'] ?? $post->lang_code);
@@ -713,10 +818,41 @@ class PostController extends Controller
 
         // Update Product Data
         if ($post->type === 'product') {
-            $post->shopData()->updateOrCreate(
+            $shopData = $post->shopData()->updateOrCreate(
                 ['post_id' => $post->id],
                 $productData
             );
+
+            // Handle Variations
+            if ($productData['type'] === 'variable') {
+                // Always clear and recreate for variable products
+                $shopData->variations()->delete();
+                if ($request->has('variations')) {
+                    foreach ($request->variations as $vData) {
+                        $shopData->variations()->create([
+                            'attributes_data' => $vData['attributes'] ?? [],
+                            'price' => $vData['price'] ?? null,
+                            'sale_price' => $vData['sale_price'] ?? null,
+                            'sku' => $vData['sku'] ?? null,
+                            'weight' => $vData['weight'] ?? null,
+                            'length' => $vData['length'] ?? null,
+                            'width' => $vData['width'] ?? null,
+                            'height' => $vData['height'] ?? null,
+                            'stock_status' => $vData['stock_status'] ?? 'instock',
+                            'stock_quantity' => $vData['stock_quantity'] ?? 0,
+                            'manage_stock' => ($vData['stock_quantity'] ?? 0) > 0,
+                            'image' => $vData['image'] ?? null,
+                        ]);
+                    }
+                }
+                
+                // After variations are saved, sync parent stock status
+                $anyInStock = $shopData->variations()->where('stock_status', 'instock')->exists();
+                $shopData->update(['stock_status' => $anyInStock ? 'instock' : 'outofstock']);
+            } else {
+                // If not variable, ensure no variations exist
+                $shopData->variations()->delete();
+            }
         }
 
         // Multilingual Copy Logic (on Update)

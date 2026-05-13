@@ -1,4 +1,4 @@
-@props(['paginator'])
+@php $paginator = $paginator ?? $paginator; @endphp
 
 @if($paginator->total() > 0)
     <div class="flex items-center text-[13px] text-[#2c3338] space-x-1">

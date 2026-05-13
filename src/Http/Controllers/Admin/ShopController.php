@@ -22,14 +22,48 @@ class ShopController extends Controller
                   ->orWhere('last_name', 'like', '%' . $request->s . '%');
         }
 
-        $orders = $query->latest()->paginate(20);
+        $orders = $query->latest()->paginate(10)->withQueryString();
         return view('cms-dashboard::admin.shop.orders.index', compact('orders'));
+    }
+
+    public function ordersBulk(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        $action = $request->input('action');
+
+        if (empty($ids)) {
+            return back()->with('error', 'Please select at least one order.');
+        }
+
+        if (strpos($action, 'status_') === 0) {
+            $status = str_replace('status_', '', $action);
+            Order::whereIn('id', $ids)->update(['status' => $status]);
+            return back()->with('success', 'Orders status updated successfully.');
+        }
+
+        if ($action === 'delete') {
+            Order::whereIn('id', $ids)->delete();
+            return back()->with('success', 'Selected orders deleted successfully.');
+        }
+
+        return back()->with('error', 'Invalid action selected.');
     }
 
     public function orderShow($id)
     {
         $order = Order::with('items.product')->findOrFail($id);
+        
+        if (!$order->is_read) {
+            $order->update(['is_read' => true]);
+        }
+
         return view('cms-dashboard::admin.shop.orders.show', compact('order'));
+    }
+
+    public function orderInvoice($id)
+    {
+        $order = Order::with('items.product')->findOrFail($id);
+        return view('cms-dashboard::admin.shop.orders.invoice', compact('order'));
     }
 
     public function orderUpdateStatus(Request $request, $id)

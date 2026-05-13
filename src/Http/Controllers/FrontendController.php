@@ -325,10 +325,16 @@ class FrontendController extends Controller
         // 2. If it's a Custom Post Type, try single-{type} first
         if ($post->type !== 'page' && $post->type !== 'post') {
             $viewName = "single-{$post->type}";
+            
+            // Special check for variable products
+            if ($post->type === 'product' && $post->shopData && $post->shopData->type === 'variable') {
+                $viewName = 'single-product-variable';
+            }
         }
 
-        // 3. Resolve the view with fallback to baseView
-        $view = $this->resolveThemeView($viewName, $baseView);
+        // 3. Resolve the view with fallback
+        $fallback = ($post->type === 'product') ? 'single-product' : $baseView;
+        $view = $this->resolveThemeView($viewName, $fallback);
         
         // 4. Final override check for slug-specific view (e.g. themes/lazy-theme/my-custom-page-slug.blade.php)
         if (preg_match('/^[a-z0-9-]+$/', $post->slug) && view()->exists($post->slug)) {
