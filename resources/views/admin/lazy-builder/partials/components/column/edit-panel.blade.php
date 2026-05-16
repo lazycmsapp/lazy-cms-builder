@@ -1,4 +1,8 @@
-@php $c = "editingColumn.settings"; @endphp
+@php 
+    $baseCol = "layout[editingContext.ci].columns[editingContext.coli]";
+    $nestedCol = "layout[editingContext.ci].columns[editingContext.coli].elements[editingContext.eli].columns[editingContext.ncoli]";
+    $c = "((editingContext.type === 'nested-column') ? $nestedCol : $baseCol).settings";
+@endphp
 
 <div class="h-full flex flex-col bg-white">
     <!-- Header -->
@@ -36,9 +40,6 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Alignment</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 <div class="grid grid-cols-5 gap-1">
                     <button @click="{{ $c }}.alignment = 'default'"
@@ -92,9 +93,6 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Content Layout</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 <div class="grid grid-cols-3 gap-2">
                     <button @click="{{ $c }}.contentLayout = 'column'"
@@ -119,9 +117,6 @@
             <div v-if="{{ $c }}.contentLayout === 'column' || !{{ $c }}.contentLayout">
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Content Alignment</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 {{-- Row 1: Vertical (justify-content, main-axis) --}}
                 <div class="grid grid-cols-3 gap-2 mb-2">
@@ -195,9 +190,6 @@
             <div v-if="{{ $c }}.contentLayout === 'row'">
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Content Alignment</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 {{-- Row 1: Horizontal (justify-content) --}}
                 <div class="grid grid-cols-3 gap-2 mb-2">
@@ -268,9 +260,6 @@
                 {{-- Row 3: Vertical Alignment (align-items) --}}
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Content Alignment</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="{{ $c }}.contentAlignV = 'flex-start'"
@@ -318,9 +307,6 @@
             <div v-if="{{ $c }}.contentLayout === 'column' || {{ $c }}.contentLayout === 'row'">
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Gap</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -340,9 +326,6 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">@{{ editingContext.type === 'nested-column' ? 'Nested Column' : 'Column' }} HTML Tag</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 <select v-model="{{ $c }}.htmlTag"
                         class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
@@ -359,9 +342,6 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Link URL</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 <div class="relative">
                     <input type="text" v-model="{{ $c }}.linkUrl" placeholder="https://"
@@ -374,9 +354,6 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Device Visibility</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 <div class="grid grid-cols-3 gap-2"
                      @click.capture="if (!{{ $c }}.visibility) { {{ $c }}.visibility = { mobile: true, tablet: true, desktop: true }; }">
@@ -405,9 +382,6 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">CSS Class</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 <input type="text" v-model="{{ $c }}.cssClass"
                        class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
@@ -417,9 +391,6 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">CSS ID</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 <input type="text" v-model="{{ $c }}.cssId"
                        class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
@@ -435,7 +406,6 @@
                 <div class="flex justify-between items-center mb-3">
                     <label class="text-[11px] font-bold text-[#444] flex items-center gap-2">
                         Width
-                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                     </label>
                     <i class="fa fa-desktop text-[10px] text-slate-300"></i>
                 </div>
@@ -488,7 +458,6 @@
                 <div class="flex justify-between items-center mb-4">
                     <label class="text-[13px] font-bold text-[#333]">Margin</label>
                     <div class="flex gap-2 items-center">
-                        <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
                         <i class="fa fa-desktop text-[11px] text-slate-300"></i>
                     </div>
                 </div>
@@ -525,7 +494,6 @@
                 <div class="flex justify-between items-center mb-4">
                     <label class="text-[13px] font-bold text-[#333]">Padding</label>
                     <div class="flex gap-2 items-center">
-                        <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
                         <i class="fa fa-desktop text-[11px] text-slate-300"></i>
                     </div>
                 </div>
@@ -573,10 +541,6 @@
             <div v-if="{{ $c }}.borderSizeTop > 0 || {{ $c }}.borderSizeRight > 0 || {{ $c }}.borderSizeBottom > 0 || {{ $c }}.borderSizeLeft > 0" class="pt-4 border-t border-slate-50">
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">@{{ editingContext.type === 'nested-column' ? 'Nested Column' : 'Column' }} Border Color</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                        <i class="fa fa-database text-[10px]"></i>
-                    </div>
                 </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded overflow-hidden w-6 h-6 flex-shrink-0 border border-slate-200">
@@ -680,10 +644,6 @@
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Background Options</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-chevron-down text-[10px]"></i>
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 
                 <!-- Sub Tabs for Background Type -->
@@ -699,11 +659,8 @@
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[11px] font-bold text-[#444]">@{{ editingContext.type === 'nested-column' ? 'Nested Column' : 'Column' }} Background Color</label>
                             <div class="flex gap-2 text-slate-300">
-                                <i class="fa fa-question-circle text-[10px]"></i>
-                                <i class="fa fa-cog text-[10px]"></i>
                                 <i class="fa fa-undo text-[10px]"></i>
                                 <i class="fa fa-desktop text-[10px]"></i>
-                                <i class="fa fa-database text-[10px]"></i>
                             </div>
                         </div>
                         <div class="flex items-center gap-1 mb-2">
@@ -726,9 +683,11 @@
                     <div class="border-b border-slate-100 pb-3">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[11px] font-bold text-[#444]">Gradient Start Color</label>
-                            <div class="flex gap-2 text-slate-300">
-                                <i class="fa fa-question-circle text-[10px]"></i>
-                                <i class="fa fa-database text-[10px]"></i>
+                            <div class="flex gap-2 items-center">
+                                <button @click="clearColorField({{ $c }}, 'bgGradientStartColor', 'bgGradientStartOpacity')" 
+                                        class="text-slate-300 hover:text-red-500 transition-colors" title="Reset">
+                                    <i class="fa fa-undo text-[10px]"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="flex items-center gap-1 mb-2">
@@ -747,14 +706,15 @@
                     <div class="border-b border-slate-100 pb-3">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[11px] font-bold text-[#444]">Gradient End Color</label>
-                            <div class="flex gap-2 text-slate-300">
-                                <i class="fa fa-question-circle text-[10px]"></i>
-                                <i class="fa fa-database text-[10px]"></i>
+                            <div class="flex gap-2 items-center">
+                                <button @click="clearColorField({{ $c }}, 'bgGradientEndColor', 'bgGradientEndOpacity')" 
+                                        class="text-slate-300 hover:text-red-500 transition-colors" title="Reset">
+                                    <i class="fa fa-undo text-[10px]"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="flex items-center gap-1 mb-2">
                             <input type="text" v-model="{{ $c }}.bgGradientEndColor" class="wp-input h-7 flex-1 text-[10px] text-center font-mono focus:outline-none focus:border-[#2271b1]">
-                            <button @click="{{ $c }}.bgGradientEndColor = '#ffffff'; {{ $c }}.bgGradientEndOpacity = 1" class="wp-btn-secondary h-7 px-2 text-[10px]">Default</button>
                         </div>
                         <div class="flex gap-2 items-center">
                             <div class="checkerboard rounded overflow-hidden w-8 h-8 flex-shrink-0 border border-slate-200">
@@ -822,9 +782,7 @@
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[11px] font-bold text-[#444]">Background Image</label>
                             <div class="flex gap-2 text-slate-300">
-                                <i class="fa fa-question-circle text-[10px]"></i>
                                 <i class="fa fa-desktop text-[10px]"></i>
-                                <i class="fa fa-database text-[10px]"></i>
                             </div>
                         </div>
                         <div v-if="{{ $c }}.bgImage" class="relative group">

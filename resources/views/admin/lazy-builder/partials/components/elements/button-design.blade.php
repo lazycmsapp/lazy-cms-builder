@@ -1,0 +1,457 @@
+<div class="space-y-6 pb-10">
+    <!-- Button Style Toggle -->
+    <div>
+        <div class="flex justify-between items-center mb-3">
+            <label class="text-[12px] font-bold text-[#333] uppercase">BUTTON STYLE</label>
+        </div>
+        <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
+            <button @click="editingElement.settings.buttonStyle = 'default'"
+                    :class="editingElement.settings.buttonStyle !== 'custom' ? 'bg-white text-slate-600 shadow-sm' : 'text-slate-400'"
+                    class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">Default</button>
+            <button @click="editingElement.settings.buttonStyle = 'custom'"
+                    :class="editingElement.settings.buttonStyle === 'custom' ? 'bg-[#0091ea] text-white shadow-md' : 'text-slate-400'"
+                    class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">Custom</button>
+        </div>
+    </div>
+
+    <!-- Default Color Options (Shown when Style is Default) -->
+    <div v-if="editingElement.settings.buttonStyle !== 'custom'" class="pt-4 border-t border-slate-50 space-y-4">
+        <div class="flex justify-between items-center mb-1">
+            <label class="text-[12px] font-bold text-[#333] uppercase">COLORS (SOLID)</label>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">BG Color</label>
+                <div class="flex gap-2 items-center">
+                    <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
+                         @click="openColorPicker($event, editingElement.settings, 'bgColor')">
+                        <div :style="{ backgroundColor: editingElement.settings.bgColor }" class="w-full h-full rounded-full"></div>
+                    </div>
+                    <input type="text" v-model="editingElement.settings.bgColor" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px]">
+                </div>
+            </div>
+            <div>
+                <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Text Color</label>
+                <div class="flex gap-2 items-center">
+                    <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
+                         @click="openColorPicker($event, editingElement.settings, 'color')">
+                        <div :style="{ backgroundColor: editingElement.settings.color }" class="w-full h-full rounded-full"></div>
+                    </div>
+                    <input type="text" v-model="editingElement.settings.color" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px]">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Gradient Options (Shown when Style is Custom) -->
+    <div v-if="editingElement.settings.buttonStyle === 'custom'" class="pt-4 border-t border-slate-50 space-y-4">
+        <div class="flex justify-between items-center mb-1">
+            <label class="text-[12px] font-bold text-[#333] uppercase">GRADIENT COLORS</label>
+        </div>
+
+        <!-- Start Color -->
+        <div>
+            <div class="flex justify-between items-center mb-1.5">
+                <label class="text-[9px] font-bold text-slate-400 uppercase block">Gradient Start Color</label>
+                <button @click="clearColorField(editingElement.settings, 'bgGradientStartColor', 'bgGradientStartOpacity')" 
+                        class="text-slate-300 hover:text-red-500 transition-colors" title="Reset">
+                    <i class="fa fa-undo text-[10px]"></i>
+                </button>
+            </div>
+            <div class="flex gap-2 items-center">
+                <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
+                     @click="openColorPicker($event, editingElement.settings, 'bgGradientStartColor')">
+                    <div :style="{ backgroundColor: editingElement.settings.bgGradientStartColor }" class="w-full h-full rounded-full"></div>
+                </div>
+                <input type="text" v-model="editingElement.settings.bgGradientStartColor" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px]">
+            </div>
+        </div>
+
+        <!-- End Color -->
+        <div>
+            <div class="flex justify-between items-center mb-1.5">
+                <label class="text-[9px] font-bold text-slate-400 uppercase block">Gradient End Color</label>
+                <button @click="clearColorField(editingElement.settings, 'bgGradientEndColor', 'bgGradientEndOpacity')" 
+                        class="text-slate-300 hover:text-red-500 transition-colors" title="Reset">
+                    <i class="fa fa-undo text-[10px]"></i>
+                </button>
+            </div>
+            <div class="flex gap-2 items-center">
+                <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
+                     @click="openColorPicker($event, editingElement.settings, 'bgGradientEndColor')">
+                    <div :style="{ backgroundColor: editingElement.settings.bgGradientEndColor }" class="w-full h-full rounded-full"></div>
+                </div>
+                <input type="text" v-model="editingElement.settings.bgGradientEndColor" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px]">
+            </div>
+        </div>
+
+        <!-- Start Position -->
+        <div>
+            <div class="flex justify-between items-center mb-1.5">
+                <label class="text-[9px] font-bold text-slate-400 uppercase">Gradient Start Position</label>
+                <span class="text-[10px] text-slate-400">@{{ editingElement.settings.bgGradientStartPosition || 0 }}</span>
+            </div>
+            <input type="range" v-model.number="editingElement.settings.bgGradientStartPosition" min="0" max="100" class="w-full accent-[#0091ea]">
+        </div>
+
+        <!-- End Position -->
+        <div>
+            <div class="flex justify-between items-center mb-1.5">
+                <label class="text-[9px] font-bold text-slate-400 uppercase">Gradient End Position</label>
+                <span class="text-[10px] text-slate-400">@{{ editingElement.settings.bgGradientEndPosition || 100 }}</span>
+            </div>
+            <input type="range" v-model.number="editingElement.settings.bgGradientEndPosition" min="0" max="100" class="w-full accent-[#0091ea]">
+        </div>
+
+        <!-- Gradient Type -->
+        <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Gradient Type</label>
+            <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-full">
+                <button @click="editingElement.settings.bgGradientType = 'linear'"
+                        :class="editingElement.settings.bgGradientType === 'linear' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        class="flex-1 py-1 text-[10px] font-bold uppercase rounded transition-all">Linear</button>
+                <button @click="editingElement.settings.bgGradientType = 'radial'"
+                        :class="editingElement.settings.bgGradientType === 'radial' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        class="flex-1 py-1 text-[10px] font-bold uppercase rounded transition-all">Radial</button>
+            </div>
+        </div>
+
+        <!-- Gradient Angle -->
+        <div v-if="editingElement.settings.bgGradientType === 'linear'">
+            <div class="flex justify-between items-center mb-1.5">
+                <label class="text-[9px] font-bold text-slate-400 uppercase">Gradient Angle</label>
+                <span class="text-[10px] text-slate-400">@{{ editingElement.settings.bgGradientAngle || 180 }}°</span>
+            </div>
+            <input type="range" v-model.number="editingElement.settings.bgGradientAngle" min="0" max="360" class="w-full accent-[#0091ea]">
+        </div>
+    </div>
+
+    <!-- Hover Color Options -->
+    <div class="pt-4 border-t border-slate-50 space-y-4">
+        <div class="flex justify-between items-center mb-1">
+            <label class="text-[12px] font-bold text-[#333] uppercase">HOVER COLORS</label>
+        </div>
+        
+        <!-- Text Hover Color (Common) -->
+        <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Text Hover Color</label>
+            <div class="flex gap-2 items-center">
+                <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
+                     @click="openColorPicker($event, editingElement.settings, 'hoverColor')">
+                    <div :style="{ backgroundColor: editingElement.settings.hoverColor }" class="w-full h-full rounded-full"></div>
+                </div>
+                <input type="text" v-model="editingElement.settings.hoverColor" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px]">
+            </div>
+        </div>
+
+        <!-- Default BG Hover (Solid) -->
+        <div v-if="editingElement.settings.buttonStyle !== 'custom'">
+            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">BG Hover Color (Solid)</label>
+            <div class="flex gap-2 items-center">
+                <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
+                     @click="openColorPicker($event, editingElement.settings, 'hoverBgColor')">
+                    <div :style="{ backgroundColor: editingElement.settings.hoverBgColor }" class="w-full h-full rounded-full"></div>
+                </div>
+                <input type="text" v-model="editingElement.settings.hoverBgColor" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px]">
+            </div>
+        </div>
+
+        <!-- Custom Gradient Hover -->
+        <div v-if="editingElement.settings.buttonStyle === 'custom'" class="space-y-4">
+            <div>
+                <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Hover Start</label>
+                <div class="flex gap-2 items-center">
+                    <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
+                         @click="openColorPicker($event, editingElement.settings, 'bgGradientHoverStartColor')">
+                        <div :style="{ backgroundColor: editingElement.settings.bgGradientHoverStartColor }" class="w-full h-full rounded-full"></div>
+                    </div>
+                    <input type="text" v-model="editingElement.settings.bgGradientHoverStartColor" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px]">
+                </div>
+            </div>
+            <div>
+                <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Hover End</label>
+                <div class="flex gap-2 items-center">
+                    <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
+                         @click="openColorPicker($event, editingElement.settings, 'bgGradientHoverEndColor')">
+                        <div :style="{ backgroundColor: editingElement.settings.bgGradientHoverEndColor }" class="w-full h-full rounded-full"></div>
+                    </div>
+                    <input type="text" v-model="editingElement.settings.bgGradientHoverEndColor" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px]">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Margin -->
+    <div class="pt-4 border-t border-slate-50">
+        <div class="flex justify-between items-center mb-3">
+            <label class="text-[12px] font-bold text-[#333] uppercase">MARGIN</label>
+            <div class="flex gap-2">
+                <i class="fa fa-desktop text-[11px] text-slate-300"></i>
+            </div>
+        </div>
+        <div class="grid grid-cols-4 gap-2">
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Top</label>
+                <input type="text" v-model="editingElement.settings.marginTop" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+            </div>
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Right</label>
+                <input type="text" v-model="editingElement.settings.marginRight" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+            </div>
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Bottom</label>
+                <input type="text" v-model="editingElement.settings.marginBottom" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+            </div>
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Left</label>
+                <input type="text" v-model="editingElement.settings.marginLeft" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+            </div>
+        </div>
+    </div>
+
+    <!-- Padding -->
+    <div class="pt-4 border-t border-slate-50">
+        <div class="flex justify-between items-center mb-3">
+            <label class="text-[12px] font-bold text-[#333] uppercase">PADDING</label>
+            <div class="flex gap-2">
+                <i class="fa fa-desktop text-[11px] text-slate-300"></i>
+            </div>
+        </div>
+        <div class="grid grid-cols-4 gap-2">
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Top</label>
+                <input type="text" v-model="editingElement.settings.paddingTop" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+            </div>
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Right</label>
+                <input type="text" v-model="editingElement.settings.paddingRight" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+            </div>
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Bottom</label>
+                <input type="text" v-model="editingElement.settings.paddingBottom" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+            </div>
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Left</label>
+                <input type="text" v-model="editingElement.settings.paddingLeft" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+            </div>
+        </div>
+    </div>
+
+    <!-- Typography (Restored to Text Block Style) -->
+    <div class="pt-4 border-t border-slate-50 space-y-4">
+        <div class="flex justify-between items-center mb-1">
+            <label class="text-[12px] font-bold text-[#333] uppercase">TYPOGRAPHY</label>
+        </div>
+        
+        <!-- Font Family -->
+        <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Font Family</label>
+            <select v-model="editingElement.settings.fontFamily"
+                    @change="loadBuilderFont(editingElement.settings.fontFamily)"
+                    class="w-full border border-slate-200 rounded px-3 py-2 text-[12px] focus:outline-none focus:border-[#0091ea]">
+                <option value="inherit">Default@{{ themeBodyFont ? ' (' + themeBodyFont + ')' : '' }}</option>
+                <template v-for="(fonts, category) in builderFontGroups" :key="category">
+                    <optgroup :label="category">
+                        <option v-for="font in fonts" :key="font.family"
+                                :value="font.family + ', ' + (font.category === 'Monospace' ? 'monospace' : (font.category === 'Serif' ? 'serif' : 'sans-serif'))">
+                            @{{ font.family }}
+                        </option>
+                    </optgroup>
+                </template>
+            </select>
+        </div>
+
+        <!-- Font Weight -->
+        <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Font Weight</label>
+            <select v-model="editingElement.settings.fontWeight"
+                    class="w-full border border-slate-200 rounded px-3 py-2 text-[12px] focus:outline-none focus:border-[#0091ea]">
+                <option v-for="v in titleFontVariants" :key="v" :value="v">@{{ ({
+                    '100':'Thin 100','200':'Extra Light 200','300':'Light 300',
+                    '400':'Regular 400','500':'Medium 500','600':'Semi Bold 600',
+                    '700':'Bold 700','800':'Extra Bold 800','900':'Black 900'
+                })[v] || ('Weight ' + v) }}</option>
+            </select>
+        </div>
+
+        <!-- Grid for Size, Line Height, Letter Spacing -->
+        <div class="grid grid-cols-3 gap-3">
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Font Size</label>
+                <input type="text" v-model="editingElement.settings.fontSize"
+                       class="w-full border border-slate-200 rounded px-2 py-2 text-[12px] text-center">
+            </div>
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Line Hei...</label>
+                <input type="text" v-model="editingElement.settings.lineHeight"
+                       class="w-full border border-slate-200 rounded px-2 py-2 text-[12px] text-center">
+            </div>
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Letter S...</label>
+                <input type="text" v-model="editingElement.settings.letterSpacing"
+                       class="w-full border border-slate-200 rounded px-2 py-2 text-[12px] text-center">
+            </div>
+        </div>
+
+        <!-- Text Transform -->
+        <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Text Transform</label>
+            <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
+                <button @click="editingElement.settings.textTransform = 'none'"
+                        :class="editingElement.settings.textTransform === 'none' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">Normal</button>
+                <button @click="editingElement.settings.textTransform = 'initial'"
+                        :class="editingElement.settings.textTransform === 'initial' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">—</button>
+                <button @click="editingElement.settings.textTransform = 'uppercase'"
+                        :class="editingElement.settings.textTransform === 'uppercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">AB</button>
+                <button @click="editingElement.settings.textTransform = 'lowercase'"
+                        :class="editingElement.settings.textTransform === 'lowercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">ab</button>
+                <button @click="editingElement.settings.textTransform = 'capitalize'"
+                        :class="editingElement.settings.textTransform === 'capitalize' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        class="flex-1 py-2 text-[10px] font-bold transition-all">Ab</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Border Size -->
+    <div class="pt-4 border-t border-slate-50">
+        <div class="flex justify-between items-center mb-3">
+            <label class="text-[12px] font-bold text-[#333] uppercase">BORDER SIZE</label>
+        </div>
+        <div class="grid grid-cols-4 gap-2">
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Top</label>
+                <input type="number" v-model.number="editingElement.settings.borderSizeTop" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+            </div>
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Right</label>
+                <input type="number" v-model.number="editingElement.settings.borderSizeRight" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+            </div>
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Bottom</label>
+                <input type="number" v-model.number="editingElement.settings.borderSizeBottom" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+            </div>
+            <div>
+                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Left</label>
+                <input type="number" v-model.number="editingElement.settings.borderSizeLeft" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+            </div>
+        </div>
+    </div>
+
+    <!-- Border Color (Conditional) -->
+    <div v-if="editingElement.settings.borderSizeTop || editingElement.settings.borderSizeRight || editingElement.settings.borderSizeBottom || editingElement.settings.borderSizeLeft"
+         class="pt-4 border-t border-slate-50">
+        <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Border Color</label>
+        <div class="flex gap-2 items-center">
+            <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
+                 @click="openColorPicker($event, editingElement.settings, 'borderColor')">
+                <div :style="{ backgroundColor: editingElement.settings.borderColor }" class="w-full h-full rounded-full"></div>
+            </div>
+            <input type="text" v-model="editingElement.settings.borderColor" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px]">
+        </div>
+    </div>
+
+    <!-- Border Radius -->
+    <div class="pt-4 border-t border-slate-50">
+        <div class="flex justify-between items-center mb-1.5">
+            <label class="text-[12px] font-bold text-[#333] uppercase">BORDER RADIUS</label>
+            <span class="text-[10px] text-slate-400">@{{ editingElement.settings.borderRadius || 0 }}px</span>
+        </div>
+        <input type="range" v-model.number="editingElement.settings.borderRadius" min="0" max="100" class="w-full accent-[#0091ea]">
+    </div>
+
+    <!-- Button Size & Span -->
+    <div class="pt-4 border-t border-slate-50 space-y-4">
+        <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Button Size</label>
+            <select v-model="editingElement.settings.buttonSize" 
+                    @change="applyButtonSize(editingElement.settings.buttonSize)"
+                    class="w-full border border-slate-200 rounded px-3 py-2 text-[11px]">
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+                <option value="extra-large">Extra Large</option>
+            </select>
+        </div>
+        <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Full Width (Span)</label>
+            <div class="flex items-center gap-2">
+                <button @click="editingElement.settings.buttonSpan = !editingElement.settings.buttonSpan"
+                        :class="editingElement.settings.buttonSpan ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                        class="w-10 h-5 rounded-full relative transition-colors">
+                    <div :class="editingElement.settings.buttonSpan ? 'translate-x-5' : 'translate-x-1'"
+                         class="absolute top-1 w-3 h-3 bg-white rounded-full transition-transform"></div>
+                </button>
+                <span class="text-[11px] text-slate-500">@{{ editingElement.settings.buttonSpan ? 'Enabled' : 'Disabled' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inline Icon Picker -->
+    <div class="pt-4 border-t border-slate-50 space-y-3">
+        <label class="text-[12px] font-bold text-[#333] uppercase">BUTTON ICON</label>
+        
+        <div class="bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
+            <!-- Search -->
+            <div class="p-2 border-b border-slate-200">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                    <input type="text" v-model="searchIconQuery" placeholder="Search icons..." 
+                           class="w-full pl-8 pr-3 py-1.5 text-[11px] bg-white border border-slate-200 rounded focus:outline-none focus:border-[#0091ea]">
+                </div>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-100/50">
+                <button v-for="tab in ['Solid', 'Regular', 'Brands']" :key="tab"
+                        @click="activeIconTab = tab"
+                        :class="activeIconTab === tab ? 'text-[#0091ea] bg-white border-b-2 border-b-[#0091ea]' : 'text-slate-400 hover:text-slate-600'"
+                        class="flex-1 py-2 text-[10px] font-bold uppercase transition-all">
+                    @{{ tab }}
+                </button>
+            </div>
+            
+            <!-- Icon Grid -->
+            <div class="h-48 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-slate-200 bg-white">
+                <div class="grid grid-cols-5 gap-1.5">
+                    <button v-for="icon in filteredIcons" :key="icon"
+                            @click="selectIcon(editingElement.settings, icon)"
+                            :class="editingElement.settings.icon === icon ? 'border-[#0091ea] bg-blue-50 text-[#0091ea]' : 'border-slate-100 text-slate-600 hover:border-[#0091ea]'"
+                            class="aspect-square flex items-center justify-center rounded border transition-all p-1">
+                        <i :class="[icon, 'text-base']"></i>
+                    </button>
+                </div>
+                <div v-if="filteredIcons.length === 0" class="py-10 text-center text-[10px] text-slate-400">
+                    No icons found
+                </div>
+            </div>
+            
+            <!-- Selected Preview -->
+            <div class="p-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 bg-white rounded border border-slate-200 flex items-center justify-center text-[#0091ea]">
+                        <i :class="editingElement.settings.icon || 'fas fa-plus'"></i>
+                    </div>
+                    <span class="text-[10px] text-slate-500 font-medium truncate max-w-[100px]">@{{ editingElement.settings.icon || 'No icon' }}</span>
+                </div>
+                <button v-if="editingElement.settings.icon" @click="editingElement.settings.icon = ''" class="text-[10px] text-red-400 hover:text-red-500 font-bold uppercase">Clear</button>
+            </div>
+        </div>
+
+        <!-- Icon Position -->
+        <div v-if="editingElement.settings.icon" class="mt-4">
+            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Icon Position</label>
+            <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-full">
+                <button @click="editingElement.settings.iconPosition = 'left'"
+                        :class="editingElement.settings.iconPosition === 'left' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        class="flex-1 py-1.5 text-[10px] font-bold uppercase rounded transition-all">Left</button>
+                <button @click="editingElement.settings.iconPosition = 'right'"
+                        :class="editingElement.settings.iconPosition === 'right' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        class="flex-1 py-1.5 text-[10px] font-bold uppercase rounded transition-all">Right</button>
+            </div>
+        </div>
+    </div>
+</div>

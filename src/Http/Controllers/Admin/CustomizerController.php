@@ -120,7 +120,7 @@ class CustomizerController extends \Illuminate\Routing\Controller
                     'info_large_screen' => [
                         'type' => 'info',
                         'label' => 'Large Screen',
-                        'desc' => 'Any screen larger than that which is defined as the medium screen will be counted as a large screen (> 1100px).',
+                        'desc' => 'Any screen larger than that which is defined as the medium screen will be counted as a large screen (> <span id="large-screen-bp-val">' . get_cms_option('theme_medium_screen_breakpoint', '1100') . '</span>px).',
                     ],
                     // Responsive Typography
                     'hr2' => ['type' => 'heading', 'label' => 'Responsive Typography'],

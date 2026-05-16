@@ -2,7 +2,7 @@
     $s = $container['settings'] ?? [];
     $heightMode = $s['height'] ?? 'auto';
     
-    $containerStyles = [];
+    $containerStyles = ['width: 100%'];
 
     $hexToRgba = function($hex, $opacity) {
         if (empty($hex) || $hex === 'transparent') return 'transparent';

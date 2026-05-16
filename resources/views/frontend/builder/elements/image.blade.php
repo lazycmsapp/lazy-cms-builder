@@ -13,12 +13,10 @@
     $linkUrl   = $s['linkUrl']   ?? '';
     $target    = $s['linkTarget'] ?? '_self';
     $width     = $s['width']     ?? '';
-    $height    = $s['height']    ?? '';
     $maxWidth  = $s['maxWidth']  ?? '';
-
-    $imgStyle  = 'display: block;';
+    $imgStyle  = 'display: inline-block; max-width: 100%; vertical-align: middle;';
     if ($width  !== '') $imgStyle .= ' width: '     . $width  . ($s['widthUnit']  ?? 'px') . ';';
-    if ($height !== '') $imgStyle .= ' height: '    . $height . ($s['heightUnit'] ?? 'px') . ';';
+    $imgStyle .= ' height: auto;';
     if ($maxWidth !== '') $imgStyle .= ' max-width: ' . $maxWidth . ($s['maxWidthUnit'] ?? 'px') . ';';
 
     $borderRadius = $s['borderRadius'] ?? '0';
@@ -26,12 +24,31 @@
         $imgStyle .= ' border-radius: ' . $borderRadius . ($s['borderRadiusUnit'] ?? 'px') . ';';
     }
 
-    $wrapperStyle = 'text-align: ' . $align . ';';
-    if (isset($s['marginTop'])    && $s['marginTop']    !== '') $wrapperStyle .= ' margin-top: '    . $s['marginTop']    . ($s['marginTopUnit']    ?? 'px') . ';';
-    if (isset($s['marginBottom']) && $s['marginBottom'] !== '') $wrapperStyle .= ' margin-bottom: ' . $s['marginBottom'] . ($s['marginBottomUnit'] ?? 'px') . ';';
+    // Borders
+    $borderTop    = $s['borderSizeTop']    ?? 0;
+    $borderRight  = $s['borderSizeRight']  ?? 0;
+    $borderBottom = $s['borderSizeBottom'] ?? 0;
+    $borderLeft   = $s['borderSizeLeft']   ?? 0;
+    $borderColor  = $s['borderColor']      ?? 'transparent';
+
+    if ($borderTop || $borderRight || $borderBottom || $borderLeft) {
+        $imgStyle .= " border-style: solid; border-color: {$borderColor};";
+        if ($borderTop)    $imgStyle .= " border-top-width: {$borderTop}px;";
+        if ($borderRight)  $imgStyle .= " border-right-width: {$borderRight}px;";
+        if ($borderBottom) $imgStyle .= " border-bottom-width: {$borderBottom}px;";
+        if ($borderLeft)   $imgStyle .= " border-left-width: {$borderLeft}px;";
+    }
+
+    $wrapperStyle = 'text-align: ' . $align . '; width: 100%;';
+    if (isset($s['marginTop'])    && $s['marginTop']    !== '') $wrapperStyle .= ' margin-top: '    . $s['marginTop']    . 'px;';
+    if (isset($s['marginRight'])   && $s['marginRight']   !== '') $wrapperStyle .= ' margin-right: '   . $s['marginRight']   . 'px;';
+    if (isset($s['marginBottom']) && $s['marginBottom'] !== '') $wrapperStyle .= ' margin-bottom: ' . $s['marginBottom'] . 'px;';
+    if (isset($s['marginLeft'])    && $s['marginLeft']    !== '') $wrapperStyle .= ' margin-left: '    . $s['marginLeft']    . 'px;';
+    $hoverType = $s['hoverType'] ?? 'none';
+    $hoverClass = ($hoverType !== 'none') ? 'hover-' . $hoverType : '';
 @endphp
 
-<div class="element-image {{ $visibilityClasses }}" style="{{ $wrapperStyle }}">
+<div class="element-image {{ $visibilityClasses }} {{ $hoverClass }}" style="{{ $wrapperStyle }}">
     @if($url)
         @if($linkUrl)
             <a href="{{ $linkUrl }}" target="{{ $target }}" style="display: inline-block;">

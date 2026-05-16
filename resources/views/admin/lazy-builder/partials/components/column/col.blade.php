@@ -158,10 +158,13 @@
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.button')
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.video')
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.spacer')
+            @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.text-block')
+            @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.menu')
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.nested.row')
 
             <!-- Custom Registered Blocks -->
             @foreach($customElements ?? [] as $type => $custEl)
+                @if(in_array($type, ['text_block', 'button', 'special_text', 'image', 'menu'])) @continue @endif
                 @php
                     $firstTextField = null;
                     foreach ($custEl['fields'] ?? [] as $fk => $fv) {

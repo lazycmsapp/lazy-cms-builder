@@ -12,10 +12,10 @@
             <!-- Always Visible: Edit & Add -->
             <div class="flex items-center flex-shrink-0">
                 <!-- Edit Row -->
-                <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
+                <div class="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool" 
                      @click.stop="setEditingContext('nested-row', ci, coli, eli)">
                     <i class="fa fa-pen text-white text-[10px]"></i>
-                    <div class="lazy-tooltip-v2">Edit Row</div>
+                    <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Edit Row</div>
                 </div>
                 <!-- Add (Opens Modal) -->
                 <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
@@ -87,7 +87,7 @@
                             </div>
                             <!-- Add Nested / Element -->
                             <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
-                                 @click.stop="openElementModal(ci, coli, 'nested', false, eli, ncoli, null, ['nested'])">
+                                 @click.stop="openElementModal(ci, coli, 'nested', false, eli, ncoli, null, ['design', 'nested'])">
                                 <i class="fa fa-plus text-white text-[10px]"></i>
                                 <div class="lazy-tooltip-v2">Add Content</div>
                             </div>
@@ -238,11 +238,133 @@
                      @drop="onDrop($event, 'element', ci, coli, eli, ncoli, nestedEli)">
                         
                         <div v-if="nestedEl.type === 'heading'" class="mb-2">
-                            <h3 :style="{ textAlign: nestedEl.settings.textAlign }" class="m-0 text-sm font-bold">@{{ nestedEl.settings.title || 'Heading' }}</h3>
+                            <h3 :style="{ textAlign: nestedEl.settings.textAlign }" class="m-0 font-bold">@{{ nestedEl.settings.title || 'Heading' }}</h3>
                         </div>
-                        <div v-else-if="nestedEl.type === 'text'" class="mb-2">
-                            <div v-html="nestedEl.settings.content || 'Text'" class="text-xs"></div>
+                        <div v-else-if="nestedEl.type === 'title'" class="mb-2"
+                             :style="[
+                                 { 
+                                    textAlign: nestedEl.settings.textAlign || 'center',
+                                    paddingTop: getUnitVal(nestedEl.settings.paddingTop, 'px'),
+                                    paddingBottom: getUnitVal(nestedEl.settings.paddingBottom, 'px'),
+                                    marginTop: getUnitVal(nestedEl.settings.marginTop, 'px'),
+                                    marginBottom: getUnitVal(nestedEl.settings.marginBottom, 'px'),
+                                 },
+                                 getCanvasVisibilityStyle(nestedEl.settings)
+                             ]">
+                            <h2 :style="{ 
+                                color: nestedEl.settings.titleColor || '#222',
+                                fontFamily: nestedEl.settings.fontFamily || 'inherit',
+                                fontSize: getUnitVal(nestedEl.settings.fontSize || 24, nestedEl.settings.fontSizeUnit || 'px'),
+                                fontWeight: nestedEl.settings.fontWeight || '800',
+                                lineHeight: nestedEl.settings.lineHeight || '1.2',
+                                letterSpacing: getUnitVal(nestedEl.settings.letterSpacing, 'px'),
+                                textTransform: nestedEl.settings.textTransform || 'none'
+                            }" class="m-0">@{{ nestedEl.settings.title || 'Title' }}</h2>
                         </div>
+                        <div v-else-if="nestedEl.type === 'image'" class="mb-2"
+                             :style="[
+                                 { 
+                                    textAlign: nestedEl.settings.textAlign === 'left' ? 'left' : (nestedEl.settings.textAlign === 'right' ? 'right' : 'center'),
+                                    marginTop: getUnitVal(nestedEl.settings.marginTop, 'px'),
+                                    marginBottom: getUnitVal(nestedEl.settings.marginBottom, 'px'),
+                                 },
+                                 getCanvasVisibilityStyle(nestedEl.settings)
+                             ]">
+                            <div class="image-inner relative overflow-hidden inline-block"
+                                 :style="{
+                                    width: nestedEl.settings.width ? getUnitVal(nestedEl.settings.width, nestedEl.settings.widthUnit || 'px') : 'auto',
+                                    height: nestedEl.settings.height ? getUnitVal(nestedEl.settings.height, nestedEl.settings.heightUnit || 'px') : 'auto',
+                                    maxWidth: nestedEl.settings.maxWidth ? getUnitVal(nestedEl.settings.maxWidth, nestedEl.settings.maxWidthUnit || 'px') : '100%',
+                                    borderRadius: getUnitVal(nestedEl.settings.borderRadius ?? 0, nestedEl.settings.borderRadiusUnit || 'px'),
+                                    borderTopWidth: getUnitVal(nestedEl.settings.borderSizeTop ?? 0, 'px'),
+                                    borderRightWidth: getUnitVal(nestedEl.settings.borderSizeRight ?? 0, 'px'),
+                                    borderBottomWidth: getUnitVal(nestedEl.settings.borderSizeBottom ?? 0, 'px'),
+                                    borderLeftWidth: getUnitVal(nestedEl.settings.borderSizeLeft ?? 0, 'px'),
+                                    borderStyle: 'solid',
+                                    borderColor: nestedEl.settings.borderColor || 'transparent'
+                                 }">
+                                <img v-if="nestedEl.settings.url" 
+                                     :src="nestedEl.settings.url" 
+                                     :alt="nestedEl.settings.alt || ''" 
+                                     class="block w-full h-auto pointer-events-none"
+                                     :style="{
+                                         objectFit: nestedEl.settings.objectFit || 'cover',
+                                         height: nestedEl.settings.height ? '100%' : 'auto'
+                                     }">
+                                <div v-else 
+                                     class="bg-slate-100 border border-dashed border-slate-300 rounded flex flex-col items-center justify-center p-4 text-slate-400">
+                                    <i class="fa fa-image text-xl mb-1 opacity-50"></i>
+                                    <span class="text-[10px] font-bold uppercase">No Image</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else-if="nestedEl.type === 'button'" class="mb-2"
+                             :style="[
+                                 { 
+                                    textAlign: nestedEl.settings.textAlign === 'left' ? 'left' : (nestedEl.settings.textAlign === 'right' ? 'right' : 'center'),
+                                    marginTop: getUnitVal(nestedEl.settings.marginTop, 'px'),
+                                    marginBottom: getUnitVal(nestedEl.settings.marginBottom, 'px'),
+                                 },
+                                 getCanvasVisibilityStyle(nestedEl.settings)
+                             ]">
+                            <a href="javascript:void(0)"
+                               :style="{
+                                   display: 'inline-block',
+                                   paddingTop: getUnitVal(nestedEl.settings.paddingTop || 12, 'px'),
+                                   paddingBottom: getUnitVal(nestedEl.settings.paddingBottom || 12, 'px'),
+                                   paddingLeft: getUnitVal(nestedEl.settings.paddingLeft || 30, 'px'),
+                                   paddingRight: getUnitVal(nestedEl.settings.paddingRight || 30, 'px'),
+                                   backgroundColor: nestedEl.settings.bgColor || '#0091ea',
+                                   color: nestedEl.settings.color || '#ffffff',
+                                   borderRadius: getUnitVal(nestedEl.settings.borderRadius || 5, 'px'),
+                                   fontSize: getUnitVal(nestedEl.settings.fontSize || 16, 'px'),
+                                   fontWeight: nestedEl.settings.fontWeight || '600',
+                                   textTransform: nestedEl.settings.textTransform || 'none',
+                                   textDecoration: 'none'
+                               }">@{{ nestedEl.settings.text || 'Click Here' }}</a>
+                        </div>
+                        <div v-else-if="nestedEl.type === 'text' || nestedEl.type === 'text_block' || nestedEl.type === 'special_text'" class="mb-2"
+                             :style="[
+                                 { 
+                                    textAlign: nestedEl.settings.textAlign || 'left',
+                                    paddingTop: getUnitVal(nestedEl.settings.paddingTop, 'px'),
+                                    paddingRight: getUnitVal(nestedEl.settings.paddingRight, 'px'),
+                                    paddingBottom: getUnitVal(nestedEl.settings.paddingBottom, 'px'),
+                                    paddingLeft: getUnitVal(nestedEl.settings.paddingLeft, 'px'),
+                                    marginTop: getUnitVal(nestedEl.settings.marginTop, 'px'),
+                                    marginRight: getUnitVal(nestedEl.settings.marginRight, 'px'),
+                                    marginBottom: getUnitVal(nestedEl.settings.marginBottom, 'px'),
+                                    marginLeft: getUnitVal(nestedEl.settings.marginLeft, 'px'),
+                                    color: nestedEl.settings.color || '#333333',
+                                    fontFamily: nestedEl.settings.fontFamily || 'inherit',
+                                    fontSize: getUnitVal(nestedEl.settings.fontSize || 16, nestedEl.settings.fontSizeUnit || 'px'),
+                                    fontWeight: nestedEl.settings.fontWeight || '400',
+                                    lineHeight: nestedEl.settings.lineHeight || '1.5',
+                                    letterSpacing: getUnitVal(nestedEl.settings.letterSpacing, 'px'),
+                                    textTransform: nestedEl.settings.textTransform || 'none'
+                                 },
+                                 getCanvasVisibilityStyle(nestedEl.settings)
+                             ]">
+                            <div v-html="nestedEl.settings.content || 'your content is here...'" style="text-align: inherit; color: inherit;"></div>
+                        </div>
+
+                        <!-- Menu Element in Nested Column -->
+                        <div v-else-if="nestedEl.type === 'menu'">
+                            <template v-for="el in [nestedEl]" :key="el.id">
+                                @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.menu')
+                            </template>
+                        </div>
+
+                        <!-- Custom Registered Blocks for Nested -->
+                        <template v-else>
+                            @foreach($customElements ?? [] as $type => $custEl)
+                                @if(in_array($type, ['text_block', 'button', 'special_text'])) @continue @endif
+                                <div v-if="nestedEl.type === '{{ $type }}'" class="p-2 text-center border border-dashed border-slate-200 rounded bg-slate-50/50">
+                                    <i class="{{ $custEl['icon'] ?? 'fa fa-cube' }} text-lg text-slate-400 block mb-1"></i>
+                                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">{{ $custEl['name'] ?? $type }}</p>
+                                </div>
+                            @endforeach
+                        </template>
 
                         <!-- Nested Element Toolbar (Top-Center, Compact & Expandable) -->
                         <div class="absolute top-0 left-1/2 -translate-x-1/2 flex justify-center opacity-0 group-hover/nel:opacity-100 transition-all duration-200 z-[1010] hover:z-[1100] pointer-events-none p-1" v-if="!isPreview">

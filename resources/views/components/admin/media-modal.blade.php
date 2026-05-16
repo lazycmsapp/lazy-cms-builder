@@ -163,7 +163,7 @@
             detailsView.classList.add('hidden');
             grid.querySelectorAll('.check-overlay').forEach(el => el.classList.add('hidden'));
             grid.querySelectorAll('.check-icon').forEach(el => el.classList.add('hidden'));
-            grid.querySelectorAll('.border-[#2271b1]').forEach(el => el.classList.remove('border-[#2271b1]'));
+            grid.querySelectorAll('.border-\\[\\#2271b1\\]').forEach(el => el.classList.remove('border-[#2271b1]'));
         };
 
         const closeModal = () => {

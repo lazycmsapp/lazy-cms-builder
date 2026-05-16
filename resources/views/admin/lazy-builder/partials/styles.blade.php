@@ -78,7 +78,8 @@
         display: none !important;
     }
     .is-preview .canvas-container {
-        padding: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 
     .builder-topbar { 
@@ -117,17 +118,19 @@
     /* Canvas Styles */
     .canvas-container {
         width: 100%;
-        margin: 0 !important;
+        margin: 0 auto !important;
         background: #fff;
         min-height: calc(100vh - var(--topbar-height));
         box-shadow: none;
         border: none;
         transition: all 0.3s ease;
         position: relative;
-        padding: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
-    .container-row:first-child {
-        margin-top: 60px;
+    .canvas-container.mobile, .canvas-container.tablet {
+        box-shadow: 0 10px 45px rgba(0,0,0,0.15) !important;
+        outline: 1px solid #cbd5e1;
     }
 
 
@@ -562,13 +565,10 @@
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 !important;
-        padding: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
         box-shadow: none !important;
         border: none !important;
-    }
-    /* Ensure container-row first-child margin removed in preview */
-    .is-preview .container-row:first-child {
-        margin-top: 0 !important;
     }
     /* Hover Effects */
     .lazy-column, .lazy-container, .column-outer, .container-row {
@@ -580,16 +580,28 @@
     .hover-effect-fade:hover { opacity: 0.7 !important; }
 
     /* Device Visibility Logic (User Breakpoints) */
-    @media (min-width: 320px) and (max-width: 640px) {
+    @media (max-width: {{ get_cms_option('theme_small_screen_breakpoint', '800') }}px) {
         .lazy-hide-mobile { display: none !important; }
     }
-    @media (min-width: 641px) and (max-width: 1024px) {
+    @media (min-width: {{ (int)get_cms_option('theme_small_screen_breakpoint', '800') + 1 }}px) and (max-width: {{ get_cms_option('theme_medium_screen_breakpoint', '1100') }}px) {
         .lazy-hide-tablet { display: none !important; }
     }
-    @media (min-width: 1025px) {
+    @media (min-width: {{ (int)get_cms_option('theme_medium_screen_breakpoint', '1100') + 1 }}px) {
         .lazy-hide-desktop { display: none !important; }
     }
     .lazy-hide-all { display: none !important; }
+
+    /* Builder-Specific Canvas Device Overrides (Simulating Media Queries) */
+    .canvas-container.mobile .lazy-hide-mobile { display: none !important; }
+    .canvas-container.mobile .lazy-column, 
+    .canvas-container.mobile .column-outer {
+        flex-basis: 100% !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    
+    .canvas-container.tablet .lazy-hide-tablet { display: none !important; }
+    .canvas-container.desktop .lazy-hide-desktop { display: none !important; }
     /* Alpha/Transparency Checkerboard */
     .checkerboard {
         background-color: #fff;
@@ -715,11 +727,86 @@
     }
 
     /* Auto Responsive Columns for Mobile Devices */
-    @media (max-width: 767px) {
+    @media (max-width: {{ get_cms_option('theme_small_screen_breakpoint', '800') }}px) {
         .lazy-column, .column-outer {
             flex-basis: 100% !important;
             max-width: 100% !important;
             width: 100% !important;
         }
+    }
+    /* Compact TinyMCE Fix */
+    .tox-tinymce { border-radius: 4px !important; border-color: #e2e8f0 !important; }
+    .tox .tox-toolbar__group { padding: 0 2px !important; border: none !important; }
+    /* Compact TinyMCE Fix */
+    .tox-tinymce { border-radius: 4px !important; border-color: #e2e8f0 !important; }
+    .tox .tox-toolbar__group { padding: 0 2px !important; border: none !important; }
+    .tox .tox-tbtn { width: 32px !important; height: 32px !important; margin: 0 !important; }
+    .tox .tox-tbtn svg { transform: scale(0.85); }
+    .tox .tox-tbtn--select { width: auto !important; padding: 0 6px !important; }
+    .tox .tox-toolbar { background-color: #f8fafc !important; border-bottom: 1px solid #f1f5f9 !important; }
+    .tox .tox-toolbar:last-child { border-bottom: none !important; }
+    /* Image Hover Effects */
+    .element-image-wrapper img, .element-image img {
+        transition: all 0.3s ease-in-out;
+    }
+    .hover-zoom-in:hover img { transform: scale(1.05); }
+    .hover-zoom-out:hover img { transform: scale(0.95); }
+    .hover-lift:hover img { transform: translateY(-5px); }
+    .hover-shadow:hover img { box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+    .hover-opacity:hover img { opacity: 0.75; }
+
+    /* Admin Menu Preview Styles */
+    .admin-menu-item { position: relative; }
+    .admin-submenu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        min-width: 180px;
+        background: #fff;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border-radius: 4px;
+        padding: 10px 0;
+        margin: 0;
+        list-style: none;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        transform: translateY(10px);
+        transition: all 0.2s ease-in-out !important;
+        z-index: 1000 !important;
+        text-align: left;
+        border: 1px solid #eee;
+    }
+    .admin-menu-item:hover > .admin-submenu {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: translateY(var(--submenu-space, 10px));
+    }
+    .admin-submenu .admin-menu-link {
+        padding: 8px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .admin-menu-arrow { font-size: 9px; margin-left: 4px; transition: transform 0.2s; }
+    .admin-menu-item:hover > .admin-menu-link .admin-menu-arrow { transform: rotate(180deg); }
+
+    /* Builder Tab Button Styles */
+    .builder-tab-btn {
+        transition: flex-grow 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+    .builder-tab-btn span {
+        animation: builderFadeIn 0.4s ease forwards;
+    }
+    @keyframes builderFadeIn {
+        from { opacity: 0; transform: translateX(-5px); }
+        to { opacity: 1; transform: translateX(0); }
     }
 </style>

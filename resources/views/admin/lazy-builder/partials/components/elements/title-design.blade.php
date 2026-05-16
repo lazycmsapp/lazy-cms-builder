@@ -4,7 +4,6 @@
         <div class="flex justify-between items-center mb-3">
             <label class="text-[12px] font-bold text-[#333]">Alignment</label>
             <div class="flex gap-2">
-                <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
                 <i class="fa fa-desktop text-[11px] text-slate-300"></i>
             </div>
         </div>
@@ -25,7 +24,6 @@
     <div class="pt-4 border-t border-slate-50">
         <div class="flex justify-between items-center mb-3">
             <label class="text-[12px] font-bold text-[#333]">HTML Heading Tag</label>
-            <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
         </div>
         <select v-model="editingElement.settings.htmlTag"
                 class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
@@ -44,10 +42,6 @@
     <div class="pt-4 border-t border-slate-50 space-y-4">
         <div class="flex justify-between items-center mb-1">
             <label class="text-[12px] font-bold text-[#333]">Typography</label>
-            <div class="flex gap-2">
-                <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
-                <i class="fa fa-globe text-[11px] text-slate-300"></i>
-            </div>
         </div>
 
         <!-- Font Family -->
@@ -104,7 +98,7 @@
             <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                 <button @click="editingElement.settings.textTransform = 'none'"
                         :class="editingElement.settings.textTransform === 'none' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
-                        class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all"><i class="fa fa-cog text-[10px]"></i></button>
+                        class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">Normal</button>
                 <button @click="editingElement.settings.textTransform = 'initial'"
                         :class="editingElement.settings.textTransform === 'initial' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
                         class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">—</button>
@@ -125,10 +119,6 @@
     <div class="pt-4 border-t border-slate-50">
         <div class="flex justify-between items-center mb-3">
             <label class="text-[12px] font-bold text-[#333]">Font Color</label>
-            <div class="flex gap-2 text-slate-300">
-                <i class="fa fa-question-circle text-[11px]"></i>
-                <i class="fa fa-bars text-[11px]"></i>
-            </div>
         </div>
         <div class="flex gap-2 items-center">
             <div class="checkerboard rounded-full overflow-hidden w-9 h-9 flex-shrink-0 border border-slate-200 shadow-sm cursor-pointer"
@@ -137,8 +127,7 @@
             </div>
             <div class="relative flex-1">
                 <input type="text" v-model="editingElement.settings.titleColor"
-                       class="w-full border border-slate-200 rounded px-3 py-2 text-[13px] pr-8">
-                <i class="fa fa-globe absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-300"></i>
+                       class="w-full border border-slate-200 rounded px-3 py-2 text-[13px]">
             </div>
         </div>
     </div>
@@ -147,10 +136,6 @@
     <div class="pt-4 border-t border-slate-50">
         <div class="flex justify-between items-center mb-3">
             <label class="text-[12px] font-bold text-[#333]">Font Hover Color</label>
-            <div class="flex gap-2 text-slate-300">
-                <i class="fa fa-question-circle text-[11px]"></i>
-                <i class="fa fa-bars text-[11px]"></i>
-            </div>
         </div>
         <div class="flex gap-2 items-center">
             <div class="checkerboard rounded-full overflow-hidden w-9 h-9 flex-shrink-0 border border-slate-200 shadow-sm cursor-pointer"
@@ -160,8 +145,7 @@
             <div class="relative flex-1">
                 <input type="text" v-model="editingElement.settings.titleHoverColor"
                        placeholder="None"
-                       class="w-full border border-slate-200 rounded px-3 py-2 text-[13px] pr-8">
-                <i class="fa fa-globe absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-300"></i>
+                       class="w-full border border-slate-200 rounded px-3 py-2 text-[13px]">
             </div>
         </div>
     </div>
@@ -170,7 +154,6 @@
     <div class="pt-4 border-t border-slate-50 space-y-4">
         <div class="flex justify-between items-center">
             <label class="text-[12px] font-bold text-[#333]">Text Shadow</label>
-            <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
         </div>
         <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
             <button @click="editingElement.settings.textShadow = true"
@@ -215,7 +198,6 @@
     <div class="pt-4 border-t border-slate-50 space-y-4">
         <div class="flex justify-between items-center">
             <label class="text-[12px] font-bold text-[#333]">Text Stroke</label>
-            <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
         </div>
         <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
             <button @click="editingElement.settings.textStroke = true"
@@ -250,7 +232,6 @@
     <div class="pt-4 border-t border-slate-50">
         <div class="flex justify-between items-center mb-3">
             <label class="text-[12px] font-bold text-[#333]">Text Overflow</label>
-            <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
         </div>
         <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
             <button @click="editingElement.settings.textOverflow = 'initial'"
@@ -270,7 +251,6 @@
         <div class="flex justify-between items-center mb-3">
             <label class="text-[12px] font-bold text-[#333]">Margin</label>
             <div class="flex gap-2">
-                <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
                 <i class="fa fa-desktop text-[11px] text-slate-300"></i>
             </div>
         </div>
@@ -298,7 +278,6 @@
     <div class="pt-4 border-t border-slate-50 space-y-4">
         <div class="flex justify-between items-center">
             <label class="text-[12px] font-bold text-[#333]">Gradient Font Color</label>
-            <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
         </div>
         <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
             <button @click="editingElement.settings.useGradient = true"
@@ -350,10 +329,6 @@
     <div class="pt-4 border-t border-slate-50 space-y-4">
         <div class="flex justify-between items-center mb-1">
             <label class="text-[12px] font-bold text-[#333]">Separator</label>
-            <div class="flex gap-2">
-                <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
-                <i class="fa fa-cog text-[11px] text-slate-300"></i>
-            </div>
         </div>
         <select v-model="editingElement.settings.separator"
                 class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
@@ -399,7 +374,6 @@
             </div>
             <div class="relative flex-1">
                 <input type="text" v-model="editingElement.settings.separatorColor" class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px]">
-                <i class="fa fa-globe absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-300"></i>
             </div>
         </div>
     </div>
@@ -416,7 +390,6 @@
             </div>
             <div class="relative flex-1">
                 <input type="text" v-model="editingElement.settings.linkColor" class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px]">
-                <i class="fa fa-globe absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-300"></i>
             </div>
         </div>
     </div>
@@ -433,7 +406,6 @@
             </div>
             <div class="relative flex-1">
                 <input type="text" v-model="editingElement.settings.linkHoverColor" class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px]">
-                <i class="fa fa-globe absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-300"></i>
             </div>
         </div>
     </div>

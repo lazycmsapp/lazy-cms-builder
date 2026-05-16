@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? 'Dashboard' }} &lsaquo; CMS &#8212; WordPress</title>
+    <title>{{ $title ?? 'Dashboard' }} &lsaquo; {{ get_cms_option('site_title', 'CMS') }}</title>
     <script src="{{ asset('vendor/cms-dashboard/js/tailwind.min.js') }}"></script>
     <style>
         /* CRITICAL FALLBACKS & CORE STYLES */

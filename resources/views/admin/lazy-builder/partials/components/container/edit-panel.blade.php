@@ -44,7 +44,6 @@
                     <div class="flex justify-between items-center mb-2">
                         <label class="text-[11px] font-bold text-[#444]">Row Minimum Height</label>
                         <div class="flex gap-2 items-center">
-                            <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                             <i class="fa fa-desktop text-[10px] text-slate-300"></i>
                         </div>
                     </div>
@@ -57,7 +56,6 @@
             <div v-if="{{ isset($isNestedRow) && $isNestedRow ? 'false' : 'true' }}">
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Interior Content Width</label>
-                    <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                 </div>
                 <div class="flex bg-slate-100 rounded overflow-hidden">
                     <button @click="{{ $base }}.settings.contentWidth = '100%'" 
@@ -73,7 +71,6 @@
         <div v-if="!{{ isset($isNestedRow) && $isNestedRow ? 'true' : 'false' }}">
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Height</label>
-                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
             </div>
             <select v-model="{{ $base }}.settings.height" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                 <option value="auto">Auto</option>
@@ -89,7 +86,6 @@
         <div>
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Column Alignment</label>
-                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
             </div>
             <div class="grid grid-cols-2 gap-2">
                 <button @click="{{ $base }}.settings.alignItems = 'flex-start'"
@@ -137,7 +133,6 @@
         <div v-if="{{ $base }}.settings.height !== 'auto' || {{ isset($isNestedRow) && $isNestedRow ? 'true' : 'false' }}">
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Row Alignment</label>
-                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
             </div>
             <div class="grid grid-cols-3 gap-2">
                 <!-- 1. Stretch (Default) -->
@@ -231,7 +226,6 @@
         <div>
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Column Justification</label>
-                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
             </div>
             <div class="grid grid-cols-2 gap-2">
                 <button @click="{{ $base }}.settings.justifyContent = 'flex-start'" 
@@ -298,7 +292,6 @@
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Content Wrap</label>
                 <div class="flex gap-2 text-slate-300">
-                    <i class="fa fa-question-circle text-[10px]"></i>
                     <i class="fa fa-desktop text-[10px]"></i>
                 </div>
             </div>
@@ -319,7 +312,6 @@
         <div v-if="{{ isset($isNestedRow) && $isNestedRow ? 'true' : 'false' }}">
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Overflow</label>
-                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
             </div>
             <select v-model="{{ $base }}.settings.overflow" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                 <option value="default">Default</option>
@@ -334,7 +326,6 @@
         <div>
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Column Spacing</label>
-                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
             </div>
             <input type="number" min="0" v-model="{{ $base }}.settings.columnGap" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
         </div>
@@ -343,7 +334,6 @@
         <div>
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Container HTML Tag</label>
-                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
             </div>
             <select v-model="{{ $base }}.settings.htmlTag" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                 <option value="div">Default</option>
@@ -359,7 +349,6 @@
         <div v-if="!{{ isset($isNestedRow) && $isNestedRow ? 'true' : 'false' }}">
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Name Of Menu Anchor</label>
-                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
             </div>
             <input type="text" v-model="{{ $base }}.settings.menuAnchor" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
         </div>
@@ -368,7 +357,6 @@
         <div>
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Device Visibility</label>
-                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
             </div>
             <div class="flex gap-0.5 rounded overflow-hidden" @click.capture="if (!{{ $base }}.settings.visibility) { {{ $base }}.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                 <button @click="{{ $base }}.settings.visibility.mobile = !{{ $base }}.settings.visibility.mobile" 
@@ -393,7 +381,6 @@
         <div v-if="!{{ isset($isNestedRow) && $isNestedRow ? 'true' : 'false' }}">
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Container Publishing Status</label>
-                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
             </div>
             <select v-model="{{ $base }}.settings.status" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                 <option value="published">Published</option>
@@ -405,7 +392,6 @@
         <div>
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">CSS Class</label>
-                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
             </div>
             <input type="text" v-model="{{ $base }}.settings.cssClass" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
         </div>
@@ -419,7 +405,6 @@
                 <div class="flex justify-between items-center mb-4">
                     <label class="text-[13px] font-bold text-[#333]">Margin</label>
                     <div class="flex gap-2 items-center">
-                        <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
                         <i class="fa fa-desktop text-[11px] text-slate-300"></i>
                     </div>
                 </div>
@@ -456,7 +441,6 @@
                 <div class="flex justify-between items-center mb-4">
                     <label class="text-[13px] font-bold text-[#333]">Padding</label>
                     <div class="flex gap-2 items-center">
-                        <i class="fa fa-question-circle text-[11px] text-slate-300"></i>
                         <i class="fa fa-desktop text-[11px] text-slate-300"></i>
                     </div>
                 </div>
@@ -481,11 +465,7 @@
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">{{ $label }} Link Color</label>
                     <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                        <i class="fa fa-cog text-[10px]"></i>
                         <i class="fa fa-undo text-[10px]"></i>
-                        <i class="fa fa-circle text-[10px] text-white border border-slate-300 rounded-full"></i>
-                        <i class="fa fa-database text-[10px]"></i>
                     </div>
                 </div>
                 <div class="flex gap-2 items-center">
@@ -505,10 +485,6 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">{{ $label }} Border Size</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                        <i class="fa fa-cog text-[10px]"></i>
-                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-1">
                     <div>
@@ -534,10 +510,6 @@
             <div v-if="{{ $base }}.settings.borderSizeTop > 0 || {{ $base }}.settings.borderSizeRight > 0 || {{ $base }}.settings.borderSizeBottom > 0 || {{ $base }}.settings.borderSizeLeft > 0">
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">{{ $label }} Border Color</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                        <i class="fa fa-database text-[10px]"></i>
-                    </div>
                 </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded overflow-hidden w-8 h-8 flex-shrink-0 border border-slate-200">
@@ -556,7 +528,6 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Border Radius</label>
-                    <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                 </div>
                 <div class="grid grid-cols-2 gap-1">
                     <div v-for="(label, key) in {'TopLeft': 'T/L', 'TopRight': 'T/R', 'BottomRight': 'B/R', 'BottomLeft': 'B/L'}">
@@ -577,7 +548,6 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Box Shadow</label>
-                    <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                 </div>
                 <div class="flex w-[100px] bg-slate-100 rounded overflow-hidden">
                     <button @click="{{ $base }}.settings.boxShadow = true" 
@@ -594,7 +564,6 @@
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <label class="text-[11px] font-bold text-[#444]">Box Shadow Position</label>
-                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -612,7 +581,6 @@
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <label class="text-[11px] font-bold text-[#444]">Box Shadow Blur Radius</label>
-                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                     </div>
                     <div class="flex items-center gap-3">
                         <input type="number" min="0" v-model="{{ $base }}.settings.boxShadowBlurRadius" class="w-16 border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
@@ -624,7 +592,6 @@
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <label class="text-[11px] font-bold text-[#444]">Box Shadow Spread Radius</label>
-                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                     </div>
                     <div class="flex items-center gap-3">
                         <input type="number" min="0" v-model="{{ $base }}.settings.boxShadowSpreadRadius" class="w-16 border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
@@ -636,10 +603,6 @@
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <label class="text-[11px] font-bold text-[#444]">Box Shadow Color</label>
-                        <div class="flex gap-2 text-slate-300">
-                            <i class="fa fa-question-circle text-[10px]"></i>
-                            <i class="fa fa-database text-[10px]"></i>
-                        </div>
                     </div>
                     <div class="flex gap-2 items-center">
                         <div class="checkerboard rounded overflow-hidden w-8 h-8 flex-shrink-0 border border-slate-200">
@@ -658,7 +621,6 @@
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <label class="text-[11px] font-bold text-[#444]">Box Shadow Style</label>
-                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                     </div>
                     <div class="flex w-[120px] bg-slate-100 rounded overflow-hidden">
                         <button @click="{{ $base }}.settings.boxShadowStyle = 'outer'" 
@@ -675,7 +637,6 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Z Index</label>
-                    <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                 </div>
                 <input type="number" min="0" v-model="{{ $base }}.settings.zIndex" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
             </div>
@@ -684,7 +645,6 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Overflow</label>
-                    <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                 </div>
                 <select v-model="{{ $base }}.settings.overflow" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                     <option value="default">Default</option>
@@ -704,10 +664,6 @@
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Background Options</label>
-                    <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-chevron-down text-[10px]"></i>
-                        <i class="fa fa-question-circle text-[10px]"></i>
-                    </div>
                 </div>
                 
                 <!-- Sub Tabs for Background Type -->
@@ -723,11 +679,8 @@
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[11px] font-bold text-[#444]">{{ $label }} Background Color</label>
                             <div class="flex gap-2 text-slate-300">
-                                <i class="fa fa-question-circle text-[10px]"></i>
-                                <i class="fa fa-cog text-[10px]"></i>
                                 <i class="fa fa-undo text-[10px]"></i>
                                 <i class="fa fa-desktop text-[10px]"></i>
-                                <i class="fa fa-database text-[10px]"></i>
                             </div>
                         </div>
                         <div class="flex items-center gap-1 mb-2">
@@ -750,11 +703,11 @@
                     <div class="border-b border-slate-100 pb-3">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[11px] font-bold text-[#444]">Gradient Start Color</label>
-                            <div class="flex gap-2 text-slate-300">
-                                <i class="fa fa-question-circle text-[10px]"></i>
-                                <i class="fa fa-cog text-[10px]"></i>
-                                <i class="fa fa-undo text-[10px]"></i>
-                                <i class="fa fa-database text-[10px]"></i>
+                            <div class="flex gap-2 items-center">
+                                <button @click="clearColorField({{ $base }}.settings, 'bgGradientStartColor', 'bgGradientStartOpacity')" 
+                                        class="text-slate-300 hover:text-red-500 transition-colors" title="Reset">
+                                    <i class="fa fa-undo text-[10px]"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="flex items-center gap-1 mb-2">
@@ -773,11 +726,11 @@
                     <div class="border-b border-slate-100 pb-3">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[11px] font-bold text-[#444]">Gradient End Color</label>
-                            <div class="flex gap-2 text-slate-300">
-                                <i class="fa fa-question-circle text-[10px]"></i>
-                                <i class="fa fa-cog text-[10px]"></i>
-                                <i class="fa fa-undo text-[10px]"></i>
-                                <i class="fa fa-database text-[10px]"></i>
+                            <div class="flex gap-2 items-center">
+                                <button @click="clearColorField({{ $base }}.settings, 'bgGradientEndColor', 'bgGradientEndOpacity')" 
+                                        class="text-slate-300 hover:text-red-500 transition-colors" title="Reset">
+                                    <i class="fa fa-undo text-[10px]"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="flex items-center gap-1 mb-2">
@@ -796,7 +749,6 @@
                     <div class="border-b border-slate-100 pb-3">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[11px] font-bold text-[#444]">Gradient Start Position</label>
-                            <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                         </div>
                         <div class="flex gap-2 items-center">
                             <input type="number" v-model="{{ $base }}.settings.bgGradientStartPosition" class="w-16 border border-slate-200 rounded px-2 py-1 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
@@ -808,7 +760,6 @@
                     <div class="border-b border-slate-100 pb-3">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[11px] font-bold text-[#444]">Gradient End Position</label>
-                            <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                         </div>
                         <div class="flex gap-2 items-center">
                             <input type="number" v-model="{{ $base }}.settings.bgGradientEndPosition" class="w-16 border border-slate-200 rounded px-2 py-1 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
@@ -820,7 +771,6 @@
                     <div class="border-b border-slate-100 pb-3">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[11px] font-bold text-[#444]">Gradient Type</label>
-                            <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                         </div>
                         <div class="flex bg-slate-100 rounded overflow-hidden">
                             <button @click="{{ $base }}.settings.bgGradientType = 'linear'" 
@@ -836,7 +786,6 @@
                     <div v-show="{{ $base }}.settings.bgGradientType === 'linear'">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[11px] font-bold text-[#444]">Gradient Angle</label>
-                            <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                         </div>
                         <div class="flex gap-2 items-center">
                             <input type="number" v-model="{{ $base }}.settings.bgGradientAngle" class="w-16 border border-slate-200 rounded px-2 py-1 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
@@ -865,7 +814,6 @@
                         <div class="border-b border-slate-100 pb-3">
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-[11px] font-bold text-[#444]">Skip Lazy Loading</label>
-                                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                             </div>
                             <div class="flex bg-slate-100 rounded overflow-hidden w-[100px]">
                                 <button @click="{{ $base }}.settings.bgImageSkipLazy = true" 
@@ -882,7 +830,6 @@
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-[11px] font-bold text-[#444]">Background Position</label>
                                 <div class="flex gap-2 text-slate-300">
-                                    <i class="fa fa-question-circle text-[10px]"></i>
                                     <i class="fa fa-desktop text-[10px]"></i>
                                 </div>
                             </div>
@@ -904,7 +851,6 @@
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-[11px] font-bold text-[#444]">Background Repeat</label>
                                 <div class="flex gap-2 text-slate-300">
-                                    <i class="fa fa-question-circle text-[10px]"></i>
                                     <i class="fa fa-desktop text-[10px]"></i>
                                 </div>
                             </div>
@@ -921,7 +867,6 @@
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-[11px] font-bold text-[#444]">Background Size</label>
                                 <div class="flex gap-2 text-slate-300">
-                                    <i class="fa fa-question-circle text-[10px]"></i>
                                     <i class="fa fa-desktop text-[10px]"></i>
                                 </div>
                             </div>
@@ -936,7 +881,6 @@
                         <div class="border-b border-slate-100 pb-3">
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-[11px] font-bold text-[#444]">Fading Animation</label>
-                                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                             </div>
                             <div class="flex bg-slate-100 rounded overflow-hidden w-[100px]">
                                 <button @click="{{ $base }}.settings.bgImageFading = true" 
@@ -952,7 +896,6 @@
                         <div class="border-b border-slate-100 pb-3">
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-[11px] font-bold text-[#444]">Background Parallax</label>
-                                <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                             </div>
                             <select v-model="{{ $base }}.settings.bgImageParallax" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                                 <option value="none">No Parallax (no effects)</option>
@@ -965,7 +908,6 @@
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-[11px] font-bold text-[#444]">Background Blend Mode</label>
                                 <div class="flex gap-2 text-slate-300">
-                                    <i class="fa fa-question-circle text-[10px]"></i>
                                     <i class="fa fa-desktop text-[10px]"></i>
                                 </div>
                             </div>
@@ -989,14 +931,12 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Link URL</label>
-                    <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                 </div>
                 <input type="text" v-model="{{ $base }}.settings.linkUrl" placeholder="https://..." class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
             </div>
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Link Target</label>
-                    <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                 </div>
                 <select v-model="{{ $base }}.settings.linkTarget" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                     <option value="_self">Same Window</option>

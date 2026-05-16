@@ -1,11 +1,16 @@
-@once
 <style>
-    @media (max-width: 640px) { .lazy-hide-mobile { display: none !important; } }
-    @media (min-width: 641px) and (max-width: 1024px) { .lazy-hide-tablet { display: none !important; } }
-    @media (min-width: 1025px) { .lazy-hide-desktop { display: none !important; } }
+    @media (max-width: {{ get_cms_option('theme_small_screen_breakpoint', '800') }}px) { 
+        .lazy-hide-mobile { display: none !important; } 
+        .lazy-column {
+            flex-basis: 100% !important;
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+    }
+    @media (min-width: {{ (int)get_cms_option('theme_small_screen_breakpoint', '800') + 1 }}px) and (max-width: {{ get_cms_option('theme_medium_screen_breakpoint', '1100') }}px) { .lazy-hide-tablet { display: none !important; } }
+    @media (min-width: {{ (int)get_cms_option('theme_medium_screen_breakpoint', '1100') + 1 }}px) { .lazy-hide-desktop { display: none !important; } }
     .lazy-hide-all { display: none !important; }
 </style>
-@endonce
 @php
     $s     = $column['settings'] ?? [];
     $basisRaw = $column['basis'] ?? null;
@@ -64,27 +69,32 @@
     $pLeft = (isset($s['columnSpacingLeft']) && $s['columnSpacingLeft'] !== '') ? $s['columnSpacingLeft'] . '%' : $globalGap . '%';
     $pRight = (isset($s['columnSpacingRight']) && $s['columnSpacingRight'] !== '') ? $s['columnSpacingRight'] . '%' : $globalGap . '%';
 
+    $finalAlignSelf = ($colAlignment && $colAlignment !== 'default') ? $colAlignment : $containerAlign;
+
     $outerStyles = [
         "flex-basis: {$flexBasis}",
         "flex-grow: " . ($shouldStretch ? '1' : ($s['flexGrow'] ?? '0')),
         "flex-shrink: " . ($s['flexShrink'] ?? '0'),
         "max-width: {$maxWidth}",
+        "width: " . ($flexBasis === '100%' || $flexBasis === 'auto' ? '100%' : $flexBasis),
         "min-height: " . ($shouldStretch ? ($isEmpty ? '100px' : '100% !important') : 'auto'),
         "padding-left: {$pLeft}",
         "padding-right: {$pRight}",
         'display: flex !important',
         'flex-direction: column !important',
+        "align-self: {$finalAlignSelf} !important",
     ];
 
-    if ($shouldStretch) {
-        $outerStyles[] = 'align-self: stretch !important';
-        $outerStyles[] = 'flex-grow: 1 !important';
-        // Use min-height: 100% for better browser support in auto-height contexts
-        $outerStyles[] = 'min-height: ' . ($isEmpty ? '100px' : '100% !important');
-    } else {
-        $outerStyles[] = 'align-self: ' . ($colAlignment === 'default' ? $containerAlign : $colAlignment) . ' !important';
-        $outerStyles[] = 'height: auto';
-    }
+    $innerStyles = [
+        'width: 100%',
+        'flex-grow: 1',
+        'margin: 0',
+        'padding-top: '    . ($s['paddingTop']    ?? 10) . ($s['paddingTopUnit']    ?? 'px'),
+        'padding-right: '  . ($s['paddingRight']  ?? 10) . ($s['paddingRightUnit']  ?? 'px'),
+        'padding-bottom: ' . ($s['paddingBottom'] ?? 10) . ($s['paddingBottomUnit'] ?? 'px'),
+        'padding-left: '   . ($s['paddingLeft']   ?? 10) . ($s['paddingLeftUnit']   ?? 'px'),
+        'align-items: stretch',
+    ];
 
     if (isset($s['marginTop']) && $s['marginTop'] !== '') $outerStyles[] = 'margin-top: ' . $s['marginTop'] . ($s['marginTopUnit'] ?? 'px');
     if (isset($s['marginBottom']) && $s['marginBottom'] !== '') $outerStyles[] = 'margin-bottom: ' . $s['marginBottom'] . ($s['marginBottomUnit'] ?? 'px');
@@ -225,10 +235,14 @@
                     @include('cms-dashboard::frontend.builder.elements.title', ['el' => $el])
                 @elseif($el['type'] === 'text')
                     @include('cms-dashboard::frontend.builder.elements.text', ['el' => $el])
-                @elseif($el['type'] === 'button')
-                    @include('cms-dashboard::frontend.builder.elements.button', ['el' => $el])
                 @elseif($el['type'] === 'image')
                     @include('cms-dashboard::frontend.builder.elements.image', ['el' => $el])
+                @elseif($el['type'] === 'text_block')
+                    @include('cms-dashboard::frontend.builder.elements.text-block', ['el' => $el])
+                @elseif($el['type'] === 'button')
+                    @include('cms-dashboard::frontend.builder.elements.button', ['el' => $el])
+                @elseif($el['type'] === 'menu')
+                    @include('cms-dashboard::frontend.builder.elements.menu', ['el' => $el])
                 @elseif($el['type'] === 'spacer')
                     @include('cms-dashboard::frontend.builder.elements.spacer', ['el' => $el])
                 @elseif($el['type'] === 'video')

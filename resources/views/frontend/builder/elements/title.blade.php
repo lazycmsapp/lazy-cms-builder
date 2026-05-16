@@ -8,8 +8,7 @@
     if (!($v['desktop'] ?? true)) $visibilityClasses .= ' lazy-hide-desktop';
 
     $wrapperStyles = [
-        'display: block',
-        'width: 100%',
+        'max-width: 100%',
         'text-align: ' . ($s['textAlign'] ?? 'center'),
         'padding-top: ' . ($s['paddingTop'] ?? 20) . 'px',
         'padding-bottom: ' . ($s['paddingBottom'] ?? 20) . 'px',

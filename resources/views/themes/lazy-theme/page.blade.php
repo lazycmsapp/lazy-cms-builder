@@ -39,4 +39,4 @@
             </div>
         </section>
     @endif
-@stop
+@endsection

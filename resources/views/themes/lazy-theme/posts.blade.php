@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drama Series| {{ get_cms_option('tagline') }}</title>
+    <title>@yield('title', 'Dramas') | {{ get_cms_option('site_title', 'Lazy CMS') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 text-white p-10">

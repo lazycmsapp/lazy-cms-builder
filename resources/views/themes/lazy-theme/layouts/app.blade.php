@@ -10,7 +10,8 @@
         }
     @endphp
     <meta name="viewport" content="{{ $viewportContent }}">
-    <title>@yield('title', get_cms_option('site_title', 'Lazy CMS'))</title>
+    <!-- SEO Meta Tags -->
+    @include('cms-dashboard::components.frontend.seo-meta')
     
     @php
         // Prepare Theme Options
@@ -33,7 +34,20 @@
         $fontsToLoad = [$bodyTypo['family'] ?? 'Inter'];
         if (isset($h1Typo['family'])) $fontsToLoad[] = $h1Typo['family'];
         if (isset($navTypo['family'])) $fontsToLoad[] = $navTypo['family'];
-        $fontsToLoad = array_unique($fontsToLoad);
+        
+        // Add builder fonts if we are on a post/page with builder content
+        if (isset($post) && !empty($post->content)) {
+            $isBuilder = $post->editor_type === 'builder' || (is_string($post->content) && (str_starts_with($post->content, '[') || str_starts_with($post->content, '{')));
+            if ($isBuilder) {
+                $layout = is_string($post->content) ? json_decode($post->content, true) : $post->content;
+                if (is_array($layout)) {
+                    $builderFonts = get_lazy_builder_fonts($layout);
+                    $fontsToLoad = array_merge($fontsToLoad, $builderFonts);
+                }
+            }
+        }
+        
+        $fontsToLoad = array_unique(array_filter($fontsToLoad));
         $googleFontsUrl = "https://fonts.googleapis.com/css2?family=" . implode('&family=', array_map(fn($f) => str_replace(' ', '+', $f) . ':wght@300;400;500;600;700;800;900', $fontsToLoad)) . "&display=swap";
 
         // Layout Type
@@ -45,13 +59,13 @@
         <link rel="icon" type="image/x-icon" href="{{ $favicon }}">
     @endif
 
-    <!-- Meta SEO -->
-    @yield('seo')
-
     <!-- Dynamic Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="{{ $googleFontsUrl }}" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -232,13 +246,21 @@
 @endphp
 <body class="{{ $bodyClasses }}">
 
-@include('cms-dashboard::themes.lazy-theme.partials.header')
+@if($customHeader = get_lazy_header())
+    {!! $customHeader !!}
+@else
+    @include('cms-dashboard::themes.lazy-theme.partials.header')
+@endif
 
 <main class="flex-grow">
     @yield('content')
 </main>
 
-@include('cms-dashboard::themes.lazy-theme.partials.footer')
+@if($customFooter = get_lazy_footer())
+    {!! $customFooter !!}
+@else
+    @include('cms-dashboard::themes.lazy-theme.partials.footer')
+@endif
 
     <!-- Scripts -->
     <script src="https://unpkg.com/lucide@latest"></script>

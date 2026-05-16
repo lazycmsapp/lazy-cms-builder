@@ -1,5 +1,7 @@
 @extends('cms-dashboard::themes.lazy-theme.layouts.app')
 
+@section('title', 'Cart')
+
 @section('content')
 <div class="bg-white py-12 min-h-screen font-sans">
     <div class="container-custom">

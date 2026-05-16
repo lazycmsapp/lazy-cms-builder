@@ -7,6 +7,14 @@
             const isPreview = ref(false);
             const isSaving = ref(false);
             const isDirty = ref(false);
+            let lastSavedLayout = '';
+            const serializedLayout = computed(() => {
+                // Return layout without transient UI state like isHovered or properties starting with _
+                return JSON.stringify(layout.value, (key, value) => {
+                    if (key === 'isHovered' || key.startsWith('_')) return undefined;
+                    return value;
+                });
+            });
             let _trackLayoutDirty = false;
             const activeTab = ref('navigator'); // Default to Navigator like in screenshot
             const device = ref('desktop');
@@ -145,6 +153,95 @@
                 return acc;
             }, {});
 
+            const activeIconTab = ref('Solid');
+            const searchIconQuery = ref('');
+            const FA_GROUPS = {
+                'Solid': [
+                    'fas fa-bars', 'fas fa-bars-staggered', 'fas fa-plus', 'fas fa-minus', 'fas fa-times', 'fas fa-check', 'fas fa-search', 'fas fa-cog', 'fas fa-home', 'fas fa-user', 'fas fa-envelope', 'fas fa-phone',
+                    'fas fa-heart', 'fas fa-star', 'fas fa-bell', 'fas fa-info-circle', 'fas fa-question-circle', 'fas fa-exclamation-circle', 'fas fa-check-circle',
+                    'fas fa-arrow-right', 'fas fa-arrow-left', 'fas fa-arrow-up', 'fas fa-arrow-down', 'fas fa-chevron-right', 'fas fa-chevron-left', 'fas fa-chevron-up', 'fas fa-chevron-down',
+                    'fas fa-angle-right', 'fas fa-angle-left', 'fas fa-angle-double-right', 'fas fa-angle-double-left', 'fas fa-external-link-alt', 'fas fa-download', 'fas fa-upload',
+                    'fas fa-shopping-cart', 'fas fa-shopping-bag', 'fas fa-credit-card', 'fas fa-tag', 'fas fa-tags', 'fas fa-wallet', 'fas fa-box', 'fas fa-truck', 'fas fa-store',
+                    'fas fa-ellipsis-v', 'fas fa-ellipsis-h', 'fas fa-trash', 'fas fa-edit', 'fas fa-save', 'fas fa-copy', 'fas fa-link', 'fas fa-unlink',
+                    'fas fa-play', 'fas fa-pause', 'fas fa-stop', 'fas fa-image', 'fas fa-video', 'fas fa-music', 'fas fa-volume-up', 'fas fa-volume-mute', 'fas fa-microphone',
+                    'fas fa-clock', 'fas fa-calendar', 'fas fa-map-marker-alt', 'fas fa-lock', 'fas fa-unlock', 'fas fa-eye', 'fas fa-eye-slash', 'fas fa-paper-plane', 'fas fa-print',
+                    'fas fa-code', 'fas fa-terminal', 'fas fa-laptop', 'fas fa-mobile-alt', 'fas fa-tablet-alt', 'fas fa-bolt', 'fas fa-fire', 'fas fa-leaf', 'fas fa-cloud',
+                    'fas fa-sun', 'fas fa-moon', 'fas fa-rocket', 'fas fa-lightbulb', 'fas fa-gift', 'fas fa-coffee', 'fas fa-quote-left', 'fas fa-quote-right',
+                    'fas fa-briefcase', 'fas fa-camera', 'fas fa-car', 'fas fa-chart-bar', 'fas fa-chart-line', 'fas fa-chart-pie', 'fas fa-cloud-download-alt', 'fas fa-cloud-upload-alt',
+                    'fas fa-comment', 'fas fa-comments', 'fas fa-desktop', 'fas fa-file', 'fas fa-file-alt', 'fas fa-flask', 'fas fa-folder', 'fas fa-folder-open',
+                    'fas fa-globe', 'fas fa-key', 'fas fa-language', 'fas fa-magic', 'fas fa-money-bill-alt', 'fas fa-palette', 'fas fa-puzzle-piece', 'fas fa-rss',
+                    'fas fa-server', 'fas fa-share-alt', 'fas fa-shield-alt', 'fas fa-signal', 'fas fa-sitemap', 'fas fa-sliders-h', 'fas fa-smile', 'fas fa-tasks',
+                    'fas fa-thumbs-up', 'fas fa-thumbs-down', 'fas fa-trophy', 'fas fa-university', 'fas fa-wrench', 'fas fa-align-center', 'fas fa-align-justify', 'fas fa-align-left', 'fas fa-align-right',
+                    'fas fa-bold', 'fas fa-italic', 'fas fa-list', 'fas fa-list-ol', 'fas fa-strikethrough', 'fas fa-underline', 'fas fa-undo', 'fas fa-redo',
+                    'fas fa-battery-full', 'fas fa-bluetooth', 'fas fa-compass', 'fas fa-database', 'fas fa-microchip', 'fas fa-wifi', 'fas fa-plug', 'fas fa-power-off'
+                ],
+                'Regular': [
+                    'far fa-heart', 'far fa-star', 'far fa-bell', 'far fa-envelope', 'far fa-user', 'far fa-calendar', 'far fa-clock', 'far fa-comment', 'far fa-file',
+                    'far fa-folder', 'far fa-image', 'far fa-play-circle', 'far fa-smile', 'far fa-question-circle', 'far fa-check-circle', 'far fa-times-circle',
+                    'far fa-address-book', 'far fa-address-card', 'far fa-bell-slash', 'far fa-bookmark', 'far fa-building', 'far fa-chart-bar', 'far fa-clipboard',
+                    'far fa-clone', 'far fa-closed-captioning', 'far fa-compass', 'far fa-copy', 'far fa-copyright', 'far fa-credit-card', 'far fa-edit', 'far fa-eye',
+                    'far fa-eye-slash', 'far fa-file-audio', 'far fa-file-code', 'far fa-file-excel', 'far fa-file-image', 'far fa-file-pdf', 'far fa-file-powerpoint',
+                    'far fa-file-video', 'far fa-file-word', 'far fa-flag', 'far fa-flushed', 'far fa-folder-open', 'far fa-frown', 'far fa-futbol', 'far fa-gem',
+                    'far fa-grimace', 'far fa-grin', 'far fa-hand-paper', 'far fa-hand-point-down', 'far fa-hand-point-left', 'far fa-hand-point-right', 'far fa-hand-point-up',
+                    'far fa-handshake', 'far fa-hospital', 'far fa-hourglass', 'far fa-id-badge', 'far fa-id-card', 'far fa-keyboard', 'far fa-lemon', 'far fa-life-ring',
+                    'far fa-lightbulb', 'far fa-list-alt', 'far fa-map', 'far fa-minus-square', 'far fa-money-bill-alt', 'far fa-moon', 'far fa-newspaper', 'far fa-object-group',
+                    'far fa-object-ungroup', 'far fa-paper-plane', 'far fa-pause-circle', 'far fa-plus-square', 'far fa-registered', 'far fa-save', 'far fa-share-square',
+                    'far fa-snowflake', 'far fa-square', 'far fa-star-half', 'far fa-sticky-note', 'far fa-stop-circle', 'far fa-sun', 'far fa-thumbs-down', 'far fa-thumbs-up',
+                    'far fa-trash-alt', 'far fa-user-circle', 'far fa-window-close', 'far fa-window-maximize', 'far fa-window-minimize', 'far fa-window-restore'
+                ],
+                'Brands': [
+                    'fab fa-facebook', 'fab fa-twitter', 'fab fa-instagram', 'fab fa-linkedin', 'fab fa-youtube', 'fab fa-github', 'fab fa-whatsapp', 'fab fa-telegram',
+                    'fab fa-tiktok', 'fab fa-pinterest', 'fab fa-skype', 'fab fa-discord', 'fab fa-google', 'fab fa-apple', 'fab fa-windows', 'fab fa-amazon',
+                    'fab fa-stripe', 'fab fa-paypal', 'fab fa-wordpress', 'fab fa-vimeo', 'fab fa-slack', 'fab fa-dribbble', 'fab fa-behance',
+                    'fab fa-android', 'fab fa-angellist', 'fab fa-app-store', 'fab fa-app-store-ios', 'fab fa-aws', 'fab fa-bitbucket', 'fab fa-bitcoin', 'fab fa-blogger',
+                    'fab fa-chrome', 'fab fa-codepen', 'fab fa-creative-commons', 'fab fa-css3', 'fab fa-digital-ocean', 'fab fa-dropbox', 'fab fa-ebay', 'fab fa-edge',
+                    'fab fa-envira', 'fab fa-etsy', 'fab fa-facebook-f', 'fab fa-facebook-messenger', 'fab fa-facebook-square', 'fab fa-firefox', 'fab fa-flickr',
+                    'fab fa-font-awesome', 'fab fa-foursquare', 'fab fa-free-code-camp', 'fab fa-get-pocket', 'fab fa-git', 'fab fa-git-alt', 'fab fa-git-square',
+                    'fab fa-github-alt', 'fab fa-github-square', 'fab fa-gitlab', 'fab fa-google-drive', 'fab fa-google-play', 'fab fa-google-plus', 'fab fa-google-plus-g',
+                    'fab fa-google-plus-square', 'fab fa-google-wallet', 'fab fa-hacker-news', 'fab fa-hacker-news-square', 'fab fa-html5', 'fab fa-hubspot', 'fab fa-imdb',
+                    'fab fa-itunes', 'fab fa-itunes-note', 'fab fa-java', 'fab fa-js', 'fab fa-js-square', 'fab fa-jsfiddle', 'fab fa-kickstarter', 'fab fa-kickstarter-k',
+                    'fab fa-laravel', 'fab fa-lastfm', 'fab fa-lastfm-square', 'fab fa-leanpub', 'fab fa-line', 'fab fa-linkedin-in', 'fab fa-linode', 'fab fa-linux',
+                    'fab fa-lyft', 'fab fa-magento', 'fab fa-mailchimp', 'fab fa-mastodon', 'fab fa-maxcdn', 'fab fa-medapps', 'fab fa-medium', 'fab fa-medium-m',
+                    'fab fa-microsoft', 'fab fa-mix', 'fab fa-mixcloud', 'fab fa-mizuni', 'fab fa-monero', 'fab fa-napster', 'fab fa-node', 'fab fa-node-js',
+                    'fab fa-npm', 'fab fa-ns8', 'fab fa-nutritionix', 'fab fa-opera', 'fab fa-optin-monster', 'fab fa-osi', 'fab fa-page4', 'fab fa-pagelines',
+                    'fab fa-palfed', 'fab fa-patreon', 'fab fa-periscope', 'fab fa-phabricator', 'fab fa-phoenix-framework', 'fab fa-phoenix-graphics', 'fab fa-php',
+                    'fab fa-pied-piper', 'fab fa-pied-piper-alt', 'fab fa-pied-piper-hat', 'fab fa-pied-piper-pp', 'fab fa-pinterest-p', 'fab fa-pinterest-square',
+                    'fab fa-playstation', 'fab fa-product-hunt', 'fab fa-pushed', 'fab fa-python', 'fab fa-qq', 'fab fa-quinscape', 'fab fa-quora', 'fab fa-raspberry-pi',
+                    'fab fa-ravelry', 'fab fa-react', 'fab fa-reacteurope', 'fab fa-readme', 'fab fa-rebel', 'fab fa-red-river', 'fab fa-reddit', 'fab fa-reddit-alien',
+                    'fab fa-reddit-square', 'fab fa-renren', 'fab fa-replyd', 'fab fa-researchgate', 'fab fa-resolving', 'fab fa-rev', 'fab fa-rocketchat', 'fab fa-rockrms',
+                    'fab fa-safari', 'fab fa-sass', 'fab fa-schlix', 'fab fa-scribd', 'fab fa-searchengin', 'fab fa-sellcast', 'fab fa-sellsy', 'fab fa-servicestack',
+                    'fab fa-shirtsinbulk', 'fab fa-shopify', 'fab fa-shopware', 'fab fa-simplybuilt', 'fab fa-sistrix', 'fab fa-sith', 'fab fa-skyatlas', 'fab fa-slideshare',
+                    'fab fa-snapchat', 'fab fa-snapchat-ghost', 'fab fa-snapchat-square', 'fab fa-soundcloud', 'fab fa-sourcetree', 'fab fa-speakap', 'fab fa-speaker-deck',
+                    'fab fa-spotify', 'fab fa-squarespace', 'fab fa-stack-exchange', 'fab fa-stack-overflow', 'fab fa-staylinked', 'fab fa-steam', 'fab fa-steam-square',
+                    'fab fa-steam-symbol', 'fab fa-sticker-mule', 'fab fa-strava', 'fab fa-studiovinari', 'fab fa-stumbleupon', 'fab fa-stumbleupon-circle', 'fab fa-superpowers',
+                    'fab fa-supple', 'fab fa-suse', 'fab fa-symfony', 'fab fa-teamspeak', 'fab fa-tencent-weibo', 'fab fa-themeisle', 'fab fa-the-red-yeti', 'fab fa-think-peaks',
+                    'fab fa-trade-federation', 'fab fa-trello', 'fab fa-tripadvisor', 'fab fa-tumblr', 'fab fa-tumblr-square', 'fab fa-twitch', 'fab fa-typo3', 'fab fa-uber',
+                    'fab fa-uikit', 'fab fa-uniregistry', 'fab fa-untappd', 'fab fa-ups', 'fab fa-usb', 'fab fa-usps', 'fab fa-ussunnah', 'fab fa-vaadin', 'fab fa-viacoin',
+                    'fab fa-viadeo', 'fab fa-viadeo-square', 'fab fa-viber', 'fab fa-vimeo-v', 'fab fa-vimeo-square', 'fab fa-vine', 'fab fa-vk', 'fab fa-vnv', 'fab fa-vuejs',
+                    'fab fa-waze', 'fab fa-weebly', 'fab fa-weibo', 'fab fa-weixin', 'fab fa-whatsapp-square', 'fab fa-whmcs', 'fab fa-wikipedia-w', 'fab fa-wix',
+                    'fab fa-wizards-of-the-coast', 'fab fa-wolf-pack-battalion', 'fab fa-xbox', 'fab fa-xing', 'fab fa-xing-square', 'fab fa-yandex', 'fab fa-yandex-international',
+                    'fab fa-yarn', 'fab fa-yelp', 'fab fa-yoast', 'fab fa-zhihu'
+                ]
+            };
+
+            const filteredIcons = computed(() => {
+                const icons = FA_GROUPS[activeIconTab.value] || [];
+                if (!searchIconQuery.value) return icons;
+                const query = searchIconQuery.value.toLowerCase();
+                return icons.filter(icon => icon.toLowerCase().includes(query));
+            });
+
+            const selectIcon = (target, icon, key = 'icon') => {
+                target[key] = icon;
+            };
+
+            const clearColorField = (target, colorKey, opacityKey = null) => {
+                if (target) {
+                    target[colorKey] = '';
+                    if (opacityKey) target[opacityKey] = 1;
+                }
+            };
+
             const loadBuilderFont = (fontFamily) => {
                 if (!fontFamily || fontFamily === 'inherit') return;
                 const match = fontFamily.match(/['"]?([^'",$]+)/);
@@ -160,13 +257,7 @@
             };
 
             const availableElements = [
-                { type: 'heading', name: 'Heading', icon: 'fa fa-heading' },
-                { type: 'text', name: 'Text Block', icon: 'fa fa-paragraph' },
-                { type: 'image', name: 'Image', icon: 'fa fa-image' },
                 { type: 'title', name: 'Title', icon: 'fa fa-heading' },
-                { type: 'button', name: 'Button', icon: 'fa fa-rectangle-ad' },
-                { type: 'video', name: 'Video', icon: 'fa fa-play-circle' },
-                { type: 'spacer', name: 'Spacer', icon: 'fa fa-arrows-alt-v' },
             ];
 
             const filteredColumnLayouts = computed(() => {
@@ -222,48 +313,69 @@
                             parsed = rawContent;
                         }
 
-                        // Recursive migration for basis and visual gap (padding)
-                        const migrateBasis = (columns) => {
-                            if (!columns || !columns.length) return;
-                            const total = columns.length;
-                            columns.forEach(col => {
-                                // Fix shrinking issue for old columns
-                                if (!col.basis) col.basis = (100 / total) + '%';
+                        const migrateLayout = (items) => {
+                            if (!items || !Array.isArray(items)) return;
+                            items.forEach(item => {
+                                // 1. Migrate Rows / Containers
+                                if (item.type === 'row' || item.type === 'container') {
+                                    if (!item.settings) item.settings = {};
+                                    if (!item.settings.visibility) item.settings.visibility = { mobile: true, tablet: true, desktop: true };
+                                    if (item.settings.contentWidth === undefined) item.settings.contentWidth = 'site';
+                                    if (item.settings.height === undefined) item.settings.height = 'auto';
+                                    if (item.settings.customHeight === undefined) item.settings.customHeight = '';
+                                    if (item.settings.alignItems === undefined) item.settings.alignItems = 'stretch';
+                                    if (item.settings.alignContent === undefined) item.settings.alignContent = 'flex-start';
+                                    if (item.settings.justifyContent === undefined) item.settings.justifyContent = 'flex-start';
+                                    if (item.settings.flexWrap === undefined) item.settings.flexWrap = 'wrap';
+                                    if (item.settings.columnGap === undefined) item.settings.columnGap = '';
+                                    if (item.settings.htmlTag === undefined) item.settings.htmlTag = 'div';
+                                }
 
-                                // Fix missing visual gap issue for old columns
-                                if (col.settings.paddingLeft === undefined) col.settings.paddingLeft = 10;
-                                if (col.settings.paddingRight === undefined) col.settings.paddingRight = 10;
+                                // 2. Migrate Columns
+                                if (item.columns && Array.isArray(item.columns)) {
+                                    const total = item.columns.length;
+                                    item.columns.forEach(col => {
+                                        if (!col.basis) col.basis = (100 / total) + '%';
+                                        if (!col.settings) col.settings = makeColumnSettings();
+                                        
+                                        // Merge defaults for missing column settings
+                                        Object.entries(makeColumnSettings()).forEach(([k, v]) => {
+                                            if (col.settings[k] === undefined) col.settings[k] = v;
+                                        });
 
-                                // Migrate missing new column settings for old columns
-                                Object.entries(makeColumnSettings()).forEach(([k, v]) => {
-                                    if (col.settings[k] === undefined) col.settings[k] = v;
-                                });
-
-                                if (col.elements) {
-                                    col.elements.forEach(el => {
-                                        if (el.type === 'row' && el.columns) migrateBasis(el.columns);
+                                        if (col.elements) migrateLayout(col.elements);
                                     });
+                                }
+
+                                // 3. Migrate Elements
+                                if (item.type && item.type !== 'row' && item.type !== 'container') {
+                                    if (!item.settings) item.settings = {};
+                                    if (!item.settings.visibility) item.settings.visibility = { mobile: true, tablet: true, desktop: true };
+
+                                    // Initialize transient UI state (not saved)
+                                    if (item.type === 'menu') {
+                                        if (item._mobileMenuOpen === undefined) item._mobileMenuOpen = false;
+                                        if (item._hoveredIdx === undefined) item._hoveredIdx = null;
+                                        if (item._hoveredSubIdx === undefined) item._hoveredSubIdx = null;
+                                        if (item._hoveredGSubIdx === undefined) item._hoveredGSubIdx = null;
+                                    }
+
+                                    // Apply defaults for missing settings from custom element definitions
+                                    const type = item.type;
+                                    const customDef = customElements[type] || Object.values(customElements).find(e => e.type === type);
+                                    if (customDef && customDef.fields) {
+                                        Object.entries(customDef.fields).forEach(([key, field]) => {
+                                            if (field.default !== undefined && item.settings[key] === undefined) {
+                                                item.settings[key] = field.default;
+                                            }
+                                        });
+                                    }
                                 }
                             });
                         };
 
                         if (Array.isArray(parsed)) {
-                            parsed.forEach(row => {
-                                if (!row.settings) row.settings = {};
-                                if (!row.settings.visibility) row.settings.visibility = { mobile: true, tablet: true, desktop: true };
-                                if (row.settings.contentWidth === undefined) row.settings.contentWidth = 'site';
-                                if (row.settings.height === undefined) row.settings.height = 'auto';
-                                if (row.settings.customHeight === undefined) row.settings.customHeight = '';
-                                if (row.settings.alignItems === undefined) row.settings.alignItems = 'stretch';
-                                if (row.settings.alignContent === undefined) row.settings.alignContent = 'flex-start';
-                                if (row.settings.justifyContent === undefined) row.settings.justifyContent = 'flex-start';
-                                if (row.settings.flexWrap === undefined) row.settings.flexWrap = 'wrap';
-                                if (row.settings.columnGap === undefined) row.settings.columnGap = '';
-                                if (row.settings.htmlTag === undefined) row.settings.htmlTag = 'div';
-                                if (row.settings.status === undefined) row.settings.status = 'published';
-
-                                if (row.columns) migrateBasis(row.columns);
-                            });
+                            migrateLayout(parsed);
                             layout.value = parsed;
                         } else {
                             layout.value = [];
@@ -274,12 +386,47 @@
                     layout.value = [];
                 }
                 // Enable dirty tracking after initial load settles (setTimeout = macro-task, runs after Vue's watcher micro-tasks)
-                setTimeout(() => { _trackLayoutDirty = true; }, 0);
+                setTimeout(() => { 
+                    _trackLayoutDirty = true; 
+                    console.log('Builder initialized, scanning for fonts...');
+                    
+                    // Recursively load all fonts used in the layout
+                    const scanForFonts = (items) => {
+                        if (!items || !Array.isArray(items)) return;
+                        items.forEach(item => {
+                            // Check if it's an element with fontFamily
+                            if (item.settings && item.settings.fontFamily && item.settings.fontFamily !== 'inherit') {
+                                console.log('Loading font for element:', item.settings.fontFamily);
+                                loadBuilderFont(item.settings.fontFamily);
+                            }
+                            
+                            // Check columns (for containers or rows)
+                            if (item.columns && Array.isArray(item.columns)) {
+                                item.columns.forEach(col => {
+                                    // Columns themselves might have fonts in the future, but for now we check their elements
+                                    if (col.elements) scanForFonts(col.elements);
+                                });
+                            }
+
+                            // Check nested elements (if any other type has them)
+                            if (item.elements && Array.isArray(item.elements)) {
+                                scanForFonts(item.elements);
+                            }
+                        });
+                    };
+
+                    scanForFonts(layout.value);
+                    
+                    // Initialize last saved layout for dirty tracking
+                    lastSavedLayout = serializedLayout.value;
+                }, 100);
             });
 
-            watch(layout, () => {
-                if (_trackLayoutDirty) isDirty.value = true;
-            }, { deep: true });
+            watch(serializedLayout, (newVal) => {
+                if (_trackLayoutDirty) {
+                    isDirty.value = (newVal !== lastSavedLayout);
+                }
+            });
 
             // Watch isPreview to directly control layout via DOM
             watch(isPreview, (val) => {
@@ -359,6 +506,47 @@
                 activeTab.value = 'navigator';
             };
 
+            const initRichEditors = () => {
+                setTimeout(() => {
+                    if (!editingElement.value) return;
+                    const elId = editingElement.value.id;
+                    const type = editingElement.value.type;
+                    
+                    // Look for custom element definition
+                    const customDef = customElements[type] || Object.values(customElements).find(e => e.type === type);
+                    if (!customDef || !customDef.fields) return;
+
+                    Object.entries(customDef.fields).forEach(([key, field]) => {
+                        if (field.type === 'wysiwyg') {
+                            const selector = `#rich-editor-${elId}-${key}`;
+                            tinymce.remove(selector);
+                            tinymce.init({
+                                selector: selector,
+                                menubar: false,
+                                height: 350,
+                                plugins: 'lists link code table lists wordcount preview fullscreen',
+                                toolbar1: 'formatselect | bold italic underline strikethrough blockquote',
+                                toolbar2: 'alignleft aligncenter alignright alignjustify',
+                                toolbar3: 'bullist numlist outdent indent link table | code fullscreen',
+                                valid_elements: '*[*]',
+                                extended_valid_elements: '*[*]',
+                                entity_encoding: 'raw',
+                                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; font-size:14px; padding: 10px; }',
+                                branding: false,
+                                setup: (editor) => {
+                                    editor.on('change keyup', () => {
+                                        editingElement.value.settings[key] = editor.getContent();
+                                    });
+                                    editor.on('init', () => {
+                                        editor.setContent(editingElement.value.settings[key] || '');
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }, 100);
+            };
+
             const setEditingContext = (type, ci = null, coli = null, eli = null, ncoli = null, neli = null) => {
                 editingContext.value = {
                     type, ci, coli, eli, ncoli, neli,
@@ -381,6 +569,10 @@
                     activeColi.value = ncoli;
                     activeColCi.value = eli;
                 }
+
+                if (type === 'element' || type === 'nested-element') {
+                    initRichEditors();
+                }
             };
 
             // Reset tabs to general only when switching to a different entity
@@ -389,6 +581,11 @@
                 if (!sameEntity) {
                     if (newCtx.type === 'container') activePanelTab.value = 'general';
                     if (newCtx.type === 'column' || newCtx.type === 'nested-column') activeColPanelTab.value = 'general';
+                }
+                
+                // Re-init rich editors if tab changes to content
+                if (newCtx.tab === 'content' && (newCtx.type === 'element' || newCtx.type === 'nested-element')) {
+                    initRichEditors();
                 }
             }, { deep: true });
 
@@ -923,6 +1120,7 @@
                     const data = await response.json();
                     if (data.success) {
                         showToast('Layout saved successfully!', 'success');
+                        lastSavedLayout = serializedLayout.value;
                         isDirty.value = false;
                     } else {
                         showToast('Failed to save layout!', 'error');
@@ -987,9 +1185,17 @@
 
             // Dynamic Styles
             const canvasStyle = computed(() => {
-                if (device.value === 'mobile') return { width: '375px' };
-                if (device.value === 'tablet') return { width: '768px' };
-                return { width: '100%' };
+                const pt = window.builderPagePadding?.top || '60px';
+                const pb = window.builderPagePadding?.bottom || '60px';
+                const baseStyle = { paddingTop: pt, paddingBottom: pb };
+                if (isPreview.value) return { ...baseStyle, width: '100%' };
+                if (device.value === 'mobile') {
+                    return { ...baseStyle, width: (window.builderBreakpoints?.small || 800) + 'px' };
+                }
+                if (device.value === 'tablet') {
+                    return { ...baseStyle, width: (window.builderBreakpoints?.medium || 1100) + 'px' };
+                }
+                return { ...baseStyle, width: '100%' };
             });
 
             const formatBasisToFraction = (basis) => {
@@ -1015,6 +1221,22 @@
                 }
             };
 
+            const applyButtonSize = (size) => {
+                if (!editingElement.value) return;
+                const config = {
+                    'small': { pt: 8, pl: 20, fs: 14 },
+                    'medium': { pt: 12, pl: 30, fs: 16 },
+                    'large': { pt: 16, pl: 40, fs: 18 },
+                    'extra-large': { pt: 20, pl: 50, fs: 20 }
+                };
+                const c = config[size] || config['medium'];
+                editingElement.value.settings.paddingTop = c.pt;
+                editingElement.value.settings.paddingBottom = c.pt;
+                editingElement.value.settings.paddingLeft = c.pl;
+                editingElement.value.settings.paddingRight = c.pl;
+                editingElement.value.settings.fontSize = c.fs;
+            };
+
             const getUnitVal = (val, unit = 'px') => {
                 if (val !== undefined && val !== null && val !== '') {
                     return String(val) + unit;
@@ -1025,7 +1247,6 @@
             const containerStyle = (container, ci) => {
                 const s = container.settings;
                 let mTop = Number(s.marginTop) || 0;
-                if (ci === 0) mTop += 60;
 
                 let boxShadowStr = 'none';
                 if (s.boxShadow) {
@@ -1058,7 +1279,7 @@
                     paddingBottom: getUnitVal(s.paddingBottom, s.paddingBottomUnit) || '0px',
                     paddingLeft: getUnitVal(s.paddingLeft, s.paddingLeftUnit) || '0px',
                     paddingRight: getUnitVal(s.paddingRight, s.paddingRightUnit) || '0px',
-                    marginTop: (ci === 0 && mTop !== 0 && !s.marginTopUnit) ? mTop + 'px' : getUnitVal(mTop, s.marginTopUnit) || '0px',
+                    marginTop: getUnitVal(mTop, s.marginTopUnit) || '0px',
                     marginBottom: getUnitVal(s.marginBottom, s.marginBottomUnit) || '0px',
                     borderTopWidth: (s.borderSizeTop || 0) + 'px',
                     borderRightWidth: (s.borderSizeRight || 0) + 'px',
@@ -1338,7 +1559,10 @@
                 showColumnModal.value = true;
             };
 
-            const openElementModal = (ci, coli = null, defaultTab = 'design', restricted = false, eli = null, ncoli = null, neli = null, allowedTabs = ['design', 'nested']) => {
+            const openElementModal = (ci, coli = null, defaultTab = 'elements', restricted = false, eli = null, ncoli = null, neli = null, allowedTabs = ['elements', 'nested']) => {
+                // Map 'design' tab from old templates to 'elements'
+                if (defaultTab === 'design') defaultTab = 'elements';
+
                 currentTargetCi.value = ci;
                 currentTargetColi.value = coli;
                 currentTargetEli.value = eli;
@@ -1435,7 +1659,7 @@
                         } : {}),
                         ...(type === 'text' ? { content: '<p>New text here...</p>' } : {}),
                         ...(type === 'button' ? { text: 'Click Me', url: '#', style: 'primary' } : {}),
-                        ...(type === 'image' ? { url: '', alt: '' } : {}),
+                        ...(type === 'image' ? { url: '', alt: '', linkUrl: '', linkTarget: '_self' } : {}),
                     }
                 };
 
@@ -1447,22 +1671,50 @@
                     });
                 }
 
+                // Initialize transient UI state for specific elements
+                if (type === 'menu') {
+                    newEl._mobileMenuOpen = false;
+                    newEl._hoveredIdx = null;
+                    newEl._hoveredSubIdx = null;
+                    newEl._hoveredGSubIdx = null;
+                }
+
+                console.log('Adding element:', type, {
+                    ci: currentTargetCi.value,
+                    coli: currentTargetColi.value,
+                    eli: currentTargetEli.value,
+                    ncoli: currentTargetNcoli.value,
+                    neli: currentTargetNeli.value
+                });
+
                 if (currentTargetNeli.value !== null) {
                     // Nested insertion inside a nested column at specific index
-                    const nestedCol = layout.value[currentTargetCi.value].columns[currentTargetColi.value].elements[currentTargetEli.value].columns[currentTargetNcoli.value];
-                    nestedCol.elements.splice(currentTargetNeli.value, 0, newEl);
+                    const row = layout.value[currentTargetCi.value].columns[currentTargetColi.value].elements[currentTargetEli.value];
+                    if (row && row.columns && row.columns[currentTargetNcoli.value]) {
+                        row.columns[currentTargetNcoli.value].elements.splice(currentTargetNeli.value, 0, newEl);
+                    } else {
+                        console.error('Failed to find nested column for insertion', { row });
+                    }
                 } else if (currentTargetEli.value !== null && currentTargetNcoli.value !== null) {
                     // Nested insertion inside a nested column (append)
-                    const nestedCol = layout.value[currentTargetCi.value].columns[currentTargetColi.value].elements[currentTargetEli.value].columns[currentTargetNcoli.value];
-                    nestedCol.elements.push(newEl);
+                    const row = layout.value[currentTargetCi.value].columns[currentTargetColi.value].elements[currentTargetEli.value];
+                    if (row && row.columns && row.columns[currentTargetNcoli.value]) {
+                        row.columns[currentTargetNcoli.value].elements.push(newEl);
+                    } else {
+                        console.error('Failed to find nested column for append', { row });
+                    }
                 } else if (currentTargetEli.value !== null) {
                     // Insertion at specific index in main column
                     const column = layout.value[currentTargetCi.value].columns[currentTargetColi.value];
-                    column.elements.splice(currentTargetEli.value, 0, newEl);
+                    if (column && column.elements) {
+                        column.elements.splice(currentTargetEli.value, 0, newEl);
+                    }
                 } else {
                     // Regular insertion at end of column
-                    const column = layout.value[currentTargetCi.value].columns[currentTargetColi.value];
-                    column.elements.push(newEl);
+                    const column = layout.value[currentTargetCi.value]?.columns[currentTargetColi.value];
+                    if (column && column.elements) {
+                        column.elements.push(newEl);
+                    }
                 }
                 showElementModal.value = false;
             };
@@ -1486,7 +1738,10 @@
                 toasts, showToast,
                 hoveredType, hoveredCi, hoveredColi, hoveredEli, hoveredNcoli, setHover,
                 themeBodyFont, themeHeadingFont, builderFontGroups, builderFonts: BUILDER_FONTS,
-                titleFontVariants, loadBuilderFont
+                titleFontVariants, loadBuilderFont,
+                applyButtonSize, searchIconQuery, filteredIcons, selectIcon, activeIconTab, clearColorField,
+                lazyMenuData: reactive(window.lazyMenuData || {}),
+                lazyMenusList: window.lazyMenusList || {}
             };
         }
     }).mount('#lazy-builder-app');

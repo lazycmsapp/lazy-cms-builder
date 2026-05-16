@@ -437,10 +437,10 @@
                                                                    step="{{ $field['step'] ?? 1 }}"
                                                                    value="{{ $val }}"
                                                                    class="flex-1 accent-[#2271b1] cursor-pointer h-1.5 bg-gray-200 rounded-lg appearance-none"
-                                                                   oninput="document.getElementById('range_val_{{ $key }}').value = this.value">
+                                                                   oninput="document.getElementById('range_val_{{ $key }}').value = this.value; if('{{ $key }}' === 'theme_medium_screen_breakpoint') { var el = document.getElementById('large-screen-bp-val'); if(el) el.textContent = this.value; }">
                                                             <input type="number" id="range_val_{{ $key }}" value="{{ $val }}"
                                                                    class="wp-input w-16 h-8 text-center text-[12px]"
-                                                                   oninput="document.getElementById('range_{{ $key }}').value = this.value">
+                                                                   oninput="document.getElementById('range_{{ $key }}').value = this.value; if('{{ $key }}' === 'theme_medium_screen_breakpoint') { var el = document.getElementById('large-screen-bp-val'); if(el) el.textContent = this.value; }">
                                                         </div>
 
                                                     @elseif($type === 'css' || $type === 'script')

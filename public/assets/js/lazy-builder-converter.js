@@ -298,6 +298,123 @@
                 a = attrI(a, 'height', s.height);
                 return '[lazy_video ' + a.trim() + vis + ' /]';
             }
+            case 'menu': {
+                var a = base;
+                // General
+                a = attrI(a, 'menu_id',           s.menuId);
+                a = attrI(a, 'layout',             s.layout,         'horizontal');
+                a = attrI(a, 'margin_top',         s.marginTop);
+                a = attrI(a, 'margin_bottom',      s.marginBottom);
+                a = attrI(a, 'item_transition',    s.itemTransition);
+                a = attrI(a, 'item_transition_ms', s.itemTransitionMs);
+                a = attrI(a, 'submenu_space',      s.submenuSpace,   10);
+                var aso = s.arrowScopeObj || {};
+                if ((aso.main  ?? true)  === false) a += ' arrow_main="no"';
+                if ((aso.active  || false) === true) a += ' arrow_active="yes"';
+                if ((aso.submenu || false) === true) a += ' arrow_submenu="yes"';
+                a = attrI(a, 'css_class', s.cssClass);
+                a = attrI(a, 'css_id',    s.cssId);
+                // Design
+                a = attrI(a, 'min_height',         s.minHeight);
+                a = attrI(a, 'align_items',        s.alignItems,    'flex-start');
+                a = attrI(a, 'justification',      s.justification, 'flex-start');
+                a = attrI(a, 'font_family',        s.fontFamily,    'inherit');
+                a = attrI(a, 'font_size',          s.fontSize);
+                a = attrI(a, 'font_weight',        s.fontWeight);
+                a = attrI(a, 'line_height',        s.lineHeight);
+                a = attrI(a, 'letter_spacing',     s.letterSpacing);
+                a = attrI(a, 'text_transform',     s.textTransform);
+                a = attrI(a, 'item_padding_top',   s.itemPaddingTop);
+                a = attrI(a, 'item_padding_right', s.itemPaddingRight);
+                a = attrI(a, 'item_padding_bottom',s.itemPaddingBottom);
+                a = attrI(a, 'item_padding_left',  s.itemPaddingLeft);
+                a = attrI(a, 'item_spacing',       s.itemSpacing);
+                a = attrI(a, 'item_border_radius', s.itemBorderRadius);
+                a = attrI(a, 'item_bg_color',      s.itemBgColor);
+                a = attrI(a, 'item_bg_color_hover',s.itemBgColorHover);
+                a = attrI(a, 'item_color',         s.itemColor);
+                a = attrI(a, 'item_color_hover',   s.itemColorHover);
+                a = attrI(a, 'item_border_top',    s.itemBorderSizeTop);
+                a = attrI(a, 'item_border_right',  s.itemBorderSizeRight);
+                a = attrI(a, 'item_border_bottom', s.itemBorderSizeBottom);
+                a = attrI(a, 'item_border_left',   s.itemBorderSizeLeft);
+                a = attrI(a, 'item_border_color',  s.itemBorderColor);
+                a = attrI(a, 'item_border_top_h',  s.itemBorderSizeTopHover);
+                a = attrI(a, 'item_border_right_h',s.itemBorderSizeRightHover);
+                a = attrI(a, 'item_border_bottom_h',s.itemBorderSizeBottomHover);
+                a = attrI(a, 'item_border_left_h', s.itemBorderSizeLeftHover);
+                a = attrI(a, 'item_border_color_h',s.itemBorderColorHover);
+                // Submenu
+                a = attrI(a, 'show_arrows',          s.showArrows,        'yes');
+                a = attrI(a, 'submenu_direction',    s.submenuDirection,  'right');
+                a = attrI(a, 'submenu_transition',   s.submenuTransition, 'fade');
+                a = attrI(a, 'submenu_min_width',    s.submenuMinWidth);
+                a = attrI(a, 'submenu_max_width',    s.submenuMaxWidth);
+                a = attrI(a, 'sub_sub_direction',    s.subSubMenuDirection, 'right');
+                a = attrI(a, 'sub_sub_offset',       s.subSubMenuOffset,  5);
+                a = attrI(a, 'submenu_font_family',  s.submenuFontFamily, 'inherit');
+                a = attrI(a, 'submenu_font_size',    s.submenuFontSize);
+                a = attrI(a, 'submenu_line_height',  s.submenuLineHeight);
+                a = attrI(a, 'submenu_letter_sp',    s.submenuLetterSpacing);
+                a = attrI(a, 'submenu_text_transform',s.submenuTextTransform);
+                a = attrI(a, 'submenu_text_align',   s.submenuTextAlign);
+                a = attrI(a, 'submenu_pt',           s.submenuPaddingTop);
+                a = attrI(a, 'submenu_pr',           s.submenuPaddingRight);
+                a = attrI(a, 'submenu_pb',           s.submenuPaddingBottom);
+                a = attrI(a, 'submenu_pl',           s.submenuPaddingLeft);
+                a = attrI(a, 'submenu_radius_tl',    s.submenuBorderRadiusTopLeft);
+                a = attrI(a, 'submenu_radius_tr',    s.submenuBorderRadiusTopRight);
+                a = attrI(a, 'submenu_radius_br',    s.submenuBorderRadiusBottomRight);
+                a = attrI(a, 'submenu_radius_bl',    s.submenuBorderRadiusBottomLeft);
+                a = attrI(a, 'submenu_shadow',       s.submenuBoxShadow,  'no');
+                a = attrI(a, 'submenu_shadow_color', s.submenuShadowColor);
+                a = attrI(a, 'submenu_shadow_h',     s.submenuShadowH);
+                a = attrI(a, 'submenu_shadow_v',     s.submenuShadowV);
+                a = attrI(a, 'submenu_shadow_blur',  s.submenuShadowBlur);
+                a = attrI(a, 'submenu_shadow_spread',s.submenuShadowSpread);
+                a = attrI(a, 'submenu_thumb_w',      s.submenuThumbWidth);
+                a = attrI(a, 'submenu_thumb_h',      s.submenuThumbHeight);
+                a = attrI(a, 'submenu_sep_color',    s.submenuSeparatorColor);
+                a = attrI(a, 'submenu_bg_color',     s.submenuBgColor);
+                a = attrI(a, 'submenu_text_color',   s.submenuTextColor);
+                a = attrI(a, 'submenu_text_color_h', s.submenuTextColorHover);
+                // Mobile
+                a = attrI(a, 'mobile_breakpoint',   s.mobileCollapseBreakpoint,         'tablet');
+                a = attrI(a, 'mobile_mode',          s.mobileMenuMode,                  'collapsed');
+                a = attrI(a, 'mobile_expand_mode',   s.mobileMenuExpandMode,            'full-width-static');
+                a = attrI(a, 'mobile_sidebar_side',  s.mobileMenuSidebarSide,           'left');
+                a = attrI(a, 'mobile_trigger_pt',    s.mobileMenuTriggerPaddingTop,     10);
+                a = attrI(a, 'mobile_trigger_pr',    s.mobileMenuTriggerPaddingRight,   15);
+                a = attrI(a, 'mobile_trigger_pb',    s.mobileMenuTriggerPaddingBottom,  10);
+                a = attrI(a, 'mobile_trigger_pl',    s.mobileMenuTriggerPaddingLeft,    15);
+                a = attrI(a, 'mobile_trigger_bg',    s.mobileMenuTriggerBgColor);
+                a = attrI(a, 'mobile_trigger_color', s.mobileMenuTriggerTextColor);
+                a = attrI(a, 'mobile_trigger_text',  s.mobileMenuTriggerText);
+                a = attrI(a, 'mobile_expand_icon',   s.mobileMenuTriggerExpandIcon);
+                a = attrI(a, 'mobile_collapse_icon', s.mobileMenuTriggerCollapseIcon);
+                a = attrI(a, 'mobile_trigger_fs',    s.mobileMenuTriggerFontSize);
+                a = attrI(a, 'mobile_trigger_align', s.mobileMenuTriggerHorizontalAlign,'flex-start');
+                a = attrI(a, 'mobile_item_min_h',    s.mobileMenuItemMinHeight);
+                a = attrI(a, 'mobile_item_pt',       s.mobileMenuItemPaddingTop);
+                a = attrI(a, 'mobile_item_pr',       s.mobileMenuItemPaddingRight);
+                a = attrI(a, 'mobile_item_pb',       s.mobileMenuItemPaddingBottom);
+                a = attrI(a, 'mobile_item_pl',       s.mobileMenuItemPaddingLeft);
+                a = attrI(a, 'mobile_text_align',    s.mobileMenuTextAlign,             'left');
+                a = attrI(a, 'mobile_indent',        s.mobileMenuIndentSubmenus,        'on');
+                a = attrI(a, 'mobile_font_family',   s.mobileMenuFontFamily,            'inherit');
+                a = attrI(a, 'mobile_font_size',     s.mobileMenuFontSize);
+                a = attrI(a, 'mobile_font_weight',   s.mobileMenuFontWeight);
+                a = attrI(a, 'mobile_line_height',   s.mobileMenuLineHeight);
+                a = attrI(a, 'mobile_letter_sp',     s.mobileMenuLetterSpacing);
+                a = attrI(a, 'mobile_text_transform',s.mobileMenuTextTransform,         'none');
+                a = attrI(a, 'mobile_separator',     s.mobileSeparatorEnabled,          'yes');
+                a = attrI(a, 'mobile_sep_color',     s.mobileMenuSeparatorColor);
+                a = attrI(a, 'mobile_bg_color',      s.mobileMenuBgColor);
+                a = attrI(a, 'mobile_bg_color_h',    s.mobileMenuBgColorHover);
+                a = attrI(a, 'mobile_text_color',    s.mobileMenuTextColor);
+                a = attrI(a, 'mobile_text_color_h',  s.mobileMenuTextColorHover);
+                return '[lazy_menu ' + a.trim() + vis + ' /]';
+            }
             case 'row': {
                 if (el.columns && el.columns.length) {
                     var rowCols = el.columns.map(columnToShortcode);
@@ -489,6 +606,123 @@
                     height: a.height || null,
                     visibility: vis
                 }};
+
+            case 'menu': {
+                var aso = {
+                    main:    (a.arrow_main    || '') !== 'no',
+                    active:  (a.arrow_active  || '') === 'yes',
+                    submenu: (a.arrow_submenu || '') === 'yes'
+                };
+                return { id: a.id || generateId(), type: 'menu', settings: {
+                    menuId:             a.menu_id          || null,
+                    layout:             a.layout            || 'horizontal',
+                    marginTop:          num(a.margin_top),
+                    marginBottom:       num(a.margin_bottom),
+                    itemTransition:     a.item_transition    ? parseFloat(a.item_transition)    : null,
+                    itemTransitionMs:   a.item_transition_ms ? parseInt(a.item_transition_ms)   : null,
+                    submenuSpace:       a.submenu_space      ? parseInt(a.submenu_space)         : 10,
+                    arrowScopeObj:      aso,
+                    cssClass:           a.css_class          || null,
+                    cssId:              a.css_id             || null,
+                    minHeight:          a.min_height         ? parseInt(a.min_height)  : null,
+                    alignItems:         a.align_items        || 'flex-start',
+                    justification:      a.justification      || 'flex-start',
+                    fontFamily:         a.font_family        || 'inherit',
+                    fontSize:           a.font_size          || null,
+                    fontWeight:         a.font_weight        || null,
+                    lineHeight:         a.line_height        || null,
+                    letterSpacing:      a.letter_spacing     || null,
+                    textTransform:      a.text_transform     || null,
+                    itemPaddingTop:     num(a.item_padding_top),
+                    itemPaddingRight:   num(a.item_padding_right),
+                    itemPaddingBottom:  num(a.item_padding_bottom),
+                    itemPaddingLeft:    num(a.item_padding_left),
+                    itemSpacing:        num(a.item_spacing),
+                    itemBorderRadius:   num(a.item_border_radius),
+                    itemBgColor:        a.item_bg_color        || null,
+                    itemBgColorHover:   a.item_bg_color_hover  || null,
+                    itemColor:          a.item_color           || null,
+                    itemColorHover:     a.item_color_hover     || null,
+                    itemBorderSizeTop:         num(a.item_border_top),
+                    itemBorderSizeRight:       num(a.item_border_right),
+                    itemBorderSizeBottom:      num(a.item_border_bottom),
+                    itemBorderSizeLeft:        num(a.item_border_left),
+                    itemBorderColor:           a.item_border_color    || null,
+                    itemBorderSizeTopHover:    num(a.item_border_top_h),
+                    itemBorderSizeRightHover:  num(a.item_border_right_h),
+                    itemBorderSizeBottomHover: num(a.item_border_bottom_h),
+                    itemBorderSizeLeftHover:   num(a.item_border_left_h),
+                    itemBorderColorHover:      a.item_border_color_h  || null,
+                    showArrows:         a.show_arrows          || 'yes',
+                    submenuDirection:   a.submenu_direction    || 'right',
+                    submenuTransition:  a.submenu_transition   || 'fade',
+                    submenuMinWidth:    a.submenu_min_width    || null,
+                    submenuMaxWidth:    a.submenu_max_width    || null,
+                    subSubMenuDirection:a.sub_sub_direction    || 'right',
+                    subSubMenuOffset:   a.sub_sub_offset       ? parseInt(a.sub_sub_offset) : 5,
+                    submenuFontFamily:  a.submenu_font_family  || 'inherit',
+                    submenuFontSize:    a.submenu_font_size    || null,
+                    submenuLineHeight:  a.submenu_line_height  || null,
+                    submenuLetterSpacing: a.submenu_letter_sp  || null,
+                    submenuTextTransform: a.submenu_text_transform || null,
+                    submenuTextAlign:   a.submenu_text_align   || null,
+                    submenuPaddingTop:  num(a.submenu_pt),
+                    submenuPaddingRight:num(a.submenu_pr),
+                    submenuPaddingBottom:num(a.submenu_pb),
+                    submenuPaddingLeft: num(a.submenu_pl),
+                    submenuBorderRadiusTopLeft:     num(a.submenu_radius_tl),
+                    submenuBorderRadiusTopRight:    num(a.submenu_radius_tr),
+                    submenuBorderRadiusBottomRight: num(a.submenu_radius_br),
+                    submenuBorderRadiusBottomLeft:  num(a.submenu_radius_bl),
+                    submenuBoxShadow:   a.submenu_shadow       || 'no',
+                    submenuShadowColor: a.submenu_shadow_color || null,
+                    submenuShadowH:     num(a.submenu_shadow_h),
+                    submenuShadowV:     num(a.submenu_shadow_v),
+                    submenuShadowBlur:  num(a.submenu_shadow_blur),
+                    submenuShadowSpread:num(a.submenu_shadow_spread),
+                    submenuThumbWidth:  a.submenu_thumb_w      || null,
+                    submenuThumbHeight: a.submenu_thumb_h      || null,
+                    submenuSeparatorColor: a.submenu_sep_color || null,
+                    submenuBgColor:     a.submenu_bg_color     || null,
+                    submenuTextColor:   a.submenu_text_color   || null,
+                    submenuTextColorHover: a.submenu_text_color_h || null,
+                    mobileCollapseBreakpoint:         a.mobile_breakpoint   || 'tablet',
+                    mobileMenuMode:                   a.mobile_mode         || 'collapsed',
+                    mobileMenuExpandMode:             a.mobile_expand_mode  || 'full-width-static',
+                    mobileMenuSidebarSide:            a.mobile_sidebar_side || 'left',
+                    mobileMenuTriggerPaddingTop:      num(a.mobile_trigger_pt) !== null ? num(a.mobile_trigger_pt) : 10,
+                    mobileMenuTriggerPaddingRight:    num(a.mobile_trigger_pr) !== null ? num(a.mobile_trigger_pr) : 15,
+                    mobileMenuTriggerPaddingBottom:   num(a.mobile_trigger_pb) !== null ? num(a.mobile_trigger_pb) : 10,
+                    mobileMenuTriggerPaddingLeft:     num(a.mobile_trigger_pl) !== null ? num(a.mobile_trigger_pl) : 15,
+                    mobileMenuTriggerBgColor:         a.mobile_trigger_bg    || null,
+                    mobileMenuTriggerTextColor:       a.mobile_trigger_color || null,
+                    mobileMenuTriggerText:            a.mobile_trigger_text  || null,
+                    mobileMenuTriggerExpandIcon:      a.mobile_expand_icon   || null,
+                    mobileMenuTriggerCollapseIcon:    a.mobile_collapse_icon || null,
+                    mobileMenuTriggerFontSize:        a.mobile_trigger_fs    || null,
+                    mobileMenuTriggerHorizontalAlign: a.mobile_trigger_align || 'flex-start',
+                    mobileMenuItemMinHeight:          a.mobile_item_min_h    ? parseInt(a.mobile_item_min_h) : null,
+                    mobileMenuItemPaddingTop:         num(a.mobile_item_pt),
+                    mobileMenuItemPaddingRight:       num(a.mobile_item_pr),
+                    mobileMenuItemPaddingBottom:      num(a.mobile_item_pb),
+                    mobileMenuItemPaddingLeft:        num(a.mobile_item_pl),
+                    mobileMenuTextAlign:              a.mobile_text_align    || 'left',
+                    mobileMenuIndentSubmenus:         a.mobile_indent        || 'on',
+                    mobileMenuFontFamily:             a.mobile_font_family   || 'inherit',
+                    mobileMenuFontSize:               a.mobile_font_size     || null,
+                    mobileMenuFontWeight:             a.mobile_font_weight   || null,
+                    mobileMenuLineHeight:             a.mobile_line_height   || null,
+                    mobileMenuLetterSpacing:          a.mobile_letter_sp     || null,
+                    mobileMenuTextTransform:          a.mobile_text_transform || 'none',
+                    mobileSeparatorEnabled:           a.mobile_separator     || 'yes',
+                    mobileMenuSeparatorColor:         a.mobile_sep_color     || null,
+                    mobileMenuBgColor:                a.mobile_bg_color      || null,
+                    mobileMenuBgColorHover:           a.mobile_bg_color_h    || null,
+                    mobileMenuTextColor:              a.mobile_text_color    || null,
+                    mobileMenuTextColorHover:         a.mobile_text_color_h  || null,
+                    visibility: vis
+                }};
+            }
 
             case 'row': {
                 var rowObj = { id: a.id || generateId(), type: 'row', settings: { visibility: vis } };

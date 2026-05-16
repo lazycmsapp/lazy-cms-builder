@@ -63,7 +63,7 @@
                                  class="flex items-center gap-3 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line"
                                  @click="setEditingContext('element', ci, coli, eli)">
                                 <i :class="el.icon" class="text-[11px] text-slate-400 w-4 text-center"></i>
-                                <span class="text-[14px] text-slate-500 flex-1 capitalize">@{{ el.type }}</span>
+                                <span class="text-[14px] text-slate-500 flex-1 capitalize">@{{ (el.type === 'text_block' || el.type === 'special_text') ? 'Text Block' : el.type.replace(/_/g, ' ') }}</span>
                                 <div class="flex items-center gap-2 opacity-0 group-hover/line:opacity-100 transition-opacity">
                                     <i @click.stop="openElementModal(ci, coli, 'design', false, eli + 1)" class="fa fa-plus text-[9px] text-slate-400 hover:text-[#0091ea]" title="Add Below"></i>
                                     <i @click.stop="setEditingContext('element', ci, coli, eli)" class="fa fa-pen text-[9px] text-slate-400 hover:text-[#0091ea]" title="Edit"></i>
@@ -104,7 +104,7 @@
                                         <div class="flex items-center gap-3 px-4 py-1 hover:bg-slate-50 cursor-pointer group/line"
                                              @click="setEditingContext('element', ci, coli, eli, ncoli, neli)">
                                             <i :class="nel.icon" class="text-[10px] text-slate-400 w-4 text-center"></i>
-                                            <span class="text-[14px] text-slate-500 flex-1 capitalize">@{{ nel.type }}</span>
+                                            <span class="text-[14px] text-slate-500 flex-1 capitalize">@{{ (nel.type === 'text_block' || nel.type === 'special_text') ? 'Text Block' : nel.type.replace(/_/g, ' ') }}</span>
                                             <div class="flex items-center gap-2 opacity-0 group-hover/line:opacity-100 transition-opacity">
                                                 <i @click.stop="openElementModal(ci, coli, 'design', true, eli, ncoli, neli + 1)" class="fa fa-plus text-[9px] text-slate-400 hover:text-[#0091ea]" title="Add Below"></i>
                                                 <i @click.stop="setEditingContext('element', ci, coli, eli, ncoli, neli)" class="fa fa-pen text-[9px] text-slate-400 hover:text-[#0091ea]" title="Edit"></i>
@@ -141,7 +141,7 @@
                                 <i :class="editingElement?.icon || 'fa fa-cube'" class="text-sm"></i>
                             </div>
                             <div>
-                                <h3 class="text-[11px] font-black uppercase tracking-widest text-slate-800">@{{ editingElement?.name || 'Element' }} Settings</h3>
+                                <h3 class="text-[11px] font-black uppercase tracking-widest text-slate-800">@{{ editingElement?.name || ( (editingElement?.type === 'text_block' || editingElement?.type === 'special_text') ? 'Text Block' : (editingElement?.type || 'Element').replace(/_/g, ' ') ) }} Settings</h3>
                                 <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Edit Content & Design</p>
                             </div>
                         </div>
@@ -150,22 +150,46 @@
                         </button>
                     </div>
 
-                    <!-- Tabs (Avada Style) -->
-                    <div class="flex border-b border-slate-100 bg-[#0091ea]">
+                    <div class="flex border-b border-white/10 bg-[#0091ea] overflow-hidden">
                         <button @click="editingContext.tab = 'content'" 
-                                :class="(editingContext.tab || 'content') === 'content' ? 'bg-[#007cc0] text-white' : 'text-white/70 hover:text-white'" 
-                                class="flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all border-r border-white/10">
-                            General
+                                :class="(editingContext.tab || 'content') === 'content' ? 'bg-[#007cc0] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'" 
+                                class="builder-tab-btn py-3 text-[10px] font-black uppercase tracking-widest border-r border-white/10">
+                            <span v-if="(editingContext.tab || 'content') === 'content'">General</span>
+                            <i v-else class="fa fa-cog text-xs"></i>
                         </button>
+                        
                         <button @click="editingContext.tab = 'design'" 
-                                :class="editingContext.tab === 'design' ? 'bg-[#007cc0] text-white' : 'text-white/70 hover:text-white'" 
-                                class="flex-1 py-3 transition-all border-r border-white/10">
-                            <i class="fa fa-pen text-xs"></i>
+                                :class="editingContext.tab === 'design' ? 'bg-[#007cc0] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'" 
+                                class="builder-tab-btn py-3 border-r border-white/10 text-[10px] font-black uppercase tracking-widest transition-all">
+                            <template v-if="editingContext.tab === 'design'">
+                                <span>@{{ editingElement?.type === 'menu' ? 'Main Menu' : 'Design' }}</span>
+                            </template>
+                            <template v-else>
+                                <i :class="editingElement?.type === 'menu' ? 'fa fa-bars' : 'fa fa-pen'" class="text-xs"></i>
+                            </template>
                         </button>
+
+                        <button v-if="editingElement?.type === 'menu'"
+                                @click="editingContext.tab = 'submenu'" 
+                                :class="editingContext.tab === 'submenu' ? 'bg-[#007cc0] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'" 
+                                class="builder-tab-btn py-3 border-r border-white/10 text-[10px] font-black uppercase tracking-widest transition-all">
+                            <span v-if="editingContext.tab === 'submenu'">Sub Menu</span>
+                            <i v-else class="fa fa-indent text-xs"></i>
+                        </button>
+
+                        <button v-if="editingElement?.type === 'menu'"
+                                @click="editingContext.tab = 'mobile'"
+                                :class="editingContext.tab === 'mobile' ? 'bg-[#007cc0] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'" 
+                                class="builder-tab-btn py-3 border-r border-white/10 text-[10px] font-black uppercase tracking-widest transition-all">
+                            <span v-if="editingContext.tab === 'mobile'">Mobile</span>
+                            <i v-else class="fa fa-mobile-screen text-xs"></i>
+                        </button>
+
                         <button @click="editingContext.tab = 'extras'" 
-                                :class="editingContext.tab === 'extras' ? 'bg-[#007cc0] text-white' : 'text-white/70 hover:text-white'" 
-                                class="flex-1 py-3 transition-all">
-                            <i class="fa fa-copy text-xs"></i>
+                                :class="editingContext.tab === 'extras' ? 'bg-[#007cc0] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'" 
+                                class="builder-tab-btn py-3 text-[10px] font-black uppercase tracking-widest transition-all">
+                            <span v-if="editingContext.tab === 'extras'">Extras</span>
+                            <i v-else class="fa fa-copy text-xs"></i>
                         </button>
                     </div>
 
@@ -173,75 +197,44 @@
                         <!-- ══ GENERAL TAB (Content) ══ -->
                         <div v-if="(editingContext.tab || 'content') === 'content'" class="p-5 space-y-8">
                             
-                            <div v-if="editingElement?.type === 'title'" class="space-y-8">
-                                <!-- Title Field -->
+                            <div v-if="editingElement?.type === 'text_block' || editingElement?.type === 'special_text'" class="space-y-8">
+                                <!-- Content Field (Rich Editor) -->
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">Title</label>
-                                        <div class="flex gap-2 text-slate-300">
-                                            <i class="fa fa-question-circle text-[10px]"></i>
-                                            <i class="fa fa-bars text-[10px]"></i>
-                                        </div>
+                                        <label class="text-[12px] font-bold text-[#333]">Content</label>
                                     </div>
-                                    <textarea v-model="editingElement.settings.title"
-                                              rows="4"
-                                              placeholder="Enter your title here..."
-                                              class="w-full border border-slate-200 rounded p-3 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea] focus:ring-1 focus:ring-[#0091ea]/10 transition-all resize-none"></textarea>
+                                    <div class="builder-rich-editor-wrapper border border-slate-200 rounded overflow-hidden focus-within:border-[#0091ea] transition-all">
+                                        <textarea :id="'rich-editor-' + editingElement.id + '-content'" 
+                                                  class="builder-rich-editor w-full p-3 text-[13px] min-h-[200px] focus:outline-none"
+                                                  v-model="editingElement.settings.content"></textarea>
+                                    </div>
                                 </div>
 
-                                <!-- Title Link Toggle -->
+                                <!-- Alignment -->
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">Title Link</label>
-                                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
-                                    </div>
-                                    <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
-                                        <button @click="editingElement.settings.useLink = true"
-                                                :class="editingElement.settings.useLink ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
-                                                class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">On</button>
-                                        <button @click="editingElement.settings.useLink = false"
-                                                :class="!editingElement.settings.useLink ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
-                                                class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">Off</button>
-                                    </div>
-                                </div>
-
-                                <!-- Link URL Field -->
-                                <div v-if="editingElement.settings.useLink">
-                                    <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">Link URL</label>
-                                        <div class="flex gap-2 text-slate-300">
-                                            <i class="fa fa-question-circle text-[10px]"></i>
-                                            <i class="fa fa-bars text-[10px]"></i>
+                                        <label class="text-[12px] font-bold text-[#333]">Alignment</label>
+                                        <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden p-1 w-fit">
+                                            <button @click="editingElement.settings.textAlign = 'left'"
+                                                    :class="editingElement.settings.textAlign === 'left' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400 hover:bg-white/50'"
+                                                    class="px-4 py-1.5 text-[11px] font-bold rounded transition-all">Left</button>
+                                            <button @click="editingElement.settings.textAlign = 'center'"
+                                                    :class="(editingElement.settings.textAlign === 'center' || !editingElement.settings.textAlign) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400 hover:bg-white/50'"
+                                                    class="px-4 py-1.5 text-[11px] font-bold rounded transition-all">Center</button>
+                                            <button @click="editingElement.settings.textAlign = 'right'"
+                                                    :class="editingElement.settings.textAlign === 'right' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400 hover:bg-white/50'"
+                                                    class="px-4 py-1.5 text-[11px] font-bold rounded transition-all">Right</button>
+                                            <button @click="editingElement.settings.textAlign = 'justify'"
+                                                    :class="editingElement.settings.textAlign === 'justify' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400 hover:bg-white/50'"
+                                                    class="px-4 py-1.5 text-[11px] font-bold rounded transition-all">Justify</button>
                                         </div>
                                     </div>
-                                    <div class="flex">
-                                        <input type="text" v-model="editingElement.settings.linkUrl"
-                                               placeholder="Select Link"
-                                               class="flex-1 border border-slate-200 border-r-0 rounded-l px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#0091ea]">
-                                        <button class="bg-white border border-slate-200 rounded-r px-3 text-slate-400 hover:text-[#0091ea] transition-colors">
-                                            <i class="fa fa-link text-[12px]"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Link Target -->
-                                <div v-if="editingElement.settings.useLink && editingElement.settings.linkUrl">
-                                    <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">Link Target</label>
-                                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
-                                    </div>
-                                    <select v-model="editingElement.settings.linkTarget"
-                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                        <option value="_self">Same Window</option>
-                                        <option value="_blank">New Window</option>
-                                    </select>
                                 </div>
 
                                 <!-- Visibility -->
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
-                                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                                     </div>
                                     <div class="grid grid-cols-3 gap-1">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
@@ -267,7 +260,6 @@
                                     <div>
                                         <div class="flex justify-between items-center mb-3">
                                             <label class="text-[12px] font-bold text-[#333]">CSS Class</label>
-                                            <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                                         </div>
                                         <input type="text" v-model="editingElement.settings.cssClass" 
                                                class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
@@ -275,7 +267,103 @@
                                     <div>
                                         <div class="flex justify-between items-center mb-3">
                                             <label class="text-[12px] font-bold text-[#333]">CSS ID</label>
-                                            <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
+                                        </div>
+                                        <input type="text" v-model="editingElement.settings.cssId" 
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-else-if="editingElement?.type === 'title'" class="space-y-8">
+                                <!-- Title Field -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Title</label>
+                                    </div>
+                                    <textarea v-model="editingElement.settings.title"
+                                              rows="4"
+                                              placeholder="Enter your title here..."
+                                              class="w-full border border-slate-200 rounded p-3 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea] focus:ring-1 focus:ring-[#0091ea]/10 transition-all resize-none"></textarea>
+                                </div>
+
+                                <!-- Title Link Toggle -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Title Link</label>
+                                    </div>
+                                    <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
+                                        <button @click="editingElement.settings.useLink = true"
+                                                :class="editingElement.settings.useLink ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">On</button>
+                                        <button @click="editingElement.settings.useLink = false"
+                                                :class="!editingElement.settings.useLink ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">Off</button>
+                                    </div>
+                                </div>
+
+                                <!-- Link URL Field -->
+                                <div v-if="editingElement.settings.useLink">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Link URL</label>
+                                    </div>
+                                    <div class="flex">
+                                        <input type="text" v-model="editingElement.settings.linkUrl"
+                                               placeholder="Select Link"
+                                               class="flex-1 border border-slate-200 border-r-0 rounded-l px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#0091ea]">
+                                        <button class="bg-white border border-slate-200 rounded-r px-3 text-slate-400 hover:text-[#0091ea] transition-colors">
+                                            <i class="fa fa-link text-[12px]"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Link Target -->
+                                <div v-if="editingElement.settings.useLink && editingElement.settings.linkUrl">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Link Target</label>
+                                    </div>
+                                    <select v-model="editingElement.settings.linkTarget"
+                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                        <option value="_self">Same Window</option>
+                                        <option value="_blank">New Window</option>
+                                    </select>
+                                </div>
+
+                                <!-- Visibility -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
+                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-mobile-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
+                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-tablet-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
+                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-desktop text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- CSS Class & ID -->
+                                <div class="grid grid-cols-1 gap-6 pt-4 border-t border-slate-50">
+                                    <div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <label class="text-[12px] font-bold text-[#333]">CSS Class</label>
+                                        </div>
+                                        <input type="text" v-model="editingElement.settings.cssClass" 
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <label class="text-[12px] font-bold text-[#333]">CSS ID</label>
                                         </div>
                                         <input type="text" v-model="editingElement.settings.cssId" 
                                                class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
@@ -291,14 +379,19 @@
 
                             <!-- ══ CUSTOM REGISTERED ELEMENTS ══ -->
                             @foreach($customElements ?? [] as $type => $custEl)
+                            @if($type === 'text_block') @continue @endif
                             <div v-else-if="editingElement?.type === '{{ $type }}'" class="space-y-8">
+                                @if($type === 'menu')
+                                    @include('cms-dashboard::admin.lazy-builder.partials.components.elements.menu-content')
+                                @endif
 
-                                @foreach($custEl['fields'] ?? [] as $fieldKey => $field)
+                                @if($type !== 'menu')
+                                    @foreach($custEl['fields'] ?? [] as $fieldKey => $field)
+                                    @if(isset($field['tab']) && $field['tab'] === 'design') @continue @endif
                                 @if(($field['type'] ?? 'text') === 'text')
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                                     </div>
                                     <input type="text" v-model="editingElement.settings.{{ $fieldKey }}"
                                            placeholder="{{ $field['placeholder'] ?? '' }}"
@@ -308,7 +401,6 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                                     </div>
                                     <textarea v-model="editingElement.settings.{{ $fieldKey }}"
                                               rows="{{ $field['rows'] ?? 4 }}"
@@ -319,7 +411,6 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                                     </div>
                                     <input type="number" v-model.number="editingElement.settings.{{ $fieldKey }}"
                                            @if(isset($field['min'])) min="{{ $field['min'] }}" @endif
@@ -330,7 +421,6 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                                     </div>
                                     <select v-model="editingElement.settings.{{ $fieldKey }}"
                                             class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
@@ -343,7 +433,6 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                                     </div>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
                                         <button @click="editingElement.settings.{{ $fieldKey }} = true"
@@ -354,11 +443,44 @@
                                                 class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">Off</button>
                                     </div>
                                 </div>
+                                 @elseif($field['type'] === 'media')
+                                 <div class="mb-6">
+                                     <div class="flex justify-between items-center mb-3">
+                                         <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
+                                     </div>
+
+                                     <!-- Empty State -->
+                                     <div v-if="!editingElement.settings.{{ $fieldKey }}" 
+                                          @click="openMediaModal('{{ $fieldKey }}')"
+                                          class="w-full aspect-[16/10] border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#0091ea] hover:bg-blue-50/30 transition-all group">
+                                         <div class="w-10 h-10 bg-[#0091ea] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                                             <i class="fa fa-plus"></i>
+                                         </div>
+                                     </div>
+
+                                     <!-- Selected State -->
+                                     <div v-else class="space-y-3">
+                                         <div class="relative group aspect-[16/10] bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
+                                             <img :src="editingElement.settings.{{ $fieldKey }}" class="w-full h-full object-cover">
+                                             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                 <button @click="openMediaModal('{{ $fieldKey }}')" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0091ea] hover:bg-[#0091ea] hover:text-white transition-all shadow-sm">
+                                                     <i class="fa fa-edit text-xs"></i>
+                                                 </button>
+                                                 <button @click="editingElement.settings.{{ $fieldKey }} = ''" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                                                     <i class="fa fa-trash text-xs"></i>
+                                                 </button>
+                                             </div>
+                                         </div>
+                                         <div class="flex gap-2">
+                                             <button @click="editingElement.settings.{{ $fieldKey }} = ''" class="flex-1 h-9 flex items-center justify-center border border-slate-200 rounded text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-colors">Remove</button>
+                                             <button @click="openMediaModal('{{ $fieldKey }}')" class="flex-1 h-9 flex items-center justify-center bg-[#0091ea] text-white rounded text-[11px] font-bold hover:bg-[#007cc0] transition-colors">Edit</button>
+                                         </div>
+                                     </div>
+                                 </div>
                                 @elseif($field['type'] === 'color')
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                                     </div>
                                     <div class="flex gap-2 items-center">
                                         <input type="color" v-model="editingElement.settings.{{ $fieldKey }}"
@@ -372,7 +494,6 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                                     </div>
                                     <div class="space-y-2">
                                         <div v-if="editingElement.settings.{{ $fieldKey }}" class="border border-slate-100 rounded overflow-hidden">
@@ -387,14 +508,25 @@
                                         </button>
                                     </div>
                                 </div>
+                                @elseif($field['type'] === 'wysiwyg')
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
+                                    </div>
+                                    <div class="builder-rich-editor-wrapper">
+                                        <textarea :id="'rich-editor-' + editingElement.id + '-' + '{{ $fieldKey }}'" 
+                                                  class="builder-rich-editor w-full border border-slate-200 rounded p-3 text-[13px]"
+                                                  v-model="editingElement.settings.{{ $fieldKey }}"></textarea>
+                                    </div>
+                                </div>
                                 @endif
                                 @endforeach
+                                @endif
 
                                 <!-- Default: Element Visibility -->
-                                <div class="pt-4 border-t border-slate-50">
+                                <div v-if="editingElement?.type !== 'menu'" class="pt-4 border-t border-slate-50">
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
-                                        <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                                     </div>
                                     <div class="grid grid-cols-3 gap-1">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
@@ -416,11 +548,10 @@
                                 </div>
 
                                 <!-- Default: CSS Class & ID -->
-                                <div class="grid grid-cols-1 gap-6 pt-4 border-t border-slate-50">
+                                <div v-if="editingElement?.type !== 'menu'" class="grid grid-cols-1 gap-6 pt-4 border-t border-slate-50">
                                     <div>
                                         <div class="flex justify-between items-center mb-3">
                                             <label class="text-[12px] font-bold text-[#333]">CSS Class</label>
-                                            <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                                         </div>
                                         <input type="text" v-model="editingElement.settings.cssClass"
                                                class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
@@ -428,7 +559,6 @@
                                     <div>
                                         <div class="flex justify-between items-center mb-3">
                                             <label class="text-[12px] font-bold text-[#333]">CSS ID</label>
-                                            <i class="fa fa-question-circle text-[10px] text-slate-300"></i>
                                         </div>
                                         <input type="text" v-model="editingElement.settings.cssId"
                                                class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
@@ -440,12 +570,33 @@
 
                         <!-- ══ DESIGN TAB ══ -->
                         <div v-else-if="editingContext.tab === 'design'" class="p-5 space-y-6">
+                             <!-- Design Settings for Special Text -->
+                             <div v-if="editingElement?.type === 'text_block' || editingElement?.type === 'special_text'" class="space-y-6">
+                                 @include('cms-dashboard::admin.lazy-builder.partials.components.elements.text-block-design')
+                             </div>
+
                              <!-- Design Settings for Title -->
-                             <div v-if="editingElement?.type === 'title'" class="space-y-6">
+                             <div v-else-if="editingElement?.type === 'title'" class="space-y-6">
                                  @include('cms-dashboard::admin.lazy-builder.partials.components.elements.title-design')
+                             </div>
+
+                             <!-- Design Settings for Button -->
+                             <div v-else-if="editingElement?.type === 'button'" class="space-y-6">
+                                 @include('cms-dashboard::admin.lazy-builder.partials.components.elements.button-design')
+                             </div>
+
+                             <!-- Design Settings for Image -->
+                             <div v-else-if="editingElement?.type === 'image'" class="space-y-6">
+                                 @include('cms-dashboard::admin.lazy-builder.partials.components.elements.image-design')
+                             </div>
+
+                             <!-- Design Settings for Menu -->
+                             <div v-else-if="editingElement?.type === 'menu'" class="space-y-6">
+                                 @include('cms-dashboard::admin.lazy-builder.partials.components.elements.menu-design')
                              </div>
                              <!-- Custom Elements: empty design tab -->
                              @foreach($customElements ?? [] as $type => $custEl)
+                             @if($type === 'text_block') @continue @endif
                              <div v-else-if="editingElement?.type === '{{ $type }}'" class="space-y-6">
                                  <div class="p-4 bg-slate-50 rounded border border-dashed border-slate-200 text-center">
                                      <i class="{{ $custEl['icon'] ?? 'fa fa-cube' }} text-slate-300 text-3xl mb-3 block"></i>
@@ -454,6 +605,20 @@
                                  </div>
                              </div>
                              @endforeach
+                        </div>
+
+                        <!-- ══ SUB MENU TAB ══ -->
+                        <div v-else-if="editingContext.tab === 'submenu'" class="p-5 space-y-6">
+                             <div v-if="editingElement?.type === 'menu'" class="space-y-6">
+                                 @include('cms-dashboard::admin.lazy-builder.partials.components.elements.menu-submenu')
+                             </div>
+                        </div>
+
+                        <!-- ══ MOBILE TAB ══ -->
+                        <div v-else-if="editingContext.tab === 'mobile'" class="p-5 space-y-6">
+                             <div v-if="editingElement?.type === 'menu'" class="space-y-6">
+                                 @include('cms-dashboard::admin.lazy-builder.partials.components.elements.menu-mobile')
+                             </div>
                         </div>
 
                         <!-- ══ EXTRAS TAB ══ -->

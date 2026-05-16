@@ -219,6 +219,12 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     Route::post('/themes/{slug}/activate', [ThemeController::class, 'activate'])->name('themes.activate');
     Route::delete('/themes/{slug}', [ThemeController::class, 'destroy'])->name('themes.destroy');
 
+    // Lazy Builder Sections
+    Route::get('/lazy-builder-sections', [\Acme\CmsDashboard\Http\Controllers\Admin\LazyBuilderController::class, 'index'])->name('lazy-builder.sections');
+    Route::get('/lazy-builder-sections/header', [\Acme\CmsDashboard\Http\Controllers\Admin\LazyBuilderController::class, 'editHeader'])->name('lazy-builder.header');
+    Route::get('/lazy-builder-sections/footer', [\Acme\CmsDashboard\Http\Controllers\Admin\LazyBuilderController::class, 'editFooter'])->name('lazy-builder.footer');
+    Route::post('/lazy-builder-sections/toggle/{id}', [\Acme\CmsDashboard\Http\Controllers\Admin\LazyBuilderController::class, 'toggleStatus'])->name('lazy-builder.toggle');
+
     // Form Builder
     Route::get('forms', [\Acme\CmsDashboard\Http\Controllers\Admin\FormController::class, 'index'])->name('forms.index');
     Route::get('forms/create', [\Acme\CmsDashboard\Http\Controllers\Admin\FormController::class, 'create'])->name('forms.create');

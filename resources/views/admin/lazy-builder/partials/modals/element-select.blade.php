@@ -15,10 +15,10 @@
 
         <!-- Tabs (Exactly like column-select style) -->
         <div class="bg-[#0091ea] h-10 flex items-center px-4 shrink-0">
-            <button v-if="elementModalAllowedTabs.includes('design')"
-                    @click="elementModalTab = 'design'" 
+            <button v-if="elementModalAllowedTabs.includes('elements')"
+                    @click="elementModalTab = 'elements'" 
                     class="px-5 h-full text-[11px] font-bold uppercase transition-all"
-                    :class="elementModalTab === 'design' ? 'text-white bg-white/10' : 'text-white/70 hover:bg-white/5'">
+                    :class="elementModalTab === 'elements' ? 'text-white bg-white/10' : 'text-white/70 hover:bg-white/5'">
                 Elements
             </button>
             <button v-if="!elementModalRestricted && elementModalAllowedTabs.includes('nested')"
@@ -33,7 +33,7 @@
         <div class="flex-1 overflow-y-auto p-10 bg-[#fff] custom-scrollbar">
             
             <!-- Elements Tab -->
-            <div v-if="elementModalTab === 'design'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-x-6 gap-y-10">
+            <div v-if="elementModalTab === 'elements'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-x-6 gap-y-10">
                 <div v-for="el in filteredAvailableElements" :key="el.type" 
                      @click="addElement(el.type)"
                      class="group flex flex-col items-center gap-3 cursor-pointer">

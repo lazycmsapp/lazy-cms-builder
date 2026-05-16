@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lazy Builder | {{ $post->title }}</title>
+    <title>{{ $post->title }} | {{ get_cms_option('site_title', 'Lazy Builder') }}</title>
     
     <!-- Meta -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -29,6 +29,67 @@
     <!-- Pickr Color Picker -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/>
     <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"></script>
+
+    <script>
+        window.builderBreakpoints = {
+            small: {{ get_cms_option('theme_small_screen_breakpoint', '800') }},
+            medium: {{ get_cms_option('theme_medium_screen_breakpoint', '1100') }}
+        };
+
+        window.builderPagePadding = {
+            top: '{{ get_cms_option('theme_page_padding_top', '60px') }}',
+            bottom: '{{ get_cms_option('theme_page_padding_bottom', '60px') }}'
+        };
+
+        @php
+            try {
+                $allMenus = \Illuminate\Support\Facades\DB::table('navigation_menus')->get();
+                $allItems = \Illuminate\Support\Facades\DB::table('navigation_menu_items')
+                    ->orderBy('order')
+                    ->get();
+                
+                $menuData = [];
+                $menuNames = [];
+                foreach($allMenus as $m) {
+                    $menuNames[$m->id] = $m->name;
+                    $menuItems = $allItems->where('navigation_menu_id', $m->id);
+                    $grouped = $menuItems->groupBy('parent_id');
+                    
+                    $topLevel = $grouped->get(null, collect([]))->map(function($item) use ($grouped) {
+                        return [
+                            'id' => $item->id,
+                            'title' => $item->title,
+                            'url' => $item->url,
+                            'children' => $grouped->get($item->id, collect([]))->map(function($child) use ($grouped) {
+                                return [
+                                    'id' => $child->id,
+                                    'title' => $child->title,
+                                    'url' => $child->url,
+                                    'children' => $grouped->get($child->id, collect([]))->map(function($gchild) {
+                                        return [
+                                            'id' => $gchild->id,
+                                            'title' => $gchild->title,
+                                            'url' => $gchild->url
+                                        ];
+                                    })->values()->toArray()
+                                ];
+                            })->values()->toArray()
+                        ];
+                    })->values()->toArray();
+                    
+                    $menuData[$m->id] = $topLevel;
+                }
+                $menuDataJson = json_encode($menuData);
+                $menuNamesJson = json_encode($menuNames);
+            } catch(\Exception $e) {
+                $menuDataJson = '{}';
+                $menuNamesJson = '{}';
+            }
+        @endphp
+        window.lazyMenuData = {!! $menuDataJson !!};
+        window.lazyMenusList = {!! $menuNamesJson !!};
+    </script>
 
     @include('cms-dashboard::admin.lazy-builder.partials.styles')
 </head>

@@ -58,15 +58,14 @@ if (!function_exists('get_lazy_content')) {
     function get_lazy_content($content)
     {
         if (empty($content)) return '';
-        try {
-            // Check if it's builder shortcode format
-            if (is_string($content) && \Acme\CmsDashboard\Services\BuilderShortcodeConverter::isBuilderShortcode($content)) {
-                $content = \Acme\CmsDashboard\Services\BuilderShortcodeConverter::shortcodesToJson($content);
-            }
+        // Check if it's builder shortcode format
+        if (is_string($content) && \Acme\CmsDashboard\Services\BuilderShortcodeConverter::isBuilderShortcode($content)) {
+            $content = \Acme\CmsDashboard\Services\BuilderShortcodeConverter::shortcodesToJson($content);
+        }
 
+        try {
             $layout = is_string($content) ? json_decode($content, true) : $content;
             
-            // If it's not an array, it might be raw HTML or non-builder content
             if (!is_array($layout)) {
                 return do_lazy_shortcode($content);
             }
@@ -74,9 +73,64 @@ if (!function_exists('get_lazy_content')) {
             $rendered = view('cms-dashboard::frontend.builder.render', ['layout' => $layout])->render();
             return do_lazy_shortcode($rendered);
         } catch (\Exception $e) {
-            // Fallback to raw content if processing fails
+            \Log::error('Lazy Builder Error: ' . $e->getMessage());
             return do_lazy_shortcode($content);
         }
+    }
+}
+
+if (!function_exists('get_lazy_header')) {
+    function get_lazy_header()
+    {
+        $header = \Acme\CmsDashboard\Models\Post::where('type', 'lazy_header')
+            ->where('status', 'published')
+            ->where('lang_code', app()->getLocale())
+            ->first();
+        
+        if (!$header) {
+            // Try fallback without lang_code or default lang if needed
+            $header = \Acme\CmsDashboard\Models\Post::where('type', 'lazy_header')
+                ->where('status', 'published')
+                ->first();
+        }
+
+        if ($header) {
+            $content = get_lazy_content($header->content);
+            return '<header class="lazy-builder-header">' . $content . '</header>';
+        }
+
+        return null;
+    }
+}
+
+if (!function_exists('get_lazy_footer')) {
+    function get_lazy_footer()
+    {
+        $footer = \Acme\CmsDashboard\Models\Post::where('type', 'lazy_footer')
+            ->where('status', 'published')
+            ->where('lang_code', app()->getLocale())
+            ->first();
+
+        if (!$footer) {
+            $footer = \Acme\CmsDashboard\Models\Post::where('type', 'lazy_footer')
+                ->where('status', 'published')
+                ->first();
+        }
+
+        if ($footer) {
+            $content = get_lazy_content($footer->content);
+            return '<footer class="lazy-builder-footer">' . $content . '</footer>';
+        }
+
+        return null;
+    }
+}
+
+if (!function_exists('getUnitVal')) {
+    function getUnitVal($val, $unit = 'px') {
+        if ($val === null || $val === '') return null;
+        if (is_numeric($val)) return $val . $unit;
+        return $val;
     }
 }
 
@@ -1098,4 +1152,411 @@ if (!function_exists('get_lazy_image_url')) {
         
         return asset('storage/' . $path); // Fallback to storage
     }
+
 }
+
+/**
+ * Register Special Text Element for Lazy Builder
+ */
+add_lazy_filter('lazy_builder_elements', function($elements) {
+    $elements['text_block'] = [
+        'type' => 'text_block',
+        'name' => 'Text Block',
+        'icon' => 'fa fa-align-left',
+        'template' => 'cms-dashboard::frontend.builder.elements.text-block',
+        'fields' => [
+            // General
+            'content' => ['type' => 'wysiwyg', 'label' => 'Content', 'default' => '<p>your content is here...</p>'],
+            'fontSize' => ['type' => 'number', 'label' => 'Font Size', 'default' => 16],
+            'fontSizeUnit' => ['type' => 'select', 'label' => 'Unit', 'options' => ['px' => 'px', 'em' => 'em', 'rem' => 'rem'], 'default' => 'px'],
+            'textAlign' => [
+                'type' => 'select',
+                'label' => 'Text Align',
+                'options' => ['left' => 'Left', 'center' => 'Center', 'right' => 'Right', 'justify' => 'Justify'],
+                'default' => 'center'
+            ],
+            
+            // Design - Typography
+            'fontFamily' => ['type' => 'text', 'label' => 'Font Family', 'default' => 'inherit'],
+            'fontSize' => ['type' => 'number', 'label' => 'Font Size', 'default' => 20],
+            'fontSizeUnit' => ['type' => 'text', 'label' => 'Size Unit', 'default' => 'px'],
+            'fontWeight' => ['type' => 'text', 'label' => 'Font Weight', 'default' => '400'],
+            'lineHeight' => ['type' => 'text', 'label' => 'Line Height', 'default' => '1.5'],
+            'letterSpacing' => ['type' => 'number', 'label' => 'Letter Spacing', 'default' => 0],
+            'textTransform' => [
+                'type' => 'select',
+                'label' => 'Text Transform',
+                'options' => ['none' => 'None', 'uppercase' => 'UPPERCASE', 'lowercase' => 'lowercase', 'capitalize' => 'Capitalize'],
+                'default' => 'none'
+            ],
+            
+            // Design - Colors
+            'color' => ['type' => 'color', 'label' => 'Text Color', 'default' => '#333333'],
+            'hoverColor' => ['type' => 'color', 'label' => 'Hover Color', 'default' => ''],
+            
+            // Design - Spacing
+            'marginTop' => ['type' => 'number', 'label' => 'Margin Top', 'default' => 0],
+            'marginBottom' => ['type' => 'number', 'label' => 'Margin Bottom', 'default' => 0],
+            'marginLeft' => ['type' => 'number', 'label' => 'Margin Left', 'default' => 0],
+            'marginRight' => ['type' => 'number', 'label' => 'Margin Right', 'default' => 0],
+            'paddingTop' => ['type' => 'number', 'label' => 'Padding Top', 'default' => 10],
+            'paddingRight' => ['type' => 'number', 'label' => 'Padding Right', 'default' => 0],
+            'paddingBottom' => ['type' => 'number', 'label' => 'Padding Bottom', 'default' => 10],
+            'paddingLeft' => ['type' => 'number', 'label' => 'Padding Left', 'default' => 0],
+
+            // Extras
+            'visibility' => [
+                'type' => 'object',
+                'default' => ['mobile' => true, 'tablet' => true, 'desktop' => true]
+            ],
+            'cssClass' => ['type' => 'text', 'default' => ''],
+            'cssId' => ['type' => 'text', 'default' => ''],
+        ]
+    ];
+    return $elements;
+});
+
+if (!function_exists('get_lazy_builder_fonts')) {
+    function get_lazy_builder_fonts($layout, &$fonts = []) {
+        if (empty($layout) || !is_array($layout)) return $fonts;
+        
+        foreach ($layout as $item) {
+            if (isset($item['settings']['fontFamily']) && !empty($item['settings']['fontFamily']) && $item['settings']['fontFamily'] !== 'inherit') {
+                // Extract only family name before comma if exists
+                $family = trim(explode(',', $item['settings']['fontFamily'])[0]);
+                // Remove quotes if present
+                $family = trim($family, "'\"");
+                $fonts[] = $family;
+            }
+            
+            // Check nested columns/elements
+            if (isset($item['columns'])) {
+                get_lazy_builder_fonts($item['columns'], $fonts);
+            }
+            if (isset($item['elements'])) {
+                get_lazy_builder_fonts($item['elements'], $fonts);
+            }
+        }
+        return array_unique($fonts);
+    }
+}
+
+/**
+ * Register Button Element for Lazy Builder
+ */
+add_lazy_filter('lazy_builder_elements', function($elements) {
+    $elements['button'] = [
+        'type' => 'button',
+        'name' => 'Button',
+        'icon' => 'fa fa-hand-pointer',
+        'template' => 'cms-dashboard::frontend.builder.elements.button',
+        'fields' => [
+            // General
+            'text' => ['type' => 'text', 'label' => 'Button Text', 'default' => 'Click Here'],
+            'linkUrl' => ['type' => 'text', 'label' => 'Link URL', 'default' => '#'],
+            'linkTarget' => [
+                'type' => 'select',
+                'label' => 'Target',
+                'options' => ['_self' => 'Same Window', '_blank' => 'New Window'],
+                'default' => '_self'
+            ],
+            'textAlign' => [
+                'type' => 'select',
+                'label' => 'Alignment',
+                'options' => ['left' => 'Left', 'center' => 'Center', 'right' => 'Right'],
+                'default' => 'center'
+            ],
+            
+            // Design - Typography
+            'fontSize' => ['type' => 'number', 'label' => 'Font Size', 'default' => 16, 'tab' => 'design'],
+            'fontWeight' => ['type' => 'text', 'label' => 'Font Weight', 'default' => '600', 'tab' => 'design'],
+            'textTransform' => ['type' => 'select', 'label' => 'Text Transform', 'options' => ['none' => 'None', 'uppercase' => 'UPPERCASE', 'lowercase' => 'lowercase', 'capitalize' => 'Capitalize'], 'default' => 'none', 'tab' => 'design'],
+            
+            // Design - Colors & Gradients
+            'buttonStyle' => ['type' => 'text', 'default' => 'default', 'tab' => 'design'],
+            'color' => ['type' => 'color', 'label' => 'Text Color', 'default' => '#ffffff', 'tab' => 'design'],
+            'bgColor' => ['type' => 'color', 'label' => 'Background Color', 'default' => '#0091ea', 'tab' => 'design'],
+            'hoverColor' => ['type' => 'color', 'label' => 'Text Hover Color', 'default' => '#ffffff', 'tab' => 'design'],
+            'hoverBgColor' => ['type' => 'color', 'label' => 'BG Hover Color', 'default' => '#007cc0', 'tab' => 'design'],
+            
+            'bgGradientStartColor' => ['type' => 'color', 'default' => '#0091ea', 'tab' => 'design'],
+            'bgGradientEndColor'   => ['type' => 'color', 'default' => '#007cc0', 'tab' => 'design'],
+            'bgGradientStartPosition' => ['type' => 'number', 'default' => 0, 'tab' => 'design'],
+            'bgGradientEndPosition'   => ['type' => 'number', 'default' => 100, 'tab' => 'design'],
+            'bgGradientType'          => ['type' => 'text', 'default' => 'linear', 'tab' => 'design'],
+            'bgGradientAngle'         => ['type' => 'number', 'default' => 180, 'tab' => 'design'],
+            'bgGradientHoverStartColor' => ['type' => 'color', 'default' => '#007cc0', 'tab' => 'design'],
+            'bgGradientHoverEndColor'   => ['type' => 'color', 'default' => '#005fa3', 'tab' => 'design'],
+            
+            // Design - Spacing & Border
+            'paddingTop' => ['type' => 'number', 'label' => 'Padding Top', 'default' => 12, 'tab' => 'design'],
+            'paddingBottom' => ['type' => 'number', 'label' => 'Padding Bottom', 'default' => 12, 'tab' => 'design'],
+            'paddingLeft' => ['type' => 'number', 'label' => 'Padding Left', 'default' => 30, 'tab' => 'design'],
+            'paddingRight' => ['type' => 'number', 'label' => 'Padding Right', 'default' => 30, 'tab' => 'design'],
+            'borderRadius' => ['type' => 'number', 'label' => 'Border Radius', 'default' => 5, 'tab' => 'design'],
+            'marginTop' => ['type' => 'number', 'label' => 'Margin Top', 'default' => 10, 'tab' => 'design'],
+            'marginBottom' => ['type' => 'number', 'label' => 'Margin Bottom', 'default' => 10, 'tab' => 'design'],
+            'visibility' => [
+                'type' => 'object',
+                'default' => ['mobile' => true, 'tablet' => true, 'desktop' => true],
+                'tab' => 'design'
+            ],
+            'borderSizeTop' => ['type' => 'number', 'default' => 0, 'tab' => 'design'],
+            'borderSizeRight' => ['type' => 'number', 'default' => 0, 'tab' => 'design'],
+            'borderSizeBottom' => ['type' => 'number', 'default' => 0, 'tab' => 'design'],
+            'borderSizeLeft' => ['type' => 'number', 'default' => 0, 'tab' => 'design'],
+            'borderColor' => ['type' => 'color', 'default' => '#000000', 'tab' => 'design'],
+            'buttonSize' => ['type' => 'text', 'default' => 'medium', 'tab' => 'design'],
+            'buttonSpan' => ['type' => 'boolean', 'default' => false, 'tab' => 'design'],
+            'icon' => ['type' => 'text', 'default' => '', 'tab' => 'design'],
+            'iconPosition' => ['type' => 'text', 'default' => 'left', 'tab' => 'design'],
+            'cssClass' => ['type' => 'text', 'default' => '', 'tab' => 'design'],
+            'cssId' => ['type' => 'text', 'default' => '', 'tab' => 'design'],
+        ]
+    ];
+    return $elements;
+});
+
+/**
+ * Register Menu Element for Lazy Builder
+ */
+add_lazy_filter('lazy_builder_elements', function($elements) {
+    $menus = [];
+    try {
+        $menus = \Illuminate\Support\Facades\DB::table('navigation_menus')->pluck('name', 'id')->toArray();
+    } catch (\Exception $e) {}
+
+    $elements['menu'] = [
+        'type' => 'menu',
+        'name' => 'Menu',
+        'icon' => 'fa fa-bars',
+        'template' => 'cms-dashboard::frontend.builder.elements.menu',
+        'fields' => [
+            // General
+            'menuId' => [
+                'type' => 'select',
+                'label' => 'Select Menu',
+                'options' => $menus,
+                'default' => count($menus) > 0 ? array_key_first($menus) : '',
+                'tab' => 'design'
+            ],
+            'layout' => [
+                'type' => 'select',
+                'label' => 'Layout',
+                'options' => ['horizontal' => 'Horizontal', 'vertical' => 'Vertical'],
+                'default' => 'horizontal',
+                'tab' => 'design'
+            ],
+            'transitionTime' => [
+                'type' => 'range',
+                'label' => 'Transition Time (s)',
+                'default' => 0.3,
+                'min' => 0,
+                'max' => 2,
+                'step' => 0.1,
+                'tab' => 'design'
+            ],
+            'submenuSpace' => [
+                'type' => 'number',
+                'label' => 'Space Between Main Menu and Submenu (px)',
+                'default' => 10,
+                'tab' => 'design'
+            ],
+            'showArrows' => [
+                'type' => 'select',
+                'label' => 'Menu Arrows',
+                'options' => ['yes' => 'Yes', 'no' => 'No'],
+                'default' => 'yes',
+                'tab' => 'design'
+            ],
+            
+            // Design - Typography
+            'fontFamily' => ['type' => 'text', 'label' => 'Font Family', 'default' => 'inherit', 'tab' => 'design'],
+            'fontSize' => ['type' => 'number', 'label' => 'Font Size', 'default' => 16, 'tab' => 'design'],
+            'fontWeight' => ['type' => 'text', 'label' => 'Font Weight', 'default' => '400', 'tab' => 'design'],
+            'lineHeight' => ['type' => 'text', 'label' => 'Line Height', 'default' => '', 'tab' => 'design'],
+            'letterSpacing' => ['type' => 'text', 'label' => 'Letter Spacing', 'default' => '', 'tab' => 'design'],
+            'textTransform' => ['type' => 'text', 'label' => 'Text Transform', 'default' => 'none', 'tab' => 'design'],
+
+            // Design - Menu Item Styling
+            'itemPaddingTop' => ['type' => 'number', 'label' => 'Item Padding Top', 'default' => 0, 'tab' => 'design'],
+            'itemPaddingRight' => ['type' => 'number', 'label' => 'Item Padding Right', 'default' => 0, 'tab' => 'design'],
+            'itemPaddingBottom' => ['type' => 'number', 'label' => 'Item Padding Bottom', 'default' => 0, 'tab' => 'design'],
+            'itemPaddingLeft' => ['type' => 'number', 'label' => 'Item Padding Left', 'default' => 0, 'tab' => 'design'],
+            'itemSpacing' => ['type' => 'number', 'label' => 'Item Spacing', 'default' => 0, 'tab' => 'design'],
+            'itemBorderRadius' => ['type' => 'number', 'label' => 'Item Border Radius', 'default' => 0, 'tab' => 'design'],
+            'itemTransition' => ['type' => 'number', 'label' => 'Item Transition', 'default' => 0.3, 'tab' => 'design'],
+            
+            'itemBgColor' => ['type' => 'color', 'label' => 'Item Background Color', 'default' => 'transparent', 'tab' => 'design'],
+            'itemBgColorHover' => ['type' => 'color', 'label' => 'Item Background Color Hover', 'default' => 'transparent', 'tab' => 'design'],
+            'itemColor' => ['type' => 'color', 'label' => 'Item Text Color', 'default' => '#333333', 'tab' => 'design'],
+            'itemColorHover' => ['type' => 'color', 'label' => 'Item Text Color Hover', 'default' => '#0091ea', 'tab' => 'design'],
+            
+            'itemBorderSizeTop' => ['type' => 'number', 'label' => 'Item Border Size Top', 'default' => 0, 'tab' => 'design'],
+            'itemBorderSizeRight' => ['type' => 'number', 'label' => 'Item Border Size Right', 'default' => 0, 'tab' => 'design'],
+            'itemBorderSizeBottom' => ['type' => 'number', 'label' => 'Item Border Size Bottom', 'default' => 0, 'tab' => 'design'],
+            'itemBorderSizeLeft' => ['type' => 'number', 'label' => 'Item Border Size Left', 'default' => 0, 'tab' => 'design'],
+            
+            'itemBorderSizeTopHover' => ['type' => 'number', 'label' => 'Item Border Size Top Hover', 'default' => 0, 'tab' => 'design'],
+            'itemBorderSizeRightHover' => ['type' => 'number', 'label' => 'Item Border Size Right Hover', 'default' => 0, 'tab' => 'design'],
+            'itemBorderSizeBottomHover' => ['type' => 'number', 'label' => 'Item Border Size Bottom Hover', 'default' => 0, 'tab' => 'design'],
+            'itemBorderSizeLeftHover' => ['type' => 'number', 'label' => 'Item Border Size Left Hover', 'default' => 0, 'tab' => 'design'],
+            
+            'itemBorderColor' => ['type' => 'color', 'label' => 'Item Border Color', 'default' => '#eeeeee', 'tab' => 'design'],
+            'itemBorderColorHover' => ['type' => 'color', 'label' => 'Item Border Color Hover', 'default' => '#0091ea', 'tab' => 'design'],
+            
+            // Design - Sub Menu Styling
+            'showArrows' => ['type' => 'text', 'label' => 'Show Arrows', 'default' => 'yes', 'tab' => 'submenu'],
+            'submenuDirection' => ['type' => 'text', 'label' => 'Expand Direction', 'default' => 'right', 'tab' => 'submenu'],
+            'submenuTransition' => ['type' => 'text', 'label' => 'Expand Transition', 'default' => 'fade', 'tab' => 'submenu'],
+            'submenuMinWidth' => ['type' => 'text', 'label' => 'Min Width', 'default' => '200px', 'tab' => 'submenu'],
+            'submenuMaxWidth' => ['type' => 'text', 'label' => 'Max Width', 'default' => '220px', 'tab' => 'submenu'],
+            'submenuSpace' => ['type' => 'number', 'label' => 'Submenu Space', 'default' => 10, 'tab' => 'submenu'],
+            
+            // Submenu Typography
+            'submenuFontFamily' => ['type' => 'text', 'label' => 'Submenu Font Family', 'default' => 'inherit', 'tab' => 'submenu'],
+            'submenuFontSize' => ['type' => 'text', 'label' => 'Submenu Font Size', 'default' => '14px', 'tab' => 'submenu'],
+            'submenuFontWeight' => ['type' => 'text', 'label' => 'Submenu Font Weight', 'default' => '400', 'tab' => 'submenu'],
+            'submenuLineHeight' => ['type' => 'text', 'label' => 'Submenu Line Height', 'default' => '', 'tab' => 'submenu'],
+            'submenuLetterSpacing' => ['type' => 'text', 'label' => 'Submenu Letter Spacing', 'default' => '', 'tab' => 'submenu'],
+            'submenuTextTransform' => ['type' => 'text', 'label' => 'Submenu Text Transform', 'default' => 'none', 'tab' => 'submenu'],
+            'submenuTextAlign' => ['type' => 'text', 'label' => 'Submenu Text Align', 'default' => 'left', 'tab' => 'submenu'],
+            
+            // Submenu Item Styling
+            'submenuPaddingTop' => ['type' => 'number', 'label' => 'Submenu Padding Top', 'default' => 10, 'tab' => 'submenu'],
+            'submenuPaddingRight' => ['type' => 'number', 'label' => 'Submenu Padding Right', 'default' => 20, 'tab' => 'submenu'],
+            'submenuPaddingBottom' => ['type' => 'number', 'label' => 'Submenu Padding Bottom', 'default' => 10, 'tab' => 'submenu'],
+            'submenuPaddingLeft' => ['type' => 'number', 'label' => 'Submenu Padding Left', 'default' => 20, 'tab' => 'submenu'],
+            
+            'submenuBorderRadiusTopLeft' => ['type' => 'number', 'label' => 'Submenu BR TL', 'default' => 4, 'tab' => 'submenu'],
+            'submenuBorderRadiusTopRight' => ['type' => 'number', 'label' => 'Submenu BR TR', 'default' => 4, 'tab' => 'submenu'],
+            'submenuBorderRadiusBottomRight' => ['type' => 'number', 'label' => 'Submenu BR BR', 'default' => 4, 'tab' => 'submenu'],
+            'submenuBorderRadiusBottomLeft' => ['type' => 'number', 'label' => 'Submenu BR BL', 'default' => 4, 'tab' => 'submenu'],
+            
+            'submenuBoxShadow' => ['type' => 'text', 'label' => 'Box Shadow', 'default' => 'no', 'tab' => 'submenu'],
+            'submenuShadowColor' => ['type' => 'color', 'label' => 'Shadow Color', 'default' => 'rgba(0,0,0,0.12)', 'tab' => 'submenu'],
+            'submenuShadowH' => ['type' => 'number', 'label' => 'Shadow H', 'default' => 0, 'tab' => 'submenu'],
+            'submenuShadowV' => ['type' => 'number', 'label' => 'Shadow V', 'default' => 15, 'tab' => 'submenu'],
+            'submenuShadowBlur' => ['type' => 'number', 'label' => 'Shadow Blur', 'default' => 35, 'tab' => 'submenu'],
+            'submenuShadowSpread' => ['type' => 'number', 'label' => 'Shadow Spread', 'default' => 0, 'tab' => 'submenu'],
+            
+            'submenuSeparatorColor' => ['type' => 'color', 'label' => 'Separator Color', 'default' => 'rgba(0,0,0,0.05)', 'tab' => 'submenu'],
+            'submenuBgColor' => ['type' => 'color', 'label' => 'Submenu BG', 'default' => '#ffffff', 'tab' => 'submenu'],
+            'submenuTextColor' => ['type' => 'color', 'label' => 'Submenu Text', 'default' => '#333333', 'tab' => 'submenu'],
+            'submenuTextColorHover' => ['type' => 'color', 'label' => 'Submenu Text Hover', 'default' => '#0091ea', 'tab' => 'submenu'],
+
+            // Mobile Menu Styling
+            'mobileCollapseBreakpoint' => ['type' => 'text', 'label' => 'Collapse to Mobile Breakpoint', 'default' => 'tablet', 'tab' => 'mobile'],
+            'mobileMenuMode' => ['type' => 'text', 'label' => 'Mobile Menu Mode', 'default' => 'collapsed', 'tab' => 'mobile'],
+            'mobileMenuExpandMode' => ['type' => 'select', 'label' => 'Mobile Menu Expand Mode', 'default' => 'full-width-static', 'tab' => 'mobile', 'options' => ['full-width-static' => 'Full Width - Static', 'full-width-absolute' => 'Full Width - Absolute', 'sidebar' => 'Sidebar']],
+            'mobileMenuSidebarSide' => ['type' => 'select', 'label' => 'Sidebar Side', 'default' => 'left', 'tab' => 'mobile', 'options' => ['left' => 'Left', 'right' => 'Right']],
+            'mobileMenuOpeningMode' => ['type' => 'text', 'label' => 'Mobile Menu Opening Mode', 'default' => 'toggle', 'tab' => 'mobile'],
+            'mobileMenuTriggerPaddingTop' => ['type' => 'number', 'label' => 'Trigger Padding Top', 'default' => 10, 'tab' => 'mobile'],
+            'mobileMenuTriggerPaddingRight' => ['type' => 'number', 'label' => 'Trigger Padding Right', 'default' => 15, 'tab' => 'mobile'],
+            'mobileMenuTriggerPaddingBottom' => ['type' => 'number', 'label' => 'Trigger Padding Bottom', 'default' => 10, 'tab' => 'mobile'],
+            'mobileMenuTriggerPaddingLeft' => ['type' => 'number', 'label' => 'Trigger Padding Left', 'default' => 15, 'tab' => 'mobile'],
+            'mobileMenuTriggerBgColor' => ['type' => 'color', 'label' => 'Trigger Background Color', 'default' => '#ffffff', 'tab' => 'mobile'],
+            'mobileMenuTriggerTextColor' => ['type' => 'color', 'label' => 'Trigger Text Color', 'default' => '#333333', 'tab' => 'mobile'],
+            'mobileMenuTriggerText' => ['type' => 'text', 'label' => 'Trigger Text', 'default' => '', 'tab' => 'mobile'],
+            'mobileMenuTriggerExpandIcon' => ['type' => 'text', 'label' => 'Trigger Expand Icon', 'default' => 'fa-bars', 'tab' => 'mobile'],
+            'mobileMenuTriggerCollapseIcon' => ['type' => 'text', 'label' => 'Trigger Collapse Icon', 'default' => 'fa-times', 'tab' => 'mobile'],
+            'mobileMenuTriggerFontSize' => ['type' => 'text', 'label' => 'Trigger Font Size', 'default' => '16px', 'tab' => 'mobile'],
+            'mobileMenuTriggerHorizontalAlign' => ['type' => 'text', 'label' => 'Trigger Horizontal Align', 'default' => 'flex-start', 'tab' => 'mobile'],
+
+            'mobileMenuItemMinHeight' => ['type' => 'number', 'label' => 'Mobile Menu Item Minimum Height', 'default' => 65, 'tab' => 'mobile'],
+            'mobileMenuItemPaddingTop' => ['type' => 'number', 'label' => 'Item Padding Top', 'default' => 12, 'tab' => 'mobile'],
+            'mobileMenuItemPaddingBottom' => ['type' => 'number', 'label' => 'Item Padding Bottom', 'default' => 12, 'tab' => 'mobile'],
+            'mobileMenuItemPaddingLeft' => ['type' => 'number', 'label' => 'Item Padding Left', 'default' => 20, 'tab' => 'mobile'],
+            'mobileMenuItemPaddingRight' => ['type' => 'number', 'label' => 'Item Padding Right', 'default' => 20, 'tab' => 'mobile'],
+            'mobileMenuTextAlign' => ['type' => 'text', 'label' => 'Mobile Menu Text Align', 'default' => 'left', 'tab' => 'mobile'],
+            'mobileMenuIndentSubmenus' => ['type' => 'text', 'label' => 'Mobile Menu Indent Submenus', 'default' => 'on', 'tab' => 'mobile'],
+            
+            'mobileMenuFontFamily' => ['type' => 'text', 'label' => 'Font Family', 'default' => 'inherit', 'tab' => 'mobile'],
+            'mobileMenuFontSize' => ['type' => 'text', 'label' => 'Font Size', 'default' => '16px', 'tab' => 'mobile'],
+            'mobileMenuFontWeight' => ['type' => 'text', 'label' => 'Font Weight', 'default' => '400', 'tab' => 'mobile'],
+            'mobileMenuLineHeight' => ['type' => 'text', 'label' => 'Line Height', 'default' => '', 'tab' => 'mobile'],
+            'mobileMenuLetterSpacing' => ['type' => 'text', 'label' => 'Letter Spacing', 'default' => '', 'tab' => 'mobile'],
+            'mobileMenuTextTransform' => ['type' => 'text', 'label' => 'Text Transform', 'default' => 'none', 'tab' => 'mobile'],
+
+            'mobileMenuSeparatorColor' => ['type' => 'color', 'label' => 'Separator Color', 'default' => 'rgba(0,0,0,0.05)', 'tab' => 'mobile'],
+            'mobileMenuBgColor' => ['type' => 'color', 'label' => 'Menu Background', 'default' => '#ffffff', 'tab' => 'mobile'],
+            'mobileMenuBgColorHover' => ['type' => 'color', 'label' => 'Menu Background Hover', 'default' => '#f8f9fa', 'tab' => 'mobile'],
+            'mobileMenuTextColor' => ['type' => 'color', 'label' => 'Menu Text Color', 'default' => '#333333', 'tab' => 'mobile'],
+            'mobileMenuTextColorHover' => ['type' => 'color', 'label' => 'Menu Text Hover', 'default' => '#0091ea', 'tab' => 'mobile'],
+
+            // Margins (Simplified per user request)
+            'marginTop' => ['type' => 'number', 'label' => 'Margin Top', 'default' => 0, 'tab' => 'design'],
+            'marginBottom' => ['type' => 'number', 'label' => 'Margin Bottom', 'default' => 0, 'tab' => 'design'],
+            
+            // Extras
+            'visibility' => [
+                'type' => 'object',
+                'default' => ['mobile' => true, 'tablet' => true, 'desktop' => true],
+                'tab' => 'design'
+            ],
+            'cssClass' => ['type' => 'text', 'default' => '', 'tab' => 'design'],
+            'cssId' => ['type' => 'text', 'default' => '', 'tab' => 'design'],
+        ]
+    ];
+    return $elements;
+});
+
+/**
+ * Register Image Element for Lazy Builder
+ */
+add_lazy_filter('lazy_builder_elements', function($elements) {
+    $elements['image'] = [
+        'type' => 'image',
+        'name' => 'Image',
+        'icon' => 'fa fa-image',
+        'template' => 'cms-dashboard::frontend.builder.elements.image',
+        'fields' => [
+            // General
+            'url' => ['type' => 'media', 'label' => 'Image URL', 'default' => ''],
+            'alt' => ['type' => 'text', 'label' => 'Alt Text', 'default' => ''],
+            'linkUrl' => ['type' => 'text', 'label' => 'Link URL', 'default' => ''],
+            'linkTarget' => [
+                'type' => 'select',
+                'label' => 'Link Target',
+                'options' => ['_self' => 'Same Window', '_blank' => 'New Window'],
+                'default' => '_self'
+            ],
+            'textAlign' => [
+                'type' => 'select',
+                'label' => 'Alignment',
+                'options' => ['left' => 'Left', 'center' => 'Center', 'right' => 'Right'],
+                'default' => 'center'
+            ],
+            
+            // Design - Dimensions
+            'width' => ['type' => 'number', 'label' => 'Width', 'default' => '', 'tab' => 'design'],
+            'widthUnit' => ['type' => 'text', 'default' => 'px', 'tab' => 'design'],
+            'maxWidth' => ['type' => 'number', 'label' => 'Max Width', 'default' => 100, 'tab' => 'design'],
+            'maxWidthUnit' => ['type' => 'text', 'default' => '%', 'tab' => 'design'],
+            
+            // Design - Spacing & Border
+            'marginTop' => ['type' => 'number', 'label' => 'Margin Top', 'default' => 0, 'tab' => 'design'],
+            'marginRight' => ['type' => 'number', 'label' => 'Margin Right', 'default' => 0, 'tab' => 'design'],
+            'marginBottom' => ['type' => 'number', 'label' => 'Margin Bottom', 'default' => 0, 'tab' => 'design'],
+            'marginLeft' => ['type' => 'number', 'label' => 'Margin Left', 'default' => 0, 'tab' => 'design'],
+            'borderRadius' => ['type' => 'number', 'label' => 'Border Radius', 'default' => 0, 'tab' => 'design'],
+            'borderRadiusUnit' => ['type' => 'text', 'default' => 'px', 'tab' => 'design'],
+            'borderSizeTop' => ['type' => 'number', 'default' => 0, 'tab' => 'design'],
+            'borderSizeRight' => ['type' => 'number', 'default' => 0, 'tab' => 'design'],
+            'borderSizeBottom' => ['type' => 'number', 'default' => 0, 'tab' => 'design'],
+            'borderSizeLeft' => ['type' => 'number', 'default' => 0, 'tab' => 'design'],
+            'borderColor' => ['type' => 'color', 'default' => 'transparent', 'tab' => 'design'],
+            'hoverType' => ['type' => 'select', 'label' => 'Hover Effect', 'default' => 'none', 'tab' => 'design'],
+            
+            // Visibility & Extras
+            'visibility' => [
+                'type' => 'object',
+                'default' => ['mobile' => true, 'tablet' => true, 'desktop' => true],
+                'tab' => 'design'
+            ],
+            'cssClass' => ['type' => 'text', 'default' => '', 'tab' => 'design'],
+            'cssId' => ['type' => 'text', 'default' => '', 'tab' => 'design'],
+        ]
+    ];
+    return $elements;
+});
