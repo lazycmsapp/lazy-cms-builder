@@ -64,13 +64,21 @@ class BuilderShortcodeConverter
         // Status & layout
         self::attr($a, 'status',        $s['status']       ?? null);
         self::attr($a, 'content_width', $s['contentWidth'] ?? null);
-        self::attr($a, 'height',        $s['height']       ?? null);
-        self::attr($a, 'custom_height', $s['customHeight'] ?? null);
 
-        // Background
+        // Height (responsive)
+        self::attr($a, 'height',        $s['height']       ?? null);
+        self::respAttr($a, 'height', $s, 'height');
+        self::attr($a, 'custom_height', $s['customHeight'] ?? null);
+        self::respAttr($a, 'custom_height', $s, 'customHeight');
+        self::attr($a, 'min_height',    $s['minHeight']    ?? null);
+        self::respAttr($a, 'min_height', $s, 'minHeight');
+
+        // Background (responsive)
         self::attr($a, 'bg_type',    $s['bgType']        ?? null);
         self::attr($a, 'bg_color',   $s['bgColor']       ?? null);
-        self::attrIf($a, 'bg_opacity', $s['bgColorOpacity'] ?? null, 1); // skip if == 1
+        self::respAttr($a, 'bg_color', $s, 'bgColor');
+        self::attrIf($a, 'bg_opacity', $s['bgColorOpacity'] ?? null, 1);
+        self::respAttr($a, 'bg_opacity', $s, 'bgColorOpacity');
 
         // Gradient
         self::attr($a, 'gradient_start',    $s['bgGradientStartColor']    ?? null);
@@ -80,27 +88,54 @@ class BuilderShortcodeConverter
         self::attrIf($a, 'gradient_start_pos', $s['bgGradientStartPosition'] ?? null, 0);
         self::attrIf($a, 'gradient_end_pos',   $s['bgGradientEndPosition']   ?? null, 100);
 
-        // Background image
+        // Background image (responsive)
         self::attr($a, 'bg_image',    $s['bgImage']         ?? null);
         self::attr($a, 'bg_position', $s['bgImagePosition'] ?? null);
+        self::respAttr($a, 'bg_position', $s, 'bgImagePosition');
         self::attrIf($a, 'bg_size',      $s['bgImageSize']     ?? null, 'auto');
+        self::respAttr($a, 'bg_size', $s, 'bgImageSize');
         self::attrIf($a, 'bg_repeat',    $s['bgImageRepeat']   ?? null, 'no-repeat');
+        self::respAttr($a, 'bg_repeat', $s, 'bgImageRepeat');
         self::attrIf($a, 'bg_parallax',  $s['bgImageParallax'] ?? null, 'none');
         self::attrIf($a, 'bg_blend',     $s['bgImageBlendMode'] ?? null, 'normal');
+        self::respAttr($a, 'bg_blend', $s, 'bgImageBlendMode');
 
-        // Spacing (include 0 so they round-trip)
+        // Spacing with units and responsive variants
         foreach (['top', 'bottom', 'left', 'right'] as $side) {
-            $key = 'padding' . ucfirst($side);
-            if (array_key_exists($key, $s) && $s[$key] !== null) $a[] = 'padding_' . $side . '="' . $s[$key] . '"';
-            $key = 'margin' . ucfirst($side);
-            if (array_key_exists($key, $s) && $s[$key] !== null) $a[] = 'margin_' . $side . '="' . $s[$key] . '"';
+            $cap = ucfirst($side);
+            $pk = 'padding' . $cap; $pu = $pk . 'Unit';
+            $mk = 'margin'  . $cap; $mu = $mk . 'Unit';
+
+            if (array_key_exists($pk, $s) && $s[$pk] !== null) $a[] = 'padding_' . $side . '="' . $s[$pk] . '"';
+            if (!empty($s[$pu]) && $s[$pu] !== 'px') $a[] = 'padding_' . $side . '_unit="' . $s[$pu] . '"';
+            foreach (['tablet', 'mobile'] as $dev) {
+                $pdv = $s[$pk . '_' . $dev] ?? null;
+                if ($pdv !== null && $pdv !== '') $a[] = 'padding_' . $side . '_' . $dev . '="' . $pdv . '"';
+                $puv = $s[$pu . '_' . $dev] ?? null;
+                if ($puv !== null && $puv !== '' && $puv !== 'px') $a[] = 'padding_' . $side . '_unit_' . $dev . '="' . $puv . '"';
+            }
+
+            if (array_key_exists($mk, $s) && $s[$mk] !== null) $a[] = 'margin_' . $side . '="' . $s[$mk] . '"';
+            if (!empty($s[$mu]) && $s[$mu] !== 'px') $a[] = 'margin_' . $side . '_unit="' . $s[$mu] . '"';
+            foreach (['tablet', 'mobile'] as $dev) {
+                $mdv = $s[$mk . '_' . $dev] ?? null;
+                if ($mdv !== null && $mdv !== '') $a[] = 'margin_' . $side . '_' . $dev . '="' . $mdv . '"';
+                $muv = $s[$mu . '_' . $dev] ?? null;
+                if ($muv !== null && $muv !== '' && $muv !== 'px') $a[] = 'margin_' . $side . '_unit_' . $dev . '="' . $muv . '"';
+            }
         }
 
-        // Flex/alignment
+        // Flex/alignment (responsive)
         self::attrIf($a, 'align_items',     $s['alignItems']     ?? null, 'stretch');
+        self::respAttr($a, 'align_items', $s, 'alignItems');
         self::attrIf($a, 'justify_content', $s['justifyContent'] ?? null, 'flex-start');
+        self::respAttr($a, 'justify_content', $s, 'justifyContent');
         self::attrIf($a, 'flex_wrap',       $s['flexWrap']       ?? null, 'wrap');
+        self::respAttr($a, 'flex_wrap', $s, 'flexWrap');
+        self::attr($a, 'row_align_content', $s['rowAlignContent'] ?? null);
+        self::respAttr($a, 'row_align_content', $s, 'rowAlignContent');
         self::attr($a, 'column_gap', $s['columnGap'] ?? null);
+        self::respAttr($a, 'column_gap', $s, 'columnGap');
 
         // HTML / CSS
         self::attrIf($a, 'html_tag',    $s['htmlTag']    ?? null, 'div');
@@ -108,6 +143,14 @@ class BuilderShortcodeConverter
         self::attr($a, 'css_class',     $s['cssClass']   ?? null);
         self::attr($a, 'z_index',       $s['zIndex']     ?? null);
         self::attrIf($a, 'overflow',    $s['overflow']   ?? null, 'default');
+        if (!empty($s['sticky'])) {
+            $a[] = 'sticky="yes"';
+            if (isset($s['stickyDesktop']) && $s['stickyDesktop'] === false) $a[] = 'sticky_desktop="no"';
+            if (isset($s['stickyTablet'])  && $s['stickyTablet']  === false) $a[] = 'sticky_tablet="no"';
+            if (isset($s['stickyMobile'])  && $s['stickyMobile']  === false) $a[] = 'sticky_mobile="no"';
+            self::attr($a, 'sticky_offset',  $s['stickyOffset']  ?? null);
+            self::attr($a, 'sticky_z_index', $s['stickyZIndex']  ?? null);
+        }
 
         // Visibility (only emit if hidden)
         $v = $s['visibility'] ?? [];
@@ -157,28 +200,51 @@ class BuilderShortcodeConverter
         $a[] = 'id="'    . ($column['id']    ?? '') . '"';
         $a[] = 'width="' . ($column['basis'] ?? '100%') . '"';
 
-        // Spacing
+        // Spacing with units and responsive variants
         foreach (['top', 'bottom', 'left', 'right'] as $side) {
-            $key = 'padding' . ucfirst($side);
-            if (array_key_exists($key, $s) && $s[$key] !== null) $a[] = 'padding_' . $side . '="' . $s[$key] . '"';
-            $key = 'margin' . ucfirst($side);
-            if (array_key_exists($key, $s) && $s[$key] !== null) $a[] = 'margin_' . $side . '="' . $s[$key] . '"';
+            $cap = ucfirst($side);
+            $pk = 'padding' . $cap; $pu = $pk . 'Unit';
+            $mk = 'margin'  . $cap; $mu = $mk . 'Unit';
+
+            if (array_key_exists($pk, $s) && $s[$pk] !== null) $a[] = 'padding_' . $side . '="' . $s[$pk] . '"';
+            if (!empty($s[$pu]) && $s[$pu] !== 'px') $a[] = 'padding_' . $side . '_unit="' . $s[$pu] . '"';
+            foreach (['tablet', 'mobile'] as $dev) {
+                $pdv = $s[$pk . '_' . $dev] ?? null;
+                if ($pdv !== null && $pdv !== '') $a[] = 'padding_' . $side . '_' . $dev . '="' . $pdv . '"';
+                $puv = $s[$pu . '_' . $dev] ?? null;
+                if ($puv !== null && $puv !== '' && $puv !== 'px') $a[] = 'padding_' . $side . '_unit_' . $dev . '="' . $puv . '"';
+            }
+
+            if (array_key_exists($mk, $s) && $s[$mk] !== null) $a[] = 'margin_' . $side . '="' . $s[$mk] . '"';
+            if (!empty($s[$mu]) && $s[$mu] !== 'px') $a[] = 'margin_' . $side . '_unit="' . $s[$mu] . '"';
+            foreach (['tablet', 'mobile'] as $dev) {
+                $mdv = $s[$mk . '_' . $dev] ?? null;
+                if ($mdv !== null && $mdv !== '') $a[] = 'margin_' . $side . '_' . $dev . '="' . $mdv . '"';
+                $muv = $s[$mu . '_' . $dev] ?? null;
+                if ($muv !== null && $muv !== '' && $muv !== 'px') $a[] = 'margin_' . $side . '_unit_' . $dev . '="' . $muv . '"';
+            }
         }
 
-        // Layout
+        // Layout (responsive)
         self::attrIf($a, 'alignment',      $s['alignment']      ?? null, 'default');
+        self::respAttr($a, 'alignment', $s, 'alignment');
         self::attr($a, 'content_layout',   $s['contentLayout']  ?? null);
         self::attr($a, 'align_h',          $s['contentAlignH']  ?? null);
+        self::respAttr($a, 'align_h', $s, 'contentAlignH');
         self::attr($a, 'align_v',          $s['contentAlignV']  ?? null);
+        self::respAttr($a, 'align_v', $s, 'contentAlignV');
         self::attr($a, 'gap_width',        $s['gapWidth']       ?? null);
         self::attr($a, 'gap_height',       $s['gapHeight']      ?? null);
         self::attrIf($a, 'html_tag',       $s['htmlTag']        ?? null, 'div');
         self::attr($a, 'css_class',        $s['cssClass']       ?? null);
         self::attr($a, 'css_id',           $s['cssId']          ?? null);
 
-        // Colors
+        // Colors (responsive)
         self::attrIf($a, 'bg_color',       $s['bgColor']        ?? null, 'transparent');
+        self::respAttr($a, 'bg_color', $s, 'bgColor');
         self::attr($a, 'text_color',        $s['textColor']      ?? null);
+        self::attrIf($a, 'bg_opacity',      $s['bgColorOpacity'] ?? null, 1);
+        self::respAttr($a, 'bg_opacity', $s, 'bgColorOpacity');
         self::attrIf($a, 'bg_type',        $s['bgType']         ?? null, 'color');
         self::attrIf($a, 'hover_type',     $s['hoverType']      ?? null, 'none');
 
@@ -187,13 +253,32 @@ class BuilderShortcodeConverter
         self::attr($a, 'gradient_end',     $s['bgGradientEndColor']   ?? null);
         self::attrIf($a, 'gradient_angle', $s['bgGradientAngle']      ?? null, 180);
 
-        // Background image (column)
+        // Background image (responsive)
         self::attr($a, 'bg_image',         $s['bgImage']         ?? null);
         self::attr($a, 'bg_position',      $s['bgImagePosition'] ?? null);
+        self::respAttr($a, 'bg_position', $s, 'bgImagePosition');
+        self::attrIf($a, 'bg_size',        $s['bgImageSize']     ?? null, 'auto');
+        self::respAttr($a, 'bg_size', $s, 'bgImageSize');
+        self::attrIf($a, 'bg_repeat',      $s['bgImageRepeat']   ?? null, 'no-repeat');
+        self::respAttr($a, 'bg_repeat', $s, 'bgImageRepeat');
+        self::attrIf($a, 'bg_blend',       $s['bgImageBlendMode'] ?? null, 'normal');
+        self::respAttr($a, 'bg_blend', $s, 'bgImageBlendMode');
 
         // Link
         self::attr($a, 'link',             $s['linkUrl']    ?? null);
         self::attrIf($a, 'link_target',    $s['linkTarget'] ?? null, '_self');
+
+        // Extra
+        self::attr($a, 'z_index',    $s['zIndex']   ?? null);
+        self::attrIf($a, 'overflow', $s['overflow'] ?? null, 'default');
+        if (!empty($s['sticky'])) {
+            $a[] = 'sticky="yes"';
+            if (isset($s['stickyDesktop']) && $s['stickyDesktop'] === false) $a[] = 'sticky_desktop="no"';
+            if (isset($s['stickyTablet'])  && $s['stickyTablet']  === false) $a[] = 'sticky_tablet="no"';
+            if (isset($s['stickyMobile'])  && $s['stickyMobile']  === false) $a[] = 'sticky_mobile="no"';
+            self::attr($a, 'sticky_offset',  $s['stickyOffset']  ?? null);
+            self::attr($a, 'sticky_z_index', $s['stickyZIndex']  ?? null);
+        }
 
         // Visibility
         $v = $s['visibility'] ?? [];
@@ -825,13 +910,19 @@ class BuilderShortcodeConverter
 
     private static function containerSettings(array $a): array
     {
-        return [
-            'marginTop'    => self::num($a['margin_top']    ?? null),
-            'marginBottom' => self::num($a['margin_bottom'] ?? null),
-            'paddingTop'   => self::num($a['padding_top']   ?? 0),
-            'paddingBottom'=> self::num($a['padding_bottom']?? 0),
-            'paddingLeft'  => self::num($a['padding_left']  ?? 0),
-            'paddingRight' => self::num($a['padding_right'] ?? 0),
+        $s = [
+            'marginTop'         => self::num($a['margin_top']    ?? null),
+            'marginBottom'      => self::num($a['margin_bottom'] ?? null),
+            'marginTopUnit'     => $a['margin_top_unit']    ?? 'px',
+            'marginBottomUnit'  => $a['margin_bottom_unit'] ?? 'px',
+            'paddingTop'        => self::num($a['padding_top']    ?? 0),
+            'paddingBottom'     => self::num($a['padding_bottom'] ?? 0),
+            'paddingLeft'       => self::num($a['padding_left']   ?? 0),
+            'paddingRight'      => self::num($a['padding_right']  ?? 0),
+            'paddingTopUnit'    => $a['padding_top_unit']    ?? 'px',
+            'paddingBottomUnit' => $a['padding_bottom_unit'] ?? 'px',
+            'paddingLeftUnit'   => $a['padding_left_unit']   ?? 'px',
+            'paddingRightUnit'  => $a['padding_right_unit']  ?? 'px',
             'bgColor'             => $a['bg_color']       ?? null,
             'bgColorOpacity'      => isset($a['bg_opacity']) ? (float)$a['bg_opacity'] : 1,
             'bgType'              => $a['bg_type']        ?? 'color',
@@ -852,6 +943,8 @@ class BuilderShortcodeConverter
             'contentWidth'        => $a['content_width']  ?? 'site',
             'height'              => $a['height']         ?? 'auto',
             'customHeight'        => $a['custom_height']  ?? null,
+            'minHeight'           => $a['min_height']     ?? null,
+            'rowAlignContent'     => $a['row_align_content'] ?? null,
             'alignItems'          => $a['align_items']    ?? 'stretch',
             'alignContent'        => null,
             'justifyContent'      => $a['justify_content'] ?? 'flex-start',
@@ -883,63 +976,106 @@ class BuilderShortcodeConverter
             'boxShadowStyle'              => $a['shadow_style'] ?? 'outer',
             'zIndex'                      => self::num($a['z_index']  ?? null),
             'overflow'                    => $a['overflow'] ?? 'default',
+            'sticky'        => ($a['sticky']         ?? '') === 'yes',
+            'stickyDesktop' => ($a['sticky_desktop'] ?? '') !== 'no',
+            'stickyTablet'  => ($a['sticky_tablet']  ?? '') !== 'no',
+            'stickyMobile'  => ($a['sticky_mobile']  ?? '') !== 'no',
+            'stickyOffset'  => self::num($a['sticky_offset']  ?? 0),
+            'stickyZIndex'  => self::num($a['sticky_z_index'] ?? 99),
         ];
+        self::addRespProps($s, $a, [
+            ['bgColor',          'bg_color',            null],
+            ['bgColorOpacity',   'bg_opacity',          'float'],
+            ['bgImagePosition',  'bg_position',         null],
+            ['bgImageSize',      'bg_size',             null],
+            ['bgImageRepeat',    'bg_repeat',           null],
+            ['bgImageBlendMode', 'bg_blend',            null],
+            ['height',           'height',              null],
+            ['customHeight',     'custom_height',       null],
+            ['minHeight',        'min_height',          null],
+            ['alignItems',       'align_items',         null],
+            ['justifyContent',   'justify_content',     null],
+            ['flexWrap',         'flex_wrap',           null],
+            ['rowAlignContent',  'row_align_content',   null],
+            ['columnGap',        'column_gap',          'num'],
+            ['paddingTop',       'padding_top',         'num'],
+            ['paddingTopUnit',   'padding_top_unit',    null],
+            ['paddingBottom',    'padding_bottom',      'num'],
+            ['paddingBottomUnit','padding_bottom_unit', null],
+            ['paddingLeft',      'padding_left',        'num'],
+            ['paddingLeftUnit',  'padding_left_unit',   null],
+            ['paddingRight',     'padding_right',       'num'],
+            ['paddingRightUnit', 'padding_right_unit',  null],
+            ['marginTop',        'margin_top',          'num'],
+            ['marginTopUnit',    'margin_top_unit',     null],
+            ['marginBottom',     'margin_bottom',       'num'],
+            ['marginBottomUnit', 'margin_bottom_unit',  null],
+        ]);
+        return $s;
     }
 
     private static function columnSettings(array $a): array
     {
-        return [
-            'paddingTop'    => self::num($a['padding_top']    ?? 10),
-            'paddingBottom' => self::num($a['padding_bottom'] ?? 10),
-            'paddingLeft'   => self::num($a['padding_left']   ?? 10),
-            'paddingRight'  => self::num($a['padding_right']  ?? 10),
-            'marginTop'     => self::num($a['margin_top']     ?? 0),
-            'marginBottom'  => self::num($a['margin_bottom']  ?? 0),
-            'marginLeft'    => self::num($a['margin_left']    ?? 0),
-            'marginRight'   => self::num($a['margin_right']   ?? 0),
-            'alignment'     => $a['alignment']      ?? 'default',
-            'contentLayout' => $a['content_layout'] ?? null,
-            'contentAlignH' => $a['align_h']        ?? 'flex-start',
-            'contentAlignV' => $a['align_v']        ?? 'flex-start',
-            'gapWidth'      => self::num($a['gap_width']  ?? null),
-            'gapHeight'     => self::num($a['gap_height'] ?? null),
-            'htmlTag'       => $a['html_tag']  ?? 'div',
-            'linkUrl'       => $a['link']      ?? null,
-            'linkTarget'    => $a['link_target'] ?? '_self',
-            'visibility'    => self::visibilityFromAttrs($a),
-            'cssClass'      => $a['css_class'] ?? null,
-            'cssId'         => $a['css_id']    ?? null,
-            'textColor'     => $a['text_color'] ?? null,
-            'bgColor'       => $a['bg_color']   ?? 'transparent',
-            'bgColorOpacity'=> 1,
-            'bgType'        => $a['bg_type']    ?? 'color',
-            'hoverType'     => $a['hover_type'] ?? 'none',
+        $s = [
+            'paddingTop'        => self::num($a['padding_top']    ?? 10),
+            'paddingBottom'     => self::num($a['padding_bottom'] ?? 10),
+            'paddingLeft'       => self::num($a['padding_left']   ?? 10),
+            'paddingRight'      => self::num($a['padding_right']  ?? 10),
+            'paddingTopUnit'    => $a['padding_top_unit']    ?? 'px',
+            'paddingBottomUnit' => $a['padding_bottom_unit'] ?? 'px',
+            'paddingLeftUnit'   => $a['padding_left_unit']   ?? 'px',
+            'paddingRightUnit'  => $a['padding_right_unit']  ?? 'px',
+            'marginTop'         => self::num($a['margin_top']     ?? 0),
+            'marginBottom'      => self::num($a['margin_bottom']  ?? 0),
+            'marginLeft'        => self::num($a['margin_left']    ?? 0),
+            'marginRight'       => self::num($a['margin_right']   ?? 0),
+            'marginTopUnit'     => $a['margin_top_unit']    ?? 'px',
+            'marginBottomUnit'  => $a['margin_bottom_unit'] ?? 'px',
+            'marginLeftUnit'    => $a['margin_left_unit']   ?? 'px',
+            'marginRightUnit'   => $a['margin_right_unit']  ?? 'px',
+            'alignment'         => $a['alignment']      ?? 'default',
+            'contentLayout'     => $a['content_layout'] ?? null,
+            'contentAlignH'     => $a['align_h']        ?? 'flex-start',
+            'contentAlignV'     => $a['align_v']        ?? 'flex-start',
+            'gapWidth'          => self::num($a['gap_width']  ?? null),
+            'gapHeight'         => self::num($a['gap_height'] ?? null),
+            'htmlTag'           => $a['html_tag']    ?? 'div',
+            'linkUrl'           => $a['link']        ?? null,
+            'linkTarget'        => $a['link_target'] ?? '_self',
+            'visibility'        => self::visibilityFromAttrs($a),
+            'cssClass'          => $a['css_class']   ?? null,
+            'cssId'             => $a['css_id']      ?? null,
+            'textColor'         => $a['text_color']  ?? null,
+            'bgColor'           => $a['bg_color']    ?? 'transparent',
+            'bgColorOpacity'    => isset($a['bg_opacity']) ? (float)$a['bg_opacity'] : 1,
+            'bgType'            => $a['bg_type']     ?? 'color',
+            'hoverType'         => $a['hover_type']  ?? 'none',
             'bgGradientStartColor' => $a['gradient_start'] ?? null,
             'bgGradientEndColor'   => $a['gradient_end']   ?? null,
-            'bgGradientStartOpacity' => 1,
-            'bgGradientEndOpacity'   => 1,
+            'bgGradientStartOpacity'  => 1,
+            'bgGradientEndOpacity'    => 1,
             'bgGradientStartPosition' => 0,
             'bgGradientEndPosition'   => 100,
-            'bgGradientType'  => 'linear',
-            'bgGradientAngle' => isset($a['gradient_angle']) ? (int)$a['gradient_angle'] : 180,
-            'bgImage'         => $a['bg_image']    ?? null,
-            'bgImageSkipLazy' => false,
-            'bgImagePosition' => $a['bg_position'] ?? 'center center',
-            'bgImageRepeat'   => 'no-repeat',
-            'bgImageSize'     => 'auto',
-            'bgImageFading'   => false,
-            'bgImageParallax' => 'none',
-            'bgImageBlendMode'=> 'normal',
-            'fontSize'        => null,
-            'fontWeight'      => null,
-            'lineHeight'      => null,
-            'letterSpacing'   => null,
-            'textAlign'       => null,
-            'borderSizeTop'   => self::num($a['border_top']    ?? null),
-            'borderSizeRight' => self::num($a['border_right']  ?? null),
-            'borderSizeBottom'=> self::num($a['border_bottom'] ?? null),
-            'borderSizeLeft'  => self::num($a['border_left']   ?? null),
-            'borderColor'     => $a['border_color'] ?? '#000000',
+            'bgGradientType'    => 'linear',
+            'bgGradientAngle'   => isset($a['gradient_angle']) ? (int)$a['gradient_angle'] : 180,
+            'bgImage'           => $a['bg_image']    ?? null,
+            'bgImageSkipLazy'   => false,
+            'bgImagePosition'   => $a['bg_position'] ?? 'center center',
+            'bgImageRepeat'     => $a['bg_repeat']   ?? 'no-repeat',
+            'bgImageSize'       => $a['bg_size']     ?? 'auto',
+            'bgImageFading'     => false,
+            'bgImageParallax'   => 'none',
+            'bgImageBlendMode'  => $a['bg_blend']    ?? 'normal',
+            'fontSize'          => null,
+            'fontWeight'        => null,
+            'lineHeight'        => null,
+            'letterSpacing'     => null,
+            'textAlign'         => null,
+            'borderSizeTop'     => self::num($a['border_top']    ?? null),
+            'borderSizeRight'   => self::num($a['border_right']  ?? null),
+            'borderSizeBottom'  => self::num($a['border_bottom'] ?? null),
+            'borderSizeLeft'    => self::num($a['border_left']   ?? null),
+            'borderColor'       => $a['border_color'] ?? '#000000',
             'borderRadiusTopLeft'     => self::num($a['radius_tl'] ?? null),
             'borderRadiusTopRight'    => self::num($a['radius_tr'] ?? null),
             'borderRadiusBottomRight' => self::num($a['radius_br'] ?? null),
@@ -951,7 +1087,43 @@ class BuilderShortcodeConverter
             'boxShadowSpreadRadius'       => 0,
             'boxShadowColor'              => '#000000',
             'boxShadowStyle'              => 'outer',
+            'zIndex'        => self::num($a['z_index']  ?? null),
+            'overflow'      => $a['overflow'] ?? 'default',
+            'sticky'        => ($a['sticky']         ?? '') === 'yes',
+            'stickyDesktop' => ($a['sticky_desktop'] ?? '') !== 'no',
+            'stickyTablet'  => ($a['sticky_tablet']  ?? '') !== 'no',
+            'stickyMobile'  => ($a['sticky_mobile']  ?? '') !== 'no',
+            'stickyOffset'  => self::num($a['sticky_offset']  ?? 0),
+            'stickyZIndex'  => self::num($a['sticky_z_index'] ?? 99),
         ];
+        self::addRespProps($s, $a, [
+            ['bgColor',          'bg_color',            null],
+            ['bgColorOpacity',   'bg_opacity',          'float'],
+            ['bgImagePosition',  'bg_position',         null],
+            ['bgImageSize',      'bg_size',             null],
+            ['bgImageRepeat',    'bg_repeat',           null],
+            ['bgImageBlendMode', 'bg_blend',            null],
+            ['alignment',        'alignment',           null],
+            ['contentAlignH',    'align_h',             null],
+            ['contentAlignV',    'align_v',             null],
+            ['paddingTop',       'padding_top',         'num'],
+            ['paddingTopUnit',   'padding_top_unit',    null],
+            ['paddingBottom',    'padding_bottom',      'num'],
+            ['paddingBottomUnit','padding_bottom_unit', null],
+            ['paddingLeft',      'padding_left',        'num'],
+            ['paddingLeftUnit',  'padding_left_unit',   null],
+            ['paddingRight',     'padding_right',       'num'],
+            ['paddingRightUnit', 'padding_right_unit',  null],
+            ['marginTop',        'margin_top',          'num'],
+            ['marginTopUnit',    'margin_top_unit',     null],
+            ['marginBottom',     'margin_bottom',       'num'],
+            ['marginBottomUnit', 'margin_bottom_unit',  null],
+            ['marginLeft',       'margin_left',         'num'],
+            ['marginLeftUnit',   'margin_left_unit',    null],
+            ['marginRight',      'margin_right',        'num'],
+            ['marginRightUnit',  'margin_right_unit',   null],
+        ]);
+        return $s;
     }
 
     // =========================================================================
@@ -977,6 +1149,34 @@ class BuilderShortcodeConverter
     {
         if ($value === null || $value === '' || $value === $skip) return;
         $a[] = $key . '="' . $value . '"';
+    }
+
+    /** Append _tablet/_mobile variant attrs for a responsive property */
+    private static function respAttr(array &$a, string $attrKey, array $s, string $sKey): void
+    {
+        foreach (['tablet', 'mobile'] as $dev) {
+            $v = $s[$sKey . '_' . $dev] ?? null;
+            if ($v !== null && $v !== '') $a[] = $attrKey . '_' . $dev . '="' . $v . '"';
+        }
+    }
+
+    /**
+     * Inject _tablet/_mobile responsive variants from parsed attrs into settings array.
+     * defs: array of [settingsKey, attrKey, parser]  parser: null|'int'|'float'|'num'
+     */
+    private static function addRespProps(array &$s, array $a, array $defs): void
+    {
+        foreach (['tablet', 'mobile'] as $dev) {
+            foreach ($defs as $def) {
+                [$sk, $ak, $parser] = $def;
+                $raw = $a[$ak . '_' . $dev] ?? null;
+                if ($raw === null || $raw === '') continue;
+                if ($parser === 'int')   { $s[$sk . '_' . $dev] = (int)$raw; }
+                elseif ($parser === 'float') { $s[$sk . '_' . $dev] = (float)$raw; }
+                elseif ($parser === 'num')   { $s[$sk . '_' . $dev] = self::num($raw); }
+                else { $s[$sk . '_' . $dev] = $raw; }
+            }
+        }
     }
 
     private static function attrs(string $str): array

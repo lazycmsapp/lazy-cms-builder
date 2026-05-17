@@ -277,7 +277,12 @@
         <div v-if="editingElement.settings.submenuBoxShadow === 'yes'" class="space-y-4 p-4 bg-slate-50 rounded border border-slate-100 animate-fade-in">
             <!-- Shadow Color -->
             <div>
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-2">Shadow Color</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Shadow Color</label>
+                    <button @click="editingElement.settings.submenuShadowColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                          @click="openColorPicker($event, editingElement.settings, 'submenuShadowColor')">
@@ -318,7 +323,12 @@
         <div class="space-y-4">
             <!-- Separator Color -->
             <div>
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-2">Submenu Separator Color</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Submenu Separator Color</label>
+                    <button @click="editingElement.settings.submenuSeparatorColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                          @click="openColorPicker($event, editingElement.settings, 'submenuSeparatorColor')">
@@ -330,7 +340,12 @@
 
             <!-- BG Color -->
             <div>
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-2">Submenu Background Color</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Submenu Background Color</label>
+                    <button @click="editingElement.settings.submenuBgColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                          @click="openColorPicker($event, editingElement.settings, 'submenuBgColor')">
@@ -342,7 +357,12 @@
 
             <!-- Text Color -->
             <div>
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-2">Submenu Text Color</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Submenu Text Color</label>
+                    <button @click="editingElement.settings.submenuTextColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                          @click="openColorPicker($event, editingElement.settings, 'submenuTextColor')">
@@ -354,7 +374,12 @@
             
             <!-- Text Color Hover -->
             <div>
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-2">Submenu Text Color (Hover)</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Submenu Text Color (Hover)</label>
+                    <button @click="editingElement.settings.submenuTextColorHover = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                          @click="openColorPicker($event, editingElement.settings, 'submenuTextColorHover')">

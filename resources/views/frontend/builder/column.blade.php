@@ -66,24 +66,29 @@
                      || (in_array($colAlignment, ['', 'default', null], true) && $containerAlign === 'stretch');
 
     $globalGap = $container['settings']['columnGap'] ?? 3;
-    $pLeft = (isset($s['columnSpacingLeft']) && $s['columnSpacingLeft'] !== '') ? $s['columnSpacingLeft'] . '%' : $globalGap . '%';
-    $pRight = (isset($s['columnSpacingRight']) && $s['columnSpacingRight'] !== '') ? $s['columnSpacingRight'] . '%' : $globalGap . '%';
+    // Use CSS custom property --lc-col-gap (set responsively by container) for default column spacing
+    $pLeft  = (isset($s['columnSpacingLeft'])  && $s['columnSpacingLeft']  !== '') ? $s['columnSpacingLeft']  . '%' : 'calc(var(--lc-col-gap, ' . $globalGap . ') * 1%)';
+    $pRight = (isset($s['columnSpacingRight']) && $s['columnSpacingRight'] !== '') ? $s['columnSpacingRight'] . '%' : 'calc(var(--lc-col-gap, ' . $globalGap . ') * 1%)';
 
     $finalAlignSelf = ($colAlignment && $colAlignment !== 'default') ? $colAlignment : $containerAlign;
+    $isDefaultAlign = in_array($colAlignment, ['', 'default', null], true);
+    $colCid = 'lcc-' . ($column['id'] ?? str_replace('.', '', uniqid('', true)));
 
     $outerStyles = [
         "flex-basis: {$flexBasis}",
-        "flex-grow: " . ($shouldStretch ? '1' : ($s['flexGrow'] ?? '0')),
         "flex-shrink: " . ($s['flexShrink'] ?? '0'),
         "max-width: {$maxWidth}",
         "width: " . ($flexBasis === '100%' || $flexBasis === 'auto' ? '100%' : $flexBasis),
-        "min-height: " . ($shouldStretch ? ($isEmpty ? '100px' : '100% !important') : 'auto'),
         "padding-left: {$pLeft}",
         "padding-right: {$pRight}",
         'display: flex !important',
         'flex-direction: column !important',
-        "align-self: {$finalAlignSelf} !important",
     ];
+    if (!$isDefaultAlign) {
+        $outerStyles[] = "flex-grow: " . ($shouldStretch ? '1' : ($s['flexGrow'] ?? '0'));
+        $outerStyles[] = "min-height: " . ($shouldStretch ? ($isEmpty ? '100px' : 'auto') : 'auto');
+        $outerStyles[] = "align-self: {$finalAlignSelf}";
+    }
 
     $innerStyles = [
         'width: 100%',
@@ -100,15 +105,19 @@
     if (isset($s['marginBottom']) && $s['marginBottom'] !== '') $outerStyles[] = 'margin-bottom: ' . $s['marginBottom'] . ($s['marginBottomUnit'] ?? 'px');
 
     $innerStyles = [
-        'min-height: ' . ($shouldStretch ? '100% !important' : '8px'),
-        'flex: ' . ($shouldStretch ? '1 1 auto !important' : '0 1 auto'),
-        'flex-grow: ' . ($shouldStretch ? '1 !important' : '0'),
         'padding-top: '    . ($s['paddingTop']    ?? 10) . ($s['paddingTopUnit'] ?? 'px'),
         'padding-bottom: ' . ($s['paddingBottom'] ?? 10) . ($s['paddingBottomUnit'] ?? 'px'),
         'padding-left: '   . ($s['paddingLeft']   ?? 10) . ($s['paddingLeftUnit'] ?? 'px'),
         'padding-right: '  . ($s['paddingRight']  ?? 10) . ($s['paddingRightUnit'] ?? 'px'),
         'box-sizing: border-box',
     ];
+    if (!$isDefaultAlign) {
+        array_unshift($innerStyles,
+            'min-height: ' . ($shouldStretch ? 'auto' : '8px'),
+            'flex: ' . ($shouldStretch ? '1 1 auto' : '0 1 auto'),
+            'flex-grow: ' . ($shouldStretch ? '1' : '0')
+        );
+    }
     if (isset($s['marginLeft']) && $s['marginLeft'] !== '') $innerStyles[] = 'margin-left: ' . $s['marginLeft'] . ($s['marginLeftUnit'] ?? 'px');
     if (isset($s['marginRight']) && $s['marginRight'] !== '') $innerStyles[] = 'margin-right: ' . $s['marginRight'] . ($s['marginRightUnit'] ?? 'px');
 
@@ -209,6 +218,137 @@
             . intval($s['boxShadowSpreadRadius']       ?? 0) . 'px '
             . ($s['boxShadowColor'] ?? '#000000');
     }
+    if (!empty($s['zIndex']))   $outerStyles[] = 'z-index: ' . $s['zIndex'];
+    if (!empty($s['overflow']) && $s['overflow'] !== 'default') $innerStyles[] = 'overflow: ' . $s['overflow'];
+
+    // Per-column responsive CSS for default-alignment columns
+    $colCss = '';
+    if ($isDefaultAlign) {
+        $cs       = $container['settings'] ?? [];
+        $colBp    = (int) get_cms_option('theme_small_screen_breakpoint', '800');
+        $colBpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
+        $colBpSm1 = $colBp + 1;
+
+        $getColAlign = function(string $device) use ($cs): string {
+            if ($device === 'mobile') {
+                if (isset($cs['alignItems_mobile']) && $cs['alignItems_mobile'] !== '') return $cs['alignItems_mobile'];
+                if (isset($cs['alignItems_tablet']) && $cs['alignItems_tablet'] !== '') return $cs['alignItems_tablet'];
+            } elseif ($device === 'tablet') {
+                if (isset($cs['alignItems_tablet']) && $cs['alignItems_tablet'] !== '') return $cs['alignItems_tablet'];
+            }
+            return $cs['alignItems'] ?? 'stretch';
+        };
+
+        $hasColAlignOvr = function(string $device) use ($cs): bool {
+            if ($device === 'tablet') return isset($cs['alignItems_tablet']) && $cs['alignItems_tablet'] !== '';
+            return (isset($cs['alignItems_mobile']) && $cs['alignItems_mobile'] !== '')
+                || (isset($cs['alignItems_tablet']) && $cs['alignItems_tablet'] !== '');
+        };
+
+        $buildColRules = function(string $align) use ($s, $isEmpty): array {
+            $stretch = ($align === 'stretch');
+            return [
+                'outer' => [
+                    "align-self:{$align}!important",
+                    "flex-grow:" . ($stretch ? '1' : ($s['flexGrow'] ?? '0')) . "!important",
+                    "min-height:" . ($stretch ? ($isEmpty ? '100px' : 'auto') : 'auto') . "!important",
+                ],
+                'inner' => [
+                    "min-height:" . ($stretch ? 'auto' : '8px') . "!important",
+                    "flex:" . ($stretch ? '1 1 auto' : '0 1 auto') . "!important",
+                    "flex-grow:" . ($stretch ? '1' : '0') . "!important",
+                ],
+            ];
+        };
+
+        $innerSel = ".{$colCid}>.lazy-column-inner,.{$colCid}>a>.lazy-column-inner";
+        $dRules = $buildColRules($containerAlign);
+        $colCss .= ".{$colCid}{" . implode(';', $dRules['outer']) . "}";
+        $colCss .= "{$innerSel}{" . implode(';', $dRules['inner']) . "}";
+
+        if ($hasColAlignOvr('tablet')) {
+            $tRules = $buildColRules($getColAlign('tablet'));
+            $colCss .= "@media(min-width:{$colBpSm1}px) and (max-width:{$colBpMed}px){";
+            $colCss .= ".{$colCid}{" . implode(';', $tRules['outer']) . "}";
+            $colCss .= "{$innerSel}{" . implode(';', $tRules['inner']) . "}";
+            $colCss .= "}";
+        }
+
+        if ($hasColAlignOvr('mobile')) {
+            $mRules = $buildColRules($getColAlign('mobile'));
+            $colCss .= "@media(max-width:{$colBp}px){";
+            $colCss .= ".{$colCid}{" . implode(';', $mRules['outer']) . "}";
+            $colCss .= "{$innerSel}{" . implode(';', $mRules['inner']) . "}";
+            $colCss .= "}";
+        }
+    }
+
+    // Per-column responsive overrides: alignment, contentAlignH, contentAlignV
+    $rBp    = (int) get_cms_option('theme_small_screen_breakpoint', '800');
+    $rBpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
+    $rBpSm1 = $rBp + 1;
+    $rInnerSel = ".{$colCid}>.lazy-column-inner,.{$colCid}>a>.lazy-column-inner";
+    $getColRespOvr = function(string $prop, string $dev) use ($s): ?string {
+        if ($dev === 'mobile') {
+            if (isset($s[$prop . '_mobile']) && $s[$prop . '_mobile'] !== '') return (string)$s[$prop . '_mobile'];
+            if (isset($s[$prop . '_tablet']) && $s[$prop . '_tablet'] !== '') return (string)$s[$prop . '_tablet'];
+        } elseif ($dev === 'tablet') {
+            if (isset($s[$prop . '_tablet']) && $s[$prop . '_tablet'] !== '') return (string)$s[$prop . '_tablet'];
+        }
+        return null;
+    };
+    foreach ([['tablet', "@media(min-width:{$rBpSm1}px) and (max-width:{$rBpMed}px)"], ['mobile', "@media(max-width:{$rBp}px)"]] as [$rDev, $rMq]) {
+        $rOuter = []; $rInner = [];
+        $rAlign = $getColRespOvr('alignment', $rDev);
+        if ($rAlign && $rAlign !== 'default') {
+            $rOuter[] = "align-self:{$rAlign}!important";
+            $rStretch = ($rAlign === 'stretch');
+            $rOuter[] = 'flex-grow:' . ($rStretch ? '1' : '0') . '!important';
+            $rInner[] = 'flex:' . ($rStretch ? '1 1 auto' : '0 1 auto') . '!important';
+            $rInner[] = 'flex-grow:' . ($rStretch ? '1' : '0') . '!important';
+        }
+        $rAlignH = $getColRespOvr('contentAlignH', $rDev);
+        $rAlignV = $getColRespOvr('contentAlignV', $rDev);
+        if ($rAlignH || $rAlignV) {
+            $rCl = $contentLayout ?: 'column';
+            if ($rCl === 'row') {
+                if ($rAlignH) $rInner[] = "justify-content:{$rAlignH}!important";
+                if ($rAlignV) $rInner[] = "align-items:{$rAlignV}!important";
+            } else {
+                if ($rAlignV) $rInner[] = "justify-content:{$rAlignV}!important";
+                if ($rAlignH) $rInner[] = "align-items:{$rAlignH}!important";
+            }
+        }
+        if ($rOuter || $rInner) {
+            $colCss .= "{$rMq}{";
+            if ($rOuter) $colCss .= ".{$colCid}{" . implode(';', $rOuter) . "}";
+            if ($rInner) $colCss .= "{$rInnerSel}{" . implode(';', $rInner) . "}";
+            $colCss .= "}";
+        }
+    }
+
+    // Sticky column CSS
+    if (!empty($s['sticky'])) {
+        $stickyOffset  = isset($s['stickyOffset'])  ? (int) $s['stickyOffset']  : 0;
+        $stickyZIndex  = isset($s['stickyZIndex'])  ? (int) $s['stickyZIndex']  : 99;
+        $stickyDesktop = $s['stickyDesktop'] ?? true;
+        $stickyTablet  = $s['stickyTablet']  ?? true;
+        $stickyMobile  = $s['stickyMobile']  ?? true;
+        $sOn  = "position:sticky;top:{$stickyOffset}px;z-index:{$stickyZIndex};";
+        $sOff = "position:static!important;top:auto!important;z-index:auto!important;";
+        $colBp    = (int) get_cms_option('theme_small_screen_breakpoint', '800');
+        $colBpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
+        $colBpSm1 = $colBp + 1;
+        if ($stickyDesktop) $colCss .= ".{$colCid}{{$sOn}}";
+        if ($stickyTablet !== $stickyDesktop) {
+            $rule = $stickyTablet ? str_replace(';', '!important;', $sOn) : $sOff;
+            $colCss .= "@media(min-width:{$colBpSm1}px) and (max-width:{$colBpMed}px){.{$colCid}{{$rule}}}";
+        }
+        if ($stickyMobile !== $stickyTablet) {
+            $rule = $stickyMobile ? str_replace(';', '!important;', $sOn) : $sOff;
+            $colCss .= "@media(max-width:{$colBp}px){.{$colCid}{{$rule}}}";
+        }
+    }
 
     $htmlTag = $s['htmlTag'] ?? 'div';
     $link = !empty($s['linkUrl']) ? $s['linkUrl'] : null;
@@ -218,7 +358,9 @@
     $hoverClass = (!empty($s['hoverType']) && $s['hoverType'] !== 'none') ? 'hover-effect-' . $s['hoverType'] : '';
 @endphp
 
-<{{ $htmlTag }} class="lazy-column {{ $hoverClass }} {{ $visibilityClasses }} {{ $s['cssClass'] ?? '' }}"
+{!! $colCss ? '<style>' . $colCss . '</style>' : '' !!}
+
+<{{ $htmlTag }} class="lazy-column {{ $colCid }} {{ $hoverClass }} {{ $visibilityClasses }} {{ $s['cssClass'] ?? '' }}"
     @if(!empty($s['cssId'])) id="{{ $s['cssId'] }}" @endif
     style="{{ implode('; ', $outerStyles) }}">
     

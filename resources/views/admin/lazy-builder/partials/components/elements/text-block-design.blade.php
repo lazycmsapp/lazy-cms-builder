@@ -3,8 +3,27 @@
     <div>
         <div class="flex justify-between items-center mb-3">
             <label class="text-[12px] font-bold text-[#333] uppercase">MARGIN</label>
-            <div class="flex gap-2">
-                <i class="fa fa-desktop text-[11px] text-slate-300"></i>
+            <div class="flex gap-1 items-center">
+                <button @click="['Top','Right','Bottom','Left'].forEach(s => editingElement.settings['margin' + s] = '')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                    <i class="fa fa-undo text-[10px]"></i>
+                </button>
+                <div class="relative inline-block">
+                    <button @click="activeResponsiveMenu = activeResponsiveMenu === 'textMargin' ? null : 'textMargin'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                        <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                        <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                    </button>
+                    <div v-show="activeResponsiveMenu === 'textMargin'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                        <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                            <i class="fa fa-desktop text-[11px]"></i>
+                        </button>
+                        <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                            <i class="fa fa-tablet-alt text-[11px]"></i>
+                        </button>
+                        <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                            <i class="fa fa-mobile-alt text-[11px]"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="grid grid-cols-4 gap-2">
@@ -31,8 +50,27 @@
     <div>
         <div class="flex justify-between items-center mb-3">
             <label class="text-[12px] font-bold text-[#333] uppercase">PADDING</label>
-            <div class="flex gap-2">
-                <i class="fa fa-desktop text-[11px] text-slate-300"></i>
+            <div class="flex gap-1 items-center">
+                <button @click="['Top','Right','Bottom','Left'].forEach(s => editingElement.settings['padding' + s] = '')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                    <i class="fa fa-undo text-[10px]"></i>
+                </button>
+                <div class="relative inline-block">
+                    <button @click="activeResponsiveMenu = activeResponsiveMenu === 'textPadding' ? null : 'textPadding'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                        <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                        <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                    </button>
+                    <div v-show="activeResponsiveMenu === 'textPadding'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                        <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                            <i class="fa fa-desktop text-[11px]"></i>
+                        </button>
+                        <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                            <i class="fa fa-tablet-alt text-[11px]"></i>
+                        </button>
+                        <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                            <i class="fa fa-mobile-alt text-[11px]"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="grid grid-cols-4 gap-2">
@@ -136,6 +174,9 @@
     <div class="pt-4 border-t border-slate-50">
         <div class="flex justify-between items-center mb-3">
             <label class="text-[12px] font-bold text-[#333] uppercase">FONT COLOR</label>
+            <button @click="editingElement.settings.color = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                <i class="fa fa-undo text-[10px]"></i>
+            </button>
         </div>
         <div class="flex gap-2 items-center">
             <div class="checkerboard rounded-full overflow-hidden w-9 h-9 flex-shrink-0 border border-slate-200 shadow-sm cursor-pointer"
@@ -153,6 +194,9 @@
     <div class="pt-4 border-t border-slate-50 pb-10">
         <div class="flex justify-between items-center mb-3">
             <label class="text-[12px] font-bold text-[#333] uppercase">FONT HOVER COLOR</label>
+            <button @click="editingElement.settings.hoverColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                <i class="fa fa-undo text-[10px]"></i>
+            </button>
         </div>
         <div class="flex gap-2 items-center">
             <div class="checkerboard rounded-full overflow-hidden w-9 h-9 flex-shrink-0 border border-slate-200 shadow-sm cursor-pointer"

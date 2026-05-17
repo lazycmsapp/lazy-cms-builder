@@ -42,6 +42,30 @@
         return str + ' ' + key + '="' + value + '"';
     }
 
+    /** Append _tablet/_mobile variant attrs onto array; skip null/undefined/empty */
+    function rAttr(a, attrKey, s, sKey) {
+        var tv = s[sKey + '_tablet'];
+        var mv = s[sKey + '_mobile'];
+        if (tv !== null && tv !== undefined && tv !== '') a.push(attrKey + '_tablet="' + tv + '"');
+        if (mv !== null && mv !== undefined && mv !== '') a.push(attrKey + '_mobile="' + mv + '"');
+    }
+
+    /**
+     * Inject _tablet/_mobile responsive variants into a settings object.
+     * defs: array of [settingsKey, attrKey, parserFn|null]
+     * Only sets the key if the attr is present and non-empty.
+     */
+    function addRespProps(s, a, defs) {
+        ['tablet', 'mobile'].forEach(function(dev) {
+            defs.forEach(function(def) {
+                var sk = def[0], ak = def[1] + '_' + dev, parser = def[2];
+                var raw = a[ak];
+                if (raw !== undefined && raw !== null && raw !== '')
+                    s[sk + '_' + dev] = parser ? parser(raw) : raw;
+            });
+        });
+    }
+
     function parseAttrs(str) {
         var out = {};
         var rx = /(\w+)\s*=\s*"([^"]*)"/g;
@@ -84,13 +108,23 @@
 
         attr(a, 'status',        s.status);
         attr(a, 'content_width', s.contentWidth);
-        attr(a, 'height',        s.height);
-        attr(a, 'custom_height', s.customHeight);
 
+        // Height (responsive)
+        attr(a, 'height',        s.height);
+        rAttr(a, 'height', s, 'height');
+        attr(a, 'custom_height', s.customHeight);
+        rAttr(a, 'custom_height', s, 'customHeight');
+        attr(a, 'min_height',    s.minHeight);
+        rAttr(a, 'min_height', s, 'minHeight');
+
+        // Background (responsive)
         attr(a, 'bg_type',    s.bgType);
         attr(a, 'bg_color',   s.bgColor);
+        rAttr(a, 'bg_color', s, 'bgColor');
         attrIf(a, 'bg_opacity', s.bgColorOpacity, 1);
+        rAttr(a, 'bg_opacity', s, 'bgColorOpacity');
 
+        // Gradient
         attr(a, 'gradient_start',        s.bgGradientStartColor);
         attr(a, 'gradient_end',          s.bgGradientEndColor);
         attrIf(a, 'gradient_type',       s.bgGradientType, 'linear');
@@ -98,30 +132,66 @@
         attrIf(a, 'gradient_start_pos',  s.bgGradientStartPosition, 0);
         attrIf(a, 'gradient_end_pos',    s.bgGradientEndPosition, 100);
 
+        // Background image (responsive)
         attr(a, 'bg_image',       s.bgImage);
         attr(a, 'bg_position',    s.bgImagePosition);
+        rAttr(a, 'bg_position', s, 'bgImagePosition');
         attrIf(a, 'bg_size',      s.bgImageSize, 'auto');
+        rAttr(a, 'bg_size', s, 'bgImageSize');
         attrIf(a, 'bg_repeat',    s.bgImageRepeat, 'no-repeat');
+        rAttr(a, 'bg_repeat', s, 'bgImageRepeat');
         attrIf(a, 'bg_parallax',  s.bgImageParallax, 'none');
         attrIf(a, 'bg_blend',     s.bgImageBlendMode, 'normal');
+        rAttr(a, 'bg_blend', s, 'bgImageBlendMode');
 
+        // Spacing with units and responsive variants
         ['top', 'bottom', 'left', 'right'].forEach(function (side) {
             var cap = side.charAt(0).toUpperCase() + side.slice(1);
-            var pk = 'padding' + cap, mk = 'margin' + cap;
+            var pk = 'padding' + cap, pu = pk + 'Unit';
+            var mk = 'margin'  + cap, mu = mk + 'Unit';
+
             if (pk in s && s[pk] !== null && s[pk] !== undefined) a.push('padding_' + side + '="' + s[pk] + '"');
-            if (mk in s && s[mk] !== null && s[mk] !== undefined) a.push('margin_'  + side + '="' + s[mk] + '"');
+            if (pu in s && s[pu] && s[pu] !== 'px') a.push('padding_' + side + '_unit="' + s[pu] + '"');
+            ['tablet', 'mobile'].forEach(function(dev) {
+                var kd = pk + '_' + dev, ud = pu + '_' + dev;
+                if (kd in s && s[kd] !== null && s[kd] !== undefined) a.push('padding_' + side + '_' + dev + '="' + s[kd] + '"');
+                if (ud in s && s[ud] && s[ud] !== 'px') a.push('padding_' + side + '_unit_' + dev + '="' + s[ud] + '"');
+            });
+
+            if (mk in s && s[mk] !== null && s[mk] !== undefined) a.push('margin_' + side + '="' + s[mk] + '"');
+            if (mu in s && s[mu] && s[mu] !== 'px') a.push('margin_' + side + '_unit="' + s[mu] + '"');
+            ['tablet', 'mobile'].forEach(function(dev) {
+                var kd = mk + '_' + dev, ud = mu + '_' + dev;
+                if (kd in s && s[kd] !== null && s[kd] !== undefined) a.push('margin_' + side + '_' + dev + '="' + s[kd] + '"');
+                if (ud in s && s[ud] && s[ud] !== 'px') a.push('margin_' + side + '_unit_' + dev + '="' + s[ud] + '"');
+            });
         });
 
+        // Flex/alignment (responsive)
         attrIf(a, 'align_items',     s.alignItems,     'stretch');
+        rAttr(a, 'align_items', s, 'alignItems');
         attrIf(a, 'justify_content', s.justifyContent, 'flex-start');
+        rAttr(a, 'justify_content', s, 'justifyContent');
         attrIf(a, 'flex_wrap',       s.flexWrap,       'wrap');
+        rAttr(a, 'flex_wrap', s, 'flexWrap');
+        attr(a, 'row_align_content', s.rowAlignContent);
+        rAttr(a, 'row_align_content', s, 'rowAlignContent');
         attr(a, 'column_gap', s.columnGap);
+        rAttr(a, 'column_gap', s, 'columnGap');
 
         attrIf(a, 'html_tag',    s.htmlTag, 'div');
         attr(a, 'menu_anchor',   s.menuAnchor);
         attr(a, 'css_class',     s.cssClass);
         attr(a, 'z_index',       s.zIndex);
         attrIf(a, 'overflow',    s.overflow, 'default');
+        if (s.sticky) {
+            a.push('sticky="yes"');
+            if (s.stickyDesktop === false) a.push('sticky_desktop="no"');
+            if (s.stickyTablet  === false) a.push('sticky_tablet="no"');
+            if (s.stickyMobile  === false) a.push('sticky_mobile="no"');
+            attr(a, 'sticky_offset',  s.stickyOffset);
+            attr(a, 'sticky_z_index', s.stickyZIndex);
+        }
 
         var v = s.visibility || {};
         if (v.mobile  === false) a.push('hide_mobile="yes"');
@@ -165,37 +235,80 @@
         a.push('id="'    + (col.id    || '') + '"');
         a.push('width="' + (col.basis || '100%') + '"');
 
+        // Spacing with units and responsive variants
         ['top', 'bottom', 'left', 'right'].forEach(function (side) {
             var cap = side.charAt(0).toUpperCase() + side.slice(1);
-            var pk = 'padding' + cap, mk = 'margin' + cap;
+            var pk = 'padding' + cap, pu = pk + 'Unit';
+            var mk = 'margin'  + cap, mu = mk + 'Unit';
+
             if (pk in s && s[pk] !== null && s[pk] !== undefined) a.push('padding_' + side + '="' + s[pk] + '"');
-            if (mk in s && s[mk] !== null && s[mk] !== undefined) a.push('margin_'  + side + '="' + s[mk] + '"');
+            if (pu in s && s[pu] && s[pu] !== 'px') a.push('padding_' + side + '_unit="' + s[pu] + '"');
+            ['tablet', 'mobile'].forEach(function(dev) {
+                var kd = pk + '_' + dev, ud = pu + '_' + dev;
+                if (kd in s && s[kd] !== null && s[kd] !== undefined) a.push('padding_' + side + '_' + dev + '="' + s[kd] + '"');
+                if (ud in s && s[ud] && s[ud] !== 'px') a.push('padding_' + side + '_unit_' + dev + '="' + s[ud] + '"');
+            });
+
+            if (mk in s && s[mk] !== null && s[mk] !== undefined) a.push('margin_' + side + '="' + s[mk] + '"');
+            if (mu in s && s[mu] && s[mu] !== 'px') a.push('margin_' + side + '_unit="' + s[mu] + '"');
+            ['tablet', 'mobile'].forEach(function(dev) {
+                var kd = mk + '_' + dev, ud = mu + '_' + dev;
+                if (kd in s && s[kd] !== null && s[kd] !== undefined) a.push('margin_' + side + '_' + dev + '="' + s[kd] + '"');
+                if (ud in s && s[ud] && s[ud] !== 'px') a.push('margin_' + side + '_unit_' + dev + '="' + s[ud] + '"');
+            });
         });
 
+        // Layout (responsive)
         attrIf(a, 'alignment',     s.alignment,    'default');
+        rAttr(a, 'alignment', s, 'alignment');
         attr(a, 'content_layout',  s.contentLayout);
         attr(a, 'align_h',         s.contentAlignH);
+        rAttr(a, 'align_h', s, 'contentAlignH');
         attr(a, 'align_v',         s.contentAlignV);
+        rAttr(a, 'align_v', s, 'contentAlignV');
         attr(a, 'gap_width',       s.gapWidth);
         attr(a, 'gap_height',      s.gapHeight);
         attrIf(a, 'html_tag',      s.htmlTag, 'div');
         attr(a, 'css_class',       s.cssClass);
         attr(a, 'css_id',          s.cssId);
 
+        // Colors (responsive)
         attrIf(a, 'bg_color',      s.bgColor, 'transparent');
+        rAttr(a, 'bg_color', s, 'bgColor');
         attr(a, 'text_color',      s.textColor);
+        attrIf(a, 'bg_opacity',    s.bgColorOpacity, 1);
+        rAttr(a, 'bg_opacity', s, 'bgColorOpacity');
         attrIf(a, 'bg_type',       s.bgType, 'color');
         attrIf(a, 'hover_type',    s.hoverType, 'none');
 
+        // Gradient
         attr(a, 'gradient_start',      s.bgGradientStartColor);
         attr(a, 'gradient_end',        s.bgGradientEndColor);
         attrIf(a, 'gradient_angle',    s.bgGradientAngle, 180);
 
+        // Background image (responsive)
         attr(a, 'bg_image',     s.bgImage);
         attr(a, 'bg_position',  s.bgImagePosition);
+        rAttr(a, 'bg_position', s, 'bgImagePosition');
+        attrIf(a, 'bg_size',    s.bgImageSize, 'auto');
+        rAttr(a, 'bg_size', s, 'bgImageSize');
+        attrIf(a, 'bg_repeat',  s.bgImageRepeat, 'no-repeat');
+        rAttr(a, 'bg_repeat', s, 'bgImageRepeat');
+        attrIf(a, 'bg_blend',   s.bgImageBlendMode, 'normal');
+        rAttr(a, 'bg_blend', s, 'bgImageBlendMode');
 
         attr(a, 'link',           s.linkUrl);
         attrIf(a, 'link_target',  s.linkTarget, '_self');
+        attr(a, 'z_index',        s.zIndex);
+        attrIf(a, 'overflow',     s.overflow, 'default');
+        if (s.sticky) {
+            a.push('sticky="yes"');
+            if (s.stickyDesktop === false) a.push('sticky_desktop="no"');
+            if (s.stickyTablet  === false) a.push('sticky_tablet="no"');
+            if (s.stickyMobile  === false) a.push('sticky_mobile="no"');
+            attr(a, 'sticky_offset',  s.stickyOffset);
+            attr(a, 'sticky_z_index', s.stickyZIndex);
+        }
 
         var v = s.visibility || {};
         if (v.mobile  === false) a.push('hide_mobile="yes"');
@@ -743,13 +856,19 @@
     // -------------------------------------------------------------------------
 
     function containerSettings(a) {
-        return {
+        var s = {
             marginTop:    num(a.margin_top    !== undefined ? a.margin_top    : null),
             marginBottom: num(a.margin_bottom !== undefined ? a.margin_bottom : null),
+            marginTopUnit:    a.margin_top_unit    || 'px',
+            marginBottomUnit: a.margin_bottom_unit || 'px',
             paddingTop:   num(a.padding_top   !== undefined ? a.padding_top   : 0),
             paddingBottom:num(a.padding_bottom !== undefined ? a.padding_bottom : 0),
             paddingLeft:  num(a.padding_left  !== undefined ? a.padding_left  : 0),
             paddingRight: num(a.padding_right !== undefined ? a.padding_right : 0),
+            paddingTopUnit:    a.padding_top_unit    || 'px',
+            paddingBottomUnit: a.padding_bottom_unit || 'px',
+            paddingLeftUnit:   a.padding_left_unit   || 'px',
+            paddingRightUnit:  a.padding_right_unit  || 'px',
             bgColor:              a.bg_color       || null,
             bgColorOpacity:       a.bg_opacity ? parseFloat(a.bg_opacity) : 1,
             bgType:               a.bg_type        || 'color',
@@ -770,6 +889,8 @@
             contentWidth:         a.content_width   || 'site',
             height:               a.height          || 'auto',
             customHeight:         a.custom_height   || null,
+            minHeight:            a.min_height      || null,
+            rowAlignContent:      a.row_align_content || null,
             alignItems:           a.align_items     || 'stretch',
             alignContent:         null,
             justifyContent:       a.justify_content || 'flex-start',
@@ -800,20 +921,63 @@
             boxShadowColor:              a.shadow_color || '#000000',
             boxShadowStyle:              a.shadow_style || 'outer',
             zIndex:                      num(a.z_index  || null),
-            overflow:                    a.overflow    || 'default'
+            overflow:                    a.overflow    || 'default',
+            sticky:        (a.sticky         || '') === 'yes',
+            stickyDesktop: (a.sticky_desktop || '') !== 'no',
+            stickyTablet:  (a.sticky_tablet  || '') !== 'no',
+            stickyMobile:  (a.sticky_mobile  || '') !== 'no',
+            stickyOffset:  a.sticky_offset  !== undefined ? num(a.sticky_offset)  : 0,
+            stickyZIndex:  a.sticky_z_index !== undefined ? num(a.sticky_z_index) : 99
         };
+        addRespProps(s, a, [
+            ['bgColor',          'bg_color',            null],
+            ['bgColorOpacity',   'bg_opacity',          parseFloat],
+            ['bgImagePosition',  'bg_position',         null],
+            ['bgImageSize',      'bg_size',             null],
+            ['bgImageRepeat',    'bg_repeat',           null],
+            ['bgImageBlendMode', 'bg_blend',            null],
+            ['height',           'height',              null],
+            ['customHeight',     'custom_height',       null],
+            ['minHeight',        'min_height',          null],
+            ['alignItems',       'align_items',         null],
+            ['justifyContent',   'justify_content',     null],
+            ['flexWrap',         'flex_wrap',           null],
+            ['rowAlignContent',  'row_align_content',   null],
+            ['columnGap',        'column_gap',          num],
+            ['paddingTop',       'padding_top',         num],
+            ['paddingTopUnit',   'padding_top_unit',    null],
+            ['paddingBottom',    'padding_bottom',      num],
+            ['paddingBottomUnit','padding_bottom_unit', null],
+            ['paddingLeft',      'padding_left',        num],
+            ['paddingLeftUnit',  'padding_left_unit',   null],
+            ['paddingRight',     'padding_right',       num],
+            ['paddingRightUnit', 'padding_right_unit',  null],
+            ['marginTop',        'margin_top',          num],
+            ['marginTopUnit',    'margin_top_unit',     null],
+            ['marginBottom',     'margin_bottom',       num],
+            ['marginBottomUnit', 'margin_bottom_unit',  null]
+        ]);
+        return s;
     }
 
     function columnSettings(a) {
-        return {
+        var s = {
             paddingTop:    num(a.padding_top    !== undefined ? a.padding_top    : 10),
             paddingBottom: num(a.padding_bottom !== undefined ? a.padding_bottom : 10),
             paddingLeft:   num(a.padding_left   !== undefined ? a.padding_left   : 10),
             paddingRight:  num(a.padding_right  !== undefined ? a.padding_right  : 10),
+            paddingTopUnit:    a.padding_top_unit    || 'px',
+            paddingBottomUnit: a.padding_bottom_unit || 'px',
+            paddingLeftUnit:   a.padding_left_unit   || 'px',
+            paddingRightUnit:  a.padding_right_unit  || 'px',
             marginTop:     num(a.margin_top     !== undefined ? a.margin_top     : 0),
             marginBottom:  num(a.margin_bottom  !== undefined ? a.margin_bottom  : 0),
             marginLeft:    num(a.margin_left    !== undefined ? a.margin_left    : 0),
             marginRight:   num(a.margin_right   !== undefined ? a.margin_right   : 0),
+            marginTopUnit:    a.margin_top_unit    || 'px',
+            marginBottomUnit: a.margin_bottom_unit || 'px',
+            marginLeftUnit:   a.margin_left_unit   || 'px',
+            marginRightUnit:  a.margin_right_unit  || 'px',
             alignment:     a.alignment      || 'default',
             contentLayout: a.content_layout || null,
             contentAlignH: a.align_h        || 'flex-start',
@@ -828,7 +992,7 @@
             cssId:         a.css_id          || null,
             textColor:     a.text_color      || null,
             bgColor:       a.bg_color        || 'transparent',
-            bgColorOpacity:1,
+            bgColorOpacity: a.bg_opacity ? parseFloat(a.bg_opacity) : 1,
             bgType:        a.bg_type         || 'color',
             hoverType:     a.hover_type      || 'none',
             bgGradientStartColor: a.gradient_start || null,
@@ -842,11 +1006,11 @@
             bgImage:          a.bg_image       || null,
             bgImageSkipLazy:  false,
             bgImagePosition:  a.bg_position    || 'center center',
-            bgImageRepeat:    'no-repeat',
-            bgImageSize:      'auto',
+            bgImageRepeat:    a.bg_repeat      || 'no-repeat',
+            bgImageSize:      a.bg_size        || 'auto',
             bgImageFading:    false,
             bgImageParallax:  'none',
-            bgImageBlendMode: 'normal',
+            bgImageBlendMode: a.bg_blend       || 'normal',
             fontSize:         null,
             fontWeight:       null,
             lineHeight:       null,
@@ -867,8 +1031,44 @@
             boxShadowBlurRadius:         0,
             boxShadowSpreadRadius:       0,
             boxShadowColor:              '#000000',
-            boxShadowStyle:              'outer'
+            boxShadowStyle:              'outer',
+            zIndex:        num(a.z_index  || null),
+            overflow:      a.overflow    || 'default',
+            sticky:        (a.sticky         || '') === 'yes',
+            stickyDesktop: (a.sticky_desktop || '') !== 'no',
+            stickyTablet:  (a.sticky_tablet  || '') !== 'no',
+            stickyMobile:  (a.sticky_mobile  || '') !== 'no',
+            stickyOffset:  a.sticky_offset  !== undefined ? num(a.sticky_offset)  : 0,
+            stickyZIndex:  a.sticky_z_index !== undefined ? num(a.sticky_z_index) : 99
         };
+        addRespProps(s, a, [
+            ['bgColor',          'bg_color',            null],
+            ['bgColorOpacity',   'bg_opacity',          parseFloat],
+            ['bgImagePosition',  'bg_position',         null],
+            ['bgImageSize',      'bg_size',             null],
+            ['bgImageRepeat',    'bg_repeat',           null],
+            ['bgImageBlendMode', 'bg_blend',            null],
+            ['alignment',        'alignment',           null],
+            ['contentAlignH',    'align_h',             null],
+            ['contentAlignV',    'align_v',             null],
+            ['paddingTop',       'padding_top',         num],
+            ['paddingTopUnit',   'padding_top_unit',    null],
+            ['paddingBottom',    'padding_bottom',      num],
+            ['paddingBottomUnit','padding_bottom_unit', null],
+            ['paddingLeft',      'padding_left',        num],
+            ['paddingLeftUnit',  'padding_left_unit',   null],
+            ['paddingRight',     'padding_right',       num],
+            ['paddingRightUnit', 'padding_right_unit',  null],
+            ['marginTop',        'margin_top',          num],
+            ['marginTopUnit',    'margin_top_unit',     null],
+            ['marginBottom',     'margin_bottom',       num],
+            ['marginBottomUnit', 'margin_bottom_unit',  null],
+            ['marginLeft',       'margin_left',         num],
+            ['marginLeftUnit',   'margin_left_unit',    null],
+            ['marginRight',      'margin_right',        num],
+            ['marginRightUnit',  'margin_right_unit',   null]
+        ]);
+        return s;
     }
 
     // -------------------------------------------------------------------------

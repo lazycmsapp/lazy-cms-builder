@@ -14,17 +14,21 @@
 
     <!-- Tabs -->
     <div class="flex bg-[#0091ea]">
-        <button @click="activePanelTab = 'general'" :class="activePanelTab === 'general' ? 'bg-[#007cc0] text-white' : 'text-white/70 hover:text-white'" class="flex-1 py-2 text-[12px] font-bold transition-colors">
+        <button @click="activePanelTab = 'general'" :class="activePanelTab === 'general' ? 'bg-[#007cc0] text-white' : 'text-white/70 hover:text-white'" class="flex-1 py-2 text-[11px] font-bold transition-all flex items-center justify-center gap-1">
             <i class="fa fa-sliders-h"></i>
+            <span v-if="activePanelTab === 'general'">General</span>
         </button>
-        <button v-if="{{ isset($isNestedRow) && $isNestedRow ? 'false' : 'true' }}" @click="activePanelTab = 'design'" :class="activePanelTab === 'design' ? 'bg-[#007cc0] text-white' : 'text-white/70 hover:text-white'" class="flex-1 py-2 text-[10px] font-bold transition-colors">
-            Design
+        <button v-if="{{ isset($isNestedRow) && $isNestedRow ? 'false' : 'true' }}" @click="activePanelTab = 'design'" :class="activePanelTab === 'design' ? 'bg-[#007cc0] text-white' : 'text-white/70 hover:text-white'" class="flex-1 py-2 text-[11px] font-bold transition-all flex items-center justify-center gap-1">
+            <i class="fa fa-paint-brush"></i>
+            <span v-if="activePanelTab === 'design'">Design</span>
         </button>
-        <button v-if="{{ isset($isNestedRow) && $isNestedRow ? 'false' : 'true' }}" @click="activePanelTab = 'background'" :class="activePanelTab === 'background' ? 'bg-[#007cc0] text-white' : 'text-white/70 hover:text-white'" class="flex-1 py-2 text-[10px] font-bold transition-colors">
-            Background
+        <button v-if="{{ isset($isNestedRow) && $isNestedRow ? 'false' : 'true' }}" @click="activePanelTab = 'background'" :class="activePanelTab === 'background' ? 'bg-[#007cc0] text-white' : 'text-white/70 hover:text-white'" class="flex-1 py-2 text-[11px] font-bold transition-all flex items-center justify-center gap-1">
+            <i class="fa fa-image"></i>
+            <span v-if="activePanelTab === 'background'">BG</span>
         </button>
-        <button v-if="{{ isset($isNestedRow) && $isNestedRow ? 'false' : 'true' }}" @click="activePanelTab = 'link'" :class="activePanelTab === 'link' ? 'bg-[#007cc0] text-white' : 'text-white/70 hover:text-white'" class="flex-1 py-2 text-[12px] transition-colors">
-            <i class="fa fa-link"></i>
+        <button v-if="{{ isset($isNestedRow) && $isNestedRow ? 'false' : 'true' }}" @click="activePanelTab = 'extra'" :class="activePanelTab === 'extra' ? 'bg-[#007cc0] text-white' : 'text-white/70 hover:text-white'" class="flex-1 py-2 text-[11px] font-bold transition-all flex items-center justify-center gap-1">
+            <i class="fa fa-cog"></i>
+            <span v-if="activePanelTab === 'extra'">Extra</span>
         </button>
     </div>
 
@@ -43,11 +47,30 @@
                 <div class="mb-4">
                     <div class="flex justify-between items-center mb-2">
                         <label class="text-[11px] font-bold text-[#444]">Row Minimum Height</label>
-                        <div class="flex gap-2 items-center">
-                            <i class="fa fa-desktop text-[10px] text-slate-300"></i>
+                        <div class="flex gap-1 items-center">
+                            <button @click="resetResponsiveVal({{ $base }}.settings, 'minHeight', device, '50px')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fa fa-undo text-[10px]"></i>
+                            </button>
+                            <div class="relative inline-block">
+                                <button @click="activeResponsiveMenu = activeResponsiveMenu === 'minHeight' ? null : 'minHeight'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                                    <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                                    <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                                </button>
+                                <div v-show="activeResponsiveMenu === 'minHeight'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                                    <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                        <i class="fa fa-desktop text-[11px]"></i>
+                                    </button>
+                                    <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                        <i class="fa fa-tablet-alt text-[11px]"></i>
+                                    </button>
+                                    <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                        <i class="fa fa-mobile-alt text-[11px]"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <input type="text" v-model="{{ $base }}.settings.minHeight" placeholder="e.g. 50px" class="w-full border border-slate-200 rounded px-3 py-2 text-[12px] focus:outline-none focus:border-[#0091ea]">
+                    <input type="text" v-model="{{ $base }}.settings[device === 'desktop' ? 'minHeight' : 'minHeight_' + device]" :placeholder="getResponsiveVal({{ $base }}.settings, 'minHeight', device) || 'e.g. 50px'" class="w-full border border-slate-200 rounded px-3 py-2 text-[12px] focus:outline-none focus:border-[#0091ea]">
                 </div>
 
             </div>
@@ -71,14 +94,36 @@
         <div v-if="!{{ isset($isNestedRow) && $isNestedRow ? 'true' : 'false' }}">
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Height</label>
+                <div class="flex gap-1 items-center">
+                    <button @click="resetResponsiveVal({{ $base }}.settings, 'height', device, 'auto'); resetResponsiveVal({{ $base }}.settings, 'customHeight', device, '')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                    <div class="relative inline-block">
+                        <button @click="activeResponsiveMenu = activeResponsiveMenu === 'height' ? null : 'height'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                            <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                            <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                        </button>
+                        <div v-show="activeResponsiveMenu === 'height'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                            <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                <i class="fa fa-desktop text-[11px]"></i>
+                            </button>
+                            <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                <i class="fa fa-tablet-alt text-[11px]"></i>
+                            </button>
+                            <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                <i class="fa fa-mobile-alt text-[11px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <select v-model="{{ $base }}.settings.height" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+            <select v-model="{{ $base }}.settings[device === 'desktop' ? 'height' : 'height_' + device]" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                 <option value="auto">Auto</option>
                 <option value="full">Full Height</option>
                 <option value="custom">Custom</option>
             </select>
-            <div v-if="{{ $base }}.settings.height === 'custom'" class="mt-2">
-                <input type="text" v-model="{{ $base }}.settings.customHeight" placeholder="e.g. 400px, 50vh" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+            <div v-if="getResponsiveVal({{ $base }}.settings, 'height', device) === 'custom'" class="mt-2">
+                <input type="text" v-model="{{ $base }}.settings[device === 'desktop' ? 'customHeight' : 'customHeight_' + device]" :placeholder="getResponsiveVal({{ $base }}.settings, 'customHeight', device) || 'e.g. 400px, 50vh'" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
             </div>
         </div>
 
@@ -86,10 +131,32 @@
         <div>
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Column Alignment</label>
+                <div class="flex gap-1 items-center">
+                    <button @click="resetResponsiveVal({{ $base }}.settings, 'alignItems', device, 'stretch')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                    <div class="relative inline-block">
+                        <button @click="activeResponsiveMenu = activeResponsiveMenu === 'alignItems' ? null : 'alignItems'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                            <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                            <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                        </button>
+                        <div v-show="activeResponsiveMenu === 'alignItems'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                            <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                <i class="fa fa-desktop text-[11px]"></i>
+                            </button>
+                            <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                <i class="fa fa-tablet-alt text-[11px]"></i>
+                            </button>
+                            <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                <i class="fa fa-mobile-alt text-[11px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="grid grid-cols-2 gap-2">
-                <button @click="{{ $base }}.settings.alignItems = 'flex-start'"
-                        :class="{{ $base }}.settings.alignItems === 'flex-start' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'alignItems', device, 'flex-start')"
+                        :class="getResponsiveVal({{ $base }}.settings, 'alignItems', device) === 'flex-start' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="5" y="4" width="3" height="10" rx="0.5"/>
@@ -98,8 +165,8 @@
                     </svg>
                     <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Align Top</div>
                 </button>
-                <button @click="{{ $base }}.settings.alignItems = 'center'"
-                        :class="{{ $base }}.settings.alignItems === 'center' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'alignItems', device, 'center')"
+                        :class="getResponsiveVal({{ $base }}.settings, 'alignItems', device) === 'center' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="5" y="7" width="3" height="10" rx="0.5"/>
@@ -108,8 +175,8 @@
                     </svg>
                     <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Align Center</div>
                 </button>
-                <button @click="{{ $base }}.settings.alignItems = 'flex-end'"
-                        :class="{{ $base }}.settings.alignItems === 'flex-end' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'alignItems', device, 'flex-end')"
+                        :class="getResponsiveVal({{ $base }}.settings, 'alignItems', device) === 'flex-end' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="5" y="10" width="3" height="10" rx="0.5"/>
@@ -118,8 +185,8 @@
                     </svg>
                     <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Align Bottom</div>
                 </button>
-                <button @click="{{ $base }}.settings.alignItems = 'stretch'"
-                        :class="{{ $base }}.settings.alignItems === 'stretch' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'alignItems', device, 'stretch')"
+                        :class="getResponsiveVal({{ $base }}.settings, 'alignItems', device) === 'stretch' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 3l3 3h-2v12h2l-3 3-3-3h2V6H9l3-3z" fill="currentColor"/>
@@ -130,14 +197,36 @@
         </div>
 
         <!-- Row Alignment (Align Content) -->
-        <div v-if="{{ $base }}.settings.height !== 'auto' || {{ isset($isNestedRow) && $isNestedRow ? 'true' : 'false' }}">
+        <div v-if="getResponsiveVal({{ $base }}.settings, 'height', device) !== 'auto' || {{ isset($isNestedRow) && $isNestedRow ? 'true' : 'false' }}">
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Row Alignment</label>
+                <div class="flex gap-1 items-center">
+                    <button @click="resetResponsiveVal({{ $base }}.settings, 'rowAlignContent', device, 'stretch')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                    <div class="relative inline-block">
+                        <button @click="activeResponsiveMenu = activeResponsiveMenu === 'rowAlignContent' ? null : 'rowAlignContent'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                            <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                            <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                        </button>
+                        <div v-show="activeResponsiveMenu === 'rowAlignContent'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                            <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                <i class="fa fa-desktop text-[11px]"></i>
+                            </button>
+                            <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                <i class="fa fa-tablet-alt text-[11px]"></i>
+                            </button>
+                            <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                <i class="fa fa-mobile-alt text-[11px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="grid grid-cols-3 gap-2">
                 <!-- 1. Stretch (Default) -->
-                <button @click="{{ $base }}.settings.rowAlignContent = 'stretch'"
-                        :class="{{ $base }}.settings.rowAlignContent === 'stretch' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'rowAlignContent', device, 'stretch')"
+                        :class="getResponsiveVal({{ $base }}.settings, 'rowAlignContent', device) === 'stretch' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="4" y="3" width="16" height="3" rx="0.5"/>
@@ -149,8 +238,8 @@
                 </button>
 
                 <!-- 2. Align Top (flex-start) -->
-                <button @click="{{ $base }}.settings.rowAlignContent = 'flex-start'"
-                        :class="{{ $base }}.settings.rowAlignContent === 'flex-start' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'rowAlignContent', device, 'flex-start')"
+                        :class="getResponsiveVal({{ $base }}.settings, 'rowAlignContent', device) === 'flex-start' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="5" y="4" width="14" height="2" rx="0.5"/>
@@ -160,8 +249,8 @@
                 </button>
 
                 <!-- 3. Align Center (center) -->
-                <button @click="{{ $base }}.settings.rowAlignContent = 'center'"
-                        :class="{{ $base }}.settings.rowAlignContent === 'center' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'rowAlignContent', device, 'center')"
+                        :class="getResponsiveVal({{ $base }}.settings, 'rowAlignContent', device) === 'center' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="5" y="11" width="14" height="2" rx="0.5"/>
@@ -172,8 +261,8 @@
                 </button>
 
                 <!-- 4. Align Bottom (flex-end) -->
-                <button @click="{{ $base }}.settings.rowAlignContent = 'flex-end'"
-                        :class="{{ $base }}.settings.rowAlignContent === 'flex-end' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'rowAlignContent', device, 'flex-end')"
+                        :class="getResponsiveVal({{ $base }}.settings, 'rowAlignContent', device) === 'flex-end' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="7" y="12" width="10" height="4" rx="0.5"/>
@@ -183,8 +272,8 @@
                 </button>
 
                 <!-- 5. Space Between (space-between) -->
-                <button @click="{{ $base }}.settings.rowAlignContent = 'space-between'"
-                        :class="{{ $base }}.settings.rowAlignContent === 'space-between' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'rowAlignContent', device, 'space-between')"
+                        :class="getResponsiveVal({{ $base }}.settings, 'rowAlignContent', device) === 'space-between' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="5" y="3" width="14" height="2" rx="0.5"/>
@@ -196,8 +285,8 @@
                 </button>
 
                 <!-- 6. Space Around (space-around) -->
-                <button @click="{{ $base }}.settings.rowAlignContent = 'space-around'"
-                        :class="{{ $base }}.settings.rowAlignContent === 'space-around' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'rowAlignContent', device, 'space-around')"
+                        :class="getResponsiveVal({{ $base }}.settings, 'rowAlignContent', device) === 'space-around' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="5" y="6" width="14" height="2" rx="0.5"/>
@@ -209,8 +298,8 @@
                 </button>
 
                 <!-- 7. Space Evenly (space-evenly) -->
-                <button @click="{{ $base }}.settings.rowAlignContent = 'space-evenly'"
-                        :class="{{ $base }}.settings.rowAlignContent === 'space-evenly' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'rowAlignContent', device, 'space-evenly')"
+                        :class="getResponsiveVal({{ $base }}.settings, 'rowAlignContent', device) === 'space-evenly' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="5" y="4" width="14" height="2" rx="0.5"/>
@@ -226,10 +315,32 @@
         <div>
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Column Justification</label>
+                <div class="flex gap-1 items-center">
+                    <button @click="resetResponsiveVal({{ $base }}.settings, 'justifyContent', device, 'flex-start')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                    <div class="relative inline-block">
+                        <button @click="activeResponsiveMenu = activeResponsiveMenu === 'justifyContent' ? null : 'justifyContent'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                            <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                            <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                        </button>
+                        <div v-show="activeResponsiveMenu === 'justifyContent'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                            <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                <i class="fa fa-desktop text-[11px]"></i>
+                            </button>
+                            <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                <i class="fa fa-tablet-alt text-[11px]"></i>
+                            </button>
+                            <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                <i class="fa fa-mobile-alt text-[11px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="grid grid-cols-2 gap-2">
-                <button @click="{{ $base }}.settings.justifyContent = 'flex-start'" 
-                        :class="{{ $base }}.settings.justifyContent === 'flex-start' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'justifyContent', device, 'flex-start')" 
+                        :class="getResponsiveVal({{ $base }}.settings, 'justifyContent', device) === 'flex-start' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="4" y="5" width="8" height="3" rx="0.5"/>
@@ -238,8 +349,8 @@
                     </svg>
                     <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Justify Left</div>
                 </button>
-                <button @click="{{ $base }}.settings.justifyContent = 'center'" 
-                        :class="{{ $base }}.settings.justifyContent === 'center' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'justifyContent', device, 'center')" 
+                        :class="getResponsiveVal({{ $base }}.settings, 'justifyContent', device) === 'center' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="8" y="5" width="8" height="3" rx="0.5"/>
@@ -248,8 +359,8 @@
                     </svg>
                     <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Justify Center</div>
                 </button>
-                <button @click="{{ $base }}.settings.justifyContent = 'flex-end'" 
-                        :class="{{ $base }}.settings.justifyContent === 'flex-end' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'justifyContent', device, 'flex-end')" 
+                        :class="getResponsiveVal({{ $base }}.settings, 'justifyContent', device) === 'flex-end' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="12" y="5" width="8" height="3" rx="0.5"/>
@@ -258,16 +369,16 @@
                     </svg>
                     <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Justify Right</div>
                 </button>
-                <button @click="{{ $base }}.settings.justifyContent = 'space-between'" 
-                        :class="{{ $base }}.settings.justifyContent === 'space-between' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'justifyContent', device, 'space-between')" 
+                        :class="getResponsiveVal({{ $base }}.settings, 'justifyContent', device) === 'space-between' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M6 16v-3h12v3l4-4-4-4v3H6V8l-4 4 4 4z" fill="currentColor"/>
                     </svg>
                     <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Space Between</div>
                 </button>
-                <button @click="{{ $base }}.settings.justifyContent = 'space-around'" 
-                        :class="{{ $base }}.settings.justifyContent === 'space-around' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'justifyContent', device, 'space-around')" 
+                        :class="getResponsiveVal({{ $base }}.settings, 'justifyContent', device) === 'space-around' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="4" y="6" width="16" height="3" rx="0.5"/>
@@ -276,8 +387,8 @@
                     </svg>
                     <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Space Around</div>
                 </button>
-                <button @click="{{ $base }}.settings.justifyContent = 'space-evenly'" 
-                        :class="{{ $base }}.settings.justifyContent === 'space-evenly' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'justifyContent', device, 'space-evenly')" 
+                        :class="getResponsiveVal({{ $base }}.settings, 'justifyContent', device) === 'space-evenly' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                         class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="4" y="9.5" width="16" height="5" rx="0.5"/>
@@ -291,19 +402,38 @@
         <div>
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Content Wrap</label>
-                <div class="flex gap-2 text-slate-300">
-                    <i class="fa fa-desktop text-[10px]"></i>
+                <div class="flex gap-1 items-center">
+                    <button @click="resetResponsiveVal({{ $base }}.settings, 'flexWrap', device, 'default')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                    <div class="relative inline-block">
+                        <button @click="activeResponsiveMenu = activeResponsiveMenu === 'flexWrap' ? null : 'flexWrap'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                            <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                            <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                        </button>
+                        <div v-show="activeResponsiveMenu === 'flexWrap'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                            <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                <i class="fa fa-desktop text-[11px]"></i>
+                            </button>
+                            <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                <i class="fa fa-tablet-alt text-[11px]"></i>
+                            </button>
+                            <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                <i class="fa fa-mobile-alt text-[11px]"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="flex bg-slate-100 rounded overflow-hidden">
-                <button @click="{{ $base }}.settings.flexWrap = 'default'" 
-                        :class="!{{ $base }}.settings.flexWrap || {{ $base }}.settings.flexWrap === 'default' ? 'bg-[#0091ea] text-white' : 'text-slate-500 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'flexWrap', device, 'default')" 
+                        :class="!getResponsiveVal({{ $base }}.settings, 'flexWrap', device) || getResponsiveVal({{ $base }}.settings, 'flexWrap', device) === 'default' ? 'bg-[#0091ea] text-white' : 'text-slate-500 hover:bg-slate-200'"
                         class="flex-1 py-1.5 text-[10px] font-medium transition-colors">Default</button>
-                <button @click="{{ $base }}.settings.flexWrap = 'wrap'" 
-                        :class="{{ $base }}.settings.flexWrap === 'wrap' ? 'bg-[#0091ea] text-white' : 'text-slate-500 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'flexWrap', device, 'wrap')" 
+                        :class="getResponsiveVal({{ $base }}.settings, 'flexWrap', device) === 'wrap' ? 'bg-[#0091ea] text-white' : 'text-slate-500 hover:bg-slate-200'"
                         class="flex-1 py-1.5 text-[10px] font-medium transition-colors">Wrap</button>
-                <button @click="{{ $base }}.settings.flexWrap = 'nowrap'" 
-                        :class="{{ $base }}.settings.flexWrap === 'nowrap' ? 'bg-[#0091ea] text-white' : 'text-slate-500 hover:bg-slate-200'"
+                <button @click="setResponsiveVal({{ $base }}.settings, 'flexWrap', device, 'nowrap')" 
+                        :class="getResponsiveVal({{ $base }}.settings, 'flexWrap', device) === 'nowrap' ? 'bg-[#0091ea] text-white' : 'text-slate-500 hover:bg-slate-200'"
                         class="flex-1 py-1.5 text-[10px] font-medium transition-colors">No Wrap</button>
             </div>
         </div>
@@ -326,8 +456,30 @@
         <div>
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Column Spacing</label>
+                <div class="flex gap-1 items-center">
+                    <button @click="resetResponsiveVal({{ $base }}.settings, 'columnGap', device, '20')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                    <div class="relative inline-block">
+                        <button @click="activeResponsiveMenu = activeResponsiveMenu === 'columnGap' ? null : 'columnGap'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                            <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                            <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                        </button>
+                        <div v-show="activeResponsiveMenu === 'columnGap'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                            <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                <i class="fa fa-desktop text-[11px]"></i>
+                            </button>
+                            <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                <i class="fa fa-tablet-alt text-[11px]"></i>
+                            </button>
+                            <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                <i class="fa fa-mobile-alt text-[11px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <input type="number" min="0" v-model="{{ $base }}.settings.columnGap" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+            <input type="number" min="0" v-model="{{ $base }}.settings[device === 'desktop' ? 'columnGap' : 'columnGap_' + device]" :placeholder="getResponsiveVal({{ $base }}.settings, 'columnGap', device) || '20'" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
         </div>
 
         <!-- Container HTML Tag -->
@@ -404,16 +556,35 @@
             <div class="pt-4 border-t border-slate-50">
                 <div class="flex justify-between items-center mb-4">
                     <label class="text-[13px] font-bold text-[#333]">Margin</label>
-                    <div class="flex gap-2 items-center">
-                        <i class="fa fa-desktop text-[11px] text-slate-300"></i>
+                    <div class="flex gap-1 items-center">
+                        <button @click="resetResponsiveVal({{ $base }}.settings, 'marginTop', device, ''); resetResponsiveVal({{ $base }}.settings, 'marginBottom', device, '')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                            <i class="fa fa-undo text-[10px]"></i>
+                        </button>
+                        <div class="relative inline-block">
+                            <button @click="activeResponsiveMenu = activeResponsiveMenu === 'margin' ? null : 'margin'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                                <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                                <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                            </button>
+                            <div v-show="activeResponsiveMenu === 'margin'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                                <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                    <i class="fa fa-desktop text-[11px]"></i>
+                                </button>
+                                <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                    <i class="fa fa-tablet-alt text-[11px]"></i>
+                                </button>
+                                <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                    <i class="fa fa-mobile-alt text-[11px]"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div class="flex flex-col gap-1">
                         <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Top</label>
                         <div class="flex border border-slate-200 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-[#0091ea]/20 focus-within:border-[#0091ea]">
-                            <input type="number" v-model.number="{{ $base }}.settings.marginTop" class="w-full h-9 px-3 text-[12px] border-none focus:ring-0" placeholder="0">
-                            <select v-model="{{ $base }}.settings.marginTopUnit" class="bg-slate-50 border-l border-slate-200 text-[10px] px-1 focus:ring-0 border-none outline-none cursor-pointer">
+                            <input type="number" v-model.number="{{ $base }}.settings[device === 'desktop' ? 'marginTop' : 'marginTop_' + device]" class="w-full h-9 px-3 text-[12px] border-none focus:ring-0" :placeholder="getResponsiveVal({{ $base }}.settings, 'marginTop', device) || '0'">
+                            <select v-model="{{ $base }}.settings[device === 'desktop' ? 'marginTopUnit' : 'marginTopUnit_' + device]" class="bg-slate-50 border-l border-slate-200 text-[10px] px-1 focus:ring-0 border-none outline-none cursor-pointer">
                                 <option value="px">px</option>
                                 <option value="rem">rem</option>
                                 <option value="%">%</option>
@@ -424,8 +595,8 @@
                     <div class="flex flex-col gap-1">
                         <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Bottom</label>
                         <div class="flex border border-slate-200 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-[#0091ea]/20 focus-within:border-[#0091ea]">
-                            <input type="number" v-model.number="{{ $base }}.settings.marginBottom" class="w-full h-9 px-3 text-[12px] border-none focus:ring-0" placeholder="0">
-                            <select v-model="{{ $base }}.settings.marginBottomUnit" class="bg-slate-50 border-l border-slate-200 text-[10px] px-1 focus:ring-0 border-none outline-none cursor-pointer">
+                            <input type="number" v-model.number="{{ $base }}.settings[device === 'desktop' ? 'marginBottom' : 'marginBottom_' + device]" class="w-full h-9 px-3 text-[12px] border-none focus:ring-0" :placeholder="getResponsiveVal({{ $base }}.settings, 'marginBottom', device) || '0'">
+                            <select v-model="{{ $base }}.settings[device === 'desktop' ? 'marginBottomUnit' : 'marginBottomUnit_' + device]" class="bg-slate-50 border-l border-slate-200 text-[10px] px-1 focus:ring-0 border-none outline-none cursor-pointer">
                                 <option value="px">px</option>
                                 <option value="rem">rem</option>
                                 <option value="%">%</option>
@@ -440,16 +611,35 @@
             <div class="pt-4 border-t border-slate-50">
                 <div class="flex justify-between items-center mb-4">
                     <label class="text-[13px] font-bold text-[#333]">Padding</label>
-                    <div class="flex gap-2 items-center">
-                        <i class="fa fa-desktop text-[11px] text-slate-300"></i>
+                    <div class="flex gap-1 items-center">
+                        <button @click="['Top','Right','Bottom','Left'].forEach(s => { resetResponsiveVal({{ $base }}.settings, 'padding' + s, device, ''); resetResponsiveVal({{ $base }}.settings, 'padding' + s + 'Unit', device, 'px'); })" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                            <i class="fa fa-undo text-[10px]"></i>
+                        </button>
+                        <div class="relative inline-block">
+                            <button @click="activeResponsiveMenu = activeResponsiveMenu === 'padding' ? null : 'padding'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                                <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                                <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                            </button>
+                            <div v-show="activeResponsiveMenu === 'padding'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                                <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                    <i class="fa fa-desktop text-[11px]"></i>
+                                </button>
+                                <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                    <i class="fa fa-tablet-alt text-[11px]"></i>
+                                </button>
+                                <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                    <i class="fa fa-mobile-alt text-[11px]"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2 mb-4">
                     <div class="flex flex-col gap-1" v-for="side in ['Top', 'Right', 'Bottom', 'Left']">
                         <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">@{{side}}</label>
                         <div class="flex border border-slate-200 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-[#0091ea]/20 focus-within:border-[#0091ea]">
-                            <input type="number" min="0" v-model.number="{{ $base }}.settings['padding' + side]" class="w-full h-8 px-1 text-[11px] text-center border-none focus:ring-0" placeholder="0">
-                            <select v-model="{{ $base }}.settings['padding' + side + 'Unit']" class="bg-slate-50 border-l border-slate-200 text-[9px] px-1 focus:ring-0 border-none outline-none cursor-pointer text-center">
+                            <input type="number" min="0" v-model.number="{{ $base }}.settings[device === 'desktop' ? 'padding' + side : 'padding' + side + '_' + device]" :placeholder="getResponsiveVal({{ $base }}.settings, 'padding' + side, device) || '0'" class="w-full h-8 px-1 text-[11px] text-center border-none focus:ring-0">
+                            <select v-model="{{ $base }}.settings[device === 'desktop' ? 'padding' + side + 'Unit' : 'padding' + side + 'Unit_' + device]" class="bg-slate-50 border-l border-slate-200 text-[9px] px-1 focus:ring-0 border-none outline-none cursor-pointer text-center">
                                 <option value="px">px</option>
                                 <option value="rem">rem</option>
                                 <option value="%">%</option>
@@ -465,7 +655,9 @@
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">{{ $label }} Link Color</label>
                     <div class="flex gap-2 text-slate-300">
-                        <i class="fa fa-undo text-[10px]"></i>
+                        <button @click="{{ $base }}.settings.linkColor = ''; {{ $base }}.settings.linkColorOpacity = 1" title="Reset Link Color" class="text-slate-300 hover:text-red-500 transition-colors">
+                            <i class="fa fa-undo text-[10px]"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="flex gap-2 items-center">
@@ -475,8 +667,7 @@
                              class="w-full h-full cursor-pointer"></div>
                     </div>
                     <div class="relative flex-1">
-                        <input type="text" v-model="{{ $base }}.settings.linkColor" class="w-full border border-slate-200 rounded px-2 py-1.5 pl-2 pr-8 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]" placeholder="#000000">
-                        <i class="fa fa-globe absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400"></i>
+                        <input type="text" v-model="{{ $base }}.settings.linkColor" class="w-full border border-slate-200 rounded px-2 py-1.5 pl-2 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]" placeholder="#000000">
                     </div>
                 </div>
             </div>
@@ -678,19 +869,37 @@
                     <div>
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[11px] font-bold text-[#444]">{{ $label }} Background Color</label>
-                            <div class="flex gap-2 text-slate-300">
-                                <i class="fa fa-undo text-[10px]"></i>
-                                <i class="fa fa-desktop text-[10px]"></i>
+                            <div class="flex gap-1 items-center">
+                                <button @click="resetResponsiveVal({{ $base }}.settings, 'bgColor', device, '#ffffff'); resetResponsiveVal({{ $base }}.settings, 'bgColorOpacity', device, 1)" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                                    <i class="fa fa-undo text-[10px]"></i>
+                                </button>
+                                <div class="relative inline-block">
+                                    <button @click="activeResponsiveMenu = activeResponsiveMenu === 'bgColor' ? null : 'bgColor'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                                        <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                                        <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                                    </button>
+                                    <div v-show="activeResponsiveMenu === 'bgColor'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                                        <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                            <i class="fa fa-desktop text-[11px]"></i>
+                                        </button>
+                                        <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                            <i class="fa fa-tablet-alt text-[11px]"></i>
+                                        </button>
+                                        <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                            <i class="fa fa-mobile-alt text-[11px]"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="flex items-center gap-1 mb-2">
-                            <input type="text" v-model="{{ $base }}.settings.bgColor" class="wp-input h-7 flex-1 text-[10px] text-center font-mono focus:outline-none focus:border-[#2271b1]">
-                            <button @click="{{ $base }}.settings.bgColor = '#ffffff'; {{ $base }}.settings.bgColorOpacity = 1" class="wp-btn-secondary h-7 px-2 text-[10px]">Default</button>
+                            <input type="text" v-model="{{ $base }}.settings[device === 'desktop' ? 'bgColor' : 'bgColor_' + device]" class="wp-input h-7 flex-1 text-[10px] text-center font-mono focus:outline-none focus:border-[#2271b1]">
+                            <button @click="setResponsiveVal({{ $base }}.settings, 'bgColor', device, '#ffffff'); setResponsiveVal({{ $base }}.settings, 'bgColorOpacity', device, 1)" class="wp-btn-secondary h-7 px-2 text-[10px]">Default</button>
                         </div>
                         <div class="flex gap-2 items-center">
                             <div class="checkerboard rounded overflow-hidden w-8 h-8 flex-shrink-0 border border-slate-200">
-                                <div @click="openColorPicker($event, {{ $base }}.settings, 'bgColor', 'bgColorOpacity')" 
-                                     :style="{ backgroundColor: hexToRgba({{ $base }}.settings.bgColor, {{ $base }}.settings.bgColorOpacity) }"
+                                <div @click="openColorPicker($event, {{ $base }}.settings, device === 'desktop' ? 'bgColor' : 'bgColor_' + device, device === 'desktop' ? 'bgColorOpacity' : 'bgColorOpacity_' + device, getResponsiveVal({{ $base }}.settings, 'bgColor', device))"
+                                     :style="{ backgroundColor: hexToRgba({{ $base }}.settings[device === 'desktop' ? 'bgColor' : 'bgColor_' + device], {{ $base }}.settings[device === 'desktop' ? 'bgColorOpacity' : 'bgColorOpacity_' + device] !== undefined ? {{ $base }}.settings[device === 'desktop' ? 'bgColorOpacity' : 'bgColorOpacity_' + device] : 1) }"
                                      class="w-full h-full cursor-pointer"></div>
                             </div>
                         </div>
@@ -829,11 +1038,30 @@
                         <div class="border-b border-slate-100 pb-3">
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-[11px] font-bold text-[#444]">Background Position</label>
-                                <div class="flex gap-2 text-slate-300">
-                                    <i class="fa fa-desktop text-[10px]"></i>
+                                <div class="flex gap-1 items-center">
+                                    <button @click="resetResponsiveVal({{ $base }}.settings, 'bgImagePosition', device, 'center center')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                                        <i class="fa fa-undo text-[10px]"></i>
+                                    </button>
+                                    <div class="relative inline-block">
+                                        <button @click="activeResponsiveMenu = activeResponsiveMenu === 'bgPos' ? null : 'bgPos'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                                            <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                                            <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                                        </button>
+                                        <div v-show="activeResponsiveMenu === 'bgPos'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                                            <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                                <i class="fa fa-desktop text-[11px]"></i>
+                                            </button>
+                                            <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                                <i class="fa fa-tablet-alt text-[11px]"></i>
+                                            </button>
+                                            <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                                <i class="fa fa-mobile-alt text-[11px]"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <select v-model="{{ $base }}.settings.bgImagePosition" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+                            <select v-model="{{ $base }}.settings[device === 'desktop' ? 'bgImagePosition' : 'bgImagePosition_' + device]" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                                 <option value="top left">Top Left</option>
                                 <option value="top center">Top Center</option>
                                 <option value="top right">Top Right</option>
@@ -850,11 +1078,30 @@
                         <div class="border-b border-slate-100 pb-3">
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-[11px] font-bold text-[#444]">Background Repeat</label>
-                                <div class="flex gap-2 text-slate-300">
-                                    <i class="fa fa-desktop text-[10px]"></i>
+                                <div class="flex gap-1 items-center">
+                                    <button @click="resetResponsiveVal({{ $base }}.settings, 'bgImageRepeat', device, 'no-repeat')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                                        <i class="fa fa-undo text-[10px]"></i>
+                                    </button>
+                                    <div class="relative inline-block">
+                                        <button @click="activeResponsiveMenu = activeResponsiveMenu === 'bgRepeat' ? null : 'bgRepeat'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                                            <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                                            <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                                        </button>
+                                        <div v-show="activeResponsiveMenu === 'bgRepeat'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                                            <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                                <i class="fa fa-desktop text-[11px]"></i>
+                                            </button>
+                                            <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                                <i class="fa fa-tablet-alt text-[11px]"></i>
+                                            </button>
+                                            <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                                <i class="fa fa-mobile-alt text-[11px]"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <select v-model="{{ $base }}.settings.bgImageRepeat" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+                            <select v-model="{{ $base }}.settings[device === 'desktop' ? 'bgImageRepeat' : 'bgImageRepeat_' + device]" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                                 <option value="no-repeat">No Repeat</option>
                                 <option value="repeat">Repeat</option>
                                 <option value="repeat-x">Repeat X</option>
@@ -866,11 +1113,30 @@
                         <div class="border-b border-slate-100 pb-3">
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-[11px] font-bold text-[#444]">Background Size</label>
-                                <div class="flex gap-2 text-slate-300">
-                                    <i class="fa fa-desktop text-[10px]"></i>
+                                <div class="flex gap-1 items-center">
+                                    <button @click="resetResponsiveVal({{ $base }}.settings, 'bgImageSize', device, 'auto')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                                        <i class="fa fa-undo text-[10px]"></i>
+                                    </button>
+                                    <div class="relative inline-block">
+                                        <button @click="activeResponsiveMenu = activeResponsiveMenu === 'bgSize' ? null : 'bgSize'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                                            <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                                            <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                                        </button>
+                                        <div v-show="activeResponsiveMenu === 'bgSize'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                                            <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                                <i class="fa fa-desktop text-[11px]"></i>
+                                            </button>
+                                            <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                                <i class="fa fa-tablet-alt text-[11px]"></i>
+                                            </button>
+                                            <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                                <i class="fa fa-mobile-alt text-[11px]"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <select v-model="{{ $base }}.settings.bgImageSize" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+                            <select v-model="{{ $base }}.settings[device === 'desktop' ? 'bgImageSize' : 'bgImageSize_' + device]" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                                 <option value="auto">Default</option>
                                 <option value="cover">Cover</option>
                                 <option value="contain">Contain</option>
@@ -907,11 +1173,30 @@
                         <div>
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-[11px] font-bold text-[#444]">Background Blend Mode</label>
-                                <div class="flex gap-2 text-slate-300">
-                                    <i class="fa fa-desktop text-[10px]"></i>
+                                <div class="flex gap-1 items-center">
+                                    <button @click="resetResponsiveVal({{ $base }}.settings, 'bgImageBlendMode', device, 'normal')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                                        <i class="fa fa-undo text-[10px]"></i>
+                                    </button>
+                                    <div class="relative inline-block">
+                                        <button @click="activeResponsiveMenu = activeResponsiveMenu === 'bgBlend' ? null : 'bgBlend'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                                            <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                                            <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                                        </button>
+                                        <div v-show="activeResponsiveMenu === 'bgBlend'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                                            <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                                <i class="fa fa-desktop text-[11px]"></i>
+                                            </button>
+                                            <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                                <i class="fa fa-tablet-alt text-[11px]"></i>
+                                            </button>
+                                            <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                                <i class="fa fa-mobile-alt text-[11px]"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <select v-model="{{ $base }}.settings.bgImageBlendMode" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+                            <select v-model="{{ $base }}.settings[device === 'desktop' ? 'bgImageBlendMode' : 'bgImageBlendMode_' + device]" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                                 <option value="normal">Disabled</option>
                                 <option value="multiply">Multiply</option>
                                 <option value="screen">Screen</option>
@@ -926,23 +1211,82 @@
             </div>
         </div>
 
-        <!-- Link Tab -->
-        <div v-if="{{ isset($isNestedRow) && $isNestedRow ? 'false' : 'true' }}" v-show="activePanelTab === 'link'" class="space-y-6">
+        <!-- Extra Tab -->
+        <div v-if="{{ isset($isNestedRow) && $isNestedRow ? 'false' : 'true' }}" v-show="activePanelTab === 'extra'" class="space-y-5">
+
+            <!-- Sticky Section -->
             <div>
                 <div class="flex justify-between items-center mb-2">
-                    <label class="text-[11px] font-bold text-[#444]">Link URL</label>
+                    <label class="text-[11px] font-bold text-[#444]">Sticky Container</label>
                 </div>
-                <input type="text" v-model="{{ $base }}.settings.linkUrl" placeholder="https://..." class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
-            </div>
-            <div>
-                <div class="flex justify-between items-center mb-2">
-                    <label class="text-[11px] font-bold text-[#444]">Link Target</label>
+                <div class="flex bg-slate-100 rounded overflow-hidden mb-3">
+                    <button @click="{{ $base }}.settings.sticky = true"
+                            :class="{{ $base }}.settings.sticky ? 'bg-slate-800 text-white shadow-inner' : 'text-slate-500 hover:bg-slate-200'"
+                            class="flex-1 py-1.5 text-[11px] font-medium transition-colors">Enable</button>
+                    <button @click="{{ $base }}.settings.sticky = false"
+                            :class="!{{ $base }}.settings.sticky ? 'bg-slate-800 text-white shadow-inner' : 'text-slate-500 hover:bg-slate-200'"
+                            class="flex-1 py-1.5 text-[11px] font-medium transition-colors">Disable</button>
                 </div>
-                <select v-model="{{ $base }}.settings.linkTarget" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
-                    <option value="_self">Same Window</option>
-                    <option value="_blank">New Window</option>
-                </select>
+
+                <template v-if="{{ $base }}.settings.sticky">
+                    <!-- Per-device sticky -->
+                    <div class="mb-3">
+                        <label class="text-[10px] text-slate-500 block mb-1.5">Enable Sticky On</label>
+                        <div class="flex gap-1">
+                            <button @click="{{ $base }}.settings.stickyDesktop = {{ $base }}.settings.stickyDesktop === false ? true : false"
+                                    :class="{{ $base }}.settings.stickyDesktop !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-200 text-slate-400'"
+                                    class="flex-1 py-1 rounded text-[10px] font-medium transition-colors flex items-center justify-center gap-1">
+                                <i class="fa fa-desktop text-[9px]"></i> Desktop
+                            </button>
+                            <button @click="{{ $base }}.settings.stickyTablet = {{ $base }}.settings.stickyTablet === false ? true : false"
+                                    :class="{{ $base }}.settings.stickyTablet !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-200 text-slate-400'"
+                                    class="flex-1 py-1 rounded text-[10px] font-medium transition-colors flex items-center justify-center gap-1">
+                                <i class="fa fa-tablet-alt text-[9px]"></i> Tablet
+                            </button>
+                            <button @click="{{ $base }}.settings.stickyMobile = {{ $base }}.settings.stickyMobile === false ? true : false"
+                                    :class="{{ $base }}.settings.stickyMobile !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-200 text-slate-400'"
+                                    class="flex-1 py-1 rounded text-[10px] font-medium transition-colors flex items-center justify-center gap-1">
+                                <i class="fa fa-mobile-alt text-[9px]"></i> Mobile
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sticky Offset -->
+                    <div class="mb-3">
+                        <label class="text-[10px] text-slate-500 block mb-1.5">Top Offset (px)</label>
+                        <input type="number" v-model.number="{{ $base }}.settings.stickyOffset" placeholder="0"
+                               class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+                    </div>
+
+                    <!-- Sticky Z-Index -->
+                    <div>
+                        <label class="text-[10px] text-slate-500 block mb-1.5">Sticky Z-Index</label>
+                        <input type="number" v-model.number="{{ $base }}.settings.stickyZIndex" placeholder="99"
+                               class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+                    </div>
+                </template>
             </div>
+
+            <!-- Z-Index & Overflow -->
+            <div class="border-t border-slate-100 pt-4 space-y-4">
+                <div>
+                    <label class="text-[11px] font-bold text-[#444] block mb-2">Z-Index</label>
+                    <input type="number" v-model.number="{{ $base }}.settings.zIndex" placeholder="auto"
+                           class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold text-[#444] block mb-2">Overflow</label>
+                    <select v-model="{{ $base }}.settings.overflow"
+                            class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+                        <option value="default">Default</option>
+                        <option value="hidden">Hidden</option>
+                        <option value="visible">Visible</option>
+                        <option value="auto">Auto</option>
+                        <option value="scroll">Scroll</option>
+                    </select>
+                </div>
+            </div>
+
         </div>
 
     </div>

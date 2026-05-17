@@ -259,7 +259,12 @@
                 <!-- Background Colors -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-2">BG COLOR</label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">BG COLOR</label>
+                            <button @click="editingElement.settings.itemBgColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fa fa-undo text-[10px]"></i>
+                            </button>
+                        </div>
                         <div class="flex gap-2 items-center">
                             <div class="checkerboard rounded overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                  @click="openColorPicker($event, editingElement.settings, 'itemBgColor')">
@@ -269,7 +274,12 @@
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-2">BG HOVER</label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">BG HOVER</label>
+                            <button @click="editingElement.settings.itemBgColorHover = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fa fa-undo text-[10px]"></i>
+                            </button>
+                        </div>
                         <div class="flex gap-2 items-center">
                             <div class="checkerboard rounded overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                  @click="openColorPicker($event, editingElement.settings, 'itemBgColorHover')">
@@ -283,7 +293,12 @@
                 <!-- Text Colors -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-2">TEXT COLOR</label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">TEXT COLOR</label>
+                            <button @click="editingElement.settings.itemColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fa fa-undo text-[10px]"></i>
+                            </button>
+                        </div>
                         <div class="flex gap-2 items-center">
                             <div class="checkerboard rounded overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                  @click="openColorPicker($event, editingElement.settings, 'itemColor')">
@@ -293,7 +308,12 @@
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-2">TEXT HOVER</label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">TEXT HOVER</label>
+                            <button @click="editingElement.settings.itemColorHover = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fa fa-undo text-[10px]"></i>
+                            </button>
+                        </div>
                         <div class="flex gap-2 items-center">
                             <div class="checkerboard rounded overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                  @click="openColorPicker($event, editingElement.settings, 'itemColorHover')">
@@ -331,7 +351,12 @@
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-2">BORDER COLOR (NORMAL)</label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">BORDER COLOR (NORMAL)</label>
+                            <button @click="editingElement.settings.itemBorderColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fa fa-undo text-[10px]"></i>
+                            </button>
+                        </div>
                         <div class="flex gap-2 items-center">
                             <div class="checkerboard rounded overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                  @click="openColorPicker($event, editingElement.settings, 'itemBorderColor')">
@@ -366,7 +391,12 @@
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-2">BORDER COLOR (HOVER)</label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">BORDER COLOR (HOVER)</label>
+                            <button @click="editingElement.settings.itemBorderColorHover = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fa fa-undo text-[10px]"></i>
+                            </button>
+                        </div>
                         <div class="flex gap-2 items-center">
                             <div class="checkerboard rounded overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                  @click="openColorPicker($event, editingElement.settings, 'itemBorderColorHover')">

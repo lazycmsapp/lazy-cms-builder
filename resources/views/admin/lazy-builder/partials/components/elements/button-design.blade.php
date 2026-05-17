@@ -21,7 +21,12 @@
         </div>
         <div class="space-y-4">
             <div>
-                <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">BG Color</label>
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block">BG Color</label>
+                    <button @click="editingElement.settings.bgColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                          @click="openColorPicker($event, editingElement.settings, 'bgColor')">
@@ -31,7 +36,12 @@
                 </div>
             </div>
             <div>
-                <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Text Color</label>
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block">Text Color</label>
+                    <button @click="editingElement.settings.color = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                          @click="openColorPicker($event, editingElement.settings, 'color')">
@@ -134,7 +144,12 @@
         
         <!-- Text Hover Color (Common) -->
         <div>
-            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Text Hover Color</label>
+            <div class="flex justify-between items-center mb-1.5">
+                <label class="text-[9px] font-bold text-slate-400 uppercase block">Text Hover Color</label>
+                <button @click="editingElement.settings.hoverColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                    <i class="fa fa-undo text-[10px]"></i>
+                </button>
+            </div>
             <div class="flex gap-2 items-center">
                 <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                      @click="openColorPicker($event, editingElement.settings, 'hoverColor')">
@@ -146,7 +161,12 @@
 
         <!-- Default BG Hover (Solid) -->
         <div v-if="editingElement.settings.buttonStyle !== 'custom'">
-            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">BG Hover Color (Solid)</label>
+            <div class="flex justify-between items-center mb-1.5">
+                <label class="text-[9px] font-bold text-slate-400 uppercase block">BG Hover Color (Solid)</label>
+                <button @click="editingElement.settings.hoverBgColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                    <i class="fa fa-undo text-[10px]"></i>
+                </button>
+            </div>
             <div class="flex gap-2 items-center">
                 <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                      @click="openColorPicker($event, editingElement.settings, 'hoverBgColor')">
@@ -159,7 +179,12 @@
         <!-- Custom Gradient Hover -->
         <div v-if="editingElement.settings.buttonStyle === 'custom'" class="space-y-4">
             <div>
-                <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Hover Start</label>
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block">Hover Start</label>
+                    <button @click="clearColorField(editingElement.settings, 'bgGradientHoverStartColor', 'bgGradientHoverStartOpacity')" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                          @click="openColorPicker($event, editingElement.settings, 'bgGradientHoverStartColor')">
@@ -169,7 +194,12 @@
                 </div>
             </div>
             <div>
-                <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Hover End</label>
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block">Hover End</label>
+                    <button @click="clearColorField(editingElement.settings, 'bgGradientHoverEndColor', 'bgGradientHoverEndOpacity')" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                          @click="openColorPicker($event, editingElement.settings, 'bgGradientHoverEndColor')">
@@ -185,8 +215,27 @@
     <div class="pt-4 border-t border-slate-50">
         <div class="flex justify-between items-center mb-3">
             <label class="text-[12px] font-bold text-[#333] uppercase">MARGIN</label>
-            <div class="flex gap-2">
-                <i class="fa fa-desktop text-[11px] text-slate-300"></i>
+            <div class="flex gap-1 items-center">
+                <button @click="['Top','Right','Bottom','Left'].forEach(s => editingElement.settings['margin' + s] = '')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                    <i class="fa fa-undo text-[10px]"></i>
+                </button>
+                <div class="relative inline-block">
+                    <button @click="activeResponsiveMenu = activeResponsiveMenu === 'btnMargin' ? null : 'btnMargin'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                        <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                        <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                    </button>
+                    <div v-show="activeResponsiveMenu === 'btnMargin'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                        <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                            <i class="fa fa-desktop text-[11px]"></i>
+                        </button>
+                        <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                            <i class="fa fa-tablet-alt text-[11px]"></i>
+                        </button>
+                        <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                            <i class="fa fa-mobile-alt text-[11px]"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="grid grid-cols-4 gap-2">
@@ -213,8 +262,27 @@
     <div class="pt-4 border-t border-slate-50">
         <div class="flex justify-between items-center mb-3">
             <label class="text-[12px] font-bold text-[#333] uppercase">PADDING</label>
-            <div class="flex gap-2">
-                <i class="fa fa-desktop text-[11px] text-slate-300"></i>
+            <div class="flex gap-1 items-center">
+                <button @click="['Top','Right','Bottom','Left'].forEach(s => editingElement.settings['padding' + s] = '')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                    <i class="fa fa-undo text-[10px]"></i>
+                </button>
+                <div class="relative inline-block">
+                    <button @click="activeResponsiveMenu = activeResponsiveMenu === 'btnPadding' ? null : 'btnPadding'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                        <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                        <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                    </button>
+                    <div v-show="activeResponsiveMenu === 'btnPadding'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                        <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                            <i class="fa fa-desktop text-[11px]"></i>
+                        </button>
+                        <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                            <i class="fa fa-tablet-alt text-[11px]"></i>
+                        </button>
+                        <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                            <i class="fa fa-mobile-alt text-[11px]"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="grid grid-cols-4 gap-2">
@@ -344,7 +412,12 @@
     <!-- Border Color (Conditional) -->
     <div v-if="editingElement.settings.borderSizeTop || editingElement.settings.borderSizeRight || editingElement.settings.borderSizeBottom || editingElement.settings.borderSizeLeft"
          class="pt-4 border-t border-slate-50">
-        <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Border Color</label>
+        <div class="flex justify-between items-center mb-1.5">
+            <label class="text-[9px] font-bold text-slate-400 uppercase block">Border Color</label>
+            <button @click="editingElement.settings.borderColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                <i class="fa fa-undo text-[10px]"></i>
+            </button>
+        </div>
         <div class="flex gap-2 items-center">
             <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                  @click="openColorPicker($event, editingElement.settings, 'borderColor')">

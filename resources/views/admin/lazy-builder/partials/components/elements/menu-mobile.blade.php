@@ -204,7 +204,12 @@
         <!-- Trigger Colors -->
         <div class="space-y-5 pt-2">
             <div>
-                <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">Mobile Menu Trigger Background Color</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block">Mobile Menu Trigger Background Color</label>
+                    <button @click="editingElement.settings.mobileMenuTriggerBgColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                          @click="openColorPicker($event, editingElement.settings, 'mobileMenuTriggerBgColor')">
@@ -217,7 +222,12 @@
             </div>
 
             <div>
-                <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">Mobile Menu Trigger Text Color</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block">Mobile Menu Trigger Text Color</label>
+                    <button @click="editingElement.settings.mobileMenuTriggerTextColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                </div>
                 <div class="flex gap-2 items-center">
                     <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                          @click="openColorPicker($event, editingElement.settings, 'mobileMenuTriggerTextColor')">
@@ -451,7 +461,12 @@
 
                 <!-- Separator Color — enabled only when separator is on -->
                 <div v-if="editingElement.settings.mobileSeparatorEnabled !== 'no'">
-                    <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">Separator Color</label>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block">Separator Color</label>
+                        <button @click="editingElement.settings.mobileMenuSeparatorColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                            <i class="fa fa-undo text-[10px]"></i>
+                        </button>
+                    </div>
                     <div class="flex gap-2 items-center">
                         <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                              @click="openColorPicker($event, editingElement.settings, 'mobileMenuSeparatorColor')">
@@ -466,7 +481,12 @@
                 <!-- Background Colors -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">BG Color</label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block">BG Color</label>
+                            <button @click="editingElement.settings.mobileMenuBgColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fa fa-undo text-[10px]"></i>
+                            </button>
+                        </div>
                         <div class="flex gap-2 items-center">
                             <div class="checkerboard rounded overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                  @click="openColorPicker($event, editingElement.settings, 'mobileMenuBgColor')">
@@ -476,7 +496,12 @@
                         </div>
                     </div>
                     <div>
-                        <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">BG Hover</label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block">BG Hover</label>
+                            <button @click="editingElement.settings.mobileMenuBgColorHover = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fa fa-undo text-[10px]"></i>
+                            </button>
+                        </div>
                         <div class="flex gap-2 items-center">
                             <div class="checkerboard rounded overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                  @click="openColorPicker($event, editingElement.settings, 'mobileMenuBgColorHover')">
@@ -490,7 +515,12 @@
                 <!-- Text Colors -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">Text Color</label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block">Text Color</label>
+                            <button @click="editingElement.settings.mobileMenuTextColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fa fa-undo text-[10px]"></i>
+                            </button>
+                        </div>
                         <div class="flex gap-2 items-center">
                             <div class="checkerboard rounded overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                  @click="openColorPicker($event, editingElement.settings, 'mobileMenuTextColor')">
@@ -500,7 +530,12 @@
                         </div>
                     </div>
                     <div>
-                        <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">Text Hover</label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block">Text Hover</label>
+                            <button @click="editingElement.settings.mobileMenuTextColorHover = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fa fa-undo text-[10px]"></i>
+                            </button>
+                        </div>
                         <div class="flex gap-2 items-center">
                             <div class="checkerboard rounded overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                  @click="openColorPicker($event, editingElement.settings, 'mobileMenuTextColorHover')">

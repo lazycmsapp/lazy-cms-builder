@@ -99,6 +99,12 @@
         </div>
     </div>
 
+    <!-- Sticky Badge -->
+    <div v-if="!isPreview && container.settings && container.settings.sticky && (device === 'desktop' ? container.settings.stickyDesktop !== false : device === 'tablet' ? container.settings.stickyTablet !== false : container.settings.stickyMobile !== false)"
+         class="absolute top-0 left-0 bg-[#0091ea] text-white text-[9px] px-2 py-0.5 z-10 flex items-center gap-1 rounded-br-sm select-none pointer-events-none">
+        <i class="fa fa-thumbtack"></i> Sticky
+    </div>
+
     <!-- Container Content Box -->
     <div class="mx-auto w-full flex relative" :style="containerInnerStyle(container)">
         

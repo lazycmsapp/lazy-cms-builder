@@ -18,6 +18,57 @@
             let _trackLayoutDirty = false;
             const activeTab = ref('navigator'); // Default to Navigator like in screenshot
             const device = ref('desktop');
+            const activeResponsiveMenu = ref(null);
+            const activePickr = ref(null);
+            let _pickerCtx = null; // { obj, colorKey, opacityKey, origColor, origOpacity }
+
+            const _closeActivePickr = (revert) => {
+                if (!activePickr.value) return;
+                if (revert && _pickerCtx) {
+                    const ctx = _pickerCtx;
+                    ctx.obj[ctx.colorKey] = ctx.origColor !== null ? ctx.origColor : '';
+                    if (ctx.opacityKey) ctx.obj[ctx.opacityKey] = ctx.origOpacity !== null ? ctx.origOpacity : 1;
+                }
+                try { activePickr.value.hide(); } catch(e) {}
+                try { activePickr.value.destroy(); } catch(e) {}
+                activePickr.value = null;
+                _pickerCtx = null;
+            };
+
+            watch(device, () => { _closeActivePickr(true); });
+
+            const getResponsiveVal = (settings, prop, deviceMode) => {
+                if (!settings) return undefined;
+                if (deviceMode === 'mobile') {
+                    if (settings[prop + '_mobile'] !== undefined && settings[prop + '_mobile'] !== '') return settings[prop + '_mobile'];
+                    if (settings[prop + '_tablet'] !== undefined && settings[prop + '_tablet'] !== '') return settings[prop + '_tablet'];
+                    return settings[prop];
+                }
+                if (deviceMode === 'tablet') {
+                    if (settings[prop + '_tablet'] !== undefined && settings[prop + '_tablet'] !== '') return settings[prop + '_tablet'];
+                    return settings[prop];
+                }
+                return settings[prop];
+            };
+
+            const setResponsiveVal = (settings, prop, deviceMode, val) => {
+                if (!settings) return;
+                if (deviceMode === 'desktop') {
+                    settings[prop] = val;
+                } else {
+                    settings[prop + '_' + deviceMode] = val;
+                }
+            };
+
+            const resetResponsiveVal = (settings, prop, deviceMode, defaultVal = '') => {
+                if (!settings) return;
+                if (deviceMode === 'desktop') {
+                    settings[prop] = defaultVal;
+                } else {
+                    settings[prop + '_' + deviceMode] = '';
+                }
+            };
+
             const activeCi = ref(null);
             const editingCi = ref(null);
             const activeColi = ref(null);
@@ -1054,12 +1105,23 @@
                 }
             };
 
-            const openColorPicker = (event, obj, colorKey, opacityKey = null) => {
+            const openColorPicker = (event, obj, colorKey, opacityKey = null, cascadeColor = null) => {
+                _closeActivePickr(true);
+
                 const target = event.currentTarget;
+                const origColor = (obj[colorKey] !== undefined && obj[colorKey] !== null && obj[colorKey] !== '')
+                    ? obj[colorKey] : null;
+                const origOpacity = opacityKey
+                    ? (obj[opacityKey] !== undefined && obj[opacityKey] !== null ? obj[opacityKey] : null)
+                    : null;
+
+                _pickerCtx = { obj, colorKey, opacityKey, origColor, origOpacity };
+
                 const pickr = Pickr.create({
                     el: target,
+                    useAsButton: true,
                     theme: 'classic',
-                    default: obj[colorKey] || '#ffffff',
+                    default: obj[colorKey] || cascadeColor || '#ffffff',
                     defaultRepresentation: 'HEXA',
                     components: {
                         preview: true,
@@ -1079,28 +1141,34 @@
                     ]
                 });
 
+                activePickr.value = pickr;
+
                 pickr.on('save', (color, instance) => {
-                    const hexa = color.toHEXA().toString();
                     const rgba = color.toRGBA();
-                    
                     obj[colorKey] = '#' + color.toHEXA()[0] + color.toHEXA()[1] + color.toHEXA()[2];
                     if (opacityKey) {
                         obj[opacityKey] = parseFloat((rgba[3]).toFixed(2));
                     }
-                    
                     instance.hide();
-                    instance.destroyAndRemoveEl();
+                    instance.destroy();
+                    activePickr.value = null;
+                    _pickerCtx = null;
                 }).on('cancel', instance => {
                     instance.hide();
-                    instance.destroyAndRemoveEl();
-                }).on('change', (color, source, instance) => {
-                     // Live update if you want
-                     if (source === 'input') return;
-                     const rgba = color.toRGBA();
-                     obj[colorKey] = '#' + color.toHEXA()[0] + color.toHEXA()[1] + color.toHEXA()[2];
-                     if (opacityKey) {
-                         obj[opacityKey] = parseFloat((rgba[3]).toFixed(2));
-                     }
+                    instance.destroy();
+                    activePickr.value = null;
+                    if (_pickerCtx) {
+                        obj[colorKey] = origColor !== null ? origColor : '';
+                        if (opacityKey) obj[opacityKey] = origOpacity !== null ? origOpacity : 1;
+                        _pickerCtx = null;
+                    }
+                }).on('change', (color, source) => {
+                    if (source === 'input') return;
+                    const rgba = color.toRGBA();
+                    obj[colorKey] = '#' + color.toHEXA()[0] + color.toHEXA()[1] + color.toHEXA()[2];
+                    if (opacityKey) {
+                        obj[opacityKey] = parseFloat((rgba[3]).toFixed(2));
+                    }
                 });
 
                 pickr.show();
@@ -1246,7 +1314,10 @@
 
             const containerStyle = (container, ci) => {
                 const s = container.settings;
-                let mTop = Number(s.marginTop) || 0;
+                const dev = device.value;
+                let mTopRaw = getResponsiveVal(s, 'marginTop', dev);
+                let mTop = mTopRaw !== undefined && mTopRaw !== '' ? Number(mTopRaw) : 0;
+                let mBottomRaw = getResponsiveVal(s, 'marginBottom', dev);
 
                 let boxShadowStr = 'none';
                 if (s.boxShadow) {
@@ -1254,7 +1325,9 @@
                     boxShadowStr = `${inset}${s.boxShadowPositionHorizontal || 0}px ${s.boxShadowPositionVertical || 0}px ${s.boxShadowBlurRadius || 0}px ${s.boxShadowSpreadRadius || 0}px ${s.boxShadowColor || '#000000'}`;
                 }
 
-                let bgStyle = hexToRgba(s.bgColor, s.bgColorOpacity !== undefined ? s.bgColorOpacity : 1);
+                let responsiveBgColor = getResponsiveVal(s, 'bgColor', dev) || s.bgColor;
+                let responsiveBgOpacity = getResponsiveVal(s, 'bgColorOpacity', dev);
+                let bgStyle = hexToRgba(responsiveBgColor, responsiveBgOpacity !== undefined ? responsiveBgOpacity : 1);
                 let bgImages = [];
 
                 if (s.bgGradientStartColor && s.bgGradientEndColor) {
@@ -1274,13 +1347,31 @@
 
                 let bgImageStr = bgImages.length > 0 ? bgImages.join(', ') : 'none';
 
+                let pt = getResponsiveVal(s, 'paddingTop', dev);
+                let pb = getResponsiveVal(s, 'paddingBottom', dev);
+                let pl = getResponsiveVal(s, 'paddingLeft', dev);
+                let pr = getResponsiveVal(s, 'paddingRight', dev);
+
+                let ptu = getResponsiveVal(s, 'paddingTopUnit', dev) || s.paddingTopUnit || 'px';
+                let pbu = getResponsiveVal(s, 'paddingBottomUnit', dev) || s.paddingBottomUnit || 'px';
+                let plu = getResponsiveVal(s, 'paddingLeftUnit', dev) || s.paddingLeftUnit || 'px';
+                let pru = getResponsiveVal(s, 'paddingRightUnit', dev) || s.paddingRightUnit || 'px';
+
+                let mtu = getResponsiveVal(s, 'marginTopUnit', dev) || s.marginTopUnit || 'px';
+                let mbu = getResponsiveVal(s, 'marginBottomUnit', dev) || s.marginBottomUnit || 'px';
+
+                let bgPos = getResponsiveVal(s, 'bgImagePosition', dev) || s.bgImagePosition || 'center center';
+                let bgRep = getResponsiveVal(s, 'bgImageRepeat', dev) || s.bgImageRepeat || 'no-repeat';
+                let bgSz = getResponsiveVal(s, 'bgImageSize', dev) || s.bgImageSize || 'auto';
+                let bgBlend = getResponsiveVal(s, 'bgImageBlendMode', dev) || s.bgImageBlendMode || 'normal';
+
                 return {
-                    paddingTop: getUnitVal(s.paddingTop, s.paddingTopUnit) || '0px',
-                    paddingBottom: getUnitVal(s.paddingBottom, s.paddingBottomUnit) || '0px',
-                    paddingLeft: getUnitVal(s.paddingLeft, s.paddingLeftUnit) || '0px',
-                    paddingRight: getUnitVal(s.paddingRight, s.paddingRightUnit) || '0px',
-                    marginTop: getUnitVal(mTop, s.marginTopUnit) || '0px',
-                    marginBottom: getUnitVal(s.marginBottom, s.marginBottomUnit) || '0px',
+                    paddingTop: getUnitVal(pt, ptu) || '0px',
+                    paddingBottom: getUnitVal(pb, pbu) || '0px',
+                    paddingLeft: getUnitVal(pl, plu) || '0px',
+                    paddingRight: getUnitVal(pr, pru) || '0px',
+                    marginTop: getUnitVal(mTop, mtu) || '0px',
+                    marginBottom: getUnitVal(mBottomRaw, mbu) || '0px',
                     borderTopWidth: (s.borderSizeTop || 0) + 'px',
                     borderRightWidth: (s.borderSizeRight || 0) + 'px',
                     borderBottomWidth: (s.borderSizeBottom || 0) + 'px',
@@ -1295,12 +1386,19 @@
                     overflow: s.overflow && s.overflow !== 'default' ? s.overflow : 'visible',
                     backgroundColor: bgStyle,
                     backgroundImage: bgImageStr ? bgImageStr : 'none',
-                    backgroundPosition: s.bgImage ? (s.bgImagePosition || 'center center') : undefined,
-                    backgroundRepeat: s.bgImage ? (s.bgImageRepeat || 'no-repeat') : undefined,
-                    backgroundSize: s.bgImage ? (s.bgImageSize || 'auto') : undefined,
+                    backgroundPosition: s.bgImage ? bgPos : undefined,
+                    backgroundRepeat: s.bgImage ? bgRep : undefined,
+                    backgroundSize: s.bgImage ? bgSz : undefined,
                     backgroundAttachment: s.bgImage && s.bgImageParallax === 'fixed' ? 'fixed' : undefined,
-                    backgroundBlendMode: s.bgImage && s.bgImageBlendMode !== 'normal' ? s.bgImageBlendMode : undefined,
-                    minHeight: s.height === 'full' ? '100vh' : (s.height === 'custom' ? (s.customHeight || 'auto') : (s.minHeight || ((container.columns || []).some(col => (col.elements || []).length > 0) ? '0px' : '100px'))),
+                    backgroundBlendMode: s.bgImage && bgBlend !== 'normal' ? bgBlend : undefined,
+                    minHeight: (() => {
+                        const rh = getResponsiveVal(s, 'height', dev) || 'auto';
+                        if (rh === 'full') return '100vh';
+                        if (rh === 'custom') return getResponsiveVal(s, 'customHeight', dev) || 'auto';
+                        const rMin = getResponsiveVal(s, 'minHeight', dev);
+                        if (rMin !== undefined && rMin !== '') return rMin;
+                        return (container.columns || []).some(col => (col.elements || []).length > 0) ? '0px' : '100px';
+                    })(),
                     height: 'auto',
                     display: 'flex',
                     flexDirection: 'column'
@@ -1310,11 +1408,13 @@
             const containerInnerStyle = (container) => {
                 const s = container.settings;
                 const isSpaceDistribution = ['space-between', 'space-around', 'space-evenly'].includes(s.justifyContent);
-                const alignItems = s.alignItems || 'stretch';
+                const alignItems = getResponsiveVal(s, 'alignItems', device.value) || 'stretch';
                 const hasContent = (container.columns || []).some(col => (col.elements || []).length > 0);
-                const innerMinHeight = s.minHeight ? s.minHeight : (hasContent ? '0px' : '100px');
+                const responsiveMinHeight = getResponsiveVal(s, 'minHeight', device.value);
+                const innerMinHeight = (responsiveMinHeight !== undefined && responsiveMinHeight !== '') ? responsiveMinHeight : (hasContent ? '0px' : '100px');
+                const rHeightMode = getResponsiveVal(s, 'height', device.value) || 'auto';
                 // Use height:100% so flex-grow fills the outer container for custom/full height
-                const innerHeight = (s.height === 'custom' || s.height === 'full') ? '100%' : 'auto';
+                const innerHeight = (rHeightMode === 'custom' || rHeightMode === 'full') ? '100%' : 'auto';
                 
                 // Align-content logic:
                 // - Auto height: flex-start
@@ -1322,12 +1422,14 @@
                 //   allowing internal align-items (Top/Center/Bottom/Stretch) to work.
                 let alignContent = 'stretch';
                 if (container.type === 'row') {
-                    alignContent = s.rowAlignContent || 'flex-start';
-                } else if (!s.height || s.height === 'auto') {
+                    alignContent = getResponsiveVal(s, 'rowAlignContent', device.value) || 'flex-start';
+                } else if (!rHeightMode || rHeightMode === 'auto') {
                     alignContent = 'flex-start';
                 } else {
-                    alignContent = s.rowAlignContent || 'stretch';
+                    alignContent = getResponsiveVal(s, 'rowAlignContent', device.value) || 'stretch';
                 }
+
+                const flexWrapRaw = getResponsiveVal(s, 'flexWrap', device.value);
 
                 return {
                     display: 'flex',
@@ -1340,17 +1442,17 @@
                     maxHeight: s.maxHeight || undefined,
                     height: 'auto',
                     flexDirection: 'row',
-                    flexWrap: !s.flexWrap || s.flexWrap === 'default' ? 'wrap' : s.flexWrap,
+                    flexWrap: (!flexWrapRaw || flexWrapRaw === 'default') ? 'wrap' : flexWrapRaw,
                     alignItems: alignItems,
                     alignContent: alignContent,
-                    justifyContent: s.justifyContent || 'flex-start',
+                    justifyContent: getResponsiveVal(s, 'justifyContent', device.value) || 'flex-start',
                     // columnGap removed in favor of percentage-based column padding
                 };
             };
 
             const columnOuterStyle = (container, column, count) => {
                 const s = column.settings;
-                const containerAlign = container?.settings?.alignItems || 'stretch';
+                const containerAlign = getResponsiveVal(container?.settings || {}, 'alignItems', device.value) || 'stretch';
                 const basis = column.basis || (100 / count) + '%';
                 
                 let flexBasis;
@@ -1366,13 +1468,14 @@
                 
                 const elements = column.elements || [];
                 const isEmpty = elements.length === 0;
-                const colAlign = (s.alignment && s.alignment !== 'default') ? s.alignment : containerAlign;
+                const colAlignRaw = getResponsiveVal(s, 'alignment', device.value) || 'default';
+                const colAlign = (colAlignRaw && colAlignRaw !== 'default') ? colAlignRaw : containerAlign;
                 const isStretch = colAlign === 'stretch';
-                const containerHeight = container?.settings?.height || 'auto';
+                const containerHeight = getResponsiveVal(container?.settings || {}, 'height', device.value) || 'auto';
 
                 const hasDefinedHeight = containerHeight === 'full' || containerHeight === 'custom';
-                
-                const rawGap = container.settings.columnGap;
+
+                const rawGap = getResponsiveVal(container.settings, 'columnGap', device.value);
                 const globalGap = (rawGap !== undefined && rawGap !== '' && rawGap !== null) ? rawGap : 3;
 
                 const pLeft = (s.columnSpacingLeft !== undefined && s.columnSpacingLeft !== '' && s.columnSpacingLeft !== null) 
@@ -1429,7 +1532,7 @@
 
             const columnInnerStyle = (column, container) => {
                 const s = column.settings;
-                const containerAlign = container?.settings?.alignItems || 'stretch';
+                const containerAlign = getResponsiveVal(container?.settings || {}, 'alignItems', device.value) || 'stretch';
                 const pTop = Number(s.paddingTop) || 0;
                 const pBottom = Number(s.paddingBottom) || 0;
                 
@@ -1446,9 +1549,10 @@
 
                 const elements = column.elements || [];
                 const isEmpty = elements.length === 0;
-                const colAlign = (s.alignment && s.alignment !== 'default') ? s.alignment : containerAlign;
+                const colAlignRaw = getResponsiveVal(s, 'alignment', device.value) || 'default';
+                const colAlign = (colAlignRaw && colAlignRaw !== 'default') ? colAlignRaw : containerAlign;
                 const isStretch = colAlign === 'stretch';
-                const containerHeight = container?.settings?.height || 'auto';
+                const containerHeight = getResponsiveVal(container?.settings || {}, 'height', device.value) || 'auto';
                 const hasDefinedHeight = containerHeight === 'full' || containerHeight === 'custom';
 
                 const style = {
@@ -1495,12 +1599,14 @@
                     const gW = s.gapWidth ? s.gapWidth + 'px' : '0px';
                     const gH = s.gapHeight ? s.gapHeight + 'px' : '0px';
                     if (s.gapWidth || s.gapHeight) style.gap = gH + ' ' + gW;
+                    const respAlignH = getResponsiveVal(s, 'contentAlignH', device.value);
+                    const respAlignV = getResponsiveVal(s, 'contentAlignV', device.value);
                     if (contentLayout === 'row') {
-                        if (s.contentAlignH) style.justifyContent = s.contentAlignH;
-                        if (s.contentAlignV) style.alignItems = s.contentAlignV;
+                        if (respAlignH) style.justifyContent = respAlignH;
+                        if (respAlignV) style.alignItems = respAlignV;
                     } else {
-                        if (s.contentAlignV) style.justifyContent = s.contentAlignV;
-                        if (s.contentAlignH) style.alignItems = s.contentAlignH;
+                        if (respAlignV) style.justifyContent = respAlignV;
+                        if (respAlignH) style.alignItems = respAlignH;
                     }
                 }
                 
@@ -1722,7 +1828,7 @@
 
 
             return {
-                layout, isPreview, isSaving, isDirty, activeTab, activePanelTab, activeColPanelTab, device, availableElements,
+                layout, isPreview, isSaving, isDirty, activeTab, activePanelTab, activeColPanelTab, device, activeResponsiveMenu, availableElements,
                 activeCi, editingCi, activeColi, activeColCi, editingContext,
                 clearEditingContext, setEditingContext,
                 showColumnModal, columnModalType, columnLayouts, openColumnModal, selectLayout,
@@ -1732,7 +1838,7 @@
                 isDragging, dragType, dragSource, dragCi, dragColi, dragEli, dragNcoli, startDrag,
                 onDragStart, onDragEnd, onDragOver, onDrop, dragTarget, dragPosition,
                 canvasStyle, containerStyle, containerInnerStyle, columnOuterStyle, columnInnerStyle, formatBasisToFraction, updateBasis, hexToRgba, getUnitVal,
-                getVisibilityClasses, getCanvasVisibilityStyle,
+                getVisibilityClasses, getCanvasVisibilityStyle, getResponsiveVal, setResponsiveVal, resetResponsiveVal,
                 searchColumnQuery, searchElementQuery, filteredColumnLayouts, filteredNestedColumnLayouts, filteredAvailableElements,
                 shouldShowGuide,
                 toasts, showToast,
