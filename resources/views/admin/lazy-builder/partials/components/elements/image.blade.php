@@ -28,12 +28,18 @@
             borderColor: el.settings.borderColor || 'transparent'
          }">
         
-         <img v-if="el.settings.url" 
-             :src="el.settings.url" 
-             :alt="el.settings.alt || ''" 
+         <img v-if="el.settings.url && el.settings.dynamic_source !== 'feature_image'"
+             :src="el.settings.url"
+             :alt="el.settings.alt || ''"
              class="block w-full h-auto pointer-events-none">
-             
-        <div v-else 
+
+        <div v-else-if="el.settings.dynamic_source === 'feature_image'"
+             class="bg-[#0091ea]/6 border-2 border-dashed border-[#0091ea]/30 rounded flex flex-col items-center justify-center p-8 text-[#0091ea]">
+            <i class="fa fa-image text-4xl mb-2 opacity-60"></i>
+            <span class="text-xs font-bold uppercase tracking-widest">Feature Image</span>
+        </div>
+
+        <div v-else
              class="bg-slate-100 border-2 border-dashed border-slate-300 rounded flex flex-col items-center justify-center p-8 text-slate-400">
             <i class="fa fa-image text-4xl mb-2 opacity-50"></i>
             <span class="text-xs font-bold uppercase tracking-widest">No Image Selected</span>

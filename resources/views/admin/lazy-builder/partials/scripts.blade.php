@@ -4,6 +4,7 @@
     createApp({
         setup() {
             const layout = ref([]);
+            const postCardMode = ref(window.lazyPostCardMode || false);
             const isPreview = ref(false);
             const isSaving = ref(false);
             const isDirty = ref(false);
@@ -309,7 +310,11 @@
 
             const availableElements = [
                 { type: 'title', name: 'Title', icon: 'fa fa-heading' },
+                { type: 'card', name: 'Card', icon: 'fa fa-th-large' },
             ];
+            if (postCardMode.value) {
+                availableElements.push({ type: 'post_content', name: 'Content', icon: 'fa fa-paragraph' });
+            }
 
             const filteredColumnLayouts = computed(() => {
                 if (!searchColumnQuery.value) return columnLayouts;
@@ -342,7 +347,7 @@
 
             // Initialize layout
             onMounted(() => {
-                const rawContent = @json($post->content);
+                const rawContent = @json($builderContent ?? $post->content);
                 try {
                     if (rawContent) {
                         let parsed;
@@ -789,6 +794,141 @@
                 elements.splice(neli + 1, 0, cloneObject(elements[neli]));
             };
 
+            // Navigator drag-to-reorder (separate from canvas drag)
+            const navDragSrc  = ref(null);
+            const navDragOver = ref(null);
+
+            const navDragStart = (e, type, ci = null, coli = null, eli = null, ncoli = null, neli = null) => {
+                navDragSrc.value = { type, ci, coli, eli, ncoli, neli };
+                e.dataTransfer.effectAllowed = 'move';
+            };
+            const navDragEnd = () => { navDragSrc.value = null; navDragOver.value = null; };
+            const navDragOverHandler = (e, type, ci = null, coli = null, eli = null, ncoli = null, neli = null) => {
+                e.preventDefault();
+                navDragOver.value = { type, ci, coli, eli, ncoli, neli };
+            };
+            const navDrop = (e, type, ci = null, coli = null, eli = null, ncoli = null, neli = null) => {
+                e.preventDefault();
+                const src = navDragSrc.value;
+                if (!src || src.type !== type) { navDragEnd(); return; }
+                if (type === 'container' && src.ci !== ci) {
+                    const [item] = layout.value.splice(src.ci, 1);
+                    layout.value.splice(ci, 0, item);
+                } else if (type === 'column' && src.ci === ci && src.coli !== coli) {
+                    const cols = layout.value[ci].columns;
+                    const [item] = cols.splice(src.coli, 1);
+                    cols.splice(coli, 0, item);
+                } else if (type === 'element' && src.ci === ci && src.coli === coli && src.eli !== eli) {
+                    const els = layout.value[ci].columns[coli].elements;
+                    const [item] = els.splice(src.eli, 1);
+                    els.splice(eli, 0, item);
+                } else if (type === 'nested-column' && src.ci === ci && src.coli === coli && src.eli === eli && src.ncoli !== ncoli) {
+                    const cols = layout.value[ci].columns[coli].elements[eli].columns;
+                    const [item] = cols.splice(src.ncoli, 1);
+                    cols.splice(ncoli, 0, item);
+                } else if (type === 'nested-element' && src.ci === ci && src.coli === coli && src.eli === eli && src.ncoli === ncoli && src.neli !== neli) {
+                    const els = layout.value[ci].columns[coli].elements[eli].columns[ncoli].elements;
+                    const [item] = els.splice(src.neli, 1);
+                    els.splice(neli, 0, item);
+                }
+                navDragEnd();
+            };
+
+            // Canvas Right-Click Context Menu
+            const ctxMenu = ref({ show: false, x: 0, y: 0, type: null, ci: null, coli: null, eli: null, ncoli: null, neli: null });
+            const ctxClipboard = ref(null); // { type, data }
+
+            const ctxMenuTitle = computed(() => {
+                const m = ctxMenu.value;
+                if (!m.type) return '';
+                if (m.type === 'container') return 'Container';
+                if (m.type === 'column') return 'Column';
+                if (m.type === 'nested-row') return 'Nested Row';
+                if (m.type === 'nested-column') return 'Nested Column';
+                if (m.type === 'element') {
+                    const el = layout.value[m.ci]?.columns[m.coli]?.elements[m.eli];
+                    if (!el) return 'Element';
+                    return (el.type === 'text_block' || el.type === 'special_text') ? 'Text Block' : el.type.replace(/_/g, ' ');
+                }
+                if (m.type === 'nested-element') {
+                    const el = layout.value[m.ci]?.columns[m.coli]?.elements[m.eli]?.columns[m.ncoli]?.elements[m.neli];
+                    if (!el) return 'Element';
+                    return (el.type === 'text_block' || el.type === 'special_text') ? 'Text Block' : el.type.replace(/_/g, ' ');
+                }
+                return m.type;
+            });
+
+            const openCtxMenu = (e, type, ci = null, coli = null, eli = null, ncoli = null, neli = null) => {
+                e.preventDefault();
+                e.stopPropagation();
+                ctxMenu.value = { show: true, x: e.clientX, y: e.clientY, type, ci, coli, eli, ncoli, neli };
+            };
+            const closeCtxMenu = () => { ctxMenu.value = { ...ctxMenu.value, show: false }; };
+
+            const ctxEdit = () => {
+                const m = ctxMenu.value;
+                setEditingContext(m.type, m.ci, m.coli, m.eli, m.ncoli, m.neli);
+                closeCtxMenu();
+            };
+            const ctxSave = () => {
+                const m = ctxMenu.value;
+                const typeMap = { container: 'containers', column: 'columns', element: 'elements', 'nested-column': 'nested_columns', 'nested-element': 'elements' };
+                openLibraryModal(typeMap[m.type], m.ci, m.coli, m.eli, m.ncoli, m.neli);
+                closeCtxMenu();
+            };
+            const ctxClone = () => {
+                const m = ctxMenu.value;
+                if (m.type === 'container') duplicateContainer(m.ci);
+                else if (m.type === 'column') duplicateColumn(m.ci, m.coli);
+                else if (m.type === 'element') duplicateElement(m.ci, m.coli, m.eli);
+                else if (m.type === 'nested-row') duplicateElement(m.ci, m.coli, m.eli);
+                else if (m.type === 'nested-column') duplicateNestedColumn(m.ci, m.coli, m.eli, m.ncoli);
+                else if (m.type === 'nested-element') duplicateNestedElement(m.ci, m.coli, m.eli, m.ncoli, m.neli);
+                closeCtxMenu();
+            };
+            const ctxRemove = () => {
+                const m = ctxMenu.value;
+                if (m.type === 'container') layout.value.splice(m.ci, 1);
+                else if (m.type === 'column') layout.value[m.ci].columns.splice(m.coli, 1);
+                else if (m.type === 'element' || m.type === 'nested-row') layout.value[m.ci].columns[m.coli].elements.splice(m.eli, 1);
+                else if (m.type === 'nested-column') layout.value[m.ci].columns[m.coli].elements[m.eli].columns.splice(m.ncoli, 1);
+                else if (m.type === 'nested-element') layout.value[m.ci].columns[m.coli].elements[m.eli].columns[m.ncoli].elements.splice(m.neli, 1);
+                closeCtxMenu();
+            };
+            const ctxCopy = () => {
+                const m = ctxMenu.value;
+                let data;
+                if (m.type === 'container') data = cloneObject(layout.value[m.ci]);
+                else if (m.type === 'column') data = cloneObject(layout.value[m.ci].columns[m.coli]);
+                else if (m.type === 'element' || m.type === 'nested-row') data = cloneObject(layout.value[m.ci].columns[m.coli].elements[m.eli]);
+                else if (m.type === 'nested-column') data = cloneObject(layout.value[m.ci].columns[m.coli].elements[m.eli].columns[m.ncoli]);
+                else if (m.type === 'nested-element') data = cloneObject(layout.value[m.ci].columns[m.coli].elements[m.eli].columns[m.ncoli].elements[m.neli]);
+                ctxClipboard.value = { type: m.type, data };
+                closeCtxMenu();
+            };
+            const ctxPaste = (position) => {
+                const m = ctxMenu.value;
+                if (!ctxClipboard.value || ctxClipboard.value.type !== m.type) { closeCtxMenu(); return; }
+                const copy = cloneObject(ctxClipboard.value.data);
+                assignNewIds(copy);
+                if (m.type === 'container') {
+                    position === 'start' ? layout.value.unshift(copy) : layout.value.push(copy);
+                } else if (m.type === 'column') {
+                    const cols = layout.value[m.ci].columns;
+                    position === 'start' ? cols.unshift(copy) : cols.push(copy);
+                } else if (m.type === 'element' || m.type === 'nested-row') {
+                    const els = layout.value[m.ci].columns[m.coli].elements;
+                    position === 'start' ? els.unshift(copy) : els.push(copy);
+                } else if (m.type === 'nested-column') {
+                    const cols = layout.value[m.ci].columns[m.coli].elements[m.eli].columns;
+                    position === 'start' ? cols.unshift(copy) : cols.push(copy);
+                } else if (m.type === 'nested-element') {
+                    const els = layout.value[m.ci].columns[m.coli].elements[m.eli].columns[m.ncoli].elements;
+                    position === 'start' ? els.unshift(copy) : els.push(copy);
+                }
+                closeCtxMenu();
+            };
+
             // Full HTML5 Drag and Drop Logic for Reordering
             const dragSource = ref(null);
             const dragTarget = ref(null); // Used for visual highlighting
@@ -1184,7 +1324,7 @@
             const saveLayout = async () => {
                 isSaving.value = true;
                 try {
-                    const response = await fetch("{{ route('admin.lazy-builder.save', $post->id) }}", {
+                    const response = await fetch("{{ $builderSaveUrl ?? route('admin.lazy-builder.save', $post->id) }}", {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1446,7 +1586,7 @@
 
                 return {
                     display: 'flex',
-                    ...(container.type !== 'row' ? { maxWidth: s.contentWidth === '100%' ? '100%' : siteWidth.value } : {}),
+                    ...(container.type !== 'row' ? { maxWidth: postCardMode.value ? '560px' : (s.contentWidth === '100%' ? '100%' : siteWidth.value) } : {}),
                     width: '100%',
                     flexGrow: 1,
                     flexShrink: 0,
@@ -1693,10 +1833,69 @@
             const currentTargetNcoli = ref(null);
             const currentTargetNeli = ref(null);
 
+            const columnModalActiveTab = ref('columns');
+
             const openColumnModal = (index = null, type = 'new') => {
                 columnModalTarget.value = index;
-                columnModalType.value = type;
-                showColumnModal.value = true;
+                columnModalType.value   = type;
+                columnModalActiveTab.value = 'columns';
+                showColumnModal.value   = true;
+                fetchLibrary();
+            };
+
+            const addContainerFromColumnModal = (item) => {
+                const copy = JSON.parse(JSON.stringify(item.data));
+                assignNewIds(copy);
+                const at = columnModalTarget.value !== null ? columnModalTarget.value : layout.value.length;
+                layout.value.splice(at, 0, copy);
+                showColumnModal.value = false;
+                showToast('Container added from library!', 'success');
+            };
+
+            const addColumnFromColumnModal = (item) => {
+                if (columnModalTarget.value === null) return;
+                const copy = JSON.parse(JSON.stringify(item.data));
+                assignNewIds(copy);
+                layout.value[columnModalTarget.value].columns.push(copy);
+                showColumnModal.value = false;
+                showToast('Column added from library!', 'success');
+            };
+
+            const addElementFromElementModal = (item) => {
+                const copy  = JSON.parse(JSON.stringify(item.data));
+                assignNewIds(copy);
+                const ci    = currentTargetCi.value;
+                const coli  = currentTargetColi.value;
+                const eli   = currentTargetEli.value;
+                const ncoli = currentTargetNcoli.value;
+                const neli  = currentTargetNeli.value;
+                if (neli !== null) {
+                    layout.value[ci].columns[coli].elements[eli].columns[ncoli].elements.splice(neli, 0, copy);
+                } else if (eli !== null && ncoli !== null) {
+                    layout.value[ci].columns[coli].elements[eli].columns[ncoli].elements.push(copy);
+                } else if (eli !== null) {
+                    layout.value[ci].columns[coli].elements.splice(eli, 0, copy);
+                } else {
+                    layout.value[ci].columns[coli].elements.push(copy);
+                }
+                showElementModal.value = false;
+                showToast('Element added from library!', 'success');
+            };
+
+            const addNestedColumnFromElementModal = (item) => {
+                const copy  = JSON.parse(JSON.stringify(item.data));
+                assignNewIds(copy);
+                const ci    = currentTargetCi.value;
+                const coli  = currentTargetColi.value;
+                const eli   = currentTargetEli.value;
+                const ncoli = currentTargetNcoli.value;
+                if (ci !== null && coli !== null && eli !== null) {
+                    const nestedRow = layout.value[ci].columns[coli].elements[eli];
+                    const at = ncoli !== null ? ncoli + 1 : nestedRow.columns.length;
+                    nestedRow.columns.splice(at, 0, copy);
+                }
+                showElementModal.value = false;
+                showToast('Nested column added from library!', 'success');
             };
 
             const openElementModal = (ci, coli = null, defaultTab = 'elements', restricted = false, eli = null, ncoli = null, neli = null, allowedTabs = ['elements', 'nested']) => {
@@ -1712,6 +1911,7 @@
                 elementModalRestricted.value = restricted;
                 elementModalAllowedTabs.value = allowedTabs;
                 showElementModal.value = true;
+                fetchLibrary();
             };
 
             const selectNestedLayout = (layoutConfig) => {
@@ -1795,11 +1995,46 @@
                             useLink: false, linkUrl: '', linkColor: '#0091ea', linkHoverColor: '#007cc0',
                             separator: 'none', separatorColor: '#0091ea', dividerWidth: 60, dividerHeight: 3,
                             paddingTop: 20, paddingBottom: 20, marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0,
-                            visibility: { mobile: true, tablet: true, desktop: true }
+                            visibility: { mobile: true, tablet: true, desktop: true },
+                            dynamic_source: '', link_dynamic_source: ''
                         } : {}),
                         ...(type === 'text' ? { content: '<p>New text here...</p>' } : {}),
-                        ...(type === 'button' ? { text: 'Click Me', url: '#', style: 'primary' } : {}),
-                        ...(type === 'image' ? { url: '', alt: '', linkUrl: '', linkTarget: '_self' } : {}),
+                        ...(type === 'button' ? { text: 'Click Me', url: '#', style: 'primary', dynamic_source: '', link_dynamic_source: '' } : {}),
+                        ...(type === 'image' ? { url: '', alt: '', linkUrl: '', linkTarget: '_self', dynamic_source: '', link_dynamic_source: '' } : {}),
+                        ...(type === 'post_content' ? {
+                            content_display: 'excerpt', excerptLength: 120, stripHtml: true,
+                            textAlign: 'left', fontFamily: 'inherit', fontSize: 13, fontSizeUnit: 'px',
+                            fontWeight: '400', lineHeight: '1.6', letterSpacing: 0, textTransform: 'none',
+                            color: '#6b7280',
+                            marginTop: 0, marginRight: 0, marginBottom: 8, marginLeft: 0,
+                            marginTopUnit: 'px', marginRightUnit: 'px', marginBottomUnit: 'px', marginLeftUnit: 'px',
+                            cssClass: '', cssId: '',
+                            visibility: { mobile: true, tablet: true, desktop: true }
+                        } : {}),
+                        ...(type === 'card' ? {
+                            post_card_id: '',
+                            content_source: 'latest',
+                            post_type: 'post',
+                            posts_by: 'all',
+                            posts_by_value: '',
+                            post_status: ['publish'],
+                            hide_out_of_stock: false,
+                            posts_count: 6,
+                            posts_offset: 0,
+                            order_by: 'created_at',
+                            order: 'desc',
+                            pagination_type: 'none',
+                            nothing_found_message: 'No posts found.',
+                            layout: 'grid',
+                            card_alignment: 'left',
+                            columns: 3, columns_tablet: 2, columns_mobile: 1,
+                            column_spacing: 24,
+                            row_spacing: 24,
+                            marginTop: 0, marginRight: 0, marginBottom: 0, marginLeft: 0,
+                            marginTopUnit: 'px', marginRightUnit: 'px', marginBottomUnit: 'px', marginLeftUnit: 'px',
+                            visibility: { mobile: true, tablet: true, desktop: true },
+                            cssClass: '', cssId: '',
+                        } : {}),
                     }
                 };
 
@@ -1893,11 +2128,151 @@
                 });
             })();
 
+            // ── Builder Library ──────────────────────────────────────────────────
+            const showLibraryModal   = ref(false);
+            const libraryActiveTab   = ref('containers');
+            const libraryNewName     = ref('');
+            const isSavingToLibrary  = ref(false);
+            const libraryContext     = ref(null);
+            const libraryItems       = ref({ containers: [], columns: [], nested_columns: [], elements: [] });
+            const postCardsList      = ref(window.lazyPostCards || []);
+            const postCardsMap       = computed(() => {
+                const m = {};
+                postCardsList.value.forEach(c => { m[c.id] = c.name; });
+                return m;
+            });
+
+            const libraryTabs = [
+                { key: 'containers',     label: 'Containers',     icon: 'fa fa-table-columns' },
+                { key: 'columns',        label: 'Columns',        icon: 'fa fa-columns' },
+                { key: 'nested_columns', label: 'Nested Columns', icon: 'fa fa-layer-group' },
+                { key: 'elements',       label: 'Elements',       icon: 'fa fa-cube' },
+            ];
+
+            const libraryCurrentItems  = computed(() => libraryItems.value[libraryActiveTab.value] || []);
+            const libraryActiveTabLabel = computed(() => libraryTabs.find(t => t.key === libraryActiveTab.value)?.label || '');
+            const libraryTabIcon       = computed(() => libraryTabs.find(t => t.key === libraryActiveTab.value)?.icon || 'fa fa-cube');
+            const libraryCanSave       = computed(() => libraryContext.value?.type === libraryActiveTab.value);
+
+            const fetchLibrary = async () => {
+                try {
+                    const res  = await fetch('{{ route("admin.lazy-builder.library.index") }}');
+                    const data = await res.json();
+                    libraryItems.value = { containers: [], columns: [], nested_columns: [], elements: [], ...data };
+                } catch (e) { console.error('Library fetch failed', e); }
+            };
+
+            const openLibraryModal = (type, ci = null, coli = null, eli = null, ncoli = null, nestedEli = null) => {
+                libraryContext.value  = { type, ci, coli, eli, ncoli, nestedEli };
+                libraryActiveTab.value = type;
+                libraryNewName.value  = '';
+                showLibraryModal.value = true;
+                fetchLibrary();
+            };
+
+            const saveToLibrary = async () => {
+                if (!libraryNewName.value.trim() || isSavingToLibrary.value) return;
+                const ctx = libraryContext.value;
+                if (!ctx) return;
+
+                let data = null;
+                try {
+                    if (ctx.type === 'containers') {
+                        data = layout.value[ctx.ci];
+                    } else if (ctx.type === 'columns') {
+                        data = layout.value[ctx.ci].columns[ctx.coli];
+                    } else if (ctx.type === 'nested_columns') {
+                        data = layout.value[ctx.ci].columns[ctx.coli].elements[ctx.eli].columns[ctx.ncoli];
+                    } else if (ctx.type === 'elements') {
+                        data = ctx.ncoli !== null
+                            ? layout.value[ctx.ci].columns[ctx.coli].elements[ctx.eli].columns[ctx.ncoli].elements[ctx.nestedEli]
+                            : layout.value[ctx.ci].columns[ctx.coli].elements[ctx.eli];
+                    }
+                } catch (e) { data = null; }
+
+                if (!data) { showToast('Could not read item data.', 'error'); return; }
+
+                isSavingToLibrary.value = true;
+                try {
+                    const res    = await fetch('{{ route("admin.lazy-builder.library.save") }}', {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                        body:    JSON.stringify({ type: ctx.type, name: libraryNewName.value.trim(), data: JSON.parse(JSON.stringify(data)) })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        libraryItems.value[ctx.type].unshift(result.item);
+                        libraryNewName.value = '';
+                        showToast('Saved to library!', 'success');
+                    }
+                } catch (e) { showToast('Save to library failed!', 'error'); }
+                finally { isSavingToLibrary.value = false; }
+            };
+
+            const assignNewIds = (obj) => {
+                if (!obj || typeof obj !== 'object') return;
+                if (Array.isArray(obj)) { obj.forEach(assignNewIds); return; }
+                if ('id' in obj) obj.id = Date.now() + Math.floor(Math.random() * 1e9);
+                Object.values(obj).forEach(assignNewIds);
+            };
+
+            const insertFromLibrary = (item) => {
+                const ctx  = libraryContext.value;
+                const copy = JSON.parse(JSON.stringify(item.data));
+                assignNewIds(copy);
+
+                const tab = libraryActiveTab.value;
+                if (tab === 'containers') {
+                    const at = (ctx?.ci !== null && ctx?.ci !== undefined) ? ctx.ci + 1 : layout.value.length;
+                    layout.value.splice(at, 0, copy);
+                } else if (tab === 'columns') {
+                    if (ctx?.ci !== null && ctx?.coli !== null) {
+                        layout.value[ctx.ci].columns.splice(ctx.coli + 1, 0, copy);
+                    } else if (ctx?.ci !== null) {
+                        layout.value[ctx.ci].columns.push(copy);
+                    }
+                } else if (tab === 'nested_columns') {
+                    if (ctx?.ci !== null && ctx?.coli !== null && ctx?.eli !== null && ctx?.ncoli !== null) {
+                        layout.value[ctx.ci].columns[ctx.coli].elements[ctx.eli].columns.splice(ctx.ncoli + 1, 0, copy);
+                    }
+                } else if (tab === 'elements') {
+                    if (ctx?.ncoli !== null && ctx?.ncoli !== undefined) {
+                        const target = layout.value[ctx.ci].columns[ctx.coli].elements[ctx.eli].columns[ctx.ncoli].elements;
+                        const at     = (ctx.nestedEli !== null && ctx.nestedEli !== undefined) ? ctx.nestedEli + 1 : target.length;
+                        target.splice(at, 0, copy);
+                    } else if (ctx?.ci !== null && ctx?.coli !== null) {
+                        const target = layout.value[ctx.ci].columns[ctx.coli].elements;
+                        const at     = (ctx.eli !== null && ctx.eli !== undefined) ? ctx.eli + 1 : target.length;
+                        target.splice(at, 0, copy);
+                    }
+                }
+
+                showToast('Added from library!', 'success');
+                showLibraryModal.value = false;
+            };
+
+            const deleteFromLibrary = async (id) => {
+                const type = libraryActiveTab.value;
+                try {
+                    const res    = await fetch(`{{ url('admin/lazy-builder/library') }}/${type}/${id}`, {
+                        method:  'DELETE',
+                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        libraryItems.value[type] = libraryItems.value[type].filter(i => i.id !== id);
+                        showToast('Deleted from library!', 'success');
+                    }
+                } catch (e) { showToast('Delete failed!', 'error'); }
+            };
+            // ── End Builder Library ──────────────────────────────────────────────
+
             return {
                 layout, isPreview, isSaving, isDirty, activeTab, activePanelTab, activeColPanelTab, device, activeResponsiveMenu, availableElements,
                 activeCi, editingCi, activeColi, activeColCi, editingContext,
                 clearEditingContext, setEditingContext,
-                showColumnModal, columnModalType, columnLayouts, openColumnModal, selectLayout,
+                showColumnModal, columnModalType, columnModalActiveTab, columnLayouts, openColumnModal, selectLayout, addContainerFromColumnModal, addColumnFromColumnModal,
+                addElementFromElementModal, addNestedColumnFromElementModal,
                 showElementModal, elementModalTab, elementModalRestricted, elementModalAllowedTabs, openElementModal, selectNestedLayout,
                 editingColumn, editingElement,
                 addContainer, addColumn, addNestedColumn, addElement, duplicateContainer, duplicateColumn, duplicateElement, duplicateNestedColumn, duplicateNestedRow, duplicateNestedElement, saveLayout, openMediaModal, openColorPicker,
@@ -1908,12 +2283,19 @@
                 searchColumnQuery, searchElementQuery, filteredColumnLayouts, filteredNestedColumnLayouts, filteredAvailableElements,
                 shouldShowGuide,
                 toasts, showToast,
+                showLibraryModal, libraryActiveTab, libraryNewName, isSavingToLibrary, libraryItems, libraryContext,
+                postCardsList, postCardsMap,
+                libraryTabs, libraryCurrentItems, libraryActiveTabLabel, libraryTabIcon, libraryCanSave,
+                openLibraryModal, saveToLibrary, insertFromLibrary, deleteFromLibrary,
                 hoveredType, hoveredCi, hoveredColi, hoveredEli, hoveredNcoli, setHover,
+                navDragSrc, navDragOver, navDragStart, navDragEnd, navDragOverHandler, navDrop,
+                ctxMenu, ctxClipboard, ctxMenuTitle, openCtxMenu, closeCtxMenu, ctxEdit, ctxSave, ctxClone, ctxRemove, ctxCopy, ctxPaste,
                 themeBodyFont, themeHeadingFont, builderFontGroups, builderFonts: BUILDER_FONTS,
                 titleFontVariants, loadBuilderFont,
                 applyButtonSize, searchIconQuery, filteredIcons, selectIcon, activeIconTab, clearColorField,
                 lazyMenuData: reactive(window.lazyMenuData || {}),
-                lazyMenusList: window.lazyMenusList || {}
+                lazyMenusList: window.lazyMenusList || {},
+                postCardMode
             };
         }
     }).mount('#lazy-builder-app');

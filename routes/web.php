@@ -60,6 +60,15 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     Route::post('posts/{post}/restore', [PostController::class, 'restore'])->name('posts.restore')->withTrashed();
     Route::delete('posts/{post}/force-delete', [PostController::class, 'forceDelete'])->name('posts.force-delete')->withTrashed();
     Route::resource('posts', PostController::class);
+    Route::get('lazy-builder-library', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'page'])->name('lazy-builder.library');
+    Route::post('lazy-builder-library/post-cards', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'savePostCard'])->name('lazy-builder.post-cards.save');
+    Route::delete('lazy-builder-library/post-cards/{id}', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'deletePostCard'])->name('lazy-builder.post-cards.delete');
+    Route::patch('lazy-builder-library/post-cards/{id}', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'updatePostCard'])->name('lazy-builder.post-cards.update');
+    Route::get('lazy-builder-library/post-cards/{id}/builder', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'editPostCardBuilder'])->name('lazy-builder.post-cards.builder');
+    Route::post('lazy-builder-library/post-cards/{id}/builder', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'savePostCardLayout'])->name('lazy-builder.post-cards.save-layout');
+    Route::get('lazy-builder/library', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'index'])->name('lazy-builder.library.index');
+    Route::post('lazy-builder/library/save', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'save'])->name('lazy-builder.library.save');
+    Route::delete('lazy-builder/library/{type}/{id}', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'delete'])->name('lazy-builder.library.delete');
     Route::get('lazy-builder/{id}', [PostController::class, 'builder'])->name('lazy-builder');
     Route::post('lazy-builder/{id}/save', [PostController::class, 'saveBuilder'])->name('lazy-builder.save');
     Route::post('posts/{id}/variations/ajax', [PostController::class, 'ajaxSaveVariations'])->name('posts.variations.ajax-save');

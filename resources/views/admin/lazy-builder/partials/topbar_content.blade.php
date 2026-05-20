@@ -23,7 +23,7 @@
 
     <!-- Center Section (Page Title) -->
     <div class="hidden md:block">
-        <span class="text-[11px] font-bold text-white/40 uppercase tracking-[0.3em]">Editing: {{ $post->title }}</span>
+        <span class="text-[11px] font-bold text-white/40 uppercase tracking-[0.3em]">Editing: {{ $builderTitle ?? $post->title }}</span>
     </div>
 
     <!-- Right Section -->
@@ -40,13 +40,14 @@
         
         <div class="h-6 w-px bg-white/10 mx-1"></div>
         
-        <button @click="saveLayout" :disabled="isSaving" class="btn-save"
-                :style="{ backgroundColor: isDirty ? '#4CAF50' : '#4A5259' }">
+        <button @click="isDirty && saveLayout()" :disabled="isSaving || !isDirty" class="btn-save"
+                :style="{ backgroundColor: isDirty ? '#4CAF50' : '#4A5259' }"
+                :class="!isDirty ? 'opacity-50 cursor-not-allowed' : ''">
             <span v-if="isSaving"><i class="fa fa-spinner fa-spin mr-2"></i> Saving</span>
             <span v-else>Save</span>
         </button>
         
-        <a href="{{ route('admin.posts.index') }}" class="topbar-icon hover:bg-red-500/20 text-white/60">
+        <a href="{{ $builderBackUrl ?? route('admin.posts.index') }}" class="topbar-icon hover:bg-red-500/20 text-white/60">
             <i class="fa fa-times"></i>
         </a>
     </div>

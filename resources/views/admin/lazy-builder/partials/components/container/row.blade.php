@@ -1,6 +1,15 @@
+@php $pcMode = ($postCardMode ?? false); @endphp
+@if($pcMode)
+<div class="relative w-full"
+     :class="[getVisibilityClasses(container.settings)]"
+     :style="containerStyle(container, ci)"
+     @click.stop="activeCi = ci"
+     @mouseenter="setHover('container', ci)"
+     @mouseleave="setHover(null)">
+@else
 <div class="container-row relative group/cont"
      :class="[
-        editingCi === ci ? 'container-active' : '', 
+        editingCi === ci ? 'container-active' : '',
         isDragging && dragCi === ci && !isColumnDrag ? 'dragging-no-transition' : 'transition-all',
         dragTarget === 'container-' + ci + '-null-null-null-null' && dragPosition === 'top' ? 'border-t-4 border-t-blue-500' : '',
         dragTarget === 'container-' + ci + '-null-null-null-null' && dragPosition === 'bottom' ? 'border-b-4 border-b-blue-500' : '',
@@ -9,11 +18,14 @@
      ]"
      :style="containerStyle(container, ci)"
      @click.stop="activeCi = ci"
+     @contextmenu.prevent.stop="openCtxMenu($event, 'container', ci)"
      @mouseenter="setHover('container', ci)"
      @mouseleave="setHover(null)"
      @dragover="onDragOver($event, 'container', ci)"
      @drop="onDrop($event, 'container', ci)">
+@endif
     
+    @if(!$pcMode)
     <!-- Container Overlays (Margin/Padding) -->
     <div v-if="!isPreview">
         <div class="absolute left-0 right-0 pointer-events-auto z-0 bg-[#9c27b0]/10 transition-opacity"
@@ -47,7 +59,9 @@
              <div class="absolute top-0 left-0 h-full border-l border-dashed border-[#0091ea]/30"></div>
         </div>
     </div>
+    @endif
 
+    @if(!$pcMode)
     <!-- Container Handles -->
     <div v-if="!isPreview" class="container-handles transition-opacity"
          :class="shouldShowGuide('container', ci) ? ( (editingCi === ci || (isDragging && dragCi === ci && !isColumnDrag)) ? 'opacity-100' : 'opacity-0' ) : 'hidden'">
@@ -81,15 +95,17 @@
             <div class="lazy-tooltip opacity-0 group-hover/hpr:opacity-100" :class="{'opacity-100!': isDragging && dragType === 'paddingRight' && dragCi === ci && !isColumnDrag}">@{{ container.settings.paddingRight || 0 }}px</div>
         </div>
     </div>
+    @endif
 
+    @if(!$pcMode)
     <!-- Container Toolbar -->
     <div class="container-right-panel transition-opacity" v-if="!isPreview"
          :class="(editingCi === ci || (isDragging && dragCi === ci)) ? 'opacity-100' : 'opacity-0'">
         <div class="panel-inner shadow-xl group/panel">
-            <div class="flex items-center overflow-hidden max-w-0 opacity-0 group-hover/panel:max-w-[200px] group-hover/panel:opacity-100 transition-all duration-300">
+            <div class="flex items-center overflow-hidden max-w-0 opacity-0 group-hover/panel:max-w-[200px] group-hover/panel:opacity-100 group-hover/panel:overflow-visible transition-all duration-300">
                 <div class="panel-btn cursor-move" draggable="true" @dragstart="onDragStart($event, 'container', ci)" @dragend="onDragEnd"><i class="fa fa-arrows-alt"></i><div class="lazy-tooltip">Drag</div></div>
                 <div class="panel-btn" @click.stop="layout.splice(ci,1)"><i class="fa fa-trash-alt"></i><div class="lazy-tooltip">Delete</div></div>
-                <div class="panel-btn" @click.stop="saveLayout"><i class="fa fa-hdd"></i><div class="lazy-tooltip">Save</div></div>
+                <div class="panel-btn" @click.stop="openLibraryModal('containers', ci)"><i class="fa fa-hdd"></i><div class="lazy-tooltip">Library</div></div>
                 <div class="panel-btn" @click.stop="duplicateContainer(ci)"><i class="fa fa-copy"></i><div class="lazy-tooltip">Duplicate</div></div>
             </div>
             <div class="panel-btn" @click.stop="setEditingContext('container', ci)">
@@ -98,12 +114,15 @@
             <div class="panel-btn" @click.stop="addContainer(ci + 1)"><i class="fa fa-plus-square"></i><div class="lazy-tooltip">Add</div></div>
         </div>
     </div>
+    @endif
 
+    @if(!$pcMode)
     <!-- Sticky Badge -->
     <div v-if="!isPreview && container.settings && container.settings.sticky && (device === 'desktop' ? container.settings.stickyDesktop !== false : device === 'tablet' ? container.settings.stickyTablet !== false : container.settings.stickyMobile !== false)"
          class="absolute top-0 left-0 bg-[#0091ea] text-white text-[9px] px-2 py-0.5 z-10 flex items-center gap-1 rounded-br-sm select-none pointer-events-none">
         <i class="fa fa-thumbtack"></i> Sticky
     </div>
+    @endif
 
     <!-- Container Content Box -->
     <div class="mx-auto w-full flex relative" :style="containerInnerStyle(container)">

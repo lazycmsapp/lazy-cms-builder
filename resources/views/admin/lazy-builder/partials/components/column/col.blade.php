@@ -1,7 +1,7 @@
 <!-- Columns Loop -->
 <div v-for="(column, coli) in container.columns" :key="column.id"
      class="column-outer relative"
-     :class="['col-' + column.id, (column.settings.hoverType && column.settings.hoverType !== 'none') ? 'hover-effect-' + column.settings.hoverType : '', getVisibilityClasses(column.settings)]"
+     :class="['col-' + column.id, (column.settings.hoverType && column.settings.hoverType !== 'none') ? 'hover-effect-' + column.settings.hoverType : '', getVisibilityClasses(column.settings), isDragging && dragCi === ci && dragColi === coli ? 'dragging-no-transition' : '']"
      :style="columnOuterStyle(container, column, container.columns.length)">
 
     
@@ -16,6 +16,7 @@
          ]"
          :style="columnInnerStyle(column, container)"
          @click.stop="if(column.settings.linkUrl && isPreview){ window.open(column.settings.linkUrl, '_blank'); } else { setEditingContext('column', ci, coli) }"
+         @contextmenu.prevent.stop="openCtxMenu($event, 'column', ci, coli)"
          @mouseenter="setHover('column', ci, coli)"
          @mouseleave="setHover(null)"
          @dragover="onDragOver($event, 'column', ci, coli)"
@@ -32,10 +33,10 @@
                     <i class="fa fa-plus-square"></i><div class="lazy-tooltip">Add Column</div>
                 </div>
                 
-                <div class="flex items-center overflow-hidden max-w-0 opacity-0 group-hover/panel:max-w-[200px] group-hover/panel:opacity-100 transition-all duration-300">
+                <div class="flex items-center overflow-hidden max-w-0 opacity-0 group-hover/panel:max-w-[200px] group-hover/panel:opacity-100 group-hover/panel:overflow-visible transition-all duration-300">
                     <div class="column-label whitespace-nowrap">@{{ formatBasisToFraction(device === 'desktop' ? column.basis : (column['basis_' + device] || column.basis)) }}</div>
                     <div class="panel-btn" @click.stop="duplicateColumn(ci, coli)"><i class="fa fa-copy"></i><div class="lazy-tooltip">Duplicate</div></div>
-                    <div class="panel-btn"><i class="fa fa-hdd"></i><div class="lazy-tooltip">Save</div></div>
+                    <div class="panel-btn" @click.stop="openLibraryModal('columns', ci, coli)"><i class="fa fa-hdd"></i><div class="lazy-tooltip">Library</div></div>
                     <div class="panel-btn" @click.stop="container.columns.splice(coli, 1)"><i class="fa fa-trash-alt"></i><div class="lazy-tooltip">Delete</div></div>
                     <div class="panel-btn cursor-move" draggable="true" @dragstart="onDragStart($event, 'column', ci, coli)" @dragend="onDragEnd"><i class="fa fa-arrows-alt"></i><div class="lazy-tooltip">Drag</div></div>
                 </div>
@@ -142,6 +143,7 @@
              style="flex-basis:100%;width:100%;height:0;overflow:hidden;"></div>
         <div class="relative group/el mb-2"
              @click.stop="setEditingContext('element', ci, coli, eli)"
+             @contextmenu.prevent.stop="openCtxMenu($event, 'element', ci, coli, eli)"
              :class="[
                 (column.settings.contentLayout === 'row' && el.type !== 'row') ? '' : (getResponsiveVal(column.settings, 'contentAlignH', device) && getResponsiveVal(column.settings, 'contentAlignH', device) !== 'stretch' && el.type !== 'title' && el.type !== 'menu' && el.type !== 'text_block' && el.type !== 'special_text' && el.type !== 'button' && el.type !== 'image' ? '' : 'w-full'),
                 dragTarget === 'element-' + ci + '-' + coli + '-' + eli + '-null-null' && dragPosition === 'top' ? 'border-t-2 border-t-blue-500' : '',
@@ -160,6 +162,8 @@
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.spacer')
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.text-block')
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.menu')
+            @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.card')
+            @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.post-content')
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.nested.row')
 
             <!-- Custom Registered Blocks -->
@@ -185,7 +189,7 @@
 
             <!-- Element Toolbar (Top-Center, Compact & Expandable) -->
             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/el:opacity-100 transition-all duration-200 z-[1010] hover:z-[1100] pointer-events-none" v-if="!isPreview && el.type !== 'row'">
-                <div class="flex items-center bg-[#9c27b0] text-white rounded shadow-xl h-7 px-1 pointer-events-auto group/etbar overflow-hidden max-w-[60px] hover:max-w-[250px] transition-all duration-300 ease-in-out">
+                <div class="flex items-center bg-[#9c27b0] text-white rounded shadow-xl h-7 px-1 pointer-events-auto group/etbar overflow-hidden hover:overflow-visible max-w-[60px] hover:max-w-[250px] transition-all duration-300 ease-in-out">
                     
                     <!-- Always Visible Part: Edit & Add -->
                     <div class="flex items-center">
@@ -208,12 +212,17 @@
                             <i class="fa fa-arrows-alt text-[10px]"></i>
                             <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Move</div>
                         </div>
-                        <div class="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool" 
+                        <div class="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
                              @click.stop="duplicateElement(ci, coli, eli)">
                             <i class="fa fa-copy text-[10px]"></i>
                             <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Duplicate</div>
                         </div>
-                        <div class="w-7 h-7 flex items-center justify-center hover:bg-red-500 rounded cursor-pointer relative group/etool text-red-100 hover:text-white" 
+                        <div class="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
+                             @click.stop="openLibraryModal('elements', ci, coli, eli)">
+                            <i class="fa fa-hdd text-[10px]"></i>
+                            <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Library</div>
+                        </div>
+                        <div class="w-7 h-7 flex items-center justify-center hover:bg-red-500 rounded cursor-pointer relative group/etool text-red-100 hover:text-white"
                              @click.stop="column.elements.splice(eli, 1)">
                             <i class="fa fa-trash-alt text-[10px]"></i>
                             <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Delete</div>

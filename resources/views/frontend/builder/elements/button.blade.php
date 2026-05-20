@@ -1,5 +1,15 @@
 @php
     $s = $el['settings'] ?? [];
+
+    $dynamicSrc  = $s['dynamic_source']      ?? '';
+    $linkDynamic = $s['link_dynamic_source'] ?? '';
+    $buttonText  = ($dynamicSrc === 'post_title')
+        ? ($postTitle ?? $s['text'] ?? 'Click Here')
+        : ($s['text'] ?? 'Click Here');
+    $resolvedLinkUrl = ($linkDynamic === 'post_url')
+        ? ($postPermalink ?? $s['linkUrl'] ?? '#')
+        : ($s['linkUrl'] ?? '#');
+
     $v = $s['visibility'] ?? ['mobile' => true, 'tablet' => true, 'desktop' => true];
     $visibilityClasses = '';
     if (!($v['mobile']  ?? true)) $visibilityClasses .= ' lazy-hide-mobile';
@@ -150,14 +160,14 @@
 
 <div class="element-button-wrapper button-container-{{ $elemId }} {{ $s['cssClass'] ?? '' }} {{ $visibilityClasses }}"
      style="{{ collect($wrapperStyles)->map(fn($v, $k) => "$k: $v")->implode('; ') }}">
-    <a href="{{ $s['linkUrl'] ?? '#' }}" 
+    <a href="{{ $resolvedLinkUrl }}"
        id="{{ $appliedId }}"
        target="{{ $s['linkTarget'] ?? '_self' }}"
        style="{{ collect($btnStyles)->map(fn($v, $k) => "$k: $v")->implode('; ') }}">
         @if($icon && $iconPos !== 'right')
             <i class="{{ $icon }} mr-2"></i>
         @endif
-        {{ $s['text'] ?? 'Click Here' }}
+        {{ $buttonText }}
         @if($icon && $iconPos === 'right')
             <i class="{{ $icon }} ml-2"></i>
         @endif

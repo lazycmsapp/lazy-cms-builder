@@ -27,28 +27,42 @@
             <div v-else class="space-y-0.5">
                 <!-- Container Loop -->
                 <div v-for="(cont, ci) in layout" :key="cont.id" class="group/nav">
+                    @if(!($postCardMode ?? false))
                     <!-- Container Row -->
-                    <div class="flex items-center gap-2 px-4 py-2 hover:bg-blue-50/50 cursor-pointer group/line"
-                         :class="editingContext.type === 'container' && editingContext.ci === ci ? 'bg-blue-50' : ''"
+                    <div class="flex items-center gap-2 px-4 py-2 hover:bg-blue-50/50 cursor-pointer group/line transition-all"
+                         :class="[editingContext.type === 'container' && editingContext.ci === ci ? 'bg-blue-50' : '', navDragOver?.type === 'container' && navDragOver?.ci === ci && navDragSrc?.ci !== ci ? 'border-t-2 border-[#0091ea]' : '']"
+                         draggable="true"
+                         @dragstart.stop="navDragStart($event, 'container', ci)"
+                         @dragover.prevent="navDragOverHandler($event, 'container', ci)"
+                         @drop="navDrop($event, 'container', ci)"
+                         @dragend="navDragEnd()"
                          @click="setEditingContext('container', ci)">
                         <i class="fa fa-caret-down text-[10px] text-slate-400"></i>
                         <span class="text-[14px] font-bold text-[#0091ea] flex-1">Container</span>
                         <div class="flex items-center gap-2 opacity-0 group-hover/line:opacity-100 transition-opacity">
+                            <i @click.stop @mousedown.stop class="fa fa-grip-vertical text-[9px] text-slate-300 hover:text-slate-500 cursor-grab" title="Drag to reorder"></i>
                             <i @click.stop="openColumnModal(ci)" class="fa fa-plus text-[9px] text-slate-400 hover:text-[#0091ea]" title="Add Column"></i>
                             <i @click.stop="setEditingContext('container', ci)" class="fa fa-pen text-[9px] text-slate-400 hover:text-[#0091ea]" title="Edit"></i>
                             <i @click.stop="duplicateContainer(ci)" class="fa fa-copy text-[9px] text-slate-400 hover:text-[#0091ea]" title="Duplicate"></i>
                             <i @click.stop="layout.splice(ci, 1)" class="fa fa-trash-alt text-[9px] text-slate-400 hover:text-red-500" title="Delete"></i>
                         </div>
                     </div>
+                    @endif
 
                     <!-- Column Loop -->
-                    <div v-for="(col, coli) in cont.columns" :key="col.id" class="ml-6 border-l border-slate-100">
-                        <div class="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line"
-                             :class="editingContext.type === 'column' && editingContext.ci === ci && editingContext.coli === coli ? 'bg-slate-50 border-l-2 border-[#0091ea] -ml-[1px]' : ''"
+                    <div v-for="(col, coli) in cont.columns" :key="col.id" class="{{ ($postCardMode ?? false) ? '' : 'ml-6 border-l border-slate-100' }}">
+                        <div class="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line transition-all"
+                             :class="[editingContext.type === 'column' && editingContext.ci === ci && editingContext.coli === coli ? 'bg-slate-50 border-l-2 border-[#0091ea] -ml-[1px]' : '', navDragOver?.type === 'column' && navDragOver?.ci === ci && navDragOver?.coli === coli && navDragSrc?.coli !== coli ? 'border-t-2 border-[#0091ea]' : '']"
+                             draggable="true"
+                             @dragstart.stop="navDragStart($event, 'column', ci, coli)"
+                             @dragover.prevent="navDragOverHandler($event, 'column', ci, coli)"
+                             @drop="navDrop($event, 'column', ci, coli)"
+                             @dragend="navDragEnd()"
                              @click="setEditingContext('column', ci, coli)">
                             <i class="fa fa-caret-down text-[10px] text-slate-300"></i>
                             <span class="text-[14px] font-semibold text-slate-700 flex-1">Column @{{ formatBasisToFraction(col.basis) }}</span>
                             <div class="flex items-center gap-2 opacity-0 group-hover/line:opacity-100 transition-opacity">
+                                <i @click.stop @mousedown.stop class="fa fa-grip-vertical text-[9px] text-slate-300 hover:text-slate-500 cursor-grab" title="Drag to reorder"></i>
                                 <i @click.stop="openElementModal(ci, coli)" class="fa fa-plus text-[9px] text-slate-400 hover:text-[#0091ea]" title="Add Element"></i>
                                 <i @click.stop="setEditingContext('column', ci, coli)" class="fa fa-pen text-[9px] text-slate-400 hover:text-[#0091ea]" title="Edit"></i>
                                 <i @click.stop="duplicateColumn(ci, coli)" class="fa fa-copy text-[9px] text-slate-400 hover:text-[#0091ea]" title="Duplicate"></i>
@@ -59,12 +73,19 @@
                         <!-- Elements Loop -->
                         <div v-for="(el, eli) in col.elements" :key="el.id" class="ml-6 border-l border-slate-50">
                             <!-- Standard Element -->
-                            <div v-if="el.type !== 'row'" 
-                                 class="flex items-center gap-3 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line"
+                            <div v-if="el.type !== 'row'"
+                                 class="flex items-center gap-3 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line transition-all"
+                                 :class="navDragOver?.type === 'element' && navDragOver?.ci === ci && navDragOver?.coli === coli && navDragOver?.eli === eli && navDragSrc?.eli !== eli ? 'border-t-2 border-[#0091ea]' : ''"
+                                 draggable="true"
+                                 @dragstart.stop="navDragStart($event, 'element', ci, coli, eli)"
+                                 @dragover.prevent="navDragOverHandler($event, 'element', ci, coli, eli)"
+                                 @drop="navDrop($event, 'element', ci, coli, eli)"
+                                 @dragend="navDragEnd()"
                                  @click="setEditingContext('element', ci, coli, eli)">
                                 <i :class="el.icon" class="text-[11px] text-slate-400 w-4 text-center"></i>
                                 <span class="text-[14px] text-slate-500 flex-1 capitalize">@{{ (el.type === 'text_block' || el.type === 'special_text') ? 'Text Block' : el.type.replace(/_/g, ' ') }}</span>
                                 <div class="flex items-center gap-2 opacity-0 group-hover/line:opacity-100 transition-opacity">
+                                    <i @click.stop @mousedown.stop class="fa fa-grip-vertical text-[9px] text-slate-300 hover:text-slate-500 cursor-grab" title="Drag to reorder"></i>
                                     <i @click.stop="openElementModal(ci, coli, 'design', false, eli + 1)" class="fa fa-plus text-[9px] text-slate-400 hover:text-[#0091ea]" title="Add Below"></i>
                                     <i @click.stop="setEditingContext('element', ci, coli, eli)" class="fa fa-pen text-[9px] text-slate-400 hover:text-[#0091ea]" title="Edit"></i>
                                     <i @click.stop="duplicateElement(ci, coli, eli)" class="fa fa-copy text-[9px] text-slate-400 hover:text-[#0091ea]" title="Duplicate"></i>
@@ -74,11 +95,18 @@
 
                             <!-- Nested Row (Nested Columns) -->
                             <div v-else class="space-y-0.5">
-                                <div class="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line"
+                                <div class="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line transition-all"
+                                     :class="navDragOver?.type === 'element' && navDragOver?.ci === ci && navDragOver?.coli === coli && navDragOver?.eli === eli && navDragSrc?.eli !== eli ? 'border-t-2 border-[#0091ea]' : ''"
+                                     draggable="true"
+                                     @dragstart.stop="navDragStart($event, 'element', ci, coli, eli)"
+                                     @dragover.prevent="navDragOverHandler($event, 'element', ci, coli, eli)"
+                                     @drop="navDrop($event, 'element', ci, coli, eli)"
+                                     @dragend="navDragEnd()"
                                      @click="setEditingContext('nested-row', ci, coli, eli)">
                                     <i class="fa fa-caret-down text-[10px] text-slate-400"></i>
                                     <span class="text-[14px] font-bold text-slate-600 flex-1">Nested Row</span>
                                     <div class="flex items-center gap-2 opacity-0 group-hover/line:opacity-100 transition-opacity">
+                                        <i @click.stop @mousedown.stop class="fa fa-grip-vertical text-[9px] text-slate-300 hover:text-slate-500 cursor-grab" title="Drag to reorder"></i>
                                         <i @click.stop="openElementModal(ci, coli, 'design', false, eli + 1)" class="fa fa-plus text-[9px] text-slate-400 hover:text-[#0091ea]" title="Add Below"></i>
                                         <i @click.stop="openElementModal(ci, coli, 'nested', true, eli)" class="fa fa-plus-square text-[9px] text-slate-400 hover:text-[#0091ea]" title="Add Nested Column"></i>
                                         <i @click.stop="setEditingContext('nested-row', ci, coli, eli)" class="fa fa-pen text-[9px] text-slate-400 hover:text-[#0091ea]" title="Edit"></i>
@@ -88,11 +116,18 @@
                                 </div>
                                 <!-- Nested Column Loop -->
                                 <div v-for="(ncol, ncoli) in el.columns" :key="ncol.id" class="ml-6 border-l border-slate-100">
-                                    <div class="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line"
+                                    <div class="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line transition-all"
+                                         :class="navDragOver?.type === 'nested-column' && navDragOver?.ci === ci && navDragOver?.coli === coli && navDragOver?.eli === eli && navDragOver?.ncoli === ncoli && navDragSrc?.ncoli !== ncoli ? 'border-t-2 border-[#0091ea]' : ''"
+                                         draggable="true"
+                                         @dragstart.stop="navDragStart($event, 'nested-column', ci, coli, eli, ncoli)"
+                                         @dragover.prevent="navDragOverHandler($event, 'nested-column', ci, coli, eli, ncoli)"
+                                         @drop="navDrop($event, 'nested-column', ci, coli, eli, ncoli)"
+                                         @dragend="navDragEnd()"
                                          @click="setEditingContext('nested-column', ci, coli, eli, ncoli)">
                                         <i class="fa fa-caret-down text-[10px] text-slate-300"></i>
                                         <span class="text-[14px] font-bold text-slate-500 flex-1">Nested Column</span>
                                         <div class="flex items-center gap-2 opacity-0 group-hover/line:opacity-100 transition-opacity">
+                                            <i @click.stop @mousedown.stop class="fa fa-grip-vertical text-[9px] text-slate-300 hover:text-slate-500 cursor-grab" title="Drag to reorder"></i>
                                             <i @click.stop="openElementModal(ci, coli, 'design', true, eli, ncoli)" class="fa fa-plus text-[9px] text-slate-400 hover:text-[#0091ea]" title="Add Nested Element"></i>
                                             <i @click.stop="setEditingContext('nested-column', ci, coli, eli, ncoli)" class="fa fa-pen text-[9px] text-slate-400 hover:text-[#0091ea]" title="Edit"></i>
                                             <i @click.stop="duplicateNestedColumn(ci, coli, eli, ncoli)" class="fa fa-copy text-[9px] text-slate-400 hover:text-[#0091ea]" title="Duplicate"></i>
@@ -101,11 +136,18 @@
                                     </div>
                                     <!-- Nested Elements -->
                                     <div v-for="(nel, neli) in ncol.elements" :key="nel.id" class="ml-6 border-l border-slate-50">
-                                        <div class="flex items-center gap-3 px-4 py-1 hover:bg-slate-50 cursor-pointer group/line"
+                                        <div class="flex items-center gap-3 px-4 py-1 hover:bg-slate-50 cursor-pointer group/line transition-all"
+                                             :class="navDragOver?.type === 'nested-element' && navDragOver?.ci === ci && navDragOver?.coli === coli && navDragOver?.eli === eli && navDragOver?.ncoli === ncoli && navDragOver?.neli === neli && navDragSrc?.neli !== neli ? 'border-t-2 border-[#0091ea]' : ''"
+                                             draggable="true"
+                                             @dragstart.stop="navDragStart($event, 'nested-element', ci, coli, eli, ncoli, neli)"
+                                             @dragover.prevent="navDragOverHandler($event, 'nested-element', ci, coli, eli, ncoli, neli)"
+                                             @drop="navDrop($event, 'nested-element', ci, coli, eli, ncoli, neli)"
+                                             @dragend="navDragEnd()"
                                              @click="setEditingContext('element', ci, coli, eli, ncoli, neli)">
                                             <i :class="nel.icon" class="text-[10px] text-slate-400 w-4 text-center"></i>
                                             <span class="text-[14px] text-slate-500 flex-1 capitalize">@{{ (nel.type === 'text_block' || nel.type === 'special_text') ? 'Text Block' : nel.type.replace(/_/g, ' ') }}</span>
                                             <div class="flex items-center gap-2 opacity-0 group-hover/line:opacity-100 transition-opacity">
+                                                <i @click.stop @mousedown.stop class="fa fa-grip-vertical text-[9px] text-slate-300 hover:text-slate-500 cursor-grab" title="Drag to reorder"></i>
                                                 <i @click.stop="openElementModal(ci, coli, 'design', true, eli, ncoli, neli + 1)" class="fa fa-plus text-[9px] text-slate-400 hover:text-[#0091ea]" title="Add Below"></i>
                                                 <i @click.stop="setEditingContext('element', ci, coli, eli, ncoli, neli)" class="fa fa-pen text-[9px] text-slate-400 hover:text-[#0091ea]" title="Edit"></i>
                                                 <i @click.stop="duplicateNestedElement(ci, coli, eli, ncoli, neli)" class="fa fa-copy text-[9px] text-slate-400 hover:text-[#0091ea]" title="Duplicate"></i>
@@ -298,8 +340,24 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Title</label>
+                                        <button @click="editingElement.settings.dynamic_source = (editingElement.settings.dynamic_source === 'post_title' ? '' : 'post_title')"
+                                                class="w-6 h-6 flex items-center justify-center rounded border transition-all"
+                                                :class="editingElement.settings.dynamic_source === 'post_title' ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                            <i class="fa fa-database text-[10px]"></i>
+                                        </button>
                                     </div>
-                                    <textarea v-model="editingElement.settings.title"
+                                    <div v-if="editingElement.settings.dynamic_source === 'post_title'"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa fa-heading text-[#0091ea] text-sm"></i>
+                                            <span class="text-[12px] font-bold text-[#0091ea]">Post Title</span>
+                                        </div>
+                                        <button @click="editingElement.settings.dynamic_source = ''"
+                                                class="w-5 h-5 flex items-center justify-center text-[#0091ea]/50 hover:text-red-500 transition-colors rounded">
+                                            <i class="fa fa-times text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                    <textarea v-else v-model="editingElement.settings.title"
                                               rows="4"
                                               placeholder="Enter your title here..."
                                               class="w-full border border-slate-200 rounded p-3 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea] focus:ring-1 focus:ring-[#0091ea]/10 transition-all resize-none"></textarea>
@@ -324,8 +382,24 @@
                                 <div v-if="editingElement.settings.useLink">
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Link URL</label>
+                                        <button @click="editingElement.settings.link_dynamic_source = (editingElement.settings.link_dynamic_source === 'post_url' ? '' : 'post_url')"
+                                                class="w-6 h-6 flex items-center justify-center rounded border transition-all"
+                                                :class="editingElement.settings.link_dynamic_source === 'post_url' ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                            <i class="fa fa-database text-[10px]"></i>
+                                        </button>
                                     </div>
-                                    <div class="flex">
+                                    <div v-if="editingElement.settings.link_dynamic_source === 'post_url'"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa fa-link text-[#0091ea] text-sm"></i>
+                                            <span class="text-[12px] font-bold text-[#0091ea]">Post URL</span>
+                                        </div>
+                                        <button @click="editingElement.settings.link_dynamic_source = ''"
+                                                class="w-5 h-5 flex items-center justify-center text-[#0091ea]/50 hover:text-red-500 transition-colors rounded">
+                                            <i class="fa fa-times text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                    <div v-else class="flex">
                                         <input type="text" v-model="editingElement.settings.linkUrl"
                                                placeholder="Select Link"
                                                class="flex-1 border border-slate-200 border-r-0 rounded-l px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#0091ea]">
@@ -336,7 +410,7 @@
                                 </div>
 
                                 <!-- Link Target -->
-                                <div v-if="editingElement.settings.useLink && editingElement.settings.linkUrl">
+                                <div v-if="editingElement.settings.useLink && (editingElement.settings.linkUrl || editingElement.settings.link_dynamic_source === 'post_url')">
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Link Target</label>
                                     </div>
@@ -402,8 +476,24 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Button Text</label>
+                                        <button @click="editingElement.settings.dynamic_source = (editingElement.settings.dynamic_source === 'post_title' ? '' : 'post_title')"
+                                                class="w-6 h-6 flex items-center justify-center rounded border transition-all"
+                                                :class="editingElement.settings.dynamic_source === 'post_title' ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                            <i class="fa fa-database text-[10px]"></i>
+                                        </button>
                                     </div>
-                                    <input type="text" v-model="editingElement.settings.text"
+                                    <div v-if="editingElement.settings.dynamic_source === 'post_title'"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa fa-heading text-[#0091ea] text-sm"></i>
+                                            <span class="text-[12px] font-bold text-[#0091ea]">Post Title</span>
+                                        </div>
+                                        <button @click="editingElement.settings.dynamic_source = ''"
+                                                class="w-5 h-5 flex items-center justify-center text-[#0091ea]/50 hover:text-red-500 transition-colors rounded">
+                                            <i class="fa fa-times text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                    <input v-else type="text" v-model="editingElement.settings.text"
                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
                                 </div>
 
@@ -411,8 +501,24 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Link URL</label>
+                                        <button @click="editingElement.settings.link_dynamic_source = (editingElement.settings.link_dynamic_source === 'post_url' ? '' : 'post_url')"
+                                                class="w-6 h-6 flex items-center justify-center rounded border transition-all"
+                                                :class="editingElement.settings.link_dynamic_source === 'post_url' ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                            <i class="fa fa-database text-[10px]"></i>
+                                        </button>
                                     </div>
-                                    <div class="flex">
+                                    <div v-if="editingElement.settings.link_dynamic_source === 'post_url'"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa fa-link text-[#0091ea] text-sm"></i>
+                                            <span class="text-[12px] font-bold text-[#0091ea]">Post URL</span>
+                                        </div>
+                                        <button @click="editingElement.settings.link_dynamic_source = ''"
+                                                class="w-5 h-5 flex items-center justify-center text-[#0091ea]/50 hover:text-red-500 transition-colors rounded">
+                                            <i class="fa fa-times text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                    <div v-else class="flex">
                                         <input type="text" v-model="editingElement.settings.linkUrl"
                                                placeholder="https://"
                                                class="flex-1 border border-slate-200 border-r-0 rounded-l px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#0091ea]">
@@ -423,7 +529,7 @@
                                 </div>
 
                                 <!-- Link Target -->
-                                <div v-if="editingElement.settings.linkUrl">
+                                <div v-if="editingElement.settings.linkUrl || editingElement.settings.link_dynamic_source === 'post_url'">
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Link Target</label>
                                     </div>
@@ -529,29 +635,49 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Image</label>
+                                        <button @click="editingElement.settings.dynamic_source = (editingElement.settings.dynamic_source === 'feature_image' ? '' : 'feature_image')"
+                                                class="w-6 h-6 flex items-center justify-center rounded border transition-all"
+                                                :class="editingElement.settings.dynamic_source === 'feature_image' ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                            <i class="fa fa-database text-[10px]"></i>
+                                        </button>
                                     </div>
-                                    <div v-if="!editingElement.settings.url"
-                                         @click="openMediaModal('url')"
-                                         class="w-full aspect-[16/10] border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#0091ea] hover:bg-blue-50/30 transition-all group">
-                                        <div class="w-10 h-10 bg-[#0091ea] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
-                                            <i class="fa fa-plus"></i>
+                                    <!-- Feature Image active state -->
+                                    <div v-if="editingElement.settings.dynamic_source === 'feature_image'"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa fa-image text-[#0091ea] text-sm"></i>
+                                            <span class="text-[12px] font-bold text-[#0091ea]">Feature Image</span>
                                         </div>
+                                        <button @click="editingElement.settings.dynamic_source = ''"
+                                                class="w-5 h-5 flex items-center justify-center text-[#0091ea]/50 hover:text-red-500 transition-colors rounded">
+                                            <i class="fa fa-times text-[10px]"></i>
+                                        </button>
                                     </div>
-                                    <div v-else class="space-y-3">
-                                        <div class="relative group aspect-[16/10] bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
-                                            <img :src="editingElement.settings.url" class="w-full h-full object-cover">
-                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                <button @click="openMediaModal('url')" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0091ea] hover:bg-[#0091ea] hover:text-white transition-all shadow-sm">
-                                                    <i class="fa fa-edit text-xs"></i>
-                                                </button>
-                                                <button @click="editingElement.settings.url = ''" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
-                                                    <i class="fa fa-trash text-xs"></i>
-                                                </button>
+                                    <!-- Normal image picker -->
+                                    <div v-else>
+                                        <div v-if="!editingElement.settings.url"
+                                             @click="openMediaModal('url')"
+                                             class="w-full aspect-[16/10] border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#0091ea] hover:bg-blue-50/30 transition-all group">
+                                            <div class="w-10 h-10 bg-[#0091ea] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                                                <i class="fa fa-plus"></i>
                                             </div>
                                         </div>
-                                        <div class="flex gap-2">
-                                            <button @click="editingElement.settings.url = ''" class="flex-1 h-9 flex items-center justify-center border border-slate-200 rounded text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-colors">Remove</button>
-                                            <button @click="openMediaModal('url')" class="flex-1 h-9 flex items-center justify-center bg-[#0091ea] text-white rounded text-[11px] font-bold hover:bg-[#007cc0] transition-colors">Change</button>
+                                        <div v-else class="space-y-3">
+                                            <div class="relative group aspect-[16/10] bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
+                                                <img :src="editingElement.settings.url" class="w-full h-full object-cover">
+                                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                    <button @click="openMediaModal('url')" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0091ea] hover:bg-[#0091ea] hover:text-white transition-all shadow-sm">
+                                                        <i class="fa fa-edit text-xs"></i>
+                                                    </button>
+                                                    <button @click="editingElement.settings.url = ''" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                                                        <i class="fa fa-trash text-xs"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button @click="editingElement.settings.url = ''" class="flex-1 h-9 flex items-center justify-center border border-slate-200 rounded text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-colors">Remove</button>
+                                                <button @click="openMediaModal('url')" class="flex-1 h-9 flex items-center justify-center bg-[#0091ea] text-white rounded text-[11px] font-bold hover:bg-[#007cc0] transition-colors">Change</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -570,8 +696,24 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Link URL</label>
+                                        <button @click="editingElement.settings.link_dynamic_source = (editingElement.settings.link_dynamic_source === 'post_url' ? '' : 'post_url')"
+                                                class="w-6 h-6 flex items-center justify-center rounded border transition-all"
+                                                :class="editingElement.settings.link_dynamic_source === 'post_url' ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                            <i class="fa fa-database text-[10px]"></i>
+                                        </button>
                                     </div>
-                                    <div class="flex">
+                                    <div v-if="editingElement.settings.link_dynamic_source === 'post_url'"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa fa-link text-[#0091ea] text-sm"></i>
+                                            <span class="text-[12px] font-bold text-[#0091ea]">Post URL</span>
+                                        </div>
+                                        <button @click="editingElement.settings.link_dynamic_source = ''"
+                                                class="w-5 h-5 flex items-center justify-center text-[#0091ea]/50 hover:text-red-500 transition-colors rounded">
+                                            <i class="fa fa-times text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                    <div v-else class="flex">
                                         <input type="text" v-model="editingElement.settings.linkUrl"
                                                placeholder="https://"
                                                class="flex-1 border border-slate-200 border-r-0 rounded-l px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#0091ea]">
@@ -582,7 +724,7 @@
                                 </div>
 
                                 <!-- Link Target -->
-                                <div v-if="editingElement.settings.linkUrl">
+                                <div v-if="editingElement.settings.linkUrl || editingElement.settings.link_dynamic_source === 'post_url'">
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Link Target</label>
                                     </div>
@@ -680,6 +822,250 @@
                                                class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- ══ CARD CONTENT ══ -->
+                            <div v-else-if="editingElement?.type === 'card'" class="space-y-6">
+
+                                <!-- 1. Card -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Card</label>
+                                    <select v-model="editingElement.settings.post_card_id"
+                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                        <option value="">— No card (raw posts) —</option>
+                                        <option v-for="card in postCardsList" :key="card.id" :value="card.id">@{{ card.name }}</option>
+                                    </select>
+                                    <p v-if="!postCardsList.length" class="mt-1.5 text-[11px] text-amber-500">
+                                        No post cards saved yet. <a href="{{ route('admin.lazy-builder.library') }}?tab=post_cards" target="_blank" class="underline">Create one →</a>
+                                    </p>
+                                </div>
+
+                                <!-- 2. Content Source -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Content Source</label>
+                                    <select v-model="editingElement.settings.content_source"
+                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                        <option value="latest">Latest Posts</option>
+                                        <option value="category">By Category</option>
+                                        <option value="tag">By Tag</option>
+                                        <option value="author">By Author</option>
+                                        <option value="related">Related Posts</option>
+                                    </select>
+                                </div>
+
+                                <!-- 3. Post Type -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Post Type</label>
+                                    <select v-model="editingElement.settings.post_type"
+                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                        <option value="post">Post</option>
+                                        <option value="page">Page</option>
+                                        <option value="product">Product</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                    <input v-if="editingElement.settings.post_type === 'custom'"
+                                           type="text" v-model="editingElement.settings.post_type_custom"
+                                           placeholder="Enter custom post type slug"
+                                           class="w-full mt-2 border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                </div>
+
+                                <!-- 4. Posts By -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Posts By</label>
+                                    <select v-model="editingElement.settings.posts_by"
+                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                        <option value="all">All</option>
+                                        <option value="category">Category</option>
+                                        <option value="tag">Tag</option>
+                                        <option value="author">Author</option>
+                                    </select>
+                                    <input v-if="editingElement.settings.posts_by !== 'all'"
+                                           type="text" v-model="editingElement.settings.posts_by_value"
+                                           :placeholder="editingElement.settings.posts_by === 'category' ? 'Category slug' : editingElement.settings.posts_by === 'tag' ? 'Tag slug' : 'Author ID'"
+                                           class="w-full mt-2 border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                </div>
+
+                                <!-- 5. Post Status -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Post Status</label>
+                                    <div class="space-y-1.5">
+                                        <label v-for="status in [{v:'publish',l:'Published'},{v:'draft',l:'Draft'},{v:'pending',l:'Pending'},{v:'private',l:'Private'}]"
+                                               :key="status.v"
+                                               class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox"
+                                                   :value="status.v"
+                                                   v-model="editingElement.settings.post_status"
+                                                   class="accent-[#0091ea]">
+                                            <span class="text-[13px] text-slate-600">@{{ status.l }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- 6. Out Of Stock Products (product only) -->
+                                <div v-if="editingElement.settings.post_type === 'product'">
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Out Of Stock Products</label>
+                                    <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
+                                        <button @click="editingElement.settings.hide_out_of_stock = false"
+                                                :class="!editingElement.settings.hide_out_of_stock ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                class="px-5 py-1.5 text-[11px] font-black uppercase rounded transition-all">Show</button>
+                                        <button @click="editingElement.settings.hide_out_of_stock = true"
+                                                :class="editingElement.settings.hide_out_of_stock ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                class="px-5 py-1.5 text-[11px] font-black uppercase rounded transition-all">Hide</button>
+                                    </div>
+                                </div>
+
+                                <!-- 7. Number of Posts -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Number of Posts</label>
+                                    <input type="number" v-model.number="editingElement.settings.posts_count"
+                                           min="1" max="48"
+                                           class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                </div>
+
+                                <!-- 8. Posts Offset -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Posts Offset</label>
+                                    <input type="number" v-model.number="editingElement.settings.posts_offset"
+                                           min="0" max="100"
+                                           class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                </div>
+
+                                <!-- 9 & 10. Order By + Order -->
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="text-[12px] font-bold text-[#333] block mb-2">Order By</label>
+                                        <select v-model="editingElement.settings.order_by"
+                                                class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                            <option value="created_at">Date</option>
+                                            <option value="title">Title</option>
+                                            <option value="views">Views</option>
+                                            <option value="updated_at">Modified</option>
+                                            <option value="rand">Random</option>
+                                            <option value="menu_order">Menu Order</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-[12px] font-bold text-[#333] block mb-2">Order</label>
+                                        <select v-model="editingElement.settings.order"
+                                                class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                            <option value="desc">Desc</option>
+                                            <option value="asc">Asc</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 11. Pagination Type -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Pagination Type</label>
+                                    <select v-model="editingElement.settings.pagination_type"
+                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                        <option value="none">None</option>
+                                        <option value="numbered">Numbered</option>
+                                        <option value="load_more">Load More</option>
+                                        <option value="infinite">Infinite Scroll</option>
+                                    </select>
+                                </div>
+
+                                <!-- 12. Nothing Found Message -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Nothing Found Message</label>
+                                    <input type="text" v-model="editingElement.settings.nothing_found_message"
+                                           placeholder="No posts found."
+                                           class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                </div>
+
+                            </div>
+
+                            <!-- ══ POST CONTENT ELEMENT ══ -->
+                            <div v-else-if="editingElement?.type === 'post_content'" class="space-y-8">
+
+                                <!-- Content Display -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Content Display</label>
+                                    </div>
+                                    <div class="flex bg-slate-50 border border-slate-100 rounded p-1">
+                                        <button @click="editingElement.settings.content_display = 'excerpt'"
+                                                :class="(editingElement.settings.content_display === 'excerpt' || !editingElement.settings.content_display) ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">Excerpt</button>
+                                        <button @click="editingElement.settings.content_display = 'full'"
+                                                :class="editingElement.settings.content_display === 'full' ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">Full Content</button>
+                                    </div>
+                                </div>
+
+                                <!-- Excerpt-only options -->
+                                <template v-if="editingElement.settings.content_display === 'excerpt' || !editingElement.settings.content_display">
+                                    <!-- Excerpt Length -->
+                                    <div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <label class="text-[12px] font-bold text-[#333]">Excerpt Length</label>
+                                        </div>
+                                        <div class="flex gap-3 items-center">
+                                            <input type="number" v-model.number="editingElement.settings.excerptLength" min="10" max="1000"
+                                                   class="w-20 border border-slate-200 rounded px-3 py-2 text-[13px] text-center focus:outline-none focus:border-[#0091ea]">
+                                            <input type="range" v-model.number="editingElement.settings.excerptLength" min="10" max="500" class="flex-1 accent-[#0091ea]">
+                                        </div>
+                                    </div>
+
+                                    <!-- Strip HTML -->
+                                    <div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <label class="text-[12px] font-bold text-[#333]">Strip HTML From Post Content</label>
+                                        </div>
+                                        <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
+                                            <button @click="editingElement.settings.stripHtml = true"
+                                                    :class="editingElement.settings.stripHtml !== false ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                    class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">Yes</button>
+                                            <button @click="editingElement.settings.stripHtml = false"
+                                                    :class="editingElement.settings.stripHtml === false ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                    class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">No</button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Element Visibility -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
+                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-mobile-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
+                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-tablet-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
+                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-desktop text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- CSS Class & ID -->
+                                <div class="grid grid-cols-1 gap-6 pt-4 border-t border-slate-50">
+                                    <div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <label class="text-[12px] font-bold text-[#333]">CSS Class</label>
+                                        </div>
+                                        <input type="text" v-model="editingElement.settings.cssClass"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <label class="text-[12px] font-bold text-[#333]">CSS ID</label>
+                                        </div>
+                                        <input type="text" v-model="editingElement.settings.cssId"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                </div>
+
                             </div>
 
                             <!-- ══ CUSTOM REGISTERED ELEMENTS ══ -->
@@ -898,6 +1284,14 @@
                              <!-- Design Settings for Menu -->
                              <div v-else-if="editingElement?.type === 'menu'" class="space-y-6">
                                  @include('cms-dashboard::admin.lazy-builder.partials.components.elements.menu-design')
+                             </div>
+                             <!-- Design Settings for Card -->
+                             <div v-else-if="editingElement?.type === 'card'" class="space-y-6">
+                                 @include('cms-dashboard::admin.lazy-builder.partials.components.elements.card-design')
+                             </div>
+                             <!-- Design Settings for Post Content -->
+                             <div v-else-if="editingElement?.type === 'post_content'" class="space-y-6">
+                                 @include('cms-dashboard::admin.lazy-builder.partials.components.elements.post-content-design')
                              </div>
                              <!-- Custom Elements: empty design tab -->
                              @foreach($customElements ?? [] as $type => $custEl)

@@ -1,4 +1,5 @@
 <div v-if="el.type === 'row'" class="nested-row-outer-wrapper w-full basis-full shrink-0 relative py-4 px-4 bg-slate-50/20 border border-slate-100 rounded-lg mb-2 mt-2 group/nrow shadow-sm"
+     @contextmenu.prevent.stop="openCtxMenu($event, 'nested-row', ci, coli, eli)"
      @mouseenter="setHover('nested-row', ci, coli, eli)"
      @mouseleave="setHover(null)">
     <!-- Header/Label for the nested row container -->
@@ -7,7 +8,7 @@
     <!-- Row Toolbar (Horizontal Top-Right, Premium Red) -->
     <div v-if="!isPreview" class="absolute top-0 right-0 transition-all z-[1050] hover:z-[1200] p-1"
          :class="(hoveredType === 'nested-row' && hoveredCi === ci && hoveredEli === eli) ? 'opacity-100' : 'opacity-0'">
-        <div class="bg-[#f44336] flex items-center rounded shadow-xl h-7 px-1 pointer-events-auto group/nrbar overflow-hidden max-w-[60px] hover:max-w-[250px] transition-all duration-300 ease-in-out">
+        <div class="bg-[#f44336] flex items-center rounded shadow-xl h-7 px-1 pointer-events-auto group/nrbar overflow-hidden hover:overflow-visible max-w-[60px] hover:max-w-[250px] transition-all duration-300 ease-in-out">
 
             <!-- Always Visible: Edit & Add -->
             <div class="flex items-center flex-shrink-0">
@@ -21,7 +22,7 @@
                 <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
                      @click.stop="openElementModal(ci, coli, 'nested', false, eli)">
                     <i class="fa fa-plus text-white text-[10px]"></i>
-                    <div class="lazy-tooltip-v2">Add Nested</div>
+                    <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Add Nested</div>
                 </div>
             </div>
 
@@ -31,19 +32,19 @@
                 <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-move relative group/etool"
                      draggable="true" @dragstart="onDragStart($event, 'element', ci, coli, eli)" @dragend="onDragEnd">
                     <i class="fa fa-arrows-alt text-white text-[10px]"></i>
-                    <div class="lazy-tooltip-v2">Drag Row</div>
+                    <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Drag Row</div>
                 </div>
                 <!-- Duplicate Row -->
                 <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
                      @click.stop="duplicateNestedRow(ci, coli, eli)">
                     <i class="fa fa-copy text-white text-[10px]"></i>
-                    <div class="lazy-tooltip-v2">Duplicate</div>
+                    <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Duplicate</div>
                 </div>
                 <!-- Delete Row -->
                 <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool text-white hover:text-red-100"
                      @click.stop="column.elements.splice(eli, 1)">
                     <i class="fa fa-trash-alt text-[10px]"></i>
-                    <div class="lazy-tooltip-v2">Delete Row</div>
+                    <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Delete Row</div>
                 </div>
             </div>
         </div>
@@ -67,6 +68,7 @@
                  ]"
                  :style="columnInnerStyle(ncol, el)"
                  @click.stop="setEditingContext('nested-column', ci, coli, eli, ncoli)"
+                 @contextmenu.prevent.stop="openCtxMenu($event, 'nested-column', ci, coli, eli, ncoli)"
                  @mouseenter="setHover('nested-column', ci, coli, eli, ncoli)"
                  @mouseleave="setHover(null)"
                  @dragover="onDragOver($event, 'nested-column', ci, coli, eli, ncoli)"
@@ -75,7 +77,7 @@
                 <!-- Nested Column Toolbar (Horizontal Top-Left, Premium Orange) -->
                 <div class="absolute top-0 left-0 transition-opacity z-[1000] hover:z-[1100] p-1" v-if="!isPreview"
                      :class="(hoveredType === 'nested-column' && hoveredCi === ci && hoveredColi === coli && hoveredEli === eli && hoveredNcoli === ncoli) ? 'opacity-100' : 'opacity-0'">
-                    <div class="bg-[#ff9800] flex items-center rounded shadow-xl h-7 px-1 pointer-events-auto group/ncbar overflow-hidden max-w-[60px] hover:max-w-[280px] transition-all duration-300 ease-in-out">
+                    <div class="bg-[#ff9800] flex items-center rounded shadow-xl h-7 px-1 pointer-events-auto group/ncbar overflow-hidden hover:overflow-visible max-w-[60px] hover:max-w-[280px] transition-all duration-300 ease-in-out">
 
                         <!-- Always Visible: Edit & Add -->
                         <div class="flex items-center flex-shrink-0">
@@ -83,13 +85,13 @@
                             <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
                                  @click.stop="setEditingContext('nested-column', ci, coli, eli, ncoli)">
                                 <i class="fa fa-pen text-white text-[10px]"></i>
-                                <div class="lazy-tooltip-v2">Column Settings</div>
+                                <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Column Settings</div>
                             </div>
                             <!-- Add Nested / Element -->
                             <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
                                  @click.stop="openElementModal(ci, coli, 'nested', false, eli, ncoli, null, ['design', 'nested'])">
                                 <i class="fa fa-plus text-white text-[10px]"></i>
-                                <div class="lazy-tooltip-v2">Add Content</div>
+                                <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Add Content</div>
                             </div>
                         </div>
 
@@ -99,25 +101,25 @@
                             <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-move relative group/etool"
                                  draggable="true" @dragstart="onDragStart($event, 'nested-column', ci, coli, eli, ncoli)" @dragend="onDragEnd">
                                 <i class="fa fa-arrows-alt text-white text-[10px]"></i>
-                                <div class="lazy-tooltip-v2">Drag Column</div>
+                                <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Drag Column</div>
                             </div>
                             <!-- Duplicate -->
                             <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
                                  @click.stop="duplicateNestedColumn(ci, coli, eli, ncoli)">
                                 <i class="fa fa-copy text-white text-[10px]"></i>
-                                <div class="lazy-tooltip-v2">Duplicate</div>
+                                <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Duplicate</div>
                             </div>
                             <!-- Save -->
                             <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
-                                 @click.stop="saveLayout">
+                                 @click.stop="openLibraryModal('nested_columns', ci, coli, eli, ncoli)">
                                 <i class="fa fa-hdd text-white text-[10px]"></i>
-                                <div class="lazy-tooltip-v2">Save</div>
+                                <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Library</div>
                             </div>
                             <!-- Delete -->
                             <div class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool text-white hover:text-red-200"
                                  @click.stop="el.columns.splice(ncoli, 1)">
                                 <i class="fa fa-trash-alt text-[10px]"></i>
-                                <div class="lazy-tooltip-v2">Delete</div>
+                                <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Delete</div>
                             </div>
                         </div>
                     </div>
@@ -226,9 +228,10 @@
                     </button>
                 </div>
                 
-                 <div v-for="(nestedEl, nestedEli) in ncol.elements" :key="nestedEl.id" 
+                 <div v-for="(nestedEl, nestedEli) in ncol.elements" :key="nestedEl.id"
                       class="relative group/nel"
                       @click.stop="setEditingContext('element', ci, coli, eli, ncoli, nestedEli)"
+                      @contextmenu.prevent.stop="openCtxMenu($event, 'nested-element', ci, coli, eli, ncoli, nestedEli)"
                      :class="[
                         (ncol.settings.contentLayout === 'row' && nestedEl.type !== 'row') ? '' : 'w-full',
                         dragTarget === 'element-' + ci + '-' + coli + '-' + eli + '-' + ncoli + '-' + nestedEli && dragPosition === 'top' ? 'border-t-2 border-t-blue-500' : '',
@@ -368,7 +371,7 @@
 
                         <!-- Nested Element Toolbar (Top-Center, Compact & Expandable) -->
                         <div class="absolute top-0 left-1/2 -translate-x-1/2 flex justify-center opacity-0 group-hover/nel:opacity-100 transition-all duration-200 z-[1010] hover:z-[1100] pointer-events-none p-1" v-if="!isPreview">
-                            <div class="flex items-center bg-[#9c27b0] text-white rounded shadow-xl h-7 px-1 pointer-events-auto group/netbar overflow-hidden max-w-[60px] hover:max-w-[250px] transition-all duration-300 ease-in-out">
+                            <div class="flex items-center bg-[#9c27b0] text-white rounded shadow-xl h-7 px-1 pointer-events-auto group/netbar overflow-hidden hover:overflow-visible max-w-[60px] hover:max-w-[250px] transition-all duration-300 ease-in-out">
                                 
                                 <!-- Always Visible Part: Edit & Add -->
                                 <div class="flex items-center">
@@ -391,12 +394,17 @@
                                         <i class="fa fa-arrows-alt text-[10px]"></i>
                                         <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Move</div>
                                     </div>
-                                    <div class="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool" 
+                                    <div class="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
                                          @click.stop="duplicateNestedElement(ci, coli, eli, ncoli, nestedEli)">
                                         <i class="fa fa-copy text-[10px]"></i>
                                         <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Duplicate</div>
                                     </div>
-                                    <div class="w-7 h-7 flex items-center justify-center hover:bg-red-500 rounded cursor-pointer relative group/etool text-red-100 hover:text-white" 
+                                    <div class="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool"
+                                         @click.stop="openLibraryModal('elements', ci, coli, eli, ncoli, nestedEli)">
+                                        <i class="fa fa-hdd text-[10px]"></i>
+                                        <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Library</div>
+                                    </div>
+                                    <div class="w-7 h-7 flex items-center justify-center hover:bg-red-500 rounded cursor-pointer relative group/etool text-red-100 hover:text-white"
                                          @click.stop="ncol.elements.splice(nestedEli, 1)">
                                         <i class="fa fa-trash-alt text-[10px]"></i>
                                         <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Delete</div>

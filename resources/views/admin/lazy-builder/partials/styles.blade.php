@@ -725,6 +725,8 @@
         opacity: 0;
         transform: translateY(-20px);
     }
+    .modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.2s ease; }
+    .modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
 
     /* Auto Responsive Columns for Mobile Devices */
     @media (max-width: {{ get_cms_option('theme_small_screen_breakpoint', '800') }}px) {

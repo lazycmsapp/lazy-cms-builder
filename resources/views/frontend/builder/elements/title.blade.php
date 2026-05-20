@@ -1,6 +1,15 @@
 @php
     $s = $el['settings'] ?? [];
 
+    $dynamicSrc  = $s['dynamic_source']      ?? '';
+    $linkDynamic = $s['link_dynamic_source'] ?? '';
+    $titleText   = ($dynamicSrc === 'post_title')
+        ? ($postTitle ?? $s['title'] ?? 'Your Awesome Title')
+        : ($s['title'] ?? 'Your Awesome Title');
+    $resolvedLinkUrl = ($linkDynamic === 'post_url')
+        ? ($postPermalink ?? $s['linkUrl'] ?? '')
+        : ($s['linkUrl'] ?? '');
+
     $v = $s['visibility'] ?? ['mobile' => true, 'tablet' => true, 'desktop' => true];
     $visibilityClasses = '';
     if (!($v['mobile']  ?? true)) $visibilityClasses .= ' lazy-hide-mobile';
@@ -76,7 +85,7 @@
         'transition: color 0.3s ease',
     ];
 
-    $useLink = !empty($s['useLink']) && !empty($s['linkUrl']);
+    $useLink = !empty($s['useLink']) && ($resolvedLinkUrl !== '' || $linkDynamic === 'post_url');
 
     if ($useLink) {
         $titleStyles[] = 'color: inherit';
@@ -141,7 +150,7 @@
     $htmlTag = $s['htmlTag'] ?? 'h2';
 
     // Auto-prefix link URL
-    $linkUrl = $s['linkUrl'] ?? '';
+    $linkUrl = $resolvedLinkUrl;
     if ($linkUrl && !preg_match('/^(https?:\/\/|\/\/|\/|#|tel:|mailto:)/i', $linkUrl)) {
         $linkUrl = 'https://' . $linkUrl;
     }
@@ -184,7 +193,7 @@
     @endif
 
     <{{ $htmlTag }} class="main-title"@if($titleElemId) id="{{ $titleElemId }}"@endif style="{{ implode('; ', $titleStyles) }}">
-        {{ $s['title'] ?? 'Your Awesome Title' }}
+        {{ $titleText }}
     </{{ $htmlTag }}>
 
     @if($useLink)
