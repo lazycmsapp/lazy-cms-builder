@@ -39,7 +39,10 @@
             $mVal = $getRespVal($mProp, $rDev);
             if ($mVal !== null) {
                 $cssProp = strtolower(preg_replace('/([A-Z])/', '-$1', $mProp));
-                $rWrapperRules[] = "{$cssProp}:{$mVal}px!important";
+                $unit = $rDev === 'mobile'
+                    ? ($s[$mProp . 'Unit_mobile'] ?? $s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px')
+                    : ($s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px');
+                $rWrapperRules[] = "{$cssProp}:{$mVal}{$unit}!important";
             }
         }
         if (!empty($rWrapperRules)) {
@@ -55,10 +58,10 @@
         'text-align: ' . ($s['textAlign'] ?? 'center'),
         'padding-top: ' . ($s['paddingTop'] ?? 20) . 'px',
         'padding-bottom: ' . ($s['paddingBottom'] ?? 20) . 'px',
-        'margin-top: ' . ($s['marginTop'] ?? 0) . 'px',
-        'margin-right: ' . ($s['marginRight'] ?? 0) . 'px',
-        'margin-bottom: ' . ($s['marginBottom'] ?? 0) . 'px',
-        'margin-left: ' . ($s['marginLeft'] ?? 0) . 'px',
+        'margin-top: ' . ($s['marginTop'] ?? 0) . ($s['marginTopUnit'] ?? 'px'),
+        'margin-right: ' . ($s['marginRight'] ?? 0) . ($s['marginRightUnit'] ?? 'px'),
+        'margin-bottom: ' . ($s['marginBottom'] ?? 0) . ($s['marginBottomUnit'] ?? 'px'),
+        'margin-left: ' . ($s['marginLeft'] ?? 0) . ($s['marginLeftUnit'] ?? 'px'),
     ];
 
     $titleStyles = [

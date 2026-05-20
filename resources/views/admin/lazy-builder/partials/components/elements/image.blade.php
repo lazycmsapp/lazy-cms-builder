@@ -3,14 +3,14 @@
      :class="[el.settings.cssClass || '', 'image-container-' + el.id, el.settings.hoverType ? 'hover-' + el.settings.hoverType : '']"
      :id="el.settings.cssId || undefined"
      :style="[
-         { 
+         {
             display: 'flex',
             width: '100%',
-            justifyContent: el.settings.textAlign === 'left' ? 'flex-start' : (el.settings.textAlign === 'right' ? 'flex-end' : 'center'),
-            marginTop: getUnitVal(el.settings.marginTop ?? 0, 'px'),
-            marginRight: getUnitVal(el.settings.marginRight ?? 0, 'px'),
-            marginBottom: getUnitVal(el.settings.marginBottom ?? 0, 'px'),
-            marginLeft: getUnitVal(el.settings.marginLeft ?? 0, 'px')
+            justifyContent: (getResponsiveVal(el.settings, 'textAlign', device) || 'center') === 'left' ? 'flex-start' : ((getResponsiveVal(el.settings, 'textAlign', device) || 'center') === 'right' ? 'flex-end' : 'center'),
+            marginTop: getUnitVal(getResponsiveVal(el.settings, 'marginTop', device) ?? 0, getResponsiveVal(el.settings, 'marginTopUnit', device) || 'px'),
+            marginRight: getUnitVal(getResponsiveVal(el.settings, 'marginRight', device) ?? 0, getResponsiveVal(el.settings, 'marginRightUnit', device) || 'px'),
+            marginBottom: getUnitVal(getResponsiveVal(el.settings, 'marginBottom', device) ?? 0, getResponsiveVal(el.settings, 'marginBottomUnit', device) || 'px'),
+            marginLeft: getUnitVal(getResponsiveVal(el.settings, 'marginLeft', device) ?? 0, getResponsiveVal(el.settings, 'marginLeftUnit', device) || 'px')
          },
          getCanvasVisibilityStyle(el.settings)
      ]">

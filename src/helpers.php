@@ -79,6 +79,158 @@ if (!function_exists('get_lazy_content')) {
     }
 }
 
+if (!function_exists('_lazy_hex_to_rgba')) {
+    function _lazy_hex_to_rgba(string $hex, float $opacity = 1): string
+    {
+        if (empty($hex) || $hex === 'transparent') return 'transparent';
+        if (strpos($hex, 'rgba') !== false) return $hex;
+        $hex = ltrim($hex, '#');
+        if (strlen($hex) === 3) $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        [$r, $g, $b] = [hexdec(substr($hex,0,2)), hexdec(substr($hex,2,2)), hexdec(substr($hex,4,2))];
+        return $opacity >= 1 ? "rgb({$r},{$g},{$b})" : "rgba({$r},{$g},{$b},{$opacity})";
+    }
+}
+
+if (!function_exists('_lazy_parse_builder_layout')) {
+    function _lazy_parse_builder_layout(string $raw): ?array
+    {
+        try {
+            if (\Acme\CmsDashboard\Services\BuilderShortcodeConverter::isBuilderShortcode($raw)) {
+                $raw = \Acme\CmsDashboard\Services\BuilderShortcodeConverter::shortcodesToJson($raw);
+            }
+            $layout = json_decode($raw, true);
+            return is_array($layout) ? $layout : null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+}
+
+if (!function_exists('_lazy_render_layout')) {
+    function _lazy_render_layout(array $layout): string
+    {
+        $rendered = view('cms-dashboard::frontend.builder.render', ['layout' => $layout])->render();
+        return do_lazy_shortcode($rendered);
+    }
+}
+
+if (!function_exists('_lazy_build_sticky_wrapper')) {
+    /**
+     * Build a sticky wrapper element around $content.
+     * $settings is the settings array of the first sticky container/column.
+     * $wrapperClass is the CSS class on the wrapper (e.g. lazy-builder-header).
+     * $tag is the HTML tag (header|footer|div).
+     */
+    function _lazy_build_sticky_wrapper(string $content, array $settings, string $wrapperClass, string $tag): string
+    {
+        $offset    = (int)($settings['stickyOffset']  ?? 0);
+        $zIndex    = (int)($settings['stickyZIndex']  ?? 100);
+        $desktop   = ($settings['stickyDesktop'] ?? true) !== false;
+        $tablet    = ($settings['stickyTablet']  ?? true) !== false;
+        $mobile    = ($settings['stickyMobile']  ?? true) !== false;
+        $bgColor   = $settings['stickyBgColor']        ?? '';
+        $bgOpacity = (float)($settings['stickyBgColorOpacity'] ?? 1);
+
+        $bpSm  = (int) get_cms_option('theme_small_screen_breakpoint',  '800');
+        $bpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
+        $bpSm1 = $bpSm + 1;
+
+        $sOn  = "position:sticky;top:{$offset}px;z-index:{$zIndex};";
+        $sOff = "position:static;top:auto;z-index:auto;";
+
+        $baseStyle    = ($tag === 'header') ? 'width:100%;' : '';
+        $wrapperStyle = $baseStyle . ($desktop ? $sOn : '');
+
+        $mediaCss = '';
+        if ($tablet !== $desktop) {
+            $rule = $tablet ? $sOn : $sOff;
+            $mediaCss .= "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px){.{$wrapperClass}{{$rule}}}";
+        }
+        if ($mobile !== $tablet) {
+            $rule = $mobile ? $sOn : $sOff;
+            $mediaCss .= "@media(max-width:{$bpSm}px){.{$wrapperClass}{{$rule}}}";
+        }
+
+        // Suppress per-container/column sticky — the wrapper handles positioning
+        $css = ".{$wrapperClass} .lazy-container,.{$wrapperClass} .lazy-column{position:static!important;top:auto!important;}";
+        $css .= $mediaCss;
+
+        if (!empty($bgColor)) {
+            $rgba = _lazy_hex_to_rgba($bgColor, $bgOpacity);
+            $css .= ".{$wrapperClass}{transition:background-color 0.3s ease;}";
+            $css .= ".lazy-sticky-active.{$wrapperClass}{background-color:{$rgba}!important;}";
+        }
+
+        // lazy-sticky-col → IntersectionObserver detects stuck state
+        return "<{$tag} class=\"{$wrapperClass} lazy-sticky-col\" style=\"{$wrapperStyle}\">"
+             . "<style>{$css}</style>"
+             . $content
+             . "</{$tag}>";
+    }
+}
+
+if (!function_exists('_lazy_builder_render_wrapper')) {
+    /**
+     * Render header/footer builder content with correct sticky handling.
+     *
+     * Only the containers from the FIRST sticky container onwards are placed
+     * inside the sticky wrapper. Containers before it render in a plain div so
+     * they scroll away normally (e.g. a top-bar above a sticky nav).
+     */
+    function _lazy_builder_render_wrapper(string $raw, string $tag, string $wrapperClass): string
+    {
+        $layout = _lazy_parse_builder_layout($raw);
+
+        if (!is_array($layout) || empty($layout)) {
+            $content = get_lazy_content($raw);
+            $style   = $tag === 'header' ? ' style="width:100%;"' : '';
+            return "<{$tag} class=\"{$wrapperClass}\"{$style}>{$content}</{$tag}>";
+        }
+
+        // Find the index of the first sticky container (check container + column settings)
+        $stickyIndex    = null;
+        $stickySettings = null;
+        foreach ($layout as $i => $container) {
+            $cs = $container['settings'] ?? [];
+            if (!empty($cs['sticky'])) {
+                $stickyIndex    = $i;
+                $stickySettings = $cs;
+                break;
+            }
+            foreach ($container['columns'] ?? [] as $col) {
+                $cls = $col['settings'] ?? [];
+                if (!empty($cls['sticky'])) {
+                    $stickyIndex    = $i;
+                    $stickySettings = $cls;
+                    break 2;
+                }
+            }
+        }
+
+        if ($stickySettings === null) {
+            // Nothing sticky — simple wrapper
+            $style = $tag === 'header' ? ' style="width:100%;"' : '';
+            return "<{$tag} class=\"{$wrapperClass}\"{$style}>"
+                 . _lazy_render_layout($layout)
+                 . "</{$tag}>";
+        }
+
+        // Render containers BEFORE the first sticky one in a plain above-wrapper
+        $html = '';
+        if ($stickyIndex > 0) {
+            $html .= '<div class="' . $wrapperClass . '-above" style="width:100%;">'
+                   . _lazy_render_layout(array_slice($layout, 0, $stickyIndex))
+                   . '</div>';
+        }
+
+        // Render sticky containers inside the sticky wrapper
+        $stickyContent = _lazy_render_layout(array_slice($layout, $stickyIndex));
+        $html .= _lazy_build_sticky_wrapper($stickyContent, $stickySettings, $wrapperClass, $tag);
+
+        return $html;
+    }
+}
+
 if (!function_exists('get_lazy_header')) {
     function get_lazy_header()
     {
@@ -86,19 +238,14 @@ if (!function_exists('get_lazy_header')) {
             ->where('status', 'published')
             ->where('lang_code', app()->getLocale())
             ->first();
-        
         if (!$header) {
-            // Try fallback without lang_code or default lang if needed
             $header = \Acme\CmsDashboard\Models\Post::where('type', 'lazy_header')
                 ->where('status', 'published')
                 ->first();
         }
-
         if ($header) {
-            $content = get_lazy_content($header->content);
-            return '<header class="lazy-builder-header" style="position:sticky;top:0;z-index:100;width:100%;">' . $content . '</header>';
+            return _lazy_builder_render_wrapper($header->content ?? '', 'header', 'lazy-builder-header');
         }
-
         return null;
     }
 }
@@ -110,18 +257,14 @@ if (!function_exists('get_lazy_footer')) {
             ->where('status', 'published')
             ->where('lang_code', app()->getLocale())
             ->first();
-
         if (!$footer) {
             $footer = \Acme\CmsDashboard\Models\Post::where('type', 'lazy_footer')
                 ->where('status', 'published')
                 ->first();
         }
-
         if ($footer) {
-            $content = get_lazy_content($footer->content);
-            return '<footer class="lazy-builder-footer">' . $content . '</footer>';
+            return _lazy_builder_render_wrapper($footer->content ?? '', 'footer', 'lazy-builder-footer');
         }
-
         return null;
     }
 }

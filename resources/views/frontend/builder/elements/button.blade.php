@@ -49,14 +49,20 @@
             $mVal = $getRespVal($mProp, $rDev);
             if ($mVal !== null) {
                 $cssProp = strtolower(preg_replace('/([A-Z])/', '-$1', $mProp));
-                $wrapRules[] = "{$cssProp}:{$mVal}px!important";
+                $unit = $rDev === 'mobile'
+                    ? ($s[$mProp . 'Unit_mobile'] ?? $s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px')
+                    : ($s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px');
+                $wrapRules[] = "{$cssProp}:{$mVal}{$unit}!important";
             }
         }
         foreach (['marginLeft', 'marginRight', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'] as $bProp) {
             $bVal = $getRespVal($bProp, $rDev);
             if ($bVal !== null) {
                 $cssProp = strtolower(preg_replace('/([A-Z])/', '-$1', $bProp));
-                $btnRules[] = "{$cssProp}:{$bVal}px!important";
+                $unit = $rDev === 'mobile'
+                    ? ($s[$bProp . 'Unit_mobile'] ?? $s[$bProp . 'Unit_tablet'] ?? $s[$bProp . 'Unit'] ?? 'px')
+                    : ($s[$bProp . 'Unit_tablet'] ?? $s[$bProp . 'Unit'] ?? 'px');
+                $btnRules[] = "{$cssProp}:{$bVal}{$unit}!important";
             }
         }
         if (!empty($wrapRules)) {
@@ -71,19 +77,19 @@
         'display' => 'flex',
         'width' => '100%',
         'justify-content' => $s['textAlign'] === 'left' ? 'flex-start' : ($s['textAlign'] === 'right' ? 'flex-end' : 'center'),
-        'margin-top' => getUnitVal($s['marginTop'] ?? 10, 'px'),
-        'margin-bottom' => getUnitVal($s['marginBottom'] ?? 10, 'px'),
+        'margin-top' => getUnitVal($s['marginTop'] ?? 10, $s['marginTopUnit'] ?? 'px'),
+        'margin-bottom' => getUnitVal($s['marginBottom'] ?? 10, $s['marginBottomUnit'] ?? 'px'),
     ];
 
     $btnStyles = [
         'display' => ($s['buttonSpan'] ?? false) ? 'block' : 'inline-block',
         'width' => ($s['buttonSpan'] ?? false) ? '100%' : 'auto',
-        'padding-top' => getUnitVal($s['paddingTop'] ?? 12, 'px'),
-        'padding-bottom' => getUnitVal($s['paddingBottom'] ?? 12, 'px'),
-        'padding-left' => getUnitVal($s['paddingLeft'] ?? 30, 'px'),
-        'padding-right' => getUnitVal($s['paddingRight'] ?? 30, 'px'),
-        'margin-left' => getUnitVal($s['marginLeft'] ?? 0, 'px'),
-        'margin-right' => getUnitVal($s['marginRight'] ?? 0, 'px'),
+        'padding-top' => getUnitVal($s['paddingTop'] ?? 12, $s['paddingTopUnit'] ?? 'px'),
+        'padding-bottom' => getUnitVal($s['paddingBottom'] ?? 12, $s['paddingBottomUnit'] ?? 'px'),
+        'padding-left' => getUnitVal($s['paddingLeft'] ?? 30, $s['paddingLeftUnit'] ?? 'px'),
+        'padding-right' => getUnitVal($s['paddingRight'] ?? 30, $s['paddingRightUnit'] ?? 'px'),
+        'margin-left' => getUnitVal($s['marginLeft'] ?? 0, $s['marginLeftUnit'] ?? 'px'),
+        'margin-right' => getUnitVal($s['marginRight'] ?? 0, $s['marginRightUnit'] ?? 'px'),
         'background-color' => (($s['buttonStyle'] ?? 'default') === 'custom' && !empty($s['bgGradientStartColor']) && !empty($s['bgGradientEndColor'])) ? 'transparent' : $hexToRgba($s['bgColor'] ?? '#0091ea', $s['bgColorOpacity'] ?? null),
         'background-image' => (($s['buttonStyle'] ?? 'default') === 'custom' && !empty($s['bgGradientStartColor']) && !empty($s['bgGradientEndColor']))
             ? (($s['bgGradientType'] ?? 'linear') === 'radial'

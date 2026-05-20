@@ -1793,7 +1793,7 @@
                         ...(type === 'title' ? {
                             title: 'Title', titleColor: '#222', fontSize: 36, fontSizeUnit: 'px', fontWeight: '800', textAlign: 'center',
                             useLink: false, linkUrl: '', linkColor: '#0091ea', linkHoverColor: '#007cc0',
-                            separator: 'default', separatorColor: '#0091ea', dividerWidth: 60, dividerHeight: 3,
+                            separator: 'none', separatorColor: '#0091ea', dividerWidth: 60, dividerHeight: 3,
                             paddingTop: 20, paddingBottom: 20, marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0,
                             visibility: { mobile: true, tablet: true, desktop: true }
                         } : {}),

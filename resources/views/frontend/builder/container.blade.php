@@ -268,6 +268,13 @@
             $rule = $stickyMobile ? $sOn : $sOff;
             $css .= "@media(max-width:{$bpSmall}px){.{$cid}{{$rule}}}";
         }
+        $stickyBgColor   = $s['stickyBgColor']        ?? '';
+        $stickyBgOpacity = (float)($s['stickyBgColorOpacity'] ?? 1);
+        if ($stickyBgColor !== '') {
+            $stickyBgRgba = $hexToRgba($stickyBgColor, $stickyBgOpacity);
+            $css .= ".{$cid}{transition:background-color 0.3s ease;}";
+            $css .= ".lazy-sticky-active.{$cid}{background-color:{$stickyBgRgba}!important;}";
+        }
     }
     $css .= ".{$cid} .lazy-container-inner{";
     $css .= "flex-wrap:{$flexWrap}!important;";
@@ -293,8 +300,31 @@
 
 {!! '<style>' . $css . '</style>' !!}
 
+@if(!empty($s['sticky']))
+@once('lazy-sticky-observer-js')
+<script>
+(function(){
+    function initLazyStickyObservers(){
+        document.querySelectorAll('.lazy-sticky-col:not([data-sticky-init])').forEach(function(el){
+            el.dataset.stickyInit='1';
+            var cs=getComputedStyle(el);
+            if(cs.position!=='sticky'&&cs.position!=='-webkit-sticky')return;
+            var top=parseInt(cs.top)||0;
+            new IntersectionObserver(function(entries){
+                el.classList.toggle('lazy-sticky-active',entries[0].intersectionRatio<1);
+            },{threshold:[1],rootMargin:'-'+(top+1)+'px 0px 0px 0px'}).observe(el);
+        });
+    }
+    document.readyState==='loading'
+        ?document.addEventListener('DOMContentLoaded',initLazyStickyObservers)
+        :initLazyStickyObservers();
+})();
+</script>
+@endonce
+@endif
+
 @if($status === 'published')
-    <{{ $htmlTag }} id="{{ $s['menuAnchor'] ?? '' }}" class="lazy-container {{ $cid }} {{ $hoverClass }} {{ $s['cssClass'] ?? '' }} {{ $visibilityClasses }}" style="{{ implode('; ', $containerStyles) }}">
+    <{{ $htmlTag }} id="{{ $s['menuAnchor'] ?? '' }}" class="lazy-container {{ $cid }} {{ $hoverClass }} {{ $s['cssClass'] ?? '' }} {{ $visibilityClasses }} {{ !empty($s['sticky']) ? 'lazy-sticky-col' : '' }}" style="{{ implode('; ', $containerStyles) }}">
         @if($link)
             <a href="{{ $link }}" target="{{ $linkTarget }}" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; flex-grow: 1; width: 100%;">
         @endif

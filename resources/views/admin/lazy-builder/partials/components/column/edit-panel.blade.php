@@ -1171,10 +1171,30 @@
                     </div>
 
                     <!-- Sticky Z-Index -->
-                    <div>
+                    <div class="mb-3">
                         <label class="text-[10px] text-slate-500 block mb-1.5">Sticky Z-Index</label>
                         <input type="number" v-model.number="editingColumn.settings.stickyZIndex" placeholder="99"
                                class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+                    </div>
+
+                    <!-- Sticky BG Color -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[10px] text-slate-500">Sticky BG Color</label>
+                            <button @click="editingColumn.settings.stickyBgColor = ''" class="text-slate-300 hover:text-red-400 transition-colors" title="Reset">
+                                <i class="fa fa-undo text-[10px]"></i>
+                            </button>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <div class="checkerboard rounded overflow-hidden w-8 h-8 flex-shrink-0 border border-slate-200">
+                                <div @click="openColorPicker($event, editingColumn.settings, 'stickyBgColor', 'stickyBgColorOpacity')"
+                                     :style="{ backgroundColor: hexToRgba(editingColumn.settings.stickyBgColor, editingColumn.settings.stickyBgColorOpacity) }"
+                                     class="w-full h-full cursor-pointer"></div>
+                            </div>
+                            <input type="text" v-model="editingColumn.settings.stickyBgColor" placeholder="#ffffff"
+                                   class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1">Applied when column is stuck</p>
                     </div>
                 </template>
             </div>

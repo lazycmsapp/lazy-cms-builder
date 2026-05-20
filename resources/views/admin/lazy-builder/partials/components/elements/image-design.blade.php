@@ -28,6 +28,19 @@
                 <input type="number" v-model="editingElement.settings.maxWidth" class="w-full border border-slate-200 rounded px-3 py-2 text-[13px] focus:outline-none focus:border-[#0091ea]">
             </div>
 
+            <!-- Sticky Width -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide">STICKY WIDTH</label>
+                    <div class="flex bg-white border border-slate-200 rounded p-0.5">
+                        <button @click="editingElement.settings.stickyWidthUnit = 'px'" :class="(editingElement.settings.stickyWidthUnit || 'px') === 'px' ? 'bg-slate-100' : ''" class="px-2 py-0.5 text-[9px] font-bold rounded">PX</button>
+                        <button @click="editingElement.settings.stickyWidthUnit = '%'" :class="editingElement.settings.stickyWidthUnit === '%' ? 'bg-slate-100' : ''" class="px-2 py-0.5 text-[9px] font-bold rounded">%</button>
+                    </div>
+                </div>
+                <input type="number" v-model="editingElement.settings.stickyWidth" placeholder="auto" class="w-full border border-slate-200 rounded px-3 py-2 text-[13px] focus:outline-none focus:border-[#0091ea]">
+                <p class="text-[10px] text-slate-400 mt-1">Applied when parent col/container is sticky</p>
+            </div>
+
         </div>
     </div>
 
@@ -41,7 +54,7 @@
                 <div class="flex justify-between items-center mb-3">
                     <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide">MARGIN</label>
                     <div class="flex gap-1 items-center">
-                        <button @click="['Top','Right','Bottom','Left'].forEach(s => editingElement.settings['margin' + s] = '')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <button @click="['Top','Right','Bottom','Left'].forEach(s => setResponsiveVal(editingElement.settings, 'margin' + s, device, ''))" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
                             <i class="fa fa-undo text-[10px]"></i>
                         </button>
                         <div class="relative inline-block">
@@ -63,22 +76,34 @@
                         </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-4 gap-2">
-                    <div>
-                        <label class="text-[8px] text-slate-400 font-bold uppercase mb-1 block">Top</label>
-                        <input type="text" v-model="editingElement.settings.marginTop" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">Top</label>
+                        <div class="flex border border-slate-200 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-[#0091ea]/20 focus-within:border-[#0091ea]">
+                            <input type="number" v-model.number="editingElement.settings[device === 'desktop' ? 'marginTop' : 'marginTop_' + device]" :placeholder="getResponsiveVal(editingElement.settings, 'marginTop', device) || '0'" class="w-full h-8 px-1 text-[11px] text-center border-none focus:ring-0">
+                            <select :value="getResponsiveVal(editingElement.settings, 'marginTopUnit', device) || 'px'" @change="setResponsiveVal(editingElement.settings, 'marginTopUnit', device, $event.target.value)" class="bg-slate-50 border-l border-slate-200 text-[9px] px-0.5 focus:ring-0 border-none outline-none cursor-pointer text-center"><option value="px">px</option><option value="rem">rem</option><option value="%">%</option><option value="em">em</option></select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[8px] text-slate-400 font-bold uppercase mb-1 block">Right</label>
-                        <input type="text" v-model="editingElement.settings.marginRight" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">Right</label>
+                        <div class="flex border border-slate-200 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-[#0091ea]/20 focus-within:border-[#0091ea]">
+                            <input type="number" v-model.number="editingElement.settings[device === 'desktop' ? 'marginRight' : 'marginRight_' + device]" :placeholder="getResponsiveVal(editingElement.settings, 'marginRight', device) || '0'" class="w-full h-8 px-1 text-[11px] text-center border-none focus:ring-0">
+                            <select :value="getResponsiveVal(editingElement.settings, 'marginRightUnit', device) || 'px'" @change="setResponsiveVal(editingElement.settings, 'marginRightUnit', device, $event.target.value)" class="bg-slate-50 border-l border-slate-200 text-[9px] px-0.5 focus:ring-0 border-none outline-none cursor-pointer text-center"><option value="px">px</option><option value="rem">rem</option><option value="%">%</option><option value="em">em</option></select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[8px] text-slate-400 font-bold uppercase mb-1 block">Bottom</label>
-                        <input type="text" v-model="editingElement.settings.marginBottom" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">Bottom</label>
+                        <div class="flex border border-slate-200 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-[#0091ea]/20 focus-within:border-[#0091ea]">
+                            <input type="number" v-model.number="editingElement.settings[device === 'desktop' ? 'marginBottom' : 'marginBottom_' + device]" :placeholder="getResponsiveVal(editingElement.settings, 'marginBottom', device) || '0'" class="w-full h-8 px-1 text-[11px] text-center border-none focus:ring-0">
+                            <select :value="getResponsiveVal(editingElement.settings, 'marginBottomUnit', device) || 'px'" @change="setResponsiveVal(editingElement.settings, 'marginBottomUnit', device, $event.target.value)" class="bg-slate-50 border-l border-slate-200 text-[9px] px-0.5 focus:ring-0 border-none outline-none cursor-pointer text-center"><option value="px">px</option><option value="rem">rem</option><option value="%">%</option><option value="em">em</option></select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[8px] text-slate-400 font-bold uppercase mb-1 block">Left</label>
-                        <input type="text" v-model="editingElement.settings.marginLeft" class="w-full border border-slate-200 rounded py-2 text-center text-[12px]">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">Left</label>
+                        <div class="flex border border-slate-200 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-[#0091ea]/20 focus-within:border-[#0091ea]">
+                            <input type="number" v-model.number="editingElement.settings[device === 'desktop' ? 'marginLeft' : 'marginLeft_' + device]" :placeholder="getResponsiveVal(editingElement.settings, 'marginLeft', device) || '0'" class="w-full h-8 px-1 text-[11px] text-center border-none focus:ring-0">
+                            <select :value="getResponsiveVal(editingElement.settings, 'marginLeftUnit', device) || 'px'" @change="setResponsiveVal(editingElement.settings, 'marginLeftUnit', device, $event.target.value)" class="bg-slate-50 border-l border-slate-200 text-[9px] px-0.5 focus:ring-0 border-none outline-none cursor-pointer text-center"><option value="px">px</option><option value="rem">rem</option><option value="%">%</option><option value="em">em</option></select>
+                        </div>
                     </div>
                 </div>
             </div>

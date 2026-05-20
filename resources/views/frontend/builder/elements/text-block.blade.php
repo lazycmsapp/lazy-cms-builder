@@ -39,14 +39,20 @@
             $mVal = $getRespVal($mProp, $rDev);
             if ($mVal !== null) {
                 $cssProp = strtolower(preg_replace('/([A-Z])/', '-$1', $mProp));
-                $rules[] = "{$cssProp}:{$mVal}px!important";
+                $unit = $rDev === 'mobile'
+                    ? ($s[$mProp . 'Unit_mobile'] ?? $s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px')
+                    : ($s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px');
+                $rules[] = "{$cssProp}:{$mVal}{$unit}!important";
             }
         }
         foreach (['paddingTop','paddingRight','paddingBottom','paddingLeft'] as $pProp) {
             $pVal = $getRespVal($pProp, $rDev);
             if ($pVal !== null) {
                 $cssProp = strtolower(preg_replace('/([A-Z])/', '-$1', $pProp));
-                $rules[] = "{$cssProp}:{$pVal}px!important";
+                $unit = $rDev === 'mobile'
+                    ? ($s[$pProp . 'Unit_mobile'] ?? $s[$pProp . 'Unit_tablet'] ?? $s[$pProp . 'Unit'] ?? 'px')
+                    : ($s[$pProp . 'Unit_tablet'] ?? $s[$pProp . 'Unit'] ?? 'px');
+                $rules[] = "{$cssProp}:{$pVal}{$unit}!important";
             }
         }
         if (!empty($rules)) {
@@ -58,14 +64,14 @@
         'width: 100%',
         'max-width: 100%',
         'text-align: ' . ($s['textAlign'] ?? 'center'),
-        'padding-top: ' . ($s['paddingTop'] ?? 10) . 'px',
-        'padding-right: ' . ($s['paddingRight'] ?? 0) . 'px',
-        'padding-bottom: ' . ($s['paddingBottom'] ?? 10) . 'px',
-        'padding-left: ' . ($s['paddingLeft'] ?? 0) . 'px',
-        'margin-top: ' . ($s['marginTop'] ?? 0) . 'px',
-        'margin-right: ' . ($s['marginRight'] ?? 0) . 'px',
-        'margin-bottom: ' . ($s['marginBottom'] ?? 0) . 'px',
-        'margin-left: ' . ($s['marginLeft'] ?? 0) . 'px',
+        'padding-top: ' . ($s['paddingTop'] ?? 10) . ($s['paddingTopUnit'] ?? 'px'),
+        'padding-right: ' . ($s['paddingRight'] ?? 0) . ($s['paddingRightUnit'] ?? 'px'),
+        'padding-bottom: ' . ($s['paddingBottom'] ?? 10) . ($s['paddingBottomUnit'] ?? 'px'),
+        'padding-left: ' . ($s['paddingLeft'] ?? 0) . ($s['paddingLeftUnit'] ?? 'px'),
+        'margin-top: ' . ($s['marginTop'] ?? 0) . ($s['marginTopUnit'] ?? 'px'),
+        'margin-right: ' . ($s['marginRight'] ?? 0) . ($s['marginRightUnit'] ?? 'px'),
+        'margin-bottom: ' . ($s['marginBottom'] ?? 0) . ($s['marginBottomUnit'] ?? 'px'),
+        'margin-left: ' . ($s['marginLeft'] ?? 0) . ($s['marginLeftUnit'] ?? 'px'),
         'color: ' . ($s['color'] ?? '#333333'),
         'font-family: ' . ($s['fontFamily'] ?? 'inherit'),
         'font-size: ' . ($s['fontSize'] ?? 16) . ($s['fontSizeUnit'] ?? 'px'),

@@ -9,10 +9,10 @@
     <div :style="{
         paddingTop: getUnitVal(el.settings.paddingTop, el.settings.paddingTopUnit),
         paddingBottom: getUnitVal(el.settings.paddingBottom, el.settings.paddingBottomUnit),
-        marginTop: getUnitVal(getResponsiveVal(el.settings, 'marginTop', device), 'px'),
-        marginRight: getUnitVal(getResponsiveVal(el.settings, 'marginRight', device), 'px'),
-        marginBottom: getUnitVal(getResponsiveVal(el.settings, 'marginBottom', device), 'px'),
-        marginLeft: getUnitVal(getResponsiveVal(el.settings, 'marginLeft', device), 'px'),
+        marginTop: getUnitVal(getResponsiveVal(el.settings, 'marginTop', device), getResponsiveVal(el.settings, 'marginTopUnit', device) || 'px'),
+        marginRight: getUnitVal(getResponsiveVal(el.settings, 'marginRight', device), getResponsiveVal(el.settings, 'marginRightUnit', device) || 'px'),
+        marginBottom: getUnitVal(getResponsiveVal(el.settings, 'marginBottom', device), getResponsiveVal(el.settings, 'marginBottomUnit', device) || 'px'),
+        marginLeft: getUnitVal(getResponsiveVal(el.settings, 'marginLeft', device), getResponsiveVal(el.settings, 'marginLeftUnit', device) || 'px'),
     }">
         <a :href="el.settings.useLink && el.settings.linkUrl
                     ? (el.settings.linkUrl.match(/^(https?:\/\/|\/\/|\/|#|tel:|mailto:)/i)

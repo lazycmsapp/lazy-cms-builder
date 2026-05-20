@@ -6,14 +6,14 @@
          {
             width: '100%',
             maxWidth: '100%',
-            paddingTop: (getResponsiveVal(el.settings, 'paddingTop', device) ?? 10) + 'px',
-            paddingRight: (getResponsiveVal(el.settings, 'paddingRight', device) ?? 0) + 'px',
-            paddingBottom: (getResponsiveVal(el.settings, 'paddingBottom', device) ?? 10) + 'px',
-            paddingLeft: (getResponsiveVal(el.settings, 'paddingLeft', device) ?? 0) + 'px',
-            marginTop: (getResponsiveVal(el.settings, 'marginTop', device) ?? 0) + 'px',
-            marginRight: (getResponsiveVal(el.settings, 'marginRight', device) ?? 0) + 'px',
-            marginBottom: (getResponsiveVal(el.settings, 'marginBottom', device) ?? 0) + 'px',
-            marginLeft: (getResponsiveVal(el.settings, 'marginLeft', device) ?? 0) + 'px',
+            paddingTop: (getResponsiveVal(el.settings, 'paddingTop', device) ?? 10) + (getResponsiveVal(el.settings, 'paddingTopUnit', device) || 'px'),
+            paddingRight: (getResponsiveVal(el.settings, 'paddingRight', device) ?? 0) + (getResponsiveVal(el.settings, 'paddingRightUnit', device) || 'px'),
+            paddingBottom: (getResponsiveVal(el.settings, 'paddingBottom', device) ?? 10) + (getResponsiveVal(el.settings, 'paddingBottomUnit', device) || 'px'),
+            paddingLeft: (getResponsiveVal(el.settings, 'paddingLeft', device) ?? 0) + (getResponsiveVal(el.settings, 'paddingLeftUnit', device) || 'px'),
+            marginTop: (getResponsiveVal(el.settings, 'marginTop', device) ?? 0) + (getResponsiveVal(el.settings, 'marginTopUnit', device) || 'px'),
+            marginRight: (getResponsiveVal(el.settings, 'marginRight', device) ?? 0) + (getResponsiveVal(el.settings, 'marginRightUnit', device) || 'px'),
+            marginBottom: (getResponsiveVal(el.settings, 'marginBottom', device) ?? 0) + (getResponsiveVal(el.settings, 'marginBottomUnit', device) || 'px'),
+            marginLeft: (getResponsiveVal(el.settings, 'marginLeft', device) ?? 0) + (getResponsiveVal(el.settings, 'marginLeftUnit', device) || 'px'),
          },
          getCanvasVisibilityStyle(el.settings)
      ]">

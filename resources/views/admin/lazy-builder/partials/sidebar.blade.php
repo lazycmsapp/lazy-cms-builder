@@ -523,9 +523,168 @@
                                 </div>
                             </div>
 
+                            <!-- ══ IMAGE CONTENT ══ -->
+                            <div v-else-if="editingElement?.type === 'image'" class="space-y-8">
+                                <!-- Image -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Image</label>
+                                    </div>
+                                    <div v-if="!editingElement.settings.url"
+                                         @click="openMediaModal('url')"
+                                         class="w-full aspect-[16/10] border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#0091ea] hover:bg-blue-50/30 transition-all group">
+                                        <div class="w-10 h-10 bg-[#0091ea] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                                            <i class="fa fa-plus"></i>
+                                        </div>
+                                    </div>
+                                    <div v-else class="space-y-3">
+                                        <div class="relative group aspect-[16/10] bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
+                                            <img :src="editingElement.settings.url" class="w-full h-full object-cover">
+                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                <button @click="openMediaModal('url')" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0091ea] hover:bg-[#0091ea] hover:text-white transition-all shadow-sm">
+                                                    <i class="fa fa-edit text-xs"></i>
+                                                </button>
+                                                <button @click="editingElement.settings.url = ''" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                                                    <i class="fa fa-trash text-xs"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button @click="editingElement.settings.url = ''" class="flex-1 h-9 flex items-center justify-center border border-slate-200 rounded text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-colors">Remove</button>
+                                            <button @click="openMediaModal('url')" class="flex-1 h-9 flex items-center justify-center bg-[#0091ea] text-white rounded text-[11px] font-bold hover:bg-[#007cc0] transition-colors">Change</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Alt Text -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Alt Text</label>
+                                    </div>
+                                    <input type="text" v-model="editingElement.settings.alt"
+                                           placeholder="Image description..."
+                                           class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                </div>
+
+                                <!-- Link URL -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Link URL</label>
+                                    </div>
+                                    <div class="flex">
+                                        <input type="text" v-model="editingElement.settings.linkUrl"
+                                               placeholder="https://"
+                                               class="flex-1 border border-slate-200 border-r-0 rounded-l px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#0091ea]">
+                                        <button class="bg-white border border-slate-200 rounded-r px-3 text-slate-400 hover:text-[#0091ea] transition-colors">
+                                            <i class="fa fa-link text-[12px]"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Link Target -->
+                                <div v-if="editingElement.settings.linkUrl">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Link Target</label>
+                                    </div>
+                                    <select v-model="editingElement.settings.linkTarget"
+                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                        <option value="_self">Same Window</option>
+                                        <option value="_blank">New Window</option>
+                                    </select>
+                                </div>
+
+                                <!-- Alignment -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Alignment</label>
+                                        <div class="flex gap-1 items-center">
+                                            <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, '')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                                                <i class="fa fa-undo text-[10px]"></i>
+                                            </button>
+                                            <div class="relative inline-block">
+                                                <button @click="activeResponsiveMenu = activeResponsiveMenu === 'imgAlign' ? null : 'imgAlign'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                                                    <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                                                    <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                                                </button>
+                                                <div v-show="activeResponsiveMenu === 'imgAlign'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                                                    <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                                        <i class="fa fa-desktop text-[11px]"></i>
+                                                    </button>
+                                                    <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                                        <i class="fa fa-tablet-alt text-[11px]"></i>
+                                                    </button>
+                                                    <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                                        <i class="fa fa-mobile-alt text-[11px]"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
+                                        <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, 'left')"
+                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'left' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                class="flex-1 py-2.5 flex items-center justify-center border-r border-slate-200 transition-all">
+                                            <i class="fa fa-align-left text-sm"></i>
+                                        </button>
+                                        <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, 'center')"
+                                                :class="(getResponsiveVal(editingElement.settings, 'textAlign', device) === 'center' || !getResponsiveVal(editingElement.settings, 'textAlign', device)) ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                class="flex-1 py-2.5 flex items-center justify-center border-r border-slate-200 transition-all">
+                                            <i class="fa fa-align-center text-sm"></i>
+                                        </button>
+                                        <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, 'right')"
+                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'right' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                class="flex-1 py-2.5 flex items-center justify-center transition-all">
+                                            <i class="fa fa-align-right text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Visibility -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
+                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-mobile-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
+                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-tablet-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
+                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-desktop text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- CSS Class & ID -->
+                                <div class="grid grid-cols-1 gap-6 pt-4 border-t border-slate-50">
+                                    <div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <label class="text-[12px] font-bold text-[#333]">CSS Class</label>
+                                        </div>
+                                        <input type="text" v-model="editingElement.settings.cssClass"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <label class="text-[12px] font-bold text-[#333]">CSS ID</label>
+                                        </div>
+                                        <input type="text" v-model="editingElement.settings.cssId"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- ══ CUSTOM REGISTERED ELEMENTS ══ -->
                             @foreach($customElements ?? [] as $type => $custEl)
-                            @if($type === 'text_block' || $type === 'button') @continue @endif
+                            @if($type === 'text_block' || $type === 'button' || $type === 'image') @continue @endif
                             <div v-else-if="editingElement?.type === '{{ $type }}'" class="space-y-8">
                                 @if($type === 'menu')
                                     @include('cms-dashboard::admin.lazy-builder.partials.components.elements.menu-content')

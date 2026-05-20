@@ -143,7 +143,7 @@
         <div class="relative group/el mb-2"
              @click.stop="setEditingContext('element', ci, coli, eli)"
              :class="[
-                (column.settings.contentLayout === 'row' && el.type !== 'row') ? '' : (getResponsiveVal(column.settings, 'contentAlignH', device) && getResponsiveVal(column.settings, 'contentAlignH', device) !== 'stretch' && el.type !== 'title' && el.type !== 'menu' && el.type !== 'text_block' && el.type !== 'special_text' && el.type !== 'button' ? '' : 'w-full'),
+                (column.settings.contentLayout === 'row' && el.type !== 'row') ? '' : (getResponsiveVal(column.settings, 'contentAlignH', device) && getResponsiveVal(column.settings, 'contentAlignH', device) !== 'stretch' && el.type !== 'title' && el.type !== 'menu' && el.type !== 'text_block' && el.type !== 'special_text' && el.type !== 'button' && el.type !== 'image' ? '' : 'w-full'),
                 dragTarget === 'element-' + ci + '-' + coli + '-' + eli + '-null-null' && dragPosition === 'top' ? 'border-t-2 border-t-blue-500' : '',
                 dragTarget === 'element-' + ci + '-' + coli + '-' + eli + '-null-null' && dragPosition === 'bottom' ? 'border-b-2 border-b-blue-500' : ''
              ]"
@@ -184,7 +184,7 @@
             @endforeach
 
             <!-- Element Toolbar (Top-Center, Compact & Expandable) -->
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 flex justify-center opacity-0 group-hover/el:opacity-100 transition-all duration-200 z-[1010] hover:z-[1100] pointer-events-none p-1" v-if="!isPreview && el.type !== 'row'">
+            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/el:opacity-100 transition-all duration-200 z-[1010] hover:z-[1100] pointer-events-none" v-if="!isPreview && el.type !== 'row'">
                 <div class="flex items-center bg-[#9c27b0] text-white rounded shadow-xl h-7 px-1 pointer-events-auto group/etbar overflow-hidden max-w-[60px] hover:max-w-[250px] transition-all duration-300 ease-in-out">
                     
                     <!-- Always Visible Part: Edit & Add -->

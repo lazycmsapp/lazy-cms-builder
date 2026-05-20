@@ -1,5 +1,5 @@
 <div v-if="el.type === 'button'"
-     class="element-button-wrapper"
+     class="element-button-wrapper w-full"
      :class="[el.settings.cssClass || '', 'button-container-' + el.id]"
      :id="el.settings.cssId || undefined"
      :style="[
@@ -7,8 +7,8 @@
             display: 'flex',
             width: '100%',
             justifyContent: (getResponsiveVal(el.settings, 'textAlign', device) || 'center') === 'left' ? 'flex-start' : ((getResponsiveVal(el.settings, 'textAlign', device) || 'center') === 'right' ? 'flex-end' : 'center'),
-            marginTop: getUnitVal(getResponsiveVal(el.settings, 'marginTop', device) ?? 10, 'px'),
-            marginBottom: getUnitVal(getResponsiveVal(el.settings, 'marginBottom', device) ?? 10, 'px')
+            marginTop: getUnitVal(getResponsiveVal(el.settings, 'marginTop', device) ?? 10, getResponsiveVal(el.settings, 'marginTopUnit', device) || 'px'),
+            marginBottom: getUnitVal(getResponsiveVal(el.settings, 'marginBottom', device) ?? 10, getResponsiveVal(el.settings, 'marginBottomUnit', device) || 'px')
          },
          getCanvasVisibilityStyle(el.settings)
      ]">
@@ -20,14 +20,14 @@
        :style="{
            display: el.settings.buttonSpan ? 'block' : 'inline-block',
            width: el.settings.buttonSpan ? '100%' : 'auto',
-           paddingTop: getUnitVal(getResponsiveVal(el.settings, 'paddingTop', device), 'px'),
-           paddingBottom: getUnitVal(getResponsiveVal(el.settings, 'paddingBottom', device), 'px'),
-           paddingLeft: getUnitVal(getResponsiveVal(el.settings, 'paddingLeft', device), 'px'),
-           paddingRight: getUnitVal(getResponsiveVal(el.settings, 'paddingRight', device), 'px'),
+           paddingTop: getUnitVal(getResponsiveVal(el.settings, 'paddingTop', device), getResponsiveVal(el.settings, 'paddingTopUnit', device) || 'px'),
+           paddingBottom: getUnitVal(getResponsiveVal(el.settings, 'paddingBottom', device), getResponsiveVal(el.settings, 'paddingBottomUnit', device) || 'px'),
+           paddingLeft: getUnitVal(getResponsiveVal(el.settings, 'paddingLeft', device), getResponsiveVal(el.settings, 'paddingLeftUnit', device) || 'px'),
+           paddingRight: getUnitVal(getResponsiveVal(el.settings, 'paddingRight', device), getResponsiveVal(el.settings, 'paddingRightUnit', device) || 'px'),
            marginTop: getUnitVal(el.settings.marginTopInner ?? 0, 'px'),
            marginBottom: getUnitVal(el.settings.marginBottomInner ?? 0, 'px'),
-           marginLeft: getUnitVal(getResponsiveVal(el.settings, 'marginLeft', device) ?? 0, 'px'),
-           marginRight: getUnitVal(getResponsiveVal(el.settings, 'marginRight', device) ?? 0, 'px'),
+           marginLeft: getUnitVal(getResponsiveVal(el.settings, 'marginLeft', device) ?? 0, getResponsiveVal(el.settings, 'marginLeftUnit', device) || 'px'),
+           marginRight: getUnitVal(getResponsiveVal(el.settings, 'marginRight', device) ?? 0, getResponsiveVal(el.settings, 'marginRightUnit', device) || 'px'),
            backgroundColor: (el.settings.buttonStyle === 'custom' && el.settings.bgGradientStartColor && el.settings.bgGradientEndColor) ? 'transparent' : (el.isHovered ? hexToRgba(el.settings.hoverBgColor || '#007cc0', el.settings.hoverBgColorOpacity) : hexToRgba(el.settings.bgColor || '#0091ea', el.settings.bgColorOpacity)),
            backgroundImage: (el.settings.buttonStyle === 'custom' && el.settings.bgGradientStartColor && el.settings.bgGradientEndColor)
                 ? (el.isHovered
