@@ -880,6 +880,45 @@ class BuilderShortcodeConverter
                 return '[lazy_row ' . trim($base) . $vis . ' /]';
             }
 
+            case 'card': {
+                $a = $base;
+                self::attrI($a, 'post_card_id',        $s['post_card_id']        ?? null);
+                self::attrI($a, 'content_source',      $s['content_source']      ?? null, 'latest');
+                self::attrI($a, 'post_type',           $s['post_type']           ?? null, 'post');
+                self::attrI($a, 'post_type_custom',    $s['post_type_custom']    ?? null);
+                self::attrI($a, 'posts_by',            $s['posts_by']            ?? null, 'all');
+                self::attrI($a, 'posts_by_value',      $s['posts_by_value']      ?? null);
+                $postStatus = $s['post_status'] ?? ['publish'];
+                if ($postStatus !== ['publish']) {
+                    self::attrI($a, 'post_status', is_array($postStatus) ? implode(',', $postStatus) : $postStatus);
+                }
+                if (!empty($s['hide_out_of_stock']))   $a .= ' hide_out_of_stock="yes"';
+                self::attrI($a, 'posts_count',         $s['posts_count']         ?? null, 6);
+                self::attrI($a, 'posts_offset',        $s['posts_offset']        ?? null, 0);
+                self::attrI($a, 'order_by',            $s['order_by']            ?? null, 'created_at');
+                self::attrI($a, 'order',               $s['order']               ?? null, 'desc');
+                self::attrI($a, 'pagination_type',     $s['pagination_type']     ?? null, 'none');
+                self::attrI($a, 'nothing_found_message', $s['nothing_found_message'] ?? null, 'No posts found.');
+                self::attrI($a, 'layout',              $s['layout']              ?? null, 'grid');
+                self::attrI($a, 'card_alignment',      $s['card_alignment']      ?? null, 'left');
+                self::attrI($a, 'columns',             $s['columns']             ?? null, 3);
+                self::attrI($a, 'columns_tablet',      $s['columns_tablet']      ?? null, 2);
+                self::attrI($a, 'columns_mobile',      $s['columns_mobile']      ?? null, 1);
+                self::attrI($a, 'column_spacing',      $s['column_spacing']      ?? null, 24);
+                self::attrI($a, 'row_spacing',         $s['row_spacing']         ?? null, 24);
+                self::attrI($a, 'margin_top',          $s['marginTop']           ?? null, 0);
+                self::attrI($a, 'margin_top_unit',     $s['marginTopUnit']       ?? null, 'px');
+                self::attrI($a, 'margin_right',        $s['marginRight']         ?? null, 0);
+                self::attrI($a, 'margin_right_unit',   $s['marginRightUnit']     ?? null, 'px');
+                self::attrI($a, 'margin_bottom',       $s['marginBottom']        ?? null, 0);
+                self::attrI($a, 'margin_bottom_unit',  $s['marginBottomUnit']    ?? null, 'px');
+                self::attrI($a, 'margin_left',         $s['marginLeft']          ?? null, 0);
+                self::attrI($a, 'margin_left_unit',    $s['marginLeftUnit']      ?? null, 'px');
+                self::attrI($a, 'css_class',           $s['cssClass']            ?? null);
+                self::attrI($a, 'css_id',              $s['cssId']               ?? null);
+                return '[lazy_card ' . trim($a) . $vis . ' /]';
+            }
+
             default: {
                 $out = '[lazy_element type="' . $type . '" ' . trim($base) . $vis;
                 $elSettings = $el['settings'] ?? [];
@@ -1472,6 +1511,45 @@ class BuilderShortcodeConverter
                     if (!empty($nestedCols)) $rowObj['columns'] = $nestedCols;
                 }
                 return $rowObj;
+            }
+
+            case 'card': {
+                $statusRaw = $a['post_status'] ?? 'publish';
+                $settings = [
+                    'post_card_id'          => $a['post_card_id']         ?? '',
+                    'content_source'        => $a['content_source']       ?? 'latest',
+                    'post_type'             => $a['post_type']            ?? 'post',
+                    'post_type_custom'      => $a['post_type_custom']     ?? '',
+                    'posts_by'              => $a['posts_by']             ?? 'all',
+                    'posts_by_value'        => $a['posts_by_value']       ?? '',
+                    'post_status'           => array_filter(array_map('trim', explode(',', $statusRaw))),
+                    'hide_out_of_stock'     => ($a['hide_out_of_stock']   ?? '') === 'yes',
+                    'posts_count'           => (int)($a['posts_count']    ?? 6),
+                    'posts_offset'          => (int)($a['posts_offset']   ?? 0),
+                    'order_by'              => $a['order_by']             ?? 'created_at',
+                    'order'                 => $a['order']                ?? 'desc',
+                    'pagination_type'       => $a['pagination_type']      ?? 'none',
+                    'nothing_found_message' => $a['nothing_found_message'] ?? 'No posts found.',
+                    'layout'                => $a['layout']               ?? 'grid',
+                    'card_alignment'        => $a['card_alignment']       ?? 'left',
+                    'columns'               => (int)($a['columns']        ?? 3),
+                    'columns_tablet'        => (int)($a['columns_tablet'] ?? 2),
+                    'columns_mobile'        => (int)($a['columns_mobile'] ?? 1),
+                    'column_spacing'        => (int)($a['column_spacing'] ?? 24),
+                    'row_spacing'           => (int)($a['row_spacing']    ?? 24),
+                    'marginTop'             => self::num($a['margin_top']         ?? 0),
+                    'marginTopUnit'         => $a['margin_top_unit']              ?? 'px',
+                    'marginRight'           => self::num($a['margin_right']       ?? 0),
+                    'marginRightUnit'       => $a['margin_right_unit']            ?? 'px',
+                    'marginBottom'          => self::num($a['margin_bottom']      ?? 0),
+                    'marginBottomUnit'      => $a['margin_bottom_unit']           ?? 'px',
+                    'marginLeft'            => self::num($a['margin_left']        ?? 0),
+                    'marginLeftUnit'        => $a['margin_left_unit']             ?? 'px',
+                    'cssClass'              => $a['css_class']                    ?? '',
+                    'cssId'                 => $a['css_id']                       ?? '',
+                    'visibility'            => $vis,
+                ];
+                return ['id' => $a['id'] ?? self::uid(), 'type' => 'card', 'settings' => $settings];
             }
 
             default: {

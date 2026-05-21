@@ -2136,6 +2136,7 @@
             const libraryContext     = ref(null);
             const libraryItems       = ref({ containers: [], columns: [], nested_columns: [], elements: [] });
             const postCardsList      = ref(window.lazyPostCards || []);
+            const recentPosts        = ref(window.lazyRecentPosts || []);
             const postCardsMap       = computed(() => {
                 const m = {};
                 postCardsList.value.forEach(c => { m[c.id] = c.name; });
@@ -2284,7 +2285,7 @@
                 shouldShowGuide,
                 toasts, showToast,
                 showLibraryModal, libraryActiveTab, libraryNewName, isSavingToLibrary, libraryItems, libraryContext,
-                postCardsList, postCardsMap,
+                postCardsList, postCardsMap, recentPosts,
                 libraryTabs, libraryCurrentItems, libraryActiveTabLabel, libraryTabIcon, libraryCanSave,
                 openLibraryModal, saveToLibrary, insertFromLibrary, deleteFromLibrary,
                 hoveredType, hoveredCi, hoveredColi, hoveredEli, hoveredNcoli, setHover,

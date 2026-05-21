@@ -93,6 +93,19 @@
             $builderPostCards = json_decode(get_cms_option('lazy_post_cards', '[]'), true) ?: [];
         @endphp
         window.lazyPostCards = {!! json_encode($builderPostCards) !!};
+        @php
+            try {
+                $__previewPosts = get_lazy_posts(['limit' => 6, 'order' => 'desc', 'orderby' => 'created_at']);
+                $__previewPostsData = $__previewPosts->map(function($p) {
+                    $img = $p->featured_image ?? null;
+                    if ($img && !str_starts_with($img, 'http')) $img = asset('storage/' . $img);
+                    $raw = $p->content ?? '';
+                    $excerpt = $p->excerpt ?? (is_array(json_decode($raw, true)) ? '' : mb_substr(strip_tags($raw), 0, 80));
+                    return ['title' => $p->title ?? 'Post', 'image' => $img, 'excerpt' => $excerpt];
+                })->values()->toArray();
+            } catch(\Exception $e) { $__previewPostsData = []; }
+        @endphp
+        window.lazyRecentPosts = {!! json_encode($__previewPostsData) !!};
     </script>
 
     @include('cms-dashboard::admin.lazy-builder.partials.styles')
