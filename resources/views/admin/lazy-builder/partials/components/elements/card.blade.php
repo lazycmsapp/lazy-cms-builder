@@ -1,6 +1,11 @@
 <div v-if="el.type === 'card'"
      class="w-full py-2"
-     :style="getCanvasVisibilityStyle(el.settings)">
+     :style="[getCanvasVisibilityStyle(el.settings), {
+         marginTop:    (el.settings.marginTop    || 0) + (el.settings.marginTopUnit    || 'px'),
+         marginRight:  (el.settings.marginRight  || 0) + (el.settings.marginRightUnit  || 'px'),
+         marginBottom: (el.settings.marginBottom || 0) + (el.settings.marginBottomUnit || 'px'),
+         marginLeft:   (el.settings.marginLeft   || 0) + (el.settings.marginLeftUnit   || 'px')
+     }]">
 
     {{-- Header bar --}}
     <div class="flex items-center gap-1.5 mb-2 px-1">
@@ -15,13 +20,24 @@
         <span v-else class="text-[9px] bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full font-bold">No card selected</span>
     </div>
 
-    {{-- Post grid --}}
-    <div class="grid gap-2"
-         :style="{ gridTemplateColumns: 'repeat(' + Math.min(el.settings.columns || 3, 4) + ', 1fr)' }">
+    {{-- Loading indicator when fetching live preview --}}
+    <div v-if="cardPreviewCache[el.id]?.loading"
+         class="text-[10px] text-slate-400 flex items-center gap-1 mb-1 px-1">
+        <i class="fa fa-spinner fa-spin text-[9px]"></i> Fetching posts…
+    </div>
 
-        {{-- When we have real posts --}}
-        <template v-if="recentPosts.length">
-            <div v-for="(post, pi) in recentPosts.slice(0, Math.min(el.settings.posts_count || 6, el.settings.columns || 3, 4))"
+    {{-- Post grid --}}
+    <div class="grid"
+         :style="{
+             gridTemplateColumns: el.settings.layout === 'list' ? '1fr' : 'repeat(' + (el.settings.columns || 3) + ', 1fr)',
+             columnGap: (el.settings.column_spacing ?? 24) + 'px',
+             rowGap:    (el.settings.row_spacing    ?? 24) + 'px',
+             alignItems: (['flex-start','center','flex-end','stretch','start','end'].includes(el.settings.card_alignment) ? el.settings.card_alignment : 'stretch')
+         }">
+
+        {{-- When we have posts (live cache only — no recentPosts fallback to avoid flash of wrong content) --}}
+        <template v-if="cardPreviewCache[el.id]?.posts?.length">
+            <div v-for="(post, pi) in cardPreviewCache[el.id].posts.slice(0, el.settings.posts_count || 6)"
                  :key="pi"
                  class="bg-white border border-slate-200/80 rounded-lg overflow-hidden shadow-sm">
 
@@ -79,9 +95,16 @@
             </div>
         </template>
 
-        {{-- No real posts at all: skeleton cards --}}
+        {{-- Preview ran and found no posts --}}
+        <template v-else-if="cardPreviewCache[el.id] && !cardPreviewCache[el.id].loading && cardPreviewCache[el.id].posts?.length === 0">
+            <div style="grid-column:1/-1;padding:20px 16px;text-align:center;color:#9ca3af;font-size:12px;font-weight:600;border:2px dashed #e5e7eb;border-radius:8px;background:#fafafa;">
+                No posts found.
+            </div>
+        </template>
+
+        {{-- No preview yet: skeleton placeholders --}}
         <template v-else>
-            <div v-for="n in Math.min(el.settings.posts_count || 6, el.settings.columns || 3, 4)"
+            <div v-for="n in Math.min(el.settings.posts_count || 6, 24)"
                  :key="n"
                  class="bg-white border border-slate-200/80 rounded-lg overflow-hidden shadow-sm">
                 <div class="bg-gradient-to-br from-slate-100 to-slate-200" style="aspect-ratio:16/9;"></div>

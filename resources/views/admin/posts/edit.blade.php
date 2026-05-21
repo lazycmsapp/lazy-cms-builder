@@ -474,6 +474,7 @@
                     </div>
                 </div>
 
+                @if($type === 'product')
                 <!-- Gallery -->
                 <div class="wp-metabox mb-6" style="margin-bottom: 24px !important; margin-top: 10px !important;">
                     <div class="wp-metabox-header flex justify-between items-center cursor-pointer"><span>Gallery</span> <svg class="w-4 h-4 text-[#646970]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg></div>
@@ -492,6 +493,7 @@
                         <a href="#" id="add-gallery-btn" class="text-[#2271b1] text-[13px] underline">+ Add images to gallery</a>
                     </div>
                 </div>
+                @endif
                 @endif
 
             </div>

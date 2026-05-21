@@ -13,16 +13,47 @@
     </div>
 </div>
 
-{{-- 2. Card Alignment --}}
+{{-- 2. Card Alignment (align-items within each grid row) --}}
 <div>
     <label class="text-[12px] font-bold text-[#333] block mb-2">Card Alignment</label>
-    <div class="flex gap-1">
-        <button v-for="opt in [{v:'left',i:'fa-align-left'},{v:'center',i:'fa-align-center'},{v:'right',i:'fa-align-right'}]"
-                :key="opt.v"
-                @click="editingElement.settings.card_alignment = opt.v"
-                :class="editingElement.settings.card_alignment === opt.v ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
-                class="w-9 h-9 rounded flex items-center justify-center transition-all">
-            <i :class="'fa ' + opt.i" class="text-sm"></i>
+    <div class="grid grid-cols-2 gap-2">
+        <button @click="editingElement.settings.card_alignment = 'flex-start'"
+                :class="(editingElement.settings.card_alignment === 'flex-start' || editingElement.settings.card_alignment === 'start' || editingElement.settings.card_alignment === 'left' || !editingElement.settings.card_alignment) ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="5" y="4" width="3" height="10" rx="0.5"/>
+                <rect x="10.5" y="4" width="3" height="14" rx="0.5"/>
+                <rect x="16" y="4" width="3" height="8" rx="0.5"/>
+            </svg>
+            <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Align Top</div>
+        </button>
+        <button @click="editingElement.settings.card_alignment = 'center'"
+                :class="editingElement.settings.card_alignment === 'center' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="5" y="7" width="3" height="10" rx="0.5"/>
+                <rect x="10.5" y="5" width="3" height="14" rx="0.5"/>
+                <rect x="16" y="8" width="3" height="8" rx="0.5"/>
+            </svg>
+            <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Align Center</div>
+        </button>
+        <button @click="editingElement.settings.card_alignment = 'flex-end'"
+                :class="(editingElement.settings.card_alignment === 'flex-end' || editingElement.settings.card_alignment === 'end' || editingElement.settings.card_alignment === 'right') ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="5" y="10" width="3" height="10" rx="0.5"/>
+                <rect x="10.5" y="6" width="3" height="14" rx="0.5"/>
+                <rect x="16" y="12" width="3" height="8" rx="0.5"/>
+            </svg>
+            <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Align Bottom</div>
+        </button>
+        <button @click="editingElement.settings.card_alignment = 'stretch'"
+                :class="(editingElement.settings.card_alignment === 'stretch' || editingElement.settings.card_alignment === '') ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 3l3 3h-2v12h2l-3 3-3-3h2V6H9l3-3z"/>
+            </svg>
+            <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Stretch</div>
         </button>
     </div>
 </div>

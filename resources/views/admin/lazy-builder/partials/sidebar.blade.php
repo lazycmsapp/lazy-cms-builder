@@ -853,7 +853,43 @@
                                     </select>
                                 </div>
 
-                                <!-- Post Type -->
+                                <!-- Taxonomy (visible when Content Source = Terms or Related) -->
+                                <div v-if="['terms','related'].includes(editingElement.settings.content_source)">
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Taxonomy</label>
+                                    <select v-model="editingElement.settings.taxonomy_slug"
+                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                        <option value="">— Select Taxonomy —</option>
+                                        <option v-for="tax in cardTaxonomiesByPostType" :key="tax.slug" :value="tax.slug">@{{ tax.name }}</option>
+                                    </select>
+                                    <p v-if="!cardTaxonomiesByPostType.length" class="mt-1.5 text-[11px] text-amber-500">
+                                        No taxonomies configured for this post type.
+                                    </p>
+                                    <!-- Include/Exclude dropdowns only for Terms source -->
+                                    <template v-if="editingElement.settings.content_source === 'terms' && editingElement.settings.taxonomy_slug && lazyTaxonomyTerms[editingElement.settings.taxonomy_slug]?.length">
+                                        <div class="mt-3">
+                                            <label class="text-[12px] font-bold text-[#333] block mb-1.5">
+                                                Include @{{ lazyTaxonomies.find(t => t.slug === editingElement.settings.taxonomy_slug)?.name || 'Terms' }}
+                                            </label>
+                                            <select :key="'tsinc-' + editingElement.settings.taxonomy_slug"
+                                                    v-tomselect="{ value: editingElement.settings.taxonomy_include, onChange: v => editingElement.settings.taxonomy_include = v, placeholder: 'Select to include…' }"
+                                                    multiple class="w-full">
+                                                <option v-for="term in lazyTaxonomyTerms[editingElement.settings.taxonomy_slug]" :key="term.id" :value="term.slug">@{{ term.name }}</option>
+                                            </select>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="text-[12px] font-bold text-[#333] block mb-1.5">
+                                                Exclude @{{ lazyTaxonomies.find(t => t.slug === editingElement.settings.taxonomy_slug)?.name || 'Terms' }}
+                                            </label>
+                                            <select :key="'tsexc-' + editingElement.settings.taxonomy_slug"
+                                                    v-tomselect="{ value: editingElement.settings.taxonomy_exclude, onChange: v => editingElement.settings.taxonomy_exclude = v, placeholder: 'Select to exclude…' }"
+                                                    multiple class="w-full">
+                                                <option v-for="term in lazyTaxonomyTerms[editingElement.settings.taxonomy_slug]" :key="term.id" :value="term.slug">@{{ term.name }}</option>
+                                            </select>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Post Type (dynamic: built-in + active custom CPTs) -->
                                 <div>
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Post Type</label>
                                     <select v-model="editingElement.settings.post_type"
@@ -861,7 +897,7 @@
                                         <option value="post">Posts</option>
                                         <option value="page">Pages</option>
                                         <option value="product">Products</option>
-                                        <option value="any">All CPT</option>
+                                        <option v-for="cpt in lazyCptList" :key="cpt.slug" :value="cpt.slug">@{{ cpt.name }}</option>
                                     </select>
                                 </div>
 
@@ -871,16 +907,17 @@
                                     <select v-model="editingElement.settings.posts_by"
                                             class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
                                         <option value="all">All</option>
-                                        <option value="search">Search</option>
                                         <option value="category">Categories</option>
                                         <option value="tag">Tags</option>
                                         <option value="custom_field">Custom Field</option>
                                         <option value="post_id">Post ID</option>
                                     </select>
-                                    <input v-if="['search','category','tag','post_id'].includes(editingElement.settings.posts_by)"
+                                    <!-- Post ID: text input -->
+                                    <input v-if="editingElement.settings.posts_by === 'post_id'"
                                            type="text" v-model="editingElement.settings.posts_by_value"
-                                           :placeholder="editingElement.settings.posts_by === 'search' ? 'Search keyword' : editingElement.settings.posts_by === 'category' ? 'Category slug' : editingElement.settings.posts_by === 'tag' ? 'Tag slug' : 'Post IDs (comma separated)'"
+                                           placeholder="Post IDs (comma separated)"
                                            class="w-full mt-2 border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    <!-- Custom Field: key + value inputs -->
                                     <template v-if="editingElement.settings.posts_by === 'custom_field'">
                                         <input type="text" v-model="editingElement.settings.posts_by_cf_key"
                                                placeholder="Meta key"

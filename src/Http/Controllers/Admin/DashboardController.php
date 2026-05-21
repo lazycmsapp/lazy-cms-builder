@@ -103,7 +103,129 @@ class DashboardController extends Controller
             ]
         ];
 
-        return view('cms-dashboard::admin.dashboard', compact('stats'));
+        // Ecommerce stats — only when shop tables exist
+        $hasShop  = false;
+        $currency = get_cms_option('shop_currency_symbol', '$');
+        $ecoStats = [
+            'total_orders'    => 0,
+            'total_revenue'   => 0,
+            'pending_orders'  => 0,
+            'total_products'  => 0,
+            'orders_today'    => 0,
+            'orders_month'    => 0,
+            'status_counts'   => [],
+            'monthly_revenue' => array_fill(0, 7, 0),
+        ];
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('shop_orders')) {
+                $hasShop = true;
+                $ecoStats['total_orders']   = \Acme\CmsDashboard\Models\Order::count();
+                $ecoStats['total_revenue']  = \Acme\CmsDashboard\Models\Order::whereIn('status', ['completed', 'processing'])->sum('total');
+                $ecoStats['pending_orders'] = \Acme\CmsDashboard\Models\Order::where('status', 'pending')->count();
+                $ecoStats['total_products'] = Post::where('type', 'product')->count();
+                $ecoStats['orders_today']   = \Acme\CmsDashboard\Models\Order::whereDate('created_at', today())->count();
+                $ecoStats['orders_month']   = \Acme\CmsDashboard\Models\Order::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+                $ecoStats['status_counts']  = \Acme\CmsDashboard\Models\Order::selectRaw('status, count(*) as total')
+                    ->groupBy('status')->pluck('total', 'status')->toArray();
+                $rev = [];
+                for ($i = 6; $i >= 0; $i--) {
+                    $d    = now()->subMonths($i);
+                    $rev[] = (float) \Acme\CmsDashboard\Models\Order::whereIn('status', ['completed', 'processing'])
+                        ->whereBetween('created_at', [$d->copy()->startOfMonth(), $d->copy()->endOfMonth()])
+                        ->sum('total');
+                }
+                $ecoStats['monthly_revenue'] = $rev;
+            }
+        } catch (\Exception $e) {}
+
+        // Ensure Dashboard > Updates submenu exists (self-heals on existing installs)
+        $this->ensureUpdateMenu();
+
+        // Refresh update cache silently (only when expired, max once per 6h)
+        if (!cache()->has('lazy_cms_update_check')) {
+            try { lazy_check_update(); } catch (\Exception $e) {}
+        }
+
+        return view('cms-dashboard::admin.dashboard', compact('stats', 'hasShop', 'ecoStats', 'currency'));
+    }
+
+    protected function ensureUpdateMenu(): void
+    {
+        try {
+            $dash = \Acme\CmsDashboard\Models\Menu::where('title', 'Dashboard')->whereNull('parent_id')->first();
+            if (!$dash) return;
+
+            \Acme\CmsDashboard\Models\Menu::firstOrCreate(
+                ['title' => 'Overview', 'parent_id' => $dash->id],
+                ['route' => 'admin.dashboard.index', 'order' => 1]
+            );
+            \Acme\CmsDashboard\Models\Menu::firstOrCreate(
+                ['title' => 'Updates', 'parent_id' => $dash->id],
+                ['route' => 'admin.update', 'order' => 2]
+            );
+        } catch (\Exception $e) {}
+    }
+
+    public function updateCheck()
+    {
+        $update = lazy_check_update(force: true);
+        return view('cms-dashboard::admin.update', compact('update'));
+    }
+
+    public function runUpdate()
+    {
+        set_time_limit(300);
+
+        $steps   = [];
+        $hasError = false;
+
+        // Step 1: composer update
+        $composerBin = $this->findComposer();
+        if ($composerBin) {
+            $cmd = $composerBin . ' update tareqcodex/lazy-cms-rebuild --no-interaction --prefer-dist --no-progress 2>&1';
+            exec('cd ' . escapeshellarg(base_path()) . ' && ' . $cmd, $composerOut, $exitCode);
+            $steps[] = ['label' => 'composer update', 'output' => implode("\n", $composerOut), 'ok' => $exitCode === 0];
+            if ($exitCode !== 0) $hasError = true;
+        } else {
+            $steps[] = ['label' => 'composer update', 'output' => 'composer not found in PATH. Run manually: composer update tareqcodex/lazy-cms-rebuild', 'ok' => false];
+            $hasError = true;
+        }
+
+        // Step 2: lazy:update (migrations, assets, cache clear)
+        try {
+            \Illuminate\Support\Facades\Artisan::call('lazy:update');
+            $steps[] = ['label' => 'php artisan lazy:update', 'output' => trim(\Illuminate\Support\Facades\Artisan::output()), 'ok' => true];
+        } catch (\Exception $e) {
+            $steps[] = ['label' => 'php artisan lazy:update', 'output' => $e->getMessage(), 'ok' => false];
+            $hasError = true;
+        }
+
+        cache()->forget('lazy_cms_update_check');
+
+        return redirect()->route('admin.update')
+            ->with('update_steps', $steps)
+            ->with('update_had_error', $hasError);
+    }
+
+    protected function findComposer(): ?string
+    {
+        $candidates = [
+            base_path('composer.phar'),
+            '/usr/local/bin/composer',
+            '/usr/bin/composer',
+            '/usr/local/bin/composer.phar',
+        ];
+        foreach ($candidates as $p) {
+            if (file_exists($p)) {
+                return str_ends_with($p, '.phar') ? 'php ' . escapeshellarg($p) : escapeshellarg($p);
+            }
+        }
+        // Try PATH
+        $which = shell_exec('which composer 2>/dev/null');
+        if ($which && trim($which)) return 'composer';
+        $where = shell_exec('where composer 2>nul');
+        if ($where && trim($where)) return 'composer';
+        return null;
     }
 
     public function settings()

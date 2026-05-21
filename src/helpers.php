@@ -2,6 +2,63 @@
 
 use Illuminate\Support\Facades\DB;
 
+if (!defined('LAZY_CMS_VERSION')) {
+    define('LAZY_CMS_VERSION', '5.9.0');
+}
+
+if (!function_exists('lazy_check_update')) {
+    function lazy_check_update(bool $force = false): array
+    {
+        $cacheKey = 'lazy_cms_update_check';
+        if (!$force && cache()->has($cacheKey)) {
+            return cache()->get($cacheKey);
+        }
+
+        $current = LAZY_CMS_VERSION;
+        $result  = ['current' => $current, 'latest' => null, 'has_update' => false, 'url' => null, 'checked_at' => now()->toDateTimeString()];
+
+        try {
+            $res = \Illuminate\Support\Facades\Http::timeout(5)
+                ->withHeaders(['Accept' => 'application/json', 'User-Agent' => 'LazyCMS/' . $current])
+                ->get('https://repo.packagist.org/p2/tareqcodex/lazy-cms-rebuild.json');
+
+            if ($res->successful()) {
+                $versions = $res->json('packages.tareqcodex/lazy-cms-rebuild') ?? [];
+                foreach ($versions as $v) {
+                    $ver = ltrim($v['version'] ?? '', 'v');
+                    if (preg_match('/^\d+\.\d+\.\d+$/', $ver)) {
+                        $result['latest'] = $ver;
+                        $result['url']    = 'https://packagist.org/packages/tareqcodex/lazy-cms-rebuild';
+                        break;
+                    }
+                }
+            }
+        } catch (\Exception $e) {}
+
+        if (!$result['latest']) {
+            try {
+                $gh = \Illuminate\Support\Facades\Http::timeout(5)
+                    ->withHeaders(['Accept' => 'application/vnd.github.v3+json', 'User-Agent' => 'LazyCMS/' . $current])
+                    ->get('https://api.github.com/repos/tareqcodex/lazy-cms-rebuild/releases/latest');
+                if ($gh->successful()) {
+                    $tag = ltrim($gh->json('tag_name') ?? '', 'v');
+                    if ($tag) {
+                        $result['latest'] = $tag;
+                        $result['url']    = $gh->json('html_url');
+                    }
+                }
+            } catch (\Exception $e) {}
+        }
+
+        if ($result['latest']) {
+            $result['has_update'] = version_compare($result['latest'], $result['current'], '>');
+        }
+
+        cache()->put($cacheKey, $result, now()->addHours(6));
+        return $result;
+    }
+}
+
 if (!function_exists('get_cms_option')) {
     function get_cms_option($key, $default = null)
     {
@@ -284,21 +341,27 @@ if (!function_exists('the_lazy_content')) {
 if (!function_exists('get_lazy_posts')) {
     function get_lazy_posts($args = []) {
         $defaults = [
-            'post_type' => 'post',
-            'limit'     => 10,
-            'offset'    => 0,
-            'order'     => 'desc',
-            'orderby'   => 'created_at',
-            'status'    => 'published',
-            'category'  => null,
-            'tag'       => null,
-            'author'    => null,
-            'search'    => null,
-            'post_id'   => null,
-            'meta_key'  => null,
-            'meta_value'=> null,
-            'paginate'  => false,
-            'lang'      => null,
+            'post_type'        => 'post',
+            'limit'            => 10,
+            'offset'           => 0,
+            'order'            => 'desc',
+            'orderby'          => 'created_at',
+            'status'           => 'published',
+            'category'         => null,
+            'tag'              => null,
+            'has_categories'   => false,
+            'has_tags'         => false,
+            'author'           => null,
+            'search'           => null,
+            'post_id'          => null,
+            'meta_key'         => null,
+            'meta_value'       => null,
+            'taxonomy_slug'    => null,
+            'taxonomy_include' => null,
+            'taxonomy_exclude' => null,
+            'paginate'         => false,
+            'page_name'        => 'page',
+            'lang'             => null,
         ];
         $args = array_merge($defaults, $args);
 
@@ -319,14 +382,28 @@ if (!function_exists('get_lazy_posts')) {
             }
         }
         if ($args['category']) {
-            $query->whereHas('categories', function($q) use ($args) {
-                $q->where('slug', $args['category']);
+            $catSlugs = is_array($args['category']) ? $args['category'] : array_filter(explode(',', $args['category']));
+            $query->whereHas('categories', function($q) use ($catSlugs) {
+                $q->whereIn('slug', $catSlugs);
             });
+        } elseif ($args['has_categories']) {
+            if ($args['post_type'] === 'post') {
+                $query->has('categories');
+            } else {
+                $query->has('taxonomyTerms');
+            }
         }
         if ($args['tag']) {
-            $query->whereHas('tags', function($q) use ($args) {
-                $q->where('slug', $args['tag']);
+            $tagSlugs = is_array($args['tag']) ? $args['tag'] : array_filter(explode(',', $args['tag']));
+            $query->whereHas('tags', function($q) use ($tagSlugs) {
+                $q->whereIn('slug', $tagSlugs);
             });
+        } elseif ($args['has_tags']) {
+            if ($args['post_type'] === 'post') {
+                $query->has('tags');
+            } else {
+                $query->has('taxonomyTerms');
+            }
         }
         if ($args['author']) {
             $query->where('user_id', $args['author']);
@@ -337,6 +414,25 @@ if (!function_exists('get_lazy_posts')) {
         if (!empty($args['post_id'])) {
             $ids = is_array($args['post_id']) ? $args['post_id'] : explode(',', $args['post_id']);
             $query->whereIn('id', array_filter(array_map('intval', $ids)));
+        }
+        if (!empty($args['taxonomy_slug'])) {
+            $taxSlug = $args['taxonomy_slug'];
+            if (!empty($args['taxonomy_include'])) {
+                $include = is_array($args['taxonomy_include']) ? $args['taxonomy_include'] : explode(',', $args['taxonomy_include']);
+                $query->whereHas('taxonomyTerms', function($q) use ($taxSlug, $include) {
+                    $q->where('taxonomy_slug', $taxSlug)->whereIn('slug', array_filter($include));
+                });
+            } else {
+                $query->whereHas('taxonomyTerms', function($q) use ($taxSlug) {
+                    $q->where('taxonomy_slug', $taxSlug);
+                });
+            }
+            if (!empty($args['taxonomy_exclude'])) {
+                $exclude = is_array($args['taxonomy_exclude']) ? $args['taxonomy_exclude'] : explode(',', $args['taxonomy_exclude']);
+                $query->whereDoesntHave('taxonomyTerms', function($q) use ($taxSlug, $exclude) {
+                    $q->where('taxonomy_slug', $taxSlug)->whereIn('slug', array_filter($exclude));
+                });
+            }
         }
 
         if ($args['orderby'] === 'rand') {
@@ -352,7 +448,7 @@ if (!function_exists('get_lazy_posts')) {
         }
 
         if ($args['paginate']) {
-            return $query->paginate($args['limit']);
+            return $query->paginate($args['limit'], ['*'], $args['page_name'] ?? 'page');
         }
         return $query->limit($args['limit'])->get();
     }

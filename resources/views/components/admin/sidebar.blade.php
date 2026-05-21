@@ -111,6 +111,12 @@
                                                                     <span class="bg-[#d63638] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">{{ $unreadOrders }}</span>
                                                                 @endif
                                                             @endif
+                                                            @if($child->title === 'Updates')
+                                                                @php $lzUpd = cache()->get('lazy_cms_update_check'); @endphp
+                                                                @if(!empty($lzUpd['has_update']))
+                                                                    <span class="bg-[#46b450] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">NEW</span>
+                                                                @endif
+                                                            @endif
                                                         </a>
                                                     </li>
                                                 @endforeach
@@ -129,6 +135,12 @@
                                                                 @php $unreadOrders = \Acme\CmsDashboard\Models\Order::where('is_read', false)->count(); @endphp
                                                                 @if($unreadOrders > 0)
                                                                     <span class="bg-[#d63638] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">{{ $unreadOrders }}</span>
+                                                                @endif
+                                                            @endif
+                                                            @if($child->title === 'Updates')
+                                                                @php $lzUpd = cache()->get('lazy_cms_update_check'); @endphp
+                                                                @if(!empty($lzUpd['has_update']))
+                                                                    <span class="bg-[#46b450] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">NEW</span>
                                                                 @endif
                                                             @endif
                                                         </a>

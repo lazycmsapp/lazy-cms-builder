@@ -116,10 +116,8 @@ class PostController extends Controller
 
     protected function checkTypeActive($slug)
     {
-        $postType = \Acme\CmsDashboard\Models\PostType::where('slug', $slug)->first();
-        if ($postType && !$postType->is_active) {
-            abort(404, "This post type is deactivated.");
-        }
+        // Admin users can always access any CPT regardless of is_active status.
+        // is_active controls frontend visibility only, not admin management access.
     }
 
     protected function generateUniqueSlug($title, $id = 0, $type = 'post', $langCode = 'en')

@@ -31,6 +31,20 @@
     <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"></script>
 
+    <!-- Tom Select -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <style>
+        .ts-wrapper { font-size: 13px; }
+        .ts-control { border-color: #e2e8f0 !important; border-radius: 6px !important; padding: 4px 8px !important; min-height: 36px; box-shadow: none !important; }
+        .ts-control:focus-within { border-color: #0091ea !important; }
+        .ts-control .item { background: #e0f2fe !important; color: #0369a1 !important; border: 1px solid #bae6fd !important; border-radius: 4px !important; font-size: 11px !important; font-weight: 600 !important; padding: 1px 6px !important; }
+        .ts-control .item .remove { color: #0369a1 !important; border-left: 1px solid #bae6fd !important; }
+        .ts-dropdown { border-color: #e2e8f0 !important; border-radius: 6px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; font-size: 13px !important; z-index: 99999 !important; }
+        .ts-dropdown .option:hover, .ts-dropdown .option.active { background: #e0f2fe !important; color: #0369a1 !important; }
+        .ts-dropdown .option.selected { background: #f0f9ff !important; color: #0369a1 !important; }
+    </style>
+
     <script>
         window.builderBreakpoints = {
             small: {{ get_cms_option('theme_small_screen_breakpoint', '800') }},
@@ -106,6 +120,46 @@
             } catch(\Exception $e) { $__previewPostsData = []; }
         @endphp
         window.lazyRecentPosts = {!! json_encode($__previewPostsData) !!};
+        @php
+            try {
+                $__taxonomies = [];
+                $__taxonomyTerms = [];
+                $__taxonomies[] = ['slug' => 'category', 'name' => 'Category', 'type' => 'built_in'];
+                $__taxonomyTerms['category'] = \Acme\CmsDashboard\Models\Category::select('id','name','slug')->orderBy('name')->get()->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'slug' => $c->slug])->values()->toArray();
+                $__taxonomies[] = ['slug' => 'tag', 'name' => 'Tag', 'type' => 'built_in'];
+                $__taxonomyTerms['tag'] = \Acme\CmsDashboard\Models\Tag::select('id','name','slug')->orderBy('name')->get()->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'slug' => $t->slug])->values()->toArray();
+                $__customTaxos = \Acme\CmsDashboard\Models\CustomTaxonomy::where('is_active', true)->get();
+                foreach ($__customTaxos as $__tax) {
+                    $__taxonomies[] = ['slug' => $__tax->slug, 'name' => $__tax->name, 'type' => 'custom'];
+                    $__taxonomyTerms[$__tax->slug] = \Acme\CmsDashboard\Models\TaxonomyTerm::where('taxonomy_slug', $__tax->slug)->select('id','name','slug')->orderBy('name')->get()->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'slug' => $t->slug])->values()->toArray();
+                }
+            } catch (\Exception $e) { $__taxonomies = []; $__taxonomyTerms = []; }
+        @endphp
+        window.lazyTaxonomies    = {!! json_encode($__taxonomies) !!};
+        window.lazyTaxonomyTerms = {!! json_encode($__taxonomyTerms) !!};
+        @php
+            try {
+                $__cptList = \Acme\CmsDashboard\Models\PostType::where('is_builtin', false)
+                    ->where('is_active', true)
+                    ->whereNull('deleted_at')
+                    ->orderBy('name')
+                    ->get()
+                    ->map(fn($c) => ['slug' => $c->slug, 'name' => $c->name])
+                    ->values()->toArray();
+                // Build post_type → taxonomy slugs mapping
+                $__cptTaxonomies = ['post' => ['category', 'tag'], 'page' => [], 'product' => []];
+                foreach ($__customTaxos as $__tax) {
+                    foreach (($__tax->post_types ?? []) as $__ptSlug) {
+                        if (!isset($__cptTaxonomies[$__ptSlug])) $__cptTaxonomies[$__ptSlug] = [];
+                        if (!in_array($__tax->slug, $__cptTaxonomies[$__ptSlug])) {
+                            $__cptTaxonomies[$__ptSlug][] = $__tax->slug;
+                        }
+                    }
+                }
+            } catch (\Exception $e) { $__cptList = []; $__cptTaxonomies = ['post' => ['category','tag']]; }
+        @endphp
+        window.lazyCptList        = {!! json_encode($__cptList) !!};
+        window.lazyCptTaxonomies  = {!! json_encode($__cptTaxonomies) !!};
     </script>
 
     @include('cms-dashboard::admin.lazy-builder.partials.styles')

@@ -69,6 +69,64 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     Route::get('lazy-builder/library', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'index'])->name('lazy-builder.library.index');
     Route::post('lazy-builder/library/save', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'save'])->name('lazy-builder.library.save');
     Route::delete('lazy-builder/library/{type}/{id}', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'delete'])->name('lazy-builder.library.delete');
+    Route::post('lazy-builder/card-preview', function(\Illuminate\Http\Request $r) {
+        $s = $r->input('settings', []);
+        $queryArgs = [
+            'post_type' => $s['post_type'] ?? 'post',
+            'limit'     => max(1, min(12, (int)($s['posts_count'] ?? 6))),
+            'offset'    => max(0, (int)($s['posts_offset'] ?? 0)),
+            'order'     => $s['order']    ?? 'desc',
+            'orderby'   => $s['order_by'] ?? 'created_at',
+        ];
+        if (!empty($s['post_status']) && is_array($s['post_status'])) {
+            $mapped = array_map(fn($st) => $st === 'publish' ? 'published' : $st, $s['post_status']);
+            $queryArgs['status'] = count($mapped) === 1 ? $mapped[0] : $mapped;
+        }
+        $postsBy    = $s['posts_by']       ?? 'all';
+        $postsByVal = $s['posts_by_value'] ?? '';
+        switch ($postsBy) {
+            case 'category':
+                if ($postsByVal) $queryArgs['category'] = $postsByVal;
+                else             $queryArgs['has_categories'] = true;
+                break;
+            case 'tag':
+                if ($postsByVal) $queryArgs['tag'] = $postsByVal;
+                else             $queryArgs['has_tags'] = true;
+                break;
+            case 'author':  if ($postsByVal) $queryArgs['author']  = $postsByVal; break;
+            case 'search':  if ($postsByVal) $queryArgs['search']  = $postsByVal; break;
+            case 'post_id': if ($postsByVal) $queryArgs['post_id'] = $postsByVal; break;
+        }
+        $contentSource = $s['content_source'] ?? 'posts';
+        $postType      = $s['post_type']      ?? 'post';
+        if ($contentSource === 'terms' && !empty($s['taxonomy_slug'])) {
+            $taxSlug = $s['taxonomy_slug'];
+            $inc = array_values(array_filter(is_array($s['taxonomy_include'] ?? '') ? $s['taxonomy_include'] : explode(',', $s['taxonomy_include'] ?? '')));
+            $exc = array_values(array_filter(is_array($s['taxonomy_exclude'] ?? '') ? $s['taxonomy_exclude'] : explode(',', $s['taxonomy_exclude'] ?? '')));
+            if ($postType === 'post' && $taxSlug === 'category') {
+                if (!empty($inc)) $queryArgs['category'] = implode(',', $inc);
+            } elseif ($postType === 'post' && $taxSlug === 'tag') {
+                if (!empty($inc)) $queryArgs['tag'] = implode(',', $inc);
+            } else {
+                $queryArgs['taxonomy_slug'] = $taxSlug;
+                if (!empty($inc)) $queryArgs['taxonomy_include'] = $inc;
+                if (!empty($exc)) $queryArgs['taxonomy_exclude'] = $exc;
+            }
+        }
+        try {
+            $posts = get_lazy_posts($queryArgs);
+            $data = $posts->map(function($p) {
+                $img = $p->featured_image ?? null;
+                if ($img && !str_starts_with($img, 'http')) $img = asset('storage/' . $img);
+                $raw = $p->content ?? '';
+                $excerpt = $p->excerpt ?? (is_array(json_decode($raw, true)) ? '' : mb_substr(strip_tags($raw), 0, 80));
+                return ['title' => $p->title ?? 'Post', 'image' => $img, 'excerpt' => $excerpt];
+            })->values()->toArray();
+            return response()->json(['success' => true, 'posts' => $data]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'posts' => []]);
+        }
+    })->name('lazy-builder.card-preview');
     Route::get('lazy-builder/{id}', [PostController::class, 'builder'])->name('lazy-builder');
     Route::post('lazy-builder/{id}/save', [PostController::class, 'saveBuilder'])->name('lazy-builder.save');
     Route::post('posts/{id}/variations/ajax', [PostController::class, 'ajaxSaveVariations'])->name('posts.variations.ajax-save');
@@ -194,6 +252,8 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     Route::get('seo/related-posts', [DashboardController::class, 'getRelatedPosts'])->name('seo.related-posts');
 
     Route::get('documentation', [DashboardController::class, 'documentation'])->name('documentation');
+    Route::get('update', [DashboardController::class, 'updateCheck'])->name('update');
+    Route::post('update/run', [DashboardController::class, 'runUpdate'])->name('update.run');
  
     // Comments Management
     Route::get('comments', [\Acme\CmsDashboard\Http\Controllers\Admin\CommentController::class, 'index'])->name('comments.index');

@@ -474,7 +474,18 @@
                     };
 
                     scanForFonts(layout.value);
-                    
+
+                    // Auto-fetch previews for all card elements so canvas shows correct post type after reload
+                    const scanForCards = (items) => {
+                        if (!Array.isArray(items)) return;
+                        items.forEach(item => {
+                            if (item.type === 'card') fetchCardPreview(item);
+                            if (item.columns) item.columns.forEach(col => scanForCards(col.elements || []));
+                            if (item.elements) scanForCards(item.elements);
+                        });
+                    };
+                    scanForCards(layout.value);
+
                     // Initialize last saved layout for dirty tracking
                     lastSavedLayout = serializedLayout.value;
                 }, 100);
@@ -1398,6 +1409,24 @@
                 loadBuilderFont(newFamily);
             });
 
+            // Reset taxonomy fields when post_type changes on a card element (skip on initial load)
+            watch(() => editingElement.value?.settings?.post_type, (newType, oldType) => {
+                const el = editingElement.value;
+                if (!el || el.type !== 'card' || newType === oldType || oldType === undefined) return;
+                el.settings.taxonomy_slug    = '';
+                el.settings.taxonomy_include = [];
+                el.settings.taxonomy_exclude = [];
+            });
+
+            // Debounced canvas preview fetch for card element settings
+            let _cardPreviewTimer = null;
+            watch(() => editingElement.value?.settings, (s) => {
+                const el = editingElement.value;
+                if (!el || el.type !== 'card') return;
+                clearTimeout(_cardPreviewTimer);
+                _cardPreviewTimer = setTimeout(() => fetchCardPreview(el), 600);
+            }, { deep: true });
+
             // Dynamic Styles
             const canvasStyle = computed(() => {
                 const pt = window.builderPagePadding?.top || '60px';
@@ -2028,7 +2057,7 @@
                             pagination_type: 'none',
                             nothing_found_message: 'No posts found.',
                             layout: 'grid',
-                            card_alignment: 'left',
+                            card_alignment: 'stretch',
                             columns: 3, columns_tablet: 2, columns_mobile: 1,
                             column_spacing: 24,
                             row_spacing: 24,
@@ -2036,6 +2065,9 @@
                             marginTopUnit: 'px', marginRightUnit: 'px', marginBottomUnit: 'px', marginLeftUnit: 'px',
                             visibility: { mobile: true, tablet: true, desktop: true },
                             cssClass: '', cssId: '',
+                            taxonomy_slug: '',
+                            taxonomy_include: [],
+                            taxonomy_exclude: [],
                         } : {}),
                     }
                 };
@@ -2139,6 +2171,11 @@
             const libraryItems       = ref({ containers: [], columns: [], nested_columns: [], elements: [] });
             const postCardsList      = ref(window.lazyPostCards || []);
             const recentPosts        = ref(window.lazyRecentPosts || []);
+            const lazyTaxonomies     = ref(window.lazyTaxonomies    || []);
+            const lazyTaxonomyTerms  = ref(window.lazyTaxonomyTerms || {});
+            const lazyCptList        = ref(window.lazyCptList        || []);
+            const lazyCptTaxonomies  = ref(window.lazyCptTaxonomies  || { post: ['category','tag'] });
+            const cardPreviewCache   = reactive({});
             const postCardsMap       = computed(() => {
                 const m = {};
                 postCardsList.value.forEach(c => { m[c.id] = c.name; });
@@ -2163,6 +2200,68 @@
                 traverse(card.config.layout);
                 return elements;
             };
+
+            const fetchCardPreview = async (el) => {
+                if (!el || el.type !== 'card') return;
+                const elId = el.id;
+                cardPreviewCache[elId] = { loading: true, posts: cardPreviewCache[elId]?.posts || [] };
+                try {
+                    const res = await fetch('{{ route("admin.lazy-builder.card-preview") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                        body: JSON.stringify({ settings: el.settings })
+                    });
+                    const data = await res.json();
+                    cardPreviewCache[elId] = { loading: false, posts: data.success ? data.posts : [] };
+                } catch(e) {
+                    cardPreviewCache[elId] = { loading: false, posts: [] };
+                }
+            };
+
+            const toggleTaxTerm = (settingKey, slug) => {
+                if (!editingElement.value) return;
+                const arr = editingElement.value.settings[settingKey];
+                if (!Array.isArray(arr)) { editingElement.value.settings[settingKey] = [slug]; return; }
+                const idx = arr.indexOf(slug);
+                if (idx === -1) arr.push(slug);
+                else arr.splice(idx, 1);
+            };
+
+            const cardCategoryTerms = computed(() => {
+                if (!editingElement.value || editingElement.value.type !== 'card') return [];
+                const postType = editingElement.value.settings.post_type || 'post';
+                const taxSlugs = lazyCptTaxonomies.value[postType] || ['category'];
+                const result = [];
+                for (const slug of taxSlugs) {
+                    if (slug === 'tag') continue;
+                    const terms = lazyTaxonomyTerms.value[slug] || [];
+                    result.push(...terms);
+                }
+                return result;
+            });
+
+            const cardTagTerms = computed(() => lazyTaxonomyTerms.value['tag'] || []);
+
+            const cardTaxonomiesByPostType = computed(() => {
+                if (!editingElement.value || editingElement.value.type !== 'card') return lazyTaxonomies.value;
+                const postType = editingElement.value.settings.post_type || 'post';
+                const allowed = lazyCptTaxonomies.value[postType];
+                if (allowed === undefined) return lazyTaxonomies.value;
+                return lazyTaxonomies.value.filter(t => allowed.includes(t.slug));
+            });
+
+            const postsbyValueArr = computed({
+                get() {
+                    const v = editingElement.value?.settings?.posts_by_value || '';
+                    if (Array.isArray(v)) return v;
+                    return v ? v.split(',').map(s => s.trim()).filter(Boolean) : [];
+                },
+                set(arr) {
+                    if (editingElement.value?.settings) {
+                        editingElement.value.settings.posts_by_value = Array.isArray(arr) ? arr.join(',') : (arr || '');
+                    }
+                }
+            });
 
             const libraryTabs = [
                 { key: 'containers',     label: 'Containers',     icon: 'fa fa-table-columns' },
@@ -2307,6 +2406,8 @@
                 toasts, showToast,
                 showLibraryModal, libraryActiveTab, libraryNewName, isSavingToLibrary, libraryItems, libraryContext,
                 postCardsList, postCardsMap, recentPosts, getCardElementsFlat,
+                lazyTaxonomies, lazyTaxonomyTerms, lazyCptList, lazyCptTaxonomies, cardPreviewCache, fetchCardPreview,
+                cardCategoryTerms, cardTagTerms, postsbyValueArr, cardTaxonomiesByPostType,
                 libraryTabs, libraryCurrentItems, libraryActiveTabLabel, libraryTabIcon, libraryCanSave,
                 openLibraryModal, saveToLibrary, insertFromLibrary, deleteFromLibrary,
                 hoveredType, hoveredCi, hoveredColi, hoveredEli, hoveredNcoli, setHover,
@@ -2319,6 +2420,42 @@
                 lazyMenusList: window.lazyMenusList || {},
                 postCardMode
             };
+        }
+    }).directive('tomselect', {
+        mounted(el, binding) {
+            el._tsCfg = binding.value || {};
+            const ts = new TomSelect(el, {
+                plugins: el.multiple ? ['remove_button'] : [],
+                maxItems: el.multiple ? null : 1,
+                create: false,
+                placeholder: el._tsCfg.placeholder || '',
+                dropdownParent: 'body',
+                onChange(val) {
+                    if (typeof el._tsCfg.onChange === 'function') {
+                        // For multi-select, always use ts.getValue() to get the FULL selection array
+                        // (onChange `val` is only the last changed item, not all selected items)
+                        el._tsCfg.onChange(el.multiple ? ts.getValue() : val);
+                    }
+                }
+            });
+            el._tomselect = ts;
+            const initVal = el._tsCfg.value;
+            if (initVal !== undefined && initVal !== null) ts.setValue(initVal, true);
+        },
+        updated(el, binding) {
+            el._tsCfg = binding.value || {};
+            const ts = el._tomselect;
+            if (!ts) return;
+            const newVal = el._tsCfg.value;
+            if (newVal === undefined) return;
+            const cur = ts.getValue();
+            const a = [...(Array.isArray(newVal) ? newVal : [newVal]).filter(Boolean)].sort();
+            const b = [...(Array.isArray(cur)    ? cur    : [cur]   ).filter(Boolean)].sort();
+            if (JSON.stringify(a) !== JSON.stringify(b)) ts.setValue(newVal, true);
+        },
+        unmounted(el) {
+            if (el._tomselect) { el._tomselect.destroy(); el._tomselect = null; }
+            el._tsCfg = null;
         }
     }).mount('#lazy-builder-app');
 </script>

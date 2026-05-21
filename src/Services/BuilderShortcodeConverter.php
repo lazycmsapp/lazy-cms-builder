@@ -917,6 +917,11 @@ class BuilderShortcodeConverter
                 self::attrI($a, 'margin_left_unit',      $s['marginLeftUnit']        ?? null, 'px');
                 self::attrI($a, 'css_class',             $s['cssClass']              ?? null);
                 self::attrI($a, 'css_id',                $s['cssId']                 ?? null);
+                self::attrI($a, 'taxonomy_slug',         $s['taxonomy_slug']         ?? null);
+                $taxInclude = is_array($s['taxonomy_include'] ?? '') ? implode(',', $s['taxonomy_include']) : ($s['taxonomy_include'] ?? '');
+                self::attrI($a, 'taxonomy_include', $taxInclude ?: null);
+                $taxExclude = is_array($s['taxonomy_exclude'] ?? '') ? implode(',', $s['taxonomy_exclude']) : ($s['taxonomy_exclude'] ?? '');
+                self::attrI($a, 'taxonomy_exclude', $taxExclude ?: null);
                 return '[lazy_card ' . trim($a) . $vis . ' /]';
             }
 
@@ -1549,6 +1554,9 @@ class BuilderShortcodeConverter
                     'marginLeftUnit'        => $a['margin_left_unit']            ?? 'px',
                     'cssClass'              => $a['css_class']                   ?? '',
                     'cssId'                 => $a['css_id']                      ?? '',
+                    'taxonomy_slug'         => $a['taxonomy_slug']               ?? '',
+                    'taxonomy_include'      => array_values(array_filter(explode(',', trim($a['taxonomy_include'] ?? '')))),
+                    'taxonomy_exclude'      => array_values(array_filter(explode(',', trim($a['taxonomy_exclude'] ?? '')))),
                     'visibility'            => $vis,
                 ];
                 return ['id' => $a['id'] ?? self::uid(), 'type' => 'card', 'settings' => $settings];
