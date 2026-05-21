@@ -53,6 +53,15 @@ class CmsDashboardServiceProvider extends ServiceProvider
         Blade::componentNamespace('Acme\\CmsDashboard\\View\\Components', 'cms-dashboard');
         Blade::component('cms-dashboard::components.frontend.breadcrumbs', 'cms-breadcrumbs');
 
+        // Register commands always (not just in console) so Artisan::call() works from web requests
+        $this->commands([
+            \Acme\CmsDashboard\Console\Commands\LazyList::class,
+            \Acme\CmsDashboard\Console\Commands\MakeDashboardPage::class,
+            \Acme\CmsDashboard\Console\Commands\InstallLazyCms::class,
+            \Acme\CmsDashboard\Console\Commands\SeedLazyCms::class,
+            \Acme\CmsDashboard\Console\Commands\UpdateLazyCms::class,
+        ]);
+
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__ . '/../resources/views' => resource_path('views/vendor/cms-dashboard'),
@@ -65,14 +74,6 @@ class CmsDashboardServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__ . '/../public/assets' => public_path('vendor/cms-dashboard'),
             ], 'cms-dashboard-assets');
-
-            $this->commands([
-                \Acme\CmsDashboard\Console\Commands\LazyList::class,
-                \Acme\CmsDashboard\Console\Commands\MakeDashboardPage::class,
-                \Acme\CmsDashboard\Console\Commands\InstallLazyCms::class,
-                \Acme\CmsDashboard\Console\Commands\SeedLazyCms::class,
-                \Acme\CmsDashboard\Console\Commands\UpdateLazyCms::class,
-            ]);
 
             // 1. Views & Themes
             $this->publishes([
