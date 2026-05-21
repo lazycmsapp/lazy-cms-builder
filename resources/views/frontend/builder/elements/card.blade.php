@@ -173,10 +173,7 @@
         $gCss .= "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px){#{$gridId}{grid-template-columns:repeat({$colsTablet},1fr)}}";
         $gCss .= "@media(max-width:{$bpSm}px){#{$gridId}{grid-template-columns:repeat({$colsMobile},1fr)}}";
     }
-    // Strip the builder's default horizontal column gap padding so Column Spacing is the sole gap control.
-    // Vertical padding (top/bottom) is intentionally preserved for content breathing room.
-    $gCss .= "#{$gridId} .lazy-column{padding-left:0!important;padding-right:0!important}";
-    $gCss .= "#{$gridId} .lazy-column-inner{padding-left:0!important;padding-right:0!important}";
+    $gCss .= "#{$gridId} .container-custom{padding-left:0!important;padding-right:0!important}";
 @endphp
 <style>
 {!! $gCss !!}
