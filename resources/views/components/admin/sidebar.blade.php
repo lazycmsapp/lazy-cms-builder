@@ -82,7 +82,7 @@
                                             @endif
                                         @endif
                                         @if($isShop)
-                                            @php $unreadOrders = \Acme\CmsDashboard\Models\Order::where('is_read', false)->count(); @endphp
+                                            @php try { $unreadOrders = \Acme\CmsDashboard\Models\Order::where('is_read', false)->count(); } catch (\Exception $e) { $unreadOrders = 0; } @endphp
                                             @if($unreadOrders > 0)
                                                 <span class="bg-[#d63638] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center">{{ $unreadOrders }}</span>
                                             @endif
@@ -106,7 +106,7 @@
                                                         <a href="{{ $childHref }}" class="block px-3 py-[6px] transition text-[13px] {{ $isChildActive ? 'text-white font-semibold' : 'text-[#c3c4c7] hover:text-[#72aee6]' }}">
                                                             {{ $child->title }}
                                                             @if($child->title === 'Orders')
-                                                                @php $unreadOrders = \Acme\CmsDashboard\Models\Order::where('is_read', false)->count(); @endphp
+                                                                @php try { $unreadOrders = \Acme\CmsDashboard\Models\Order::where('is_read', false)->count(); } catch (\Exception $e) { $unreadOrders = 0; } @endphp
                                                                 @if($unreadOrders > 0)
                                                                     <span class="bg-[#d63638] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">{{ $unreadOrders }}</span>
                                                                 @endif
@@ -132,7 +132,7 @@
                                                         <a href="{{ $resolveRoute($child) }}" class="block px-3 py-[6px] transition text-[13px] hover:text-[#72aee6] text-[#c3c4c7]">
                                                             {{ $child->title }}
                                                             @if($child->title === 'Orders')
-                                                                @php $unreadOrders = \Acme\CmsDashboard\Models\Order::where('is_read', false)->count(); @endphp
+                                                                @php try { $unreadOrders = \Acme\CmsDashboard\Models\Order::where('is_read', false)->count(); } catch (\Exception $e) { $unreadOrders = 0; } @endphp
                                                                 @if($unreadOrders > 0)
                                                                     <span class="bg-[#d63638] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">{{ $unreadOrders }}</span>
                                                                 @endif
