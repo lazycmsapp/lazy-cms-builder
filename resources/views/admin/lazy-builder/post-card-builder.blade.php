@@ -70,6 +70,32 @@
         @php $builderPostCards = json_decode(get_cms_option('lazy_post_cards','[]'),true) ?: []; @endphp
         window.lazyPostCards = {!! json_encode($builderPostCards) !!};
         window.lazyPostCardMode = true;
+        @php
+            $__pcTaxonomies   = [
+                ['slug' => 'category', 'name' => 'Category', 'type' => 'built_in'],
+                ['slug' => 'tag',      'name' => 'Tag',      'type' => 'built_in'],
+            ];
+            $__pcTaxTerms   = [];
+            $__pcCustomTaxos = collect();
+            $__pcCptTaxonomies = ['post' => ['category', 'tag'], 'page' => [], 'product' => []];
+            try {
+                $__pcTaxTerms['category'] = \Acme\CmsDashboard\Models\Category::select('id','name','slug')->orderBy('name')->get()->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'slug' => $c->slug])->values()->toArray();
+                $__pcTaxTerms['tag']      = \Acme\CmsDashboard\Models\Tag::select('id','name','slug')->orderBy('name')->get()->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'slug' => $t->slug])->values()->toArray();
+                $__pcCustomTaxos = \Acme\CmsDashboard\Models\CustomTaxonomy::where('is_active', true)->get();
+                foreach ($__pcCustomTaxos as $__pct) {
+                    $__pcTaxonomies[] = ['slug' => $__pct->slug, 'name' => $__pct->name, 'type' => 'custom'];
+                    $__pcTaxTerms[$__pct->slug] = \Acme\CmsDashboard\Models\TaxonomyTerm::where('taxonomy_slug', $__pct->slug)->select('id','name','slug')->orderBy('name')->get()->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'slug' => $t->slug])->values()->toArray();
+                    foreach (($__pct->post_types ?? []) as $__ptSlug) {
+                        if (!isset($__pcCptTaxonomies[$__ptSlug])) $__pcCptTaxonomies[$__ptSlug] = [];
+                        if (!in_array($__pct->slug, $__pcCptTaxonomies[$__ptSlug])) $__pcCptTaxonomies[$__ptSlug][] = $__pct->slug;
+                    }
+                }
+            } catch (\Exception $e) { /* built-ins already set */ }
+        @endphp
+        window.lazyTaxonomies    = {!! json_encode($__pcTaxonomies) !!};
+        window.lazyTaxonomyTerms = {!! json_encode($__pcTaxTerms) !!};
+        window.lazyCptTaxonomies = {!! json_encode($__pcCptTaxonomies) !!};
+        window.lazyCptList       = [];
     </script>
 
     @include('cms-dashboard::admin.lazy-builder.partials.styles')

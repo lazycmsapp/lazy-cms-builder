@@ -121,19 +121,22 @@
         @endphp
         window.lazyRecentPosts = {!! json_encode($__previewPostsData) !!};
         @php
+            // Built-ins are declared outside try so they survive any DB exception
+            $__taxonomies   = [
+                ['slug' => 'category', 'name' => 'Category', 'type' => 'built_in'],
+                ['slug' => 'tag',      'name' => 'Tag',      'type' => 'built_in'],
+            ];
+            $__taxonomyTerms = [];
+            $__customTaxos   = collect();
             try {
-                $__taxonomies = [];
-                $__taxonomyTerms = [];
-                $__taxonomies[] = ['slug' => 'category', 'name' => 'Category', 'type' => 'built_in'];
                 $__taxonomyTerms['category'] = \Acme\CmsDashboard\Models\Category::select('id','name','slug')->orderBy('name')->get()->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'slug' => $c->slug])->values()->toArray();
-                $__taxonomies[] = ['slug' => 'tag', 'name' => 'Tag', 'type' => 'built_in'];
-                $__taxonomyTerms['tag'] = \Acme\CmsDashboard\Models\Tag::select('id','name','slug')->orderBy('name')->get()->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'slug' => $t->slug])->values()->toArray();
+                $__taxonomyTerms['tag']      = \Acme\CmsDashboard\Models\Tag::select('id','name','slug')->orderBy('name')->get()->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'slug' => $t->slug])->values()->toArray();
                 $__customTaxos = \Acme\CmsDashboard\Models\CustomTaxonomy::where('is_active', true)->get();
                 foreach ($__customTaxos as $__tax) {
                     $__taxonomies[] = ['slug' => $__tax->slug, 'name' => $__tax->name, 'type' => 'custom'];
                     $__taxonomyTerms[$__tax->slug] = \Acme\CmsDashboard\Models\TaxonomyTerm::where('taxonomy_slug', $__tax->slug)->select('id','name','slug')->orderBy('name')->get()->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'slug' => $t->slug])->values()->toArray();
                 }
-            } catch (\Exception $e) { $__taxonomies = []; $__taxonomyTerms = []; }
+            } catch (\Exception $e) { /* built-ins already set above */ }
         @endphp
         window.lazyTaxonomies    = {!! json_encode($__taxonomies) !!};
         window.lazyTaxonomyTerms = {!! json_encode($__taxonomyTerms) !!};

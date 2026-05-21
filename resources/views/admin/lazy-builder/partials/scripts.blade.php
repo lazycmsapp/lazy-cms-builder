@@ -1427,6 +1427,18 @@
                 _cardPreviewTimer = setTimeout(() => fetchCardPreview(el), 600);
             }, { deep: true });
 
+            // When a card element is selected, fill in any missing numeric defaults so
+            // sliders (range inputs) start at the correct position instead of browser default.
+            watch(() => editingElement.value, (el) => {
+                if (!el || el.type !== 'card') return;
+                const s = el.settings;
+                if (s.column_spacing === undefined || s.column_spacing === null) s.column_spacing = 24;
+                if (s.row_spacing    === undefined || s.row_spacing    === null) s.row_spacing    = 24;
+                if (s.columns        === undefined || s.columns        === null) s.columns        = 3;
+                if (s.columns_tablet === undefined || s.columns_tablet === null) s.columns_tablet = 2;
+                if (s.columns_mobile === undefined || s.columns_mobile === null) s.columns_mobile = 1;
+            }, { immediate: true });
+
             // Dynamic Styles
             const canvasStyle = computed(() => {
                 const pt = window.builderPagePadding?.top || '60px';
