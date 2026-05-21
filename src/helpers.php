@@ -285,23 +285,38 @@ if (!function_exists('get_lazy_posts')) {
     function get_lazy_posts($args = []) {
         $defaults = [
             'post_type' => 'post',
-            'limit' => 10,
-            'order' => 'desc',
-            'orderby' => 'created_at',
-            'status' => 'published',
-            'category' => null,
-            'tag' => null,
-            'paginate' => false,
-            'lang' => null,
+            'limit'     => 10,
+            'offset'    => 0,
+            'order'     => 'desc',
+            'orderby'   => 'created_at',
+            'status'    => 'published',
+            'category'  => null,
+            'tag'       => null,
+            'author'    => null,
+            'search'    => null,
+            'post_id'   => null,
+            'meta_key'  => null,
+            'meta_value'=> null,
+            'paginate'  => false,
+            'lang'      => null,
         ];
         $args = array_merge($defaults, $args);
-        $query = \Acme\CmsDashboard\Models\Post::where('type', $args['post_type']);
-        
+
+        if ($args['post_type'] === 'any') {
+            $query = \Acme\CmsDashboard\Models\Post::query();
+        } else {
+            $query = \Acme\CmsDashboard\Models\Post::where('type', $args['post_type']);
+        }
+
         $lang = $args['lang'] ?: app()->getLocale();
         $query->where('lang_code', $lang);
 
         if ($args['status']) {
-            $query->where('status', $args['status']);
+            if (is_array($args['status'])) {
+                $query->whereIn('status', $args['status']);
+            } else {
+                $query->where('status', $args['status']);
+            }
         }
         if ($args['category']) {
             $query->whereHas('categories', function($q) use ($args) {
@@ -313,8 +328,29 @@ if (!function_exists('get_lazy_posts')) {
                 $q->where('slug', $args['tag']);
             });
         }
-        $query->orderBy($args['orderby'], $args['order']);
-        
+        if ($args['author']) {
+            $query->where('user_id', $args['author']);
+        }
+        if ($args['search']) {
+            $query->where('title', 'like', '%' . $args['search'] . '%');
+        }
+        if (!empty($args['post_id'])) {
+            $ids = is_array($args['post_id']) ? $args['post_id'] : explode(',', $args['post_id']);
+            $query->whereIn('id', array_filter(array_map('intval', $ids)));
+        }
+
+        if ($args['orderby'] === 'rand') {
+            $query->inRandomOrder();
+        } else {
+            $safeOrderby = in_array($args['orderby'], ['created_at','updated_at','title','views','menu_order','id'])
+                ? $args['orderby'] : 'created_at';
+            $query->orderBy($safeOrderby, $args['order']);
+        }
+
+        if ((int)$args['offset'] > 0) {
+            $query->skip((int)$args['offset']);
+        }
+
         if ($args['paginate']) {
             return $query->paginate($args['limit']);
         }

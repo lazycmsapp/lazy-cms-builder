@@ -827,7 +827,7 @@
                             <!-- ══ CARD CONTENT ══ -->
                             <div v-else-if="editingElement?.type === 'card'" class="space-y-6">
 
-                                <!-- 1. Card -->
+                                <!-- Card -->
                                 <div>
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Card</label>
                                     <select v-model="editingElement.settings.post_card_id"
@@ -840,60 +840,65 @@
                                     </p>
                                 </div>
 
-                                <!-- 2. Content Source -->
+                                <!-- Content Source -->
                                 <div>
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Content Source</label>
                                     <select v-model="editingElement.settings.content_source"
                                             class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                        <option value="latest">Latest Posts</option>
-                                        <option value="category">By Category</option>
-                                        <option value="tag">By Tag</option>
-                                        <option value="author">By Author</option>
-                                        <option value="related">Related Posts</option>
+                                        <option value="posts">Posts</option>
+                                        <option value="terms">Terms</option>
+                                        <option value="related">Related</option>
+                                        <option value="upsells">Upsells</option>
+                                        <option value="cross_sells">Cross-sells</option>
                                     </select>
                                 </div>
 
-                                <!-- 3. Post Type -->
+                                <!-- Post Type -->
                                 <div>
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Post Type</label>
                                     <select v-model="editingElement.settings.post_type"
                                             class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                        <option value="post">Post</option>
-                                        <option value="page">Page</option>
-                                        <option value="product">Product</option>
-                                        <option value="custom">Custom</option>
+                                        <option value="post">Posts</option>
+                                        <option value="page">Pages</option>
+                                        <option value="product">Products</option>
+                                        <option value="any">All CPT</option>
                                     </select>
-                                    <input v-if="editingElement.settings.post_type === 'custom'"
-                                           type="text" v-model="editingElement.settings.post_type_custom"
-                                           placeholder="Enter custom post type slug"
-                                           class="w-full mt-2 border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
                                 </div>
 
-                                <!-- 4. Posts By -->
+                                <!-- Posts By -->
                                 <div>
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Posts By</label>
                                     <select v-model="editingElement.settings.posts_by"
                                             class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
                                         <option value="all">All</option>
-                                        <option value="category">Category</option>
-                                        <option value="tag">Tag</option>
-                                        <option value="author">Author</option>
+                                        <option value="search">Search</option>
+                                        <option value="category">Categories</option>
+                                        <option value="tag">Tags</option>
+                                        <option value="custom_field">Custom Field</option>
+                                        <option value="post_id">Post ID</option>
                                     </select>
-                                    <input v-if="editingElement.settings.posts_by !== 'all'"
+                                    <input v-if="['search','category','tag','post_id'].includes(editingElement.settings.posts_by)"
                                            type="text" v-model="editingElement.settings.posts_by_value"
-                                           :placeholder="editingElement.settings.posts_by === 'category' ? 'Category slug' : editingElement.settings.posts_by === 'tag' ? 'Tag slug' : 'Author ID'"
+                                           :placeholder="editingElement.settings.posts_by === 'search' ? 'Search keyword' : editingElement.settings.posts_by === 'category' ? 'Category slug' : editingElement.settings.posts_by === 'tag' ? 'Tag slug' : 'Post IDs (comma separated)'"
                                            class="w-full mt-2 border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    <template v-if="editingElement.settings.posts_by === 'custom_field'">
+                                        <input type="text" v-model="editingElement.settings.posts_by_cf_key"
+                                               placeholder="Meta key"
+                                               class="w-full mt-2 border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                        <input type="text" v-model="editingElement.settings.posts_by_cf_value"
+                                               placeholder="Meta value"
+                                               class="w-full mt-2 border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </template>
                                 </div>
 
-                                <!-- 5. Post Status -->
+                                <!-- Post Status -->
                                 <div>
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Post Status</label>
                                     <div class="space-y-1.5">
                                         <label v-for="status in [{v:'publish',l:'Published'},{v:'draft',l:'Draft'},{v:'pending',l:'Pending'},{v:'private',l:'Private'}]"
                                                :key="status.v"
                                                class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox"
-                                                   :value="status.v"
+                                            <input type="checkbox" :value="status.v"
                                                    v-model="editingElement.settings.post_status"
                                                    class="accent-[#0091ea]">
                                             <span class="text-[13px] text-slate-600">@{{ status.l }}</span>
@@ -901,7 +906,7 @@
                                     </div>
                                 </div>
 
-                                <!-- 6. Out Of Stock Products (product only) -->
+                                <!-- Out Of Stock (product only) -->
                                 <div v-if="editingElement.settings.post_type === 'product'">
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Out Of Stock Products</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
@@ -914,47 +919,68 @@
                                     </div>
                                 </div>
 
-                                <!-- 7. Number of Posts -->
+                                <!-- Number of Posts (slider) -->
                                 <div>
-                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Number of Posts</label>
-                                    <input type="number" v-model.number="editingElement.settings.posts_count"
-                                           min="1" max="48"
-                                           class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                </div>
-
-                                <!-- 8. Posts Offset -->
-                                <div>
-                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Posts Offset</label>
-                                    <input type="number" v-model.number="editingElement.settings.posts_offset"
-                                           min="0" max="100"
-                                           class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                </div>
-
-                                <!-- 9 & 10. Order By + Order -->
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="text-[12px] font-bold text-[#333] block mb-2">Order By</label>
-                                        <select v-model="editingElement.settings.order_by"
-                                                class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                            <option value="created_at">Date</option>
-                                            <option value="title">Title</option>
-                                            <option value="views">Views</option>
-                                            <option value="updated_at">Modified</option>
-                                            <option value="rand">Random</option>
-                                            <option value="menu_order">Menu Order</option>
-                                        </select>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label class="text-[12px] font-bold text-[#333]">Number of Posts</label>
+                                        <span class="text-[12px] text-[#0091ea] font-black">@{{ editingElement.settings.posts_count ?? 6 }}</span>
                                     </div>
-                                    <div>
-                                        <label class="text-[12px] font-bold text-[#333] block mb-2">Order</label>
-                                        <select v-model="editingElement.settings.order"
-                                                class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                            <option value="desc">Desc</option>
-                                            <option value="asc">Asc</option>
-                                        </select>
+                                    <div class="flex gap-3 items-center">
+                                        <input type="range" v-model.number="editingElement.settings.posts_count"
+                                               min="1" max="48" class="flex-1 accent-[#0091ea]">
+                                        <input type="number" v-model.number="editingElement.settings.posts_count"
+                                               min="1" max="48"
+                                               class="w-14 border border-slate-200 rounded px-2 py-2 text-[13px] text-center focus:outline-none focus:border-[#0091ea]">
                                     </div>
                                 </div>
 
-                                <!-- 11. Pagination Type -->
+                                <!-- Posts Offset (slider) -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label class="text-[12px] font-bold text-[#333]">Posts Offset</label>
+                                        <span class="text-[12px] text-[#0091ea] font-black">@{{ editingElement.settings.posts_offset ?? 0 }}</span>
+                                    </div>
+                                    <div class="flex gap-3 items-center">
+                                        <input type="range" v-model.number="editingElement.settings.posts_offset"
+                                               min="0" max="100" class="flex-1 accent-[#0091ea]">
+                                        <input type="number" v-model.number="editingElement.settings.posts_offset"
+                                               min="0" max="100"
+                                               class="w-14 border border-slate-200 rounded px-2 py-2 text-[13px] text-center focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                </div>
+
+                                <!-- Order By -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Order By</label>
+                                    <select v-model="editingElement.settings.order_by"
+                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                        <option value="created_at">Date</option>
+                                        <option value="title">Title</option>
+                                        <option value="views">Views</option>
+                                        <option value="updated_at">Modified</option>
+                                        <option value="rand">Random</option>
+                                        <option value="menu_order">Menu Order</option>
+                                        <option value="price">Price</option>
+                                        <option value="popularity">Popularity (sales)</option>
+                                        <option value="rating">Average Rating</option>
+                                        <option value="recently_purchased">Recently Purchased</option>
+                                    </select>
+                                </div>
+
+                                <!-- Order (Asc / Desc buttons) -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Order</label>
+                                    <div class="flex bg-slate-50 border border-slate-100 rounded p-1">
+                                        <button @click="editingElement.settings.order = 'asc'"
+                                                :class="editingElement.settings.order === 'asc' ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">ASC</button>
+                                        <button @click="editingElement.settings.order = 'desc'"
+                                                :class="(editingElement.settings.order === 'desc' || !editingElement.settings.order) ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">DESC</button>
+                                    </div>
+                                </div>
+
+                                <!-- Pagination Type -->
                                 <div>
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Pagination Type</label>
                                     <select v-model="editingElement.settings.pagination_type"
@@ -966,12 +992,48 @@
                                     </select>
                                 </div>
 
-                                <!-- 12. Nothing Found Message -->
+                                <!-- Nothing Found Message -->
                                 <div>
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Nothing Found Message</label>
                                     <input type="text" v-model="editingElement.settings.nothing_found_message"
                                            placeholder="No posts found."
                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                </div>
+
+                                <!-- Element Visibility -->
+                                <div class="pt-4 border-t border-slate-50">
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Element Visibility</label>
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
+                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-mobile-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
+                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-tablet-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
+                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-desktop text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- CSS Class & ID -->
+                                <div class="grid grid-cols-1 gap-4 pt-4 border-t border-slate-50">
+                                    <div>
+                                        <label class="text-[12px] font-bold text-[#333] block mb-2">CSS Class</label>
+                                        <input type="text" v-model="editingElement.settings.cssClass"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                    <div>
+                                        <label class="text-[12px] font-bold text-[#333] block mb-2">CSS ID</label>
+                                        <input type="text" v-model="editingElement.settings.cssId"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
                                 </div>
 
                             </div>

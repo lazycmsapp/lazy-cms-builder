@@ -20,11 +20,9 @@
     }
 
     // Resolve post type
-    $postType = $s['post_type'] === 'custom'
-        ? ($s['post_type_custom'] ?? 'post')
-        : ($s['post_type'] ?? 'post');
+    $postType = $s['post_type'] ?? 'post';
 
-    // Resolve category/tag/author filter
+    // Build query args
     $queryArgs = [
         'post_type' => $postType,
         'limit'     => max(1, (int)($s['posts_count'] ?? 6)),
@@ -32,12 +30,24 @@
         'order'     => $s['order']    ?? 'desc',
         'orderby'   => $s['order_by'] ?? 'created_at',
     ];
-    $postsBy = $s['posts_by'] ?? 'all';
-    if ($postsBy !== 'all' && !empty($s['posts_by_value'])) {
-        if ($postsBy === 'category') $queryArgs['category'] = $s['posts_by_value'];
-        if ($postsBy === 'tag')      $queryArgs['tag']      = $s['posts_by_value'];
-        if ($postsBy === 'author')   $queryArgs['author']   = $s['posts_by_value'];
+
+    // Post status
+    if (!empty($s['post_status']) && is_array($s['post_status'])) {
+        $mapped = array_map(fn($st) => $st === 'publish' ? 'published' : $st, $s['post_status']);
+        $queryArgs['status'] = count($mapped) === 1 ? $mapped[0] : $mapped;
     }
+
+    // Posts By filter
+    $postsBy = $s['posts_by'] ?? 'all';
+    $postsByVal = $s['posts_by_value'] ?? '';
+    switch ($postsBy) {
+        case 'category':    if ($postsByVal) $queryArgs['category'] = $postsByVal; break;
+        case 'tag':         if ($postsByVal) $queryArgs['tag']      = $postsByVal; break;
+        case 'author':      if ($postsByVal) $queryArgs['author']   = $postsByVal; break;
+        case 'search':      if ($postsByVal) $queryArgs['search']   = $postsByVal; break;
+        case 'post_id':     if ($postsByVal) $queryArgs['post_id']  = $postsByVal; break;
+    }
+
     $posts = get_lazy_posts($queryArgs);
 
     // Grid / spacing settings

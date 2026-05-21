@@ -2013,10 +2013,12 @@
                         } : {}),
                         ...(type === 'card' ? {
                             post_card_id: '',
-                            content_source: 'latest',
+                            content_source: 'posts',
                             post_type: 'post',
                             posts_by: 'all',
                             posts_by_value: '',
+                            posts_by_cf_key: '',
+                            posts_by_cf_value: '',
                             post_status: ['publish'],
                             hide_out_of_stock: false,
                             posts_count: 6,
