@@ -2143,6 +2143,25 @@
                 return m;
             });
 
+            const getCardElementsFlat = (cardId) => {
+                if (!cardId) return [];
+                const card = postCardsList.value.find(c => c.id === cardId);
+                if (!card?.config?.layout) return [];
+                const elements = [];
+                const traverse = (items) => {
+                    if (!Array.isArray(items)) return;
+                    for (const item of items) {
+                        if (Array.isArray(item.columns)) {
+                            for (const col of item.columns) traverse(col.elements || []);
+                        } else if (item.type) {
+                            elements.push(item);
+                        }
+                    }
+                };
+                traverse(card.config.layout);
+                return elements;
+            };
+
             const libraryTabs = [
                 { key: 'containers',     label: 'Containers',     icon: 'fa fa-table-columns' },
                 { key: 'columns',        label: 'Columns',        icon: 'fa fa-columns' },
@@ -2285,7 +2304,7 @@
                 shouldShowGuide,
                 toasts, showToast,
                 showLibraryModal, libraryActiveTab, libraryNewName, isSavingToLibrary, libraryItems, libraryContext,
-                postCardsList, postCardsMap, recentPosts,
+                postCardsList, postCardsMap, recentPosts, getCardElementsFlat,
                 libraryTabs, libraryCurrentItems, libraryActiveTabLabel, libraryTabIcon, libraryCanSave,
                 openLibraryModal, saveToLibrary, insertFromLibrary, deleteFromLibrary,
                 hoveredType, hoveredCi, hoveredColi, hoveredEli, hoveredNcoli, setHover,
