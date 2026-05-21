@@ -117,7 +117,7 @@ class MenuSeeder extends Seeder
             ['title' => 'Sections',       'route' => 'admin.lazy-builder.sections',     'order' => 1],
             ['title' => 'Header Builder', 'route' => 'admin.lazy-builder.header',        'order' => 2],
             ['title' => 'Footer Builder', 'route' => 'admin.lazy-builder.footer',        'order' => 3],
-            ['title' => 'Library',        'route' => 'admin.lazy-builder.library.index', 'order' => 4],
+            ['title' => 'Library',        'route' => 'admin.lazy-builder.library',       'order' => 4],
         ]);
 
         // 8. ACPT
