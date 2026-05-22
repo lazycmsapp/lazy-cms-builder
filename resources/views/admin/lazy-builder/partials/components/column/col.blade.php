@@ -145,11 +145,11 @@
              @click.stop="setEditingContext('element', ci, coli, eli)"
              @contextmenu.prevent.stop="openCtxMenu($event, 'element', ci, coli, eli)"
              :class="[
-                (column.settings.contentLayout === 'row' && el.type !== 'row') ? '' : (getResponsiveVal(column.settings, 'contentAlignH', device) && getResponsiveVal(column.settings, 'contentAlignH', device) !== 'stretch' && el.type !== 'title' && el.type !== 'menu' && el.type !== 'text_block' && el.type !== 'special_text' && el.type !== 'button' && el.type !== 'image' ? '' : 'w-full'),
+                (column.settings.contentLayout === 'row' && el.type !== 'row') ? '' : (getResponsiveVal(column.settings, 'contentAlignH', device) && getResponsiveVal(column.settings, 'contentAlignH', device) !== 'stretch' && el.type !== 'title' && el.type !== 'menu' && el.type !== 'text_block' && el.type !== 'special_text' && el.type !== 'button' && el.type !== 'image' && el.type !== 'card' && el.type !== 'spacer' ? '' : 'w-full'),
                 dragTarget === 'element-' + ci + '-' + coli + '-' + eli + '-null-null' && dragPosition === 'top' ? 'border-t-2 border-t-blue-500' : '',
                 dragTarget === 'element-' + ci + '-' + coli + '-' + eli + '-null-null' && dragPosition === 'bottom' ? 'border-b-2 border-b-blue-500' : ''
              ]"
-             :style="el.type === 'row' ? { width: '100%', maxWidth: '100%' } : {}"
+             :style="el.type === 'row' ? { width: '100%', maxWidth: '100%' } : (el.type === 'spacer' ? { flexGrow: el.settings.flexGrow || 0 } : {})"
              @dragover="onDragOver($event, 'element', ci, coli, eli)"
              @drop="onDrop($event, 'element', ci, coli, eli)">
             

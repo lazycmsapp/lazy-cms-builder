@@ -358,6 +358,21 @@
                             </template>
                         </div>
 
+                        <!-- Card Element in Nested Column -->
+                        <div v-else-if="nestedEl.type === 'card'">
+                            <template v-for="el in [nestedEl]" :key="el.id">
+                                @include('cms-dashboard::admin.lazy-builder.partials.components.elements.card')
+                            </template>
+                        </div>
+
+                        <!-- Spacer Element in Nested Column -->
+                        <div v-else-if="nestedEl.type === 'spacer'"
+                             :style="{ flexGrow: nestedEl.settings.flexGrow || 0 }">
+                            <template v-for="el in [nestedEl]" :key="el.id">
+                                @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.spacer')
+                            </template>
+                        </div>
+
                         <!-- Custom Registered Blocks for Nested -->
                         <template v-else>
                             @foreach($customElements ?? [] as $type => $custEl)
@@ -369,8 +384,8 @@
                             @endforeach
                         </template>
 
-                        <!-- Nested Element Toolbar (Top-Center, Compact & Expandable) -->
-                        <div class="absolute top-0 left-1/2 -translate-x-1/2 flex justify-center opacity-0 group-hover/nel:opacity-100 transition-all duration-200 z-[1010] hover:z-[1100] pointer-events-none p-1" v-if="!isPreview">
+                        <!-- Nested Element Toolbar (Center, Compact & Expandable) -->
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/nel:opacity-100 transition-all duration-200 z-[1010] hover:z-[1100] pointer-events-none" v-if="!isPreview">
                             <div class="flex items-center bg-[#9c27b0] text-white rounded shadow-xl h-7 px-1 pointer-events-auto group/netbar overflow-hidden hover:overflow-visible max-w-[60px] hover:max-w-[250px] transition-all duration-300 ease-in-out">
                                 
                                 <!-- Always Visible Part: Edit & Add -->

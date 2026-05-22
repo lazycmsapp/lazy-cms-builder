@@ -3,6 +3,7 @@
     $heightMode = $s['height'] ?? 'auto';
     
     $containerStyles = ['width: 100%'];
+    if (!empty($cardStretch ?? false)) $containerStyles[] = 'flex-grow: 1';
 
     $hexToRgba = function($hex, $opacity) {
         if (empty($hex) || $hex === 'transparent') return 'transparent';

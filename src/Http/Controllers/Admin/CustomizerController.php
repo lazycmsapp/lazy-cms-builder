@@ -18,7 +18,7 @@ class CustomizerController extends \Illuminate\Routing\Controller
                         'type'    => 'button_group',
                         'label'   => 'Layout',
                         'desc'    => 'Controls the site layout.',
-                        'default' => 'wide',
+                        'default' => 'boxed',
                         'options' => ['boxed' => 'Boxed', 'wide' => 'Wide'],
                     ],
                     'theme_site_width' => [

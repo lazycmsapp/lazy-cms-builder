@@ -311,6 +311,7 @@
             const availableElements = [
                 { type: 'title', name: 'Title', icon: 'fa fa-heading' },
                 { type: 'card', name: 'Card', icon: 'fa fa-th-large' },
+                { type: 'spacer', name: 'Spacer', icon: 'fa fa-arrows-alt-v' },
             ];
             if (postCardMode.value) {
                 availableElements.push({ type: 'post_content', name: 'Content', icon: 'fa fa-paragraph' });
@@ -534,7 +535,8 @@
                     g = "0x" + hex[3] + hex[4];
                     b = "0x" + hex[5] + hex[6];
                 }
-                return `rgba(${+r}, ${+g}, ${+b}, ${opacity})`;
+                const a = (opacity !== undefined && opacity !== null && opacity !== '') ? opacity : 1;
+                return `rgba(${+r}, ${+g}, ${+b}, ${a})`;
             };
 
             const uid = () => Math.random().toString(36).substr(2, 9);
@@ -2040,7 +2042,17 @@
                             dynamic_source: '', link_dynamic_source: ''
                         } : {}),
                         ...(type === 'text' ? { content: '<p>New text here...</p>' } : {}),
-                        ...(type === 'button' ? { text: 'Click Me', url: '#', style: 'primary', dynamic_source: '', link_dynamic_source: '' } : {}),
+                        ...(type === 'button' ? {
+                            text: 'Click Me', url: '#', style: 'primary',
+                            buttonStyle: 'default',
+                            bgColor: '#0091ea', color: '#ffffff',
+                            hoverColor: '#ffffff', hoverBgColor: '#007cc0',
+                            bgGradientStartColor: '#0091ea', bgGradientEndColor: '#007cc0',
+                            bgGradientHoverStartColor: '#007cc0', bgGradientHoverEndColor: '#005fa3',
+                            bgGradientType: 'linear', bgGradientAngle: 180,
+                            bgGradientStartPosition: 0, bgGradientEndPosition: 100,
+                            dynamic_source: '', link_dynamic_source: '',
+                        } : {}),
                         ...(type === 'image' ? { url: '', alt: '', linkUrl: '', linkTarget: '_self', dynamic_source: '', link_dynamic_source: '' } : {}),
                         ...(type === 'post_content' ? {
                             content_display: 'excerpt', excerptLength: 120, stripHtml: true,
@@ -2051,6 +2063,18 @@
                             marginTopUnit: 'px', marginRightUnit: 'px', marginBottomUnit: 'px', marginLeftUnit: 'px',
                             cssClass: '', cssId: '',
                             visibility: { mobile: true, tablet: true, desktop: true }
+                        } : {}),
+                        ...(type === 'spacer' ? {
+                            style: 'default',
+                            flexGrow: 0,
+                            marginTop: 0, marginTopUnit: 'px',
+                            marginBottom: 0, marginBottomUnit: 'px',
+                            separatorWidth: 100, separatorWidthUnit: '%',
+                            alignment: 'center',
+                            borderSize: 1,
+                            separatorColor: '#cccccc',
+                            cssClass: '', cssId: '',
+                            visibility: { mobile: true, tablet: true, desktop: true },
                         } : {}),
                         ...(type === 'card' ? {
                             post_card_id: '',
@@ -2216,7 +2240,7 @@
             const fetchCardPreview = async (el) => {
                 if (!el || el.type !== 'card') return;
                 const elId = el.id;
-                cardPreviewCache[elId] = { loading: true, posts: cardPreviewCache[elId]?.posts || [] };
+                cardPreviewCache[elId] = { loading: true, html: cardPreviewCache[elId]?.html || '' };
                 try {
                     const res = await fetch('{{ route("admin.lazy-builder.card-preview") }}', {
                         method: 'POST',
@@ -2224,9 +2248,9 @@
                         body: JSON.stringify({ settings: el.settings })
                     });
                     const data = await res.json();
-                    cardPreviewCache[elId] = { loading: false, posts: data.success ? data.posts : [] };
+                    cardPreviewCache[elId] = { loading: false, html: data.success ? data.html : '' };
                 } catch(e) {
-                    cardPreviewCache[elId] = { loading: false, posts: [] };
+                    cardPreviewCache[elId] = { loading: false, html: '' };
                 }
             };
 

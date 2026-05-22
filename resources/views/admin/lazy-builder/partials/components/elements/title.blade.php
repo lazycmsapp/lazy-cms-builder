@@ -71,7 +71,8 @@
                     whiteSpace: (el.settings.textOverflow === 'ellipsis' || el.settings.textOverflow === 'clip') ? 'nowrap' : 'normal',
                     overflow: (el.settings.textOverflow === 'ellipsis' || el.settings.textOverflow === 'clip') ? 'hidden' : 'visible',
                     margin: '0',
-                    transition: 'color 0.3s ease'
+                    transition: 'color 0.3s ease',
+                    pointerEvents: 'auto'
                 }"
                 class="main-title">@{{ el.settings.title || 'Your Awesome Title' }}</component>
         </a>

@@ -99,7 +99,7 @@
         $titleStyles[] = "color: transparent";
         $titleStyles[] = "-webkit-text-fill-color: transparent";
     } else {
-        $titleStyles[] = 'color: ' . ($s['titleColor'] ?? '#222');
+        $titleStyles[] = 'color: ' . ($s['titleColor'] ?: '#222');
     }
 
     if (!empty($s['textShadow'])) {
@@ -173,7 +173,7 @@
 @if($titleHoverColor)
 <style>
     @if(empty($s['useGradient']))
-    #{{ $titleElemId }} { transition: color 0.3s ease; }
+    #{{ $titleElemId }} { color: {{ $s['titleColor'] ?: '#222' }}; transition: color 0.3s ease; }
     #{{ $titleElemId }}:hover { color: {{ $titleHoverColor }} !important; }
     @else
     #{{ $titleElemId }}:hover { color: {{ $titleHoverColor }} !important; -webkit-text-fill-color: {{ $titleHoverColor }} !important; background-image: none !important; }

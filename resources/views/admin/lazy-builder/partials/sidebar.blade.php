@@ -1076,6 +1076,63 @@
 
                             </div>
 
+                            <!-- ══ SPACER ELEMENT ══ -->
+                            <div v-else-if="editingElement?.type === 'spacer'" class="space-y-8">
+
+                                <!-- Style -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Style</label>
+                                    <select v-model="editingElement.settings.style"
+                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                        <option value="default">Default</option>
+                                        <option value="none">None</option>
+                                        <option value="single_border_solid">Single Border Solid</option>
+                                        <option value="double_border_solid">Double Border Solid</option>
+                                        <option value="single_border_dashed">Single Border Dashed</option>
+                                        <option value="double_border_dashed">Double Border Dashed</option>
+                                        <option value="single_border_dotted">Single Border Dotted</option>
+                                        <option value="double_border_dotted">Double Border Dotted</option>
+                                    </select>
+                                </div>
+
+                                <!-- Element Visibility -->
+                                <div class="pt-4 border-t border-slate-50">
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Element Visibility</label>
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
+                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-mobile-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
+                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-tablet-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
+                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-desktop text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- CSS Class & ID -->
+                                <div class="grid grid-cols-1 gap-4 pt-4 border-t border-slate-50">
+                                    <div>
+                                        <label class="text-[12px] font-bold text-[#333] block mb-2">CSS Class</label>
+                                        <input type="text" v-model="editingElement.settings.cssClass"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                    <div>
+                                        <label class="text-[12px] font-bold text-[#333] block mb-2">CSS ID</label>
+                                        <input type="text" v-model="editingElement.settings.cssId"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                </div>
+
+                            </div>
+
                             <!-- ══ POST CONTENT ELEMENT ══ -->
                             <div v-else-if="editingElement?.type === 'post_content'" class="space-y-8">
 
@@ -1388,6 +1445,10 @@
                              <!-- Design Settings for Card -->
                              <div v-else-if="editingElement?.type === 'card'" class="space-y-6">
                                  @include('cms-dashboard::admin.lazy-builder.partials.components.elements.card-design')
+                             </div>
+                             <!-- Design Settings for Spacer -->
+                             <div v-else-if="editingElement?.type === 'spacer'" class="space-y-6">
+                                 @include('cms-dashboard::admin.lazy-builder.partials.components.elements.spacer-design')
                              </div>
                              <!-- Design Settings for Post Content -->
                              <div v-else-if="editingElement?.type === 'post_content'" class="space-y-6">

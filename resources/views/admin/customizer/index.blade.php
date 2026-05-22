@@ -5,7 +5,7 @@
 {{-- Toast container --}}
 <div id="customizer-toast" class="fixed top-6 right-6 z-[99999] flex flex-col gap-2 pointer-events-none" style="min-width:280px;"></div>
 
-<div x-data="customizerApp('{{ $section }}')" x-init="init()" class="flex flex-col" style="height:calc(100vh - 32px - 40px);">
+<div x-cloak x-data="customizerApp('{{ $section }}')" x-init="init()" class="flex flex-col" style="height:calc(100vh - 32px - 40px);">
 
     {{-- ===== TOP BAR ===== --}}
     <div class="flex-shrink-0 flex items-center gap-3 mb-3">

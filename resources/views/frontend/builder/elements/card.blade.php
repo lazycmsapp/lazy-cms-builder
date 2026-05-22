@@ -265,8 +265,8 @@
             $postCategories    = $post->categories ?? collect();
         @endphp
         @if(!empty($cardLayout))
-        <div style="break-inside:avoid">
-            @include('cms-dashboard::frontend.builder.render', ['layout' => $cardLayout])
+        <div style="break-inside:avoid{{ $alignItems === 'stretch' ? ';display:flex;flex-direction:column' : '' }}">
+            @include('cms-dashboard::frontend.builder.render', ['layout' => $cardLayout, 'cardStretch' => $alignItems === 'stretch'])
         </div>
         @else
         <article class="lazy-post-card {{ $cardStyleCss }} {{ $hoverCss }} rounded-lg overflow-hidden bg-white" style="break-inside:avoid">

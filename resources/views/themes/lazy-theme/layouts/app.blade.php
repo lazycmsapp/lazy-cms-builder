@@ -51,7 +51,7 @@
         $googleFontsUrl = "https://fonts.googleapis.com/css2?family=" . implode('&family=', array_map(fn($f) => str_replace(' ', '+', $f) . ':wght@300;400;500;600;700;800;900', $fontsToLoad)) . "&display=swap";
 
         // Layout Type
-        $layoutType = get_cms_option('theme_layout_type', 'wide');
+        $layoutType = get_cms_option('theme_layout_type', 'boxed');
     @endphp
 
     <!-- Favicon -->
