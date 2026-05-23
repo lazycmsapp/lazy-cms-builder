@@ -145,7 +145,7 @@
              @click.stop="setEditingContext('element', ci, coli, eli)"
              @contextmenu.prevent.stop="openCtxMenu($event, 'element', ci, coli, eli)"
              :class="[
-                (column.settings.contentLayout === 'row' && el.type !== 'row') ? '' : (getResponsiveVal(column.settings, 'contentAlignH', device) && getResponsiveVal(column.settings, 'contentAlignH', device) !== 'stretch' && el.type !== 'title' && el.type !== 'menu' && el.type !== 'text_block' && el.type !== 'special_text' && el.type !== 'button' && el.type !== 'image' && el.type !== 'card' && el.type !== 'spacer' ? '' : 'w-full'),
+                (column.settings.contentLayout === 'row' && el.type !== 'row') ? '' : (getResponsiveVal(column.settings, 'contentAlignH', device) && getResponsiveVal(column.settings, 'contentAlignH', device) !== 'stretch' && el.type !== 'title' && el.type !== 'menu' && el.type !== 'text_block' && el.type !== 'special_text' && el.type !== 'button' && el.type !== 'image' && el.type !== 'card' && el.type !== 'spacer' && el.type !== 'html' && el.type !== 'icon_box' ? '' : 'w-full'),
                 dragTarget === 'element-' + ci + '-' + coli + '-' + eli + '-null-null' && dragPosition === 'top' ? 'border-t-2 border-t-blue-500' : '',
                 dragTarget === 'element-' + ci + '-' + coli + '-' + eli + '-null-null' && dragPosition === 'bottom' ? 'border-b-2 border-b-blue-500' : ''
              ]"
@@ -160,6 +160,8 @@
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.button')
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.video')
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.spacer')
+            @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.html')
+            @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.icon-box')
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.text-block')
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.menu')
             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.card')
@@ -196,7 +198,7 @@
                         <div class="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool" 
                              @click.stop="setEditingContext('element', ci, coli, eli)">
                             <i class="fa fa-pen text-[10px]"></i>
-                            <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Edit</div>
+                            <div class="lazy-tooltip-v2 opacity-0 group-hover/etool:opacity-100 z-[100] whitespace-nowrap">Edit @{{ {heading:'Heading',title:'Title',text:'Text',image:'Image',button:'Button',video:'Video',spacer:'Spacer',html:'HTML',icon_box:'Icon Box',text_block:'Text Block',menu:'Menu',card:'Card',row:'Nested Row',post_grid:'Post Grid',post_content:'Post Content',special_text:'Special Text'}[el.type] || 'Element' }}</div>
                         </div>
                         <div class="w-7 h-7 flex items-center justify-center hover:bg-white/20 rounded cursor-pointer relative group/etool" 
                              @click.stop="openElementModal(ci, coli, 'design', false, eli + 1)">

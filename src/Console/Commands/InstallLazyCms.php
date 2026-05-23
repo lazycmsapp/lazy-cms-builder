@@ -35,6 +35,12 @@ class InstallLazyCms extends Command
             '--force' => true
         ]);
 
+        // 3b. Publish child theme skeleton (no --force: never overwrite user customizations)
+        $this->info('Step 3b: Publishing child theme (skipped if already exists)...');
+        $this->call('vendor:publish', [
+            '--tag' => 'lazy-theme-child',
+        ]);
+
         // 4. Create Storage Link
         $this->info('Step 4: Creating storage link...');
         if (!file_exists(public_path('storage'))) {

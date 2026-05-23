@@ -1,3 +1,19 @@
+{{-- CodeMirror — HTML Block IDE editor (local assets) --}}
+<link rel="stylesheet" href="{{ asset('vendor/cms-dashboard/css/codemirror/codemirror.min.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/cms-dashboard/css/codemirror/dracula.min.css') }}">
+<script src="{{ asset('vendor/cms-dashboard/js/codemirror/codemirror.min.js') }}"></script>
+<script src="{{ asset('vendor/cms-dashboard/js/codemirror/xml.min.js') }}"></script>
+<script src="{{ asset('vendor/cms-dashboard/js/codemirror/javascript.min.js') }}"></script>
+<script src="{{ asset('vendor/cms-dashboard/js/codemirror/css.min.js') }}"></script>
+<script src="{{ asset('vendor/cms-dashboard/js/codemirror/htmlmixed.min.js') }}"></script>
+<script src="{{ asset('vendor/cms-dashboard/js/codemirror/closetag.min.js') }}"></script>
+<script src="{{ asset('vendor/cms-dashboard/js/codemirror/closebrackets.min.js') }}"></script>
+<script src="{{ asset('vendor/cms-dashboard/js/codemirror/matchbrackets.min.js') }}"></script>
+<style>
+    .CodeMirror { height: 280px !important; font-size: 12px; font-family: 'Fira Code', 'Courier New', monospace; }
+    .CodeMirror-scroll { min-height: 260px; }
+</style>
+
 <script>
     const { createApp, ref, reactive, computed, onMounted, watch, watchEffect } = Vue;
 
@@ -310,8 +326,10 @@
 
             const availableElements = [
                 { type: 'title', name: 'Title', icon: 'fa fa-heading' },
+                { type: 'icon_box', name: 'Icon Box', icon: 'fa fa-star-half-alt' },
                 { type: 'card', name: 'Card', icon: 'fa fa-th-large' },
                 { type: 'spacer', name: 'Spacer', icon: 'fa fa-arrows-alt-v' },
+                { type: 'html', name: 'HTML Block', icon: 'fa fa-code' },
             ];
             if (postCardMode.value) {
                 availableElements.push({ type: 'post_content', name: 'Content', icon: 'fa fa-paragraph' });
@@ -1441,6 +1459,71 @@
                 if (s.columns_mobile === undefined || s.columns_mobile === null) s.columns_mobile = 1;
             }, { immediate: true });
 
+            // HTML Block — CodeMirror IDE editor
+            let lazyHtmlCm = null;
+
+            const initHtmlEditor = () => {
+                if (!window.CodeMirror) return;
+                const container = document.getElementById('lazy-html-editor');
+                if (!container) return;
+
+                // Editor was removed from DOM (v-if toggled off then on) — destroy and re-create
+                if (lazyHtmlCm && !document.body.contains(lazyHtmlCm.getWrapperElement())) {
+                    lazyHtmlCm = null;
+                }
+
+                const currentVal = editingElement.value?.settings?.htmlContent || '';
+
+                if (lazyHtmlCm) {
+                    if (lazyHtmlCm.getValue() !== currentVal) {
+                        lazyHtmlCm.setValue(currentVal);
+                    }
+                    lazyHtmlCm.refresh();
+                    return;
+                }
+
+                lazyHtmlCm = CodeMirror(container, {
+                    value: currentVal,
+                    mode: 'htmlmixed',
+                    theme: 'dracula',
+                    lineNumbers: true,
+                    lineWrapping: true,
+                    tabSize: 2,
+                    indentWithTabs: false,
+                    autoCloseTags: true,
+                    autoCloseBrackets: true,
+                    matchBrackets: true,
+                });
+                lazyHtmlCm.setSize('100%', 280);
+                lazyHtmlCm.on('change', (cm) => {
+                    if (editingElement.value?.type === 'html') {
+                        editingElement.value.settings.htmlContent = cm.getValue();
+                    }
+                });
+            };
+
+            // Watch when editing switches to/from an html element
+            const isEditingHtml = computed(() => editingElement.value?.type === 'html');
+            watch(isEditingHtml, (nowHtml) => {
+                if (nowHtml) {
+                    setTimeout(initHtmlEditor, 80);
+                } else {
+                    lazyHtmlCm = null;
+                }
+            }, { flush: 'post' });
+            // Re-init when switching between two html elements
+            watch(() => editingElement.value?.id, (newId) => {
+                if (isEditingHtml.value) {
+                    setTimeout(initHtmlEditor, 80);
+                }
+            }, { flush: 'post' });
+            // Re-init when switching back to General tab while editing an html element
+            watch(() => editingContext.value.tab, (tab) => {
+                if ((tab === 'content' || !tab) && isEditingHtml.value) {
+                    setTimeout(initHtmlEditor, 80);
+                }
+            }, { flush: 'post' });
+
             // Dynamic Styles
             const canvasStyle = computed(() => {
                 const pt = window.builderPagePadding?.top || '60px';
@@ -2073,6 +2156,37 @@
                             alignment: 'center',
                             borderSize: 1,
                             separatorColor: '#cccccc',
+                            cssClass: '', cssId: '',
+                            visibility: { mobile: true, tablet: true, desktop: true },
+                        } : {}),
+                        ...(type === 'html' ? {
+                            htmlContent: '',
+                            marginTop: 0, marginTopUnit: 'px',
+                            marginBottom: 0, marginBottomUnit: 'px',
+                            cssClass: '', cssId: '',
+                            visibility: { mobile: true, tablet: true, desktop: true },
+                        } : {}),
+                        ...(type === 'icon_box' ? {
+                            icon: 'fas fa-star',
+                            title: 'Icon Box',
+                            description: 'Add a short description for this icon box.',
+                            linkUrl: '', linkTarget: '_self',
+                            layout: 'top', alignment: 'center',
+                            iconSize: 40, iconSizeUnit: 'px',
+                            iconColor: '#0091ea',
+                            iconBgColor: '', iconBgColorOpacity: 1,
+                            iconBorderRadius: 50, iconSpacing: 16, iconPadding: 0,
+                            titleTag: 'h3',
+                            titleFontFamily: 'inherit',
+                            titleFontSize: 20, titleFontSizeUnit: 'px',
+                            titleFontWeight: '600', titleColor: '#222222', titleSpacing: 8,
+                            titleLineHeight: 1.3, titleLetterSpacing: '0px', titleTextTransform: 'none',
+                            descFontFamily: 'inherit',
+                            descFontSize: 14, descFontSizeUnit: 'px',
+                            descFontWeight: '400', descColor: '#666666', descLineHeight: 1.6,
+                            descLetterSpacing: '0px', descTextTransform: 'none',
+                            marginTop: 0, marginTopUnit: 'px',
+                            marginBottom: 0, marginBottomUnit: 'px',
                             cssClass: '', cssId: '',
                             visibility: { mobile: true, tablet: true, desktop: true },
                         } : {}),

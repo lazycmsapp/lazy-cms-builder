@@ -31,11 +31,17 @@ class UpdateLazyCms extends Command
             '--force' => true
         ]);
 
-        // 4. Publish Themes (Force)
+        // 4. Publish Themes (Force) — parent theme only
         $this->info('Step 4: Refreshing themes...');
         $this->call('vendor:publish', [
             '--tag' => 'lazy-themes',
             '--force' => true
+        ]);
+
+        // 4b. Publish child theme skeleton if it does not exist yet (never --force)
+        $this->info('Step 4b: Publishing child theme (skipped if already exists)...');
+        $this->call('vendor:publish', [
+            '--tag' => 'lazy-theme-child',
         ]);
 
         // 5. Clear Cache

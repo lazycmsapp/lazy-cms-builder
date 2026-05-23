@@ -75,10 +75,15 @@ class CmsDashboardServiceProvider extends ServiceProvider
                 __DIR__ . '/../public/assets' => public_path('vendor/cms-dashboard'),
             ], 'cms-dashboard-assets');
 
-            // 1. Views & Themes
+            // 1. Parent theme only — safe to publish with --force on every update
             $this->publishes([
-                __DIR__ . '/../resources/views/themes' => resource_path('views/themes'),
+                __DIR__ . '/../resources/views/themes/lazy-theme' => resource_path('views/themes/lazy-theme'),
             ], 'lazy-themes');
+
+            // Child theme — published WITHOUT --force so user customizations are never overwritten
+            $this->publishes([
+                __DIR__ . '/../resources/views/themes/lazy-theme-child' => resource_path('views/themes/lazy-theme-child'),
+            ], 'lazy-theme-child');
 
             $this->publishes([
                 __DIR__ . '/../resources/views' => resource_path('views/vendor/cms-dashboard'),
@@ -103,58 +108,92 @@ class CmsDashboardServiceProvider extends ServiceProvider
             }
         } catch (\Exception $e) {}
 
-        // 2. Load theme-specific functions.php (For Hooks/Logic)
-        $functionsFile = resource_path("views/themes/{$activeTheme}/functions.php");
-        if (!file_exists($functionsFile)) {
-            $functionsFile = __DIR__ . "/../resources/views/themes/{$activeTheme}/functions.php";
-        }
-        
-        if (file_exists($functionsFile)) {
-            require_once $functionsFile;
-        }
-
-        // 3. Load theme-specific options.php (For Admin UI Config)
-        $optionsFile = resource_path("views/themes/{$activeTheme}/options.php");
-        if (!file_exists($optionsFile)) {
-            $optionsFile = __DIR__ . "/../resources/views/themes/{$activeTheme}/options.php";
-        }
-        
-        $themeOptions = [];
-        if (file_exists($optionsFile)) {
-            require_once $optionsFile;
-        }
-
-        // 4. Merge and Filter Options
-        $baseOptions = config('lazy-options', []);
-        
-        // Merge themeOptions array if defined in options.php
-        if (!empty($themeOptions)) {
-            $baseOptions = array_replace_recursive($baseOptions, $themeOptions);
-        }
-
-        // Apply filters so users can add options via functions.php hooks
-        $finalOptions = apply_lazy_filters('cms_theme_options', $baseOptions);
-        
-        // 5. Provide specific filters for Magic Keys (to make it cleaner for developers)
-        if (isset($finalOptions['hooks'])) {
-            foreach ($finalOptions['hooks'] as $key => $hookData) {
-                // Example tag: lazy_general_settings_fields
-                $filterTag = 'lazy_' . str_replace('-', '_', $key) . '_fields';
-                $finalOptions['hooks'][$key]['fields'] = apply_lazy_filters($filterTag, $finalOptions['hooks'][$key]['fields'] ?? []);
-            }
-        }
-
-        config(['lazy-options' => $finalOptions]);
-
-        // 6. Set Theme Path as Priority
+        // 2. Resolve active theme path
         $themePath = resource_path("views/themes/{$activeTheme}");
         if (!file_exists($themePath)) {
             $themePath = __DIR__ . "/../resources/views/themes/{$activeTheme}";
         }
 
-        // We only add it to the top. We do NOT remove the root to avoid breaking Laravel
+        // 2a. Detect child theme — read theme.json for parent reference
+        $parentTheme     = null;
+        $parentThemePath = null;
+        $themeJsonFile   = $themePath . '/theme.json';
+        if (file_exists($themeJsonFile)) {
+            $themeJson   = json_decode(file_get_contents($themeJsonFile), true) ?: [];
+            $parentTheme = $themeJson['parent'] ?? null;
+        }
+        if ($parentTheme) {
+            $parentThemePath = resource_path("views/themes/{$parentTheme}");
+            if (!file_exists($parentThemePath)) {
+                $parentThemePath = __DIR__ . "/../resources/views/themes/{$parentTheme}";
+            }
+            if (!file_exists($parentThemePath)) {
+                $parentThemePath = null;
+            }
+        }
+
+        // 3. Load functions.php — parent first, then child (child can override parent hooks)
+        if ($parentThemePath) {
+            $parentFunctionsFile = $parentThemePath . '/functions.php';
+            if (file_exists($parentFunctionsFile)) {
+                require_once $parentFunctionsFile;
+            }
+        }
+        $functionsFile = $themePath . '/functions.php';
+        if (!file_exists($functionsFile) && !$parentTheme) {
+            $functionsFile = __DIR__ . "/../resources/views/themes/{$activeTheme}/functions.php";
+        }
+        if (file_exists($functionsFile)) {
+            require_once $functionsFile;
+        }
+
+        // 4. Load options.php — parent first, then child merged on top
+        $themeOptions = [];
+        if ($parentThemePath) {
+            $parentOptionsFile = $parentThemePath . '/options.php';
+            if (!file_exists($parentOptionsFile)) {
+                $parentOptionsFile = __DIR__ . "/../resources/views/themes/{$parentTheme}/options.php";
+            }
+            if (file_exists($parentOptionsFile)) {
+                require $parentOptionsFile;
+            }
+        }
+        $parentThemeOptions = $themeOptions;
+        $themeOptions = [];
+
+        $optionsFile = $themePath . '/options.php';
+        if (!file_exists($optionsFile) && !$parentTheme) {
+            $optionsFile = __DIR__ . "/../resources/views/themes/{$activeTheme}/options.php";
+        }
+        if (file_exists($optionsFile)) {
+            require $optionsFile;
+        }
+        if (!empty($parentThemeOptions)) {
+            $themeOptions = array_replace_recursive($parentThemeOptions, $themeOptions);
+        }
+
+        // 5. Merge and Filter Options
+        $baseOptions = config('lazy-options', []);
+        if (!empty($themeOptions)) {
+            $baseOptions = array_replace_recursive($baseOptions, $themeOptions);
+        }
+        $finalOptions = apply_lazy_filters('cms_theme_options', $baseOptions);
+        if (isset($finalOptions['hooks'])) {
+            foreach ($finalOptions['hooks'] as $key => $hookData) {
+                $filterTag = 'lazy_' . str_replace('-', '_', $key) . '_fields';
+                $finalOptions['hooks'][$key]['fields'] = apply_lazy_filters($filterTag, $finalOptions['hooks'][$key]['fields'] ?? []);
+            }
+        }
+        config(['lazy-options' => $finalOptions]);
+
+        // 6. Set View Paths Priority: child theme first → parent theme second → Laravel default
         $paths = config('view.paths', []);
-        array_unshift($paths, $themePath);
+        if ($parentThemePath) {
+            array_unshift($paths, $parentThemePath); // parent inserted first
+            array_unshift($paths, $themePath);        // child pushed to front (checked first)
+        } else {
+            array_unshift($paths, $themePath);
+        }
         config(['view.paths' => array_unique($paths)]);
     }
 }

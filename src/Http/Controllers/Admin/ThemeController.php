@@ -45,15 +45,34 @@ class ThemeController extends Controller
                         $screenshot = asset('themes/' . $slug . '/screenshot.jpg');
                     }
 
-                    // Check if activatable (must have index.blade.php)
-                    $isActivatable = File::exists($dir . '/index.blade.php');
+                    // Read theme.json metadata if present
+                    $themeJson   = [];
+                    $themeJsonFile = $dir . '/theme.json';
+                    if (File::exists($themeJsonFile)) {
+                        $themeJson = json_decode(File::get($themeJsonFile), true) ?: [];
+                    }
+                    $parentSlug = $themeJson['parent'] ?? null;
+
+                    // Child theme is activatable if its parent has index.blade.php
+                    if ($parentSlug) {
+                        $parentPath = resource_path('views/themes/' . $parentSlug);
+                        if (!File::isDirectory($parentPath)) {
+                            $parentPath = dirname(__DIR__, 4) . '/resources/views/themes/' . $parentSlug;
+                        }
+                        $isActivatable = File::exists($parentPath . '/index.blade.php');
+                    } else {
+                        $isActivatable = File::exists($dir . '/index.blade.php');
+                    }
 
                     $themes[$slug] = [
-                        'name' => ucfirst(str_replace('-', ' ', $slug)),
-                        'slug' => $slug,
-                        'screenshot' => $screenshot,
-                        'is_active' => ($slug === $activeTheme),
-                        'is_activatable' => $isActivatable
+                        'name'         => $themeJson['name'] ?? ucfirst(str_replace('-', ' ', $slug)),
+                        'slug'         => $slug,
+                        'screenshot'   => $screenshot,
+                        'is_active'    => ($slug === $activeTheme),
+                        'is_activatable' => $isActivatable,
+                        'parent'       => $parentSlug,
+                        'description'  => $themeJson['description'] ?? null,
+                        'version'      => $themeJson['version'] ?? null,
                     ];
                 }
             }
@@ -73,8 +92,21 @@ class ThemeController extends Controller
             return redirect()->back()->with('error', 'Theme not found!');
         }
 
-        // Validate criteria: Must have index.blade.php
-        if (!File::exists($themePath . '/index.blade.php')) {
+        // Detect child theme
+        $themeJson  = [];
+        $jsonFile   = $themePath . '/theme.json';
+        if (File::exists($jsonFile)) {
+            $themeJson = json_decode(File::get($jsonFile), true) ?: [];
+        }
+        $parentSlug = $themeJson['parent'] ?? null;
+
+        // Validate: child theme checks parent's index.blade.php; regular theme checks its own
+        if ($parentSlug) {
+            $parentPath = $this->findThemePath($parentSlug);
+            if (!$parentPath || !File::exists($parentPath . '/index.blade.php')) {
+                return redirect()->back()->with('error', "Child theme '{$slug}' requires parent theme '{$parentSlug}' with an 'index.blade.php'.");
+            }
+        } elseif (!File::exists($themePath . '/index.blade.php')) {
             return redirect()->back()->with('error', "Theme '{$slug}' is invalid! It must contain an 'index.blade.php' file.");
         }
 
@@ -100,6 +132,10 @@ class ThemeController extends Controller
 
         if ($slug === 'lazy-theme') {
             return redirect()->back()->with('error', "The core 'Lazy Theme' cannot be deleted!");
+        }
+
+        if ($slug === 'lazy-theme-child') {
+            return redirect()->back()->with('error', "The default child theme 'Lazy Theme Child' cannot be deleted!");
         }
 
         if ($slug === $activeTheme) {

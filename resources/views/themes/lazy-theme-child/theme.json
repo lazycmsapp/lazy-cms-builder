@@ -1,0 +1,6 @@
+{
+    "name": "Lazy Theme Child",
+    "parent": "lazy-theme",
+    "version": "1.0.0",
+    "description": "Child theme of Lazy Theme. Customize freely — this directory is never overwritten by CMS updates."
+}
