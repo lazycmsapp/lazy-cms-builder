@@ -1,7 +1,6 @@
 {
     "name": "tareqcodex/lazy-cms-rebuild",
     "description": "A reusable WordPress-like admin dashboard package.",
-    "version": "5.10.2",
     "license": "MIT",
     "type": "library",
     "require": {
