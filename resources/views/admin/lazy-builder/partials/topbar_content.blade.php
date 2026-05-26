@@ -7,8 +7,15 @@
         <div class="topbar-icon" title="Layout" @click="activeTab='navigator'">
             <i class="fa fa-th-large text-sm"></i>
         </div>
-        <div class="topbar-icon" title="History">
-            <i class="fa fa-history text-sm"></i>
+        <div @click="undo()" :title="canUndo ? 'Undo (Ctrl+Z)' : 'Nothing to undo'"
+             :class="canUndo ? 'cursor-pointer' : 'opacity-30 cursor-not-allowed pointer-events-none'"
+             class="topbar-icon">
+            <i class="fa fa-undo text-sm"></i>
+        </div>
+        <div @click="redo()" :title="canRedo ? 'Redo (Ctrl+Y)' : 'Nothing to redo'"
+             :class="canRedo ? 'cursor-pointer' : 'opacity-30 cursor-not-allowed pointer-events-none'"
+             class="topbar-icon">
+            <i class="fa fa-redo text-sm"></i>
         </div>
         <div class="topbar-icon" title="Responsive" @click="device = device === 'desktop' ? 'tablet' : (device === 'tablet' ? 'mobile' : 'desktop')">
             <i class="fa" :class="device==='desktop' ? 'fa-desktop' : (device==='tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>

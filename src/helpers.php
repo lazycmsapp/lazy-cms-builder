@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 
 if (!defined('LAZY_CMS_VERSION')) {
-    define('LAZY_CMS_VERSION', '5.10.1');
+    define('LAZY_CMS_VERSION', '5.11.0');
 }
 
 if (!function_exists('lazy_check_update')) {
@@ -1509,13 +1509,13 @@ if (!function_exists('get_lazy_builder_fonts')) {
     function get_lazy_builder_fonts($layout, &$fonts = []) {
         if (empty($layout) || !is_array($layout)) return $fonts;
         
+        $fontKeys = ['fontFamily', 'numberFontFamily', 'labelFontFamily', 'titleFontFamily'];
         foreach ($layout as $item) {
-            if (isset($item['settings']['fontFamily']) && !empty($item['settings']['fontFamily']) && $item['settings']['fontFamily'] !== 'inherit') {
-                // Extract only family name before comma if exists
-                $family = trim(explode(',', $item['settings']['fontFamily'])[0]);
-                // Remove quotes if present
-                $family = trim($family, "'\"");
-                $fonts[] = $family;
+            foreach ($fontKeys as $fk) {
+                if (!empty($item['settings'][$fk]) && $item['settings'][$fk] !== 'inherit') {
+                    $family = trim(trim(explode(',', $item['settings'][$fk])[0]), "'\"");
+                    if ($family) $fonts[] = $family;
+                }
             }
             
             // Check nested columns/elements
@@ -1537,7 +1537,7 @@ add_lazy_filter('lazy_builder_elements', function($elements) {
     $elements['button'] = [
         'type' => 'button',
         'name' => 'Button',
-        'icon' => 'fa fa-hand-pointer',
+        'icon' => 'fas fa-toggle-on',
         'template' => 'cms-dashboard::frontend.builder.elements.button',
         'fields' => [
             // General

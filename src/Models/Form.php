@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Form extends Model
 {
     protected $table = 'cms_forms';
-    protected $guarded = [];
+    protected $fillable = ['title', 'slug', 'fields', 'settings', 'status', 'success_message', 'redirect_url', 'email_to'];
 
     protected $casts = [
         'fields' => 'array',

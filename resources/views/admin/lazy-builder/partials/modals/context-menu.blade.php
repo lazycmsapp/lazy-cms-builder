@@ -28,6 +28,20 @@
                 Clone
             </button>
 
+            <template v-if="ctxMenu.type === 'container'">
+                <div class="border-t border-white/10 my-1"></div>
+                <button v-if="!layout[ctxMenu.ci]?.settings?.global_id"
+                        @click="ctxSaveAsGlobal()"
+                        class="w-full px-4 py-2 text-left text-[13px] text-purple-300 hover:bg-purple-500/20 transition-colors flex items-center gap-2">
+                    <i class="fa fa-globe text-[11px]"></i> Save as Global
+                </button>
+                <button v-if="layout[ctxMenu.ci]?.settings?.global_id"
+                        @click="unlinkGlobal(ctxMenu.ci); closeCtxMenu()"
+                        class="w-full px-4 py-2 text-left text-[13px] text-amber-300 hover:bg-amber-500/20 transition-colors flex items-center gap-2">
+                    <i class="fa fa-unlink text-[11px]"></i> Unlink Global
+                </button>
+            </template>
+
             <div class="border-t border-white/10 my-1"></div>
 
             <button @click="ctxRemove()"

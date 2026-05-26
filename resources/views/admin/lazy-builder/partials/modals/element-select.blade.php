@@ -3,7 +3,7 @@
 
         <!-- Header -->
         <div class="bg-[#222] text-white h-14 flex items-center justify-between px-6 shrink-0">
-            <h3 class="text-sm font-bold uppercase tracking-wider">Select Element</h3>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-white">Select Element</h3>
             <div class="flex items-center gap-4">
                 <div class="relative" v-show="elementModalTab === 'elements' || elementModalTab === 'nested'">
                     <input type="text" v-model="searchElementQuery" :placeholder="elementModalTab === 'nested' ? 'Search Columns' : 'Search Elements'" class="bg-[#333] border-none text-xs text-white px-10 py-2 rounded focus:ring-1 focus:ring-[#0091ea] w-64 outline-none">
@@ -51,14 +51,14 @@
         <div class="flex-1 overflow-y-auto p-10 bg-[#fff] custom-scrollbar">
 
             <!-- Elements Tab -->
-            <div v-if="elementModalTab === 'elements'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-x-6 gap-y-10">
+            <div v-if="elementModalTab === 'elements'" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-5 gap-y-8">
                 <div v-for="el in filteredAvailableElements" :key="el.type"
                      @click="addElement(el.type)"
                      class="group flex flex-col items-center gap-3 cursor-pointer">
-                    <div class="w-full aspect-square bg-white border border-dashed border-slate-200 p-2 flex flex-col items-center justify-center gap-2 rounded group-hover:border-[#0091ea] group-hover:shadow-md transition-all transform group-hover:-translate-y-1">
-                        <i :class="el.icon" class="text-2xl text-slate-400 group-hover:text-[#0091ea] transition-colors"></i>
+                    <div class="w-full aspect-square bg-white border-2 border-slate-200 flex flex-col items-center justify-center rounded-lg group-hover:border-[#0091ea] group-hover:shadow-md transition-all transform group-hover:-translate-y-1">
+                        <i :class="el.icon" style="font-size:24px" class="text-slate-400 group-hover:text-[#0091ea] transition-colors"></i>
                     </div>
-                    <span class="text-[10px] font-bold uppercase text-slate-500 group-hover:text-[#0091ea] transition-colors">@{{ el.name || el.type }}</span>
+                    <span class="text-[12px] font-bold uppercase text-slate-500 group-hover:text-[#0091ea] transition-colors">@{{ el.name || el.type }}</span>
                 </div>
             </div>
 

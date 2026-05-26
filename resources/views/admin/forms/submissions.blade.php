@@ -73,7 +73,7 @@
                                     ->filter(fn($v) => !is_array($v) && !str_starts_with((string)$v, 'form-uploads/'))
                                     ->take(3)
                                     ->map(fn($v, $k) =>
-                                        '<span class="text-gray-400 capitalize">' . str_replace('_', ' ', $k) . ':</span> '
+                                        '<span class="text-gray-400 capitalize">' . e(str_replace('_', ' ', $k)) . ':</span> '
                                         . e(html_entity_decode(strip_tags((string)$v), ENT_QUOTES | ENT_HTML5, 'UTF-8'))
                                     )
                                     ->implode('<span class="mx-2 text-gray-200">·</span>');

@@ -90,10 +90,21 @@
     $posts = get_lazy_posts($queryArgs);
 
     // Grid / spacing settings
-    $layout       = $s['layout']       ?? 'grid';
-    $cols         = max(1, (int)($s['columns']        ?? 3));
-    $colsTablet   = max(1, (int)($s['columns_tablet'] ?? 2));
-    $colsMobile   = max(1, (int)($s['columns_mobile'] ?? 1));
+    $layout = $s['layout'] ?? 'grid';
+    if ($layout === 'carousel') {
+        // Use items_per_slide if explicitly saved; fall back to columns for old saved pages
+        $cols   = isset($s['items_per_slide'])
+                    ? max(1, (int)$s['items_per_slide'])
+                    : max(1, (int)($s['columns'] ?? 1));
+        $rawT   = (int)($s['items_per_slide_tablet'] ?? 0);
+        $rawM   = (int)($s['items_per_slide_mobile'] ?? 0);
+        $colsTablet = $rawT > 0 ? $rawT : $cols;
+        $colsMobile = $rawM > 0 ? $rawM : $cols;
+    } else {
+        $cols       = max(1, (int)($s['columns']        ?? 3));
+        $colsTablet = max(1, (int)($s['columns_tablet'] ?? 2));
+        $colsMobile = max(1, (int)($s['columns_mobile'] ?? 1));
+    }
     $colSpacing   = max(0, (int)($s['column_spacing'] ?? 24));
     $rowSpacing   = max(0, (int)($s['row_spacing']    ?? 24));
     $cardAlign  = $s['card_alignment'] ?? 'stretch';
@@ -103,6 +114,11 @@
     $bpSm         = (int) get_cms_option('theme_small_screen_breakpoint',  '800');
     $bpMed        = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
     $bpSm1        = $bpSm + 1;
+    $showArrows       = $layout === 'carousel' && ($s['carousel_arrows'] ?? true);
+    $showDots         = $layout === 'carousel' && ($s['carousel_dots'] ?? true);
+    $carouselAutoplay = $layout === 'carousel' && ($s['carousel_autoplay'] ?? false);
+    $autoplaySpeed    = max(500, (int)($s['carousel_autoplay_speed'] ?? 3000));
+    $carouselLoop     = $layout === 'carousel' && ($s['carousel_loop'] ?? false);
 
     // For list layout force single column
     if ($layout === 'list') { $cols = 1; $colsTablet = 1; $colsMobile = 1; }
@@ -163,9 +179,7 @@
     } elseif ($layout === 'carousel') {
         $gCss  = "#{$gridId}-wrap{position:relative;overflow:hidden}";
         $gCss .= "#{$gridId}{display:flex;transition:transform .4s cubic-bezier(.25,.46,.45,.94);will-change:transform}";
-        $gCss .= "#{$gridId}>*{flex:0 0 calc(100%/{$cols} - {$colSpacing}px*({$cols}-1)/{$cols});margin-right:{$colSpacing}px}";
-        $gCss .= "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px){#{$gridId}>*{flex:0 0 calc(100%/{$colsTablet} - {$colSpacing}px*({$colsTablet}-1)/{$colsTablet})}}";
-        $gCss .= "@media(max-width:{$bpSm}px){#{$gridId}>*{flex:0 0 calc(100%/{$colsMobile} - {$colSpacing}px*({$colsMobile}-1)/{$colsMobile})}}";
+        $gCss .= "#{$gridId}>*{flex:0 0 auto;min-width:0;margin-right:{$colSpacing}px;box-sizing:border-box}";
     } else {
         // grid or list (list already forced $cols=1)
         // Compute explicit px/% values in PHP to produce simple, unambiguous CSS calc()
@@ -207,17 +221,19 @@
      @if($cssId) id="{{ $cssId }}" @endif
      style="{{ $marginStyle }}">
     @if($layout === 'carousel')
-    <div id="{{ $gridId }}-wrap" style="position:relative">
+    <div id="{{ $gridId }}-wrap">
+        @if($showArrows)
         {{-- Prev arrow --}}
         <button id="{{ $gridId }}-prev" onclick="lzSlider('{{ $gridId }}','prev')"
-                style="position:absolute;left:-18px;top:50%;transform:translateY(-50%);z-index:10;width:36px;height:36px;border-radius:50%;background:#fff;border:1.5px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s">
+                style="position:absolute;left:8px;top:50%;transform:translateY(-50%);z-index:10;width:36px;height:36px;border-radius:50%;background:#fff;border:1.5px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         {{-- Next arrow --}}
         <button id="{{ $gridId }}-next" onclick="lzSlider('{{ $gridId }}','next')"
-                style="position:absolute;right:-18px;top:50%;transform:translateY(-50%);z-index:10;width:36px;height:36px;border-radius:50%;background:#fff;border:1.5px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s">
+                style="position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:10;width:36px;height:36px;border-radius:50%;background:#fff;border:1.5px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
+        @endif
     @endif
     <div id="{{ $gridId }}">
         @forelse($posts as $post)
@@ -333,8 +349,8 @@
 
     @if($layout === 'carousel')
     @php $carouselTotal = count($posts); $slidesPerView = $cols; @endphp
-    {{-- Dots --}}
-    @if($carouselTotal > $slidesPerView)
+    </div>{{-- end wrap --}}
+    @if($showDots && $carouselTotal > $slidesPerView)
     <div id="{{ $gridId }}-dots" style="display:flex;justify-content:center;gap:6px;margin-top:14px">
         @for($d = 0; $d < ceil($carouselTotal / $slidesPerView); $d++)
         <button onclick="lzSliderGoTo('{{ $gridId }}',{{ $d }})"
@@ -343,15 +359,17 @@
         @endfor
     </div>
     @endif
-    </div>{{-- end wrap --}}
     <script>
     (function(){
-        var perView = {{ $slidesPerView }};
+        var perView       = {{ $slidesPerView }};
         var perViewTablet = {{ $colsTablet }};
         var perViewMobile = {{ $colsMobile }};
         var bpMed = {{ $bpMed }};
         var bpSm  = {{ $bpSm }};
         var gap   = {{ $colSpacing }};
+        var loop  = {{ $carouselLoop ? 'true' : 'false' }};
+        var autoplay      = {{ $carouselAutoplay ? 'true' : 'false' }};
+        var autoplaySpeed = {{ $autoplaySpeed }};
         var id    = '{{ $gridId }}';
         var track = document.getElementById(id);
         if (!track) return;
@@ -362,47 +380,66 @@
             var w = window.innerWidth;
             return w <= bpSm ? perViewMobile : (w <= bpMed ? perViewTablet : perView);
         }
+        // Each slot = wrapW/per; slot = slide + gap; so slideW = wrapW/per - gap
+        // This ensures exactly `per` slides fill the container with no overflow.
         function getSlideW() {
-            var per = getPer();
-            return (track.parentElement.offsetWidth - gap * (per - 1)) / per;
+            var per   = getPer();
+            var wrapW = track.parentElement.offsetWidth;
+            return Math.max(10, wrapW / per - gap);
         }
         function goTo(n) {
-            var per  = getPer();
-            var max  = Math.max(0, total - per);
-            idx = Math.max(0, Math.min(n, max));
-            var sw   = getSlideW();
+            var per = getPer();
+            var max = Math.max(0, total - per);
+            idx = loop ? (n > max ? 0 : (n < 0 ? max : n)) : Math.max(0, Math.min(n, max));
+            var sw = getSlideW();
+            Array.from(track.children).forEach(function(c) {
+                c.style.flex        = '0 0 ' + sw + 'px';
+                c.style.width       = sw + 'px';
+                c.style.marginRight = gap + 'px';
+            });
             track.style.transform = 'translateX(-' + (idx * (sw + gap)) + 'px)';
-            // update arrows
             var prev = document.getElementById(id + '-prev');
             var next = document.getElementById(id + '-next');
-            if (prev) prev.style.opacity = idx === 0 ? '0.35' : '1';
-            if (next) next.style.opacity = idx >= max ? '0.35' : '1';
-            // update dots
-            var dots = document.getElementById(id + '-dots');
-            if (dots) {
-                var dotEls = dots.children;
-                for (var i = 0; i < dotEls.length; i++) {
-                    var active = i === Math.floor(idx / per) || (idx >= max && i === dotEls.length - 1);
-                    dotEls[i].style.width    = active ? '22px' : '8px';
-                    dotEls[i].style.background = active ? '#2271b1' : '#cbd5e1';
+            if (prev) prev.style.opacity = (!loop && idx === 0)  ? '0.35' : '1';
+            if (next) next.style.opacity = (!loop && idx >= max) ? '0.35' : '1';
+            var dotsEl = document.getElementById(id + '-dots');
+            if (dotsEl) {
+                var dotBtns   = dotsEl.children;
+                var activeDot = (idx >= max) ? dotBtns.length - 1 : Math.floor(idx / per);
+                for (var i = 0; i < dotBtns.length; i++) {
+                    dotBtns[i].style.width      = (i === activeDot) ? '22px' : '8px';
+                    dotBtns[i].style.background = (i === activeDot) ? '#2271b1' : '#cbd5e1';
                 }
             }
-            // resize each card
-            var sw2 = getSlideW();
-            Array.from(track.children).forEach(function(c){ c.style.flex = '0 0 ' + sw2 + 'px'; c.style.marginRight = gap + 'px'; });
         }
+        // Arrows move 1 slide at a time
+        window['lzSlider_' + id]     = function(dir) { goTo(dir === 'next' ? idx + 1 : idx - 1); };
+        window['lzSliderGoTo_' + id] = function(n)   { goTo(n * getPer()); };
+        // Global dispatchers (delegate to per-instance functions)
         window['lzSlider'] = window['lzSlider'] || function(gid, dir) {
-            if (gid !== id) { var f = window['lzSlider_' + gid]; if (f) f(dir); return; }
-            goTo(dir === 'next' ? idx + getPer() : idx - getPer());
+            var f = window['lzSlider_' + gid]; if (f) f(dir);
         };
         window['lzSliderGoTo'] = window['lzSliderGoTo'] || function(gid, n) {
-            if (gid !== id) { var f = window['lzSliderGoTo_' + gid]; if (f) f(n); return; }
-            goTo(n * getPer());
+            var f = window['lzSliderGoTo_' + gid]; if (f) f(n);
         };
-        window['lzSlider_' + id]     = function(dir) { goTo(dir === 'next' ? idx + getPer() : idx - getPer()); };
-        window['lzSliderGoTo_' + id] = function(n)   { goTo(n * getPer()); };
-        window.addEventListener('resize', function(){ goTo(idx); });
-        goTo(0);
+        window.addEventListener('resize', function() { goTo(idx); });
+        // Retry via rAF until the wrap has a non-zero width (handles inline scripts,
+        // AJAX-injected canvas previews, and hidden/deferred containers reliably).
+        (function tryInit() {
+            if (track.parentElement.offsetWidth > 0) {
+                goTo(0);
+                if (autoplay) {
+                    setInterval(function() {
+                        var per = getPer();
+                        var max = Math.max(0, total - per);
+                        if (!loop && idx >= max) { goTo(0); return; }
+                        goTo(idx + 1);
+                    }, autoplaySpeed);
+                }
+            } else {
+                requestAnimationFrame(tryInit);
+            }
+        })();
     })();
     </script>
     @endif

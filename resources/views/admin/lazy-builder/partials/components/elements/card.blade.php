@@ -32,18 +32,19 @@
         {{-- Rendered frontend HTML preview --}}
         <div v-if="cardPreviewCache[el.id]?.html"
              v-html="cardPreviewCache[el.id].html"
-             style="pointer-events:none;padding:4px 6px;">
+             :data-card-preview-id="el.id"
+             style="pointer-events:none;padding:4px 6px">
         </div>
 
         {{-- No preview yet or fetch failed: skeleton placeholders --}}
         <div v-else
              class="grid"
              :style="{
-                 gridTemplateColumns: el.settings.layout === 'list' ? '1fr' : 'repeat(' + (el.settings.columns || 3) + ', 1fr)',
+                 gridTemplateColumns: el.settings.layout === 'list' ? '1fr' : 'repeat(' + (el.settings.layout === 'carousel' ? (el.settings.items_per_slide || 1) : (el.settings.columns || 3)) + ', 1fr)',
                  columnGap: (el.settings.column_spacing ?? 24) + 'px',
                  rowGap:    (el.settings.row_spacing    ?? 24) + 'px'
              }">
-            <div v-for="n in Math.min(el.settings.posts_count || 6, 24)"
+            <div v-for="n in Math.min(el.settings.layout === 'carousel' ? (el.settings.items_per_slide || 1) : (el.settings.posts_count || 6), 24)"
                  :key="n"
                  class="bg-white border border-slate-200/80 rounded-lg overflow-hidden shadow-sm">
                 <div class="bg-gradient-to-br from-slate-100 to-slate-200" style="aspect-ratio:16/9;"></div>

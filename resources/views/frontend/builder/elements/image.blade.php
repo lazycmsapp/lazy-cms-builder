@@ -69,8 +69,13 @@
     if (isset($s['marginBottom']) && $s['marginBottom'] !== '') $wrapperStyle .= "margin-bottom:{$s['marginBottom']}" . ($s['marginBottomUnit'] ?? 'px') . ";";
     if (isset($s['marginLeft'])   && $s['marginLeft']   !== '') $wrapperStyle .= "margin-left:{$s['marginLeft']}" . ($s['marginLeftUnit'] ?? 'px') . ";";
 
-    // Inline element style (applied to the <a> or <img> directly)
-    $elemStyle = "display:inline-block;max-width:100%;vertical-align:middle;height:auto;";
+    $aspectRatio = $s['aspectRatio'] ?? 'none';
+    $hasRatio    = ($aspectRatio && $aspectRatio !== 'none');
+    $focusX      = (int)($s['focusX'] ?? 50);
+    $focusY      = (int)($s['focusY'] ?? 50);
+
+    // Style for wrapper element (<a> or <div> when hasRatio; applied to <img> when no ratio + no link)
+    $elemStyle = "display:inline-block;max-width:100%;vertical-align:middle;overflow:hidden;";
     if (!empty($s['width']))    $elemStyle .= "width:{$s['width']}"    . ($s['widthUnit']    ?? 'px') . ";";
     if (!empty($s['maxWidth'])) $elemStyle .= "max-width:{$s['maxWidth']}" . ($s['maxWidthUnit'] ?? 'px') . ";";
 
@@ -91,7 +96,13 @@
         if ($bLeft)   $elemStyle .= "border-left-width:{$bLeft}px;";
     }
 
-    $imgStyle = "display:block;width:100%;height:auto;";
+    if ($hasRatio) {
+        $elemStyle .= "aspect-ratio:{$aspectRatio};height:auto;";
+        $imgStyle   = "display:block;width:100%;height:100%;object-fit:cover;object-position:{$focusX}% {$focusY}%;";
+    } else {
+        $elemStyle .= "height:auto;";
+        $imgStyle   = "display:block;width:100%;height:auto;";
+    }
 
     $stickyWidth     = $s['stickyWidth']     ?? null;
     $stickyWidthUnit = $s['stickyWidthUnit'] ?? 'px';
@@ -113,12 +124,15 @@
      style="{{ $wrapperStyle }}">
     @if($url)
         @if($linkUrl)
-            <a href="{{ $linkUrl }}" target="{{ $target }}" style="{{ $elemStyle }}overflow:hidden;text-decoration:none;">
+            <a href="{{ $linkUrl }}" target="{{ $target }}" style="{{ $elemStyle }}text-decoration:none;">
                 <img src="{{ $url }}" alt="{{ $alt }}" style="{{ $imgStyle }}">
             </a>
+        @elseif($hasRatio)
+            <div style="{{ $elemStyle }}font-size:0;line-height:0;">
+                <img src="{{ $url }}" alt="{{ $alt }}" style="{{ $imgStyle }}">
+            </div>
         @else
-            <img src="{{ $url }}" alt="{{ $alt }}"
-                 style="{{ $elemStyle }}">
+            <img src="{{ $url }}" alt="{{ $alt }}" style="{{ $elemStyle }}">
         @endif
     @else
         <div style="background:#f0f0f1;border:2px dashed #c3c4c7;padding:40px 20px;text-align:center;color:#8c8f94;font-size:13px;border-radius:4px;">

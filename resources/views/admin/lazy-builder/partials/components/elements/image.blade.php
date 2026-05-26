@@ -31,7 +31,10 @@
          <img v-if="el.settings.url && el.settings.dynamic_source !== 'feature_image'"
              :src="el.settings.url"
              :alt="el.settings.alt || ''"
-             class="block w-full h-auto pointer-events-none">
+             class="block w-full pointer-events-none"
+             :style="(el.settings.aspectRatio && el.settings.aspectRatio !== 'none')
+                 ? { aspectRatio: el.settings.aspectRatio, objectFit: 'cover', height: 'auto', objectPosition: (el.settings.focusX||50)+'% '+(el.settings.focusY||50)+'%' }
+                 : { height: 'auto' }">
 
         <div v-else-if="el.settings.dynamic_source === 'feature_image'"
              class="bg-[#0091ea]/6 border-2 border-dashed border-[#0091ea]/30 rounded flex flex-col items-center justify-center p-8 text-[#0091ea]">

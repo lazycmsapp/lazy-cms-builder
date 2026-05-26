@@ -2,7 +2,7 @@
     <div class="bg-white w-[95vw] max-w-[1200px] h-[90vh] flex flex-col shadow-2xl rounded overflow-hidden">
         <!-- Header -->
         <div class="bg-[#222] text-white h-14 flex items-center justify-between px-6 shrink-0">
-            <h3 class="text-sm font-bold uppercase tracking-wider">@{{ columnModalType === 'new' ? 'Select Column' : 'Select Column Layout' }}</h3>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-white">@{{ columnModalType === 'new' ? 'Select Column' : 'Select Column Layout' }}</h3>
             <div class="flex items-center gap-4">
                 <div class="relative" v-show="columnModalActiveTab === 'columns'">
                     <input type="text" v-model="searchColumnQuery" placeholder="Search Columns" class="bg-[#333] border-none text-xs text-white px-10 py-2 rounded focus:ring-1 focus:ring-[#0091ea] w-64 outline-none">
@@ -37,6 +37,16 @@
                 Column Library
                 <span v-if="libraryItems.columns?.length" class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white">
                     @{{ libraryItems.columns.length }}
+                </span>
+            </button>
+            <!-- Global Sections: shown when adding a new container -->
+            <button v-if="columnModalType === 'new'"
+                    @click="columnModalActiveTab = 'global_sections'"
+                    class="px-4 h-full text-[11px] font-bold uppercase transition-all flex items-center gap-2"
+                    :class="columnModalActiveTab === 'global_sections' ? 'text-white bg-white/20' : 'text-white/70 hover:bg-white/5'">
+                <i class="fa fa-globe text-[10px]"></i> Global Sections
+                <span v-if="globalSections.length" class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white">
+                    @{{ globalSections.length }}
                 </span>
             </button>
         </div>
@@ -112,6 +122,36 @@
                                 <i class="fa fa-plus text-[10px]"></i> Add Column
                             </button>
                             <button @click.stop="deleteFromLibrary(item.id)"
+                                    class="w-8 py-1.5 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 hover:text-red-500 transition-colors flex items-center justify-center">
+                                <i class="fa fa-trash-alt text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Global Sections Tab -->
+        <div v-show="columnModalActiveTab === 'global_sections'" class="flex-1 overflow-y-auto p-8 bg-[#fafafa]">
+            <div v-if="!globalSections.length" class="text-center py-20 text-slate-300">
+                <i class="fa fa-globe text-5xl mb-4 block"></i>
+                <p class="text-sm font-semibold text-slate-400">No global sections saved yet</p>
+                <p class="text-xs text-slate-300 mt-1">Right-click a container and choose "Save as Global" to create one</p>
+            </div>
+            <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+                <div v-for="section in globalSections" :key="section.id"
+                     class="bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-[#7c3aed] hover:shadow-lg transition-all group">
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-8 flex items-center justify-center border-b border-slate-100">
+                        <i class="fa fa-globe text-4xl text-purple-200 group-hover:text-[#7c3aed]/50 transition-colors"></i>
+                    </div>
+                    <div class="p-3">
+                        <p class="text-xs font-bold text-slate-700 truncate mb-1" :title="section.name">@{{ section.name }}</p>
+                        <p class="text-[10px] text-slate-400 mb-3">@{{ section.created_at }}</p>
+                        <div class="flex gap-2">
+                            <button @click="insertGlobalSection(section)"
+                                    class="flex-1 py-1.5 bg-[#7c3aed]/10 text-[#7c3aed] rounded-lg text-[11px] font-semibold hover:bg-[#7c3aed] hover:text-white transition-colors flex items-center justify-center gap-1">
+                                <i class="fa fa-plus text-[10px]"></i> Insert
+                            </button>
+                            <button @click.stop="deleteGlobalSection(section.id)"
                                     class="w-8 py-1.5 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 hover:text-red-500 transition-colors flex items-center justify-center">
                                 <i class="fa fa-trash-alt text-[10px]"></i>
                             </button>

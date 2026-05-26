@@ -69,6 +69,10 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     Route::get('lazy-builder/library', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'index'])->name('lazy-builder.library.index');
     Route::post('lazy-builder/library/save', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'save'])->name('lazy-builder.library.save');
     Route::delete('lazy-builder/library/{type}/{id}', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'delete'])->name('lazy-builder.library.delete');
+    Route::get('lazy-builder/global-sections', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'listGlobalSections'])->name('lazy-builder.global-sections.list');
+    Route::post('lazy-builder/global-sections', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'saveGlobalSection'])->name('lazy-builder.global-sections.save');
+    Route::patch('lazy-builder/global-sections/{id}', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'updateGlobalSection'])->name('lazy-builder.global-sections.update');
+    Route::delete('lazy-builder/global-sections/{id}', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'deleteGlobalSection'])->name('lazy-builder.global-sections.delete');
     Route::post('lazy-builder/card-preview', function(\Illuminate\Http\Request $r) {
         $s = $r->input('settings', []);
         try {

@@ -43,7 +43,9 @@ class MediaController extends Controller
                   ->whereMonth('created_at', $month);
         }
 
-        $perPage = ($request->ajax() || $request->expectsJson()) ? 100 : 10;
+        $perPage = ($request->ajax() || $request->expectsJson())
+            ? (int)($request->input('per_page', 100))
+            : 10;
         $media = $query->latest()->paginate($perPage)->appends($request->all());
 
         // Get unique months for filter dropdown
@@ -84,10 +86,21 @@ class MediaController extends Controller
             $extension = strtolower($file->getClientOriginalExtension());
             $mimeType = $file->getMimeType();
 
+            // Block executable and server-side script extensions regardless of allowed list
+            $blockedExtensions = ['php', 'php3', 'php4', 'php5', 'php7', 'phtml', 'phar',
+                                   'asp', 'aspx', 'jsp', 'js', 'cgi', 'pl', 'py', 'rb',
+                                   'sh', 'bash', 'exe', 'bat', 'cmd', 'htaccess', 'htpasswd'];
+            if (in_array($extension, $blockedExtensions)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "File format '.{$extension}' is not allowed for security reasons."
+                ], 422);
+            }
+
             // Validate allowed formats
             $allowedRaw = get_cms_option('performance_allowed_formats', '[]');
             $allowedFormats = is_array($allowedRaw) ? $allowedRaw : json_decode($allowedRaw, true);
-            
+
             if (!empty($allowedFormats) && !in_array($extension, $allowedFormats)) {
                 return response()->json([
                     'success' => false,

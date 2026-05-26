@@ -14,9 +14,12 @@ class Post extends Model
 {
     use HasFactory, SoftDeletes;
     
-    // Fallback to avoid breaking if project has User namespace issues currently
-    // protected $fillable = ['user_id', 'title', 'slug', 'content', 'type', 'status'];
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id', 'title', 'slug', 'content', 'excerpt', 'type', 'status',
+        'featured_image', 'gallery', 'seo_meta', 'published_at', 'editor_type',
+        'lang_code', 'origin_id', 'template', 'password', 'comment_status',
+        'menu_order', 'post_parent', 'is_sticky',
+    ];
 
     protected $casts = [
         'published_at' => 'datetime',

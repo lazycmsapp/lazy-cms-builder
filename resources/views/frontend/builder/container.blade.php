@@ -324,8 +324,23 @@
 @endonce
 @endif
 
-@if($status === 'published')
-    <{{ $htmlTag }} id="{{ $s['menuAnchor'] ?? '' }}" class="lazy-container {{ $cid }} {{ $hoverClass }} {{ $s['cssClass'] ?? '' }} {{ $visibilityClasses }} {{ !empty($s['sticky']) ? 'lazy-sticky-col' : '' }}" style="{{ implode('; ', $containerStyles) }}">
+@php
+    $visCondition = $s['vis_condition'] ?? '';
+    $showByCondition = true;
+    if ($visCondition === 'logged_in') {
+        $showByCondition = auth()->check();
+    } elseif ($visCondition === 'logged_out') {
+        $showByCondition = !auth()->check();
+    } elseif ($visCondition === 'schedule') {
+        $now = time();
+        $from = !empty($s['vis_date_from']) ? strtotime($s['vis_date_from']) : null;
+        $to   = !empty($s['vis_date_to'])   ? strtotime($s['vis_date_to'])   : null;
+        $showByCondition = (!$from || $now >= $from) && (!$to || $now <= $to);
+    }
+@endphp
+@if($status === 'published' && $showByCondition)
+    @php $ctnAnimType = $s['anim_type'] ?? ''; @endphp
+    <{{ $htmlTag }} id="{{ $s['menuAnchor'] ?? '' }}" class="lazy-container {{ $cid }} {{ $hoverClass }} {{ $s['cssClass'] ?? '' }} {{ $visibilityClasses }} {{ !empty($s['sticky']) ? 'lazy-sticky-col' : '' }}{{ $ctnAnimType ? ' lz-anim lz-anim-' . $ctnAnimType : '' }}" style="{{ implode('; ', $containerStyles) }}"@if($ctnAnimType) data-anim-duration="{{ $s['anim_duration'] ?? 600 }}" data-anim-delay="{{ $s['anim_delay'] ?? 0 }}" data-anim-easing="{{ $s['anim_easing'] ?? 'ease' }}"@endif>
         @if($link)
             <a href="{{ $link }}" target="{{ $linkTarget }}" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; flex-grow: 1; width: 100%;">
         @endif

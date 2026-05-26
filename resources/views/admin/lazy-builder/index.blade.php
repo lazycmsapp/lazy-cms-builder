@@ -196,6 +196,7 @@
         @include('cms-dashboard::admin.lazy-builder.partials.modals.element-select')
         @include('cms-dashboard::admin.lazy-builder.partials.modals.library')
         @include('cms-dashboard::admin.lazy-builder.partials.modals.context-menu')
+        @include('cms-dashboard::admin.lazy-builder.partials.modals.global-section')
     </div>
 
     @include('cms-dashboard::components.admin.media-modal')

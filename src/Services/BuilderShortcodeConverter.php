@@ -142,6 +142,7 @@ class BuilderShortcodeConverter
         self::attrIf($a, 'html_tag',    $s['htmlTag']    ?? null, 'div');
         self::attr($a, 'menu_anchor',   $s['menuAnchor'] ?? null);
         self::attr($a, 'css_class',     $s['cssClass']   ?? null);
+        self::attr($a, 'global_id',     $s['global_id']  ?? null);
         self::attr($a, 'z_index',       $s['zIndex']     ?? null);
         self::respAttr($a, 'z_index',  $s, 'zIndex');
         self::attrIf($a, 'overflow',   $s['overflow']   ?? null, 'default');
@@ -652,7 +653,10 @@ class BuilderShortcodeConverter
                 self::attrI($a, 'border_left',        $s['borderSizeLeft']   ?? null);
                 self::attrI($a, 'border_color',       $s['borderColor']      ?? null);
                 // Hover
-                self::attrI($a, 'hover_type', $s['hoverType'] ?? null);
+                self::attrI($a, 'hover_type',   $s['hoverType']   ?? null);
+                self::attrI($a, 'aspect_ratio', $s['aspectRatio'] ?? null);
+                self::attrI($a, 'focus_x',      $s['focusX']      ?? null, 50);
+                self::attrI($a, 'focus_y',      $s['focusY']      ?? null, 50);
                 // CSS
                 self::attrI($a, 'css_class', $s['cssClass'] ?? null);
                 self::attrI($a, 'css_id',    $s['cssId']    ?? null);
@@ -736,10 +740,19 @@ class BuilderShortcodeConverter
 
             case 'video': {
                 $a = $base;
-                self::attrI($a, 'src',    $s['src']    ?? '');
-                self::attrI($a, 'type',   $s['type']   ?? null);
-                self::attrI($a, 'width',  $s['width']  ?? null);
-                self::attrI($a, 'height', $s['height'] ?? null);
+                self::attrI($a, 'url',          $s['url']         ?? '');
+                self::attrI($a, 'video_source',  $s['videoSource'] ?? 'youtube', 'youtube');
+                self::attrI($a, 'aspect_ratio',  $s['aspectRatio'] ?? '16-9', '16-9');
+                self::attrI($a, 'autoplay',      ($s['autoplay']   ?? false) ? '1' : '0', '0');
+                self::attrI($a, 'muted',         ($s['muted']      ?? false) ? '1' : '0', '0');
+                self::attrI($a, 'loop',          ($s['loop']       ?? false) ? '1' : '0', '0');
+                self::attrI($a, 'controls',      ($s['controls']   ?? true)  ? '1' : '0', '1');
+                self::attrI($a, 'margin_top',    $s['marginTop']    ?? 0, 0);
+                self::attrI($a, 'margin_top_unit', $s['marginTopUnit'] ?? 'px', 'px');
+                self::attrI($a, 'margin_bottom', $s['marginBottom'] ?? 0, 0);
+                self::attrI($a, 'margin_bottom_unit', $s['marginBottomUnit'] ?? 'px', 'px');
+                self::attrI($a, 'css_class', $s['cssClass'] ?? null);
+                self::attrI($a, 'css_id',    $s['cssId']    ?? null);
                 return '[lazy_video ' . trim($a) . $vis . ' /]';
             }
 
@@ -991,7 +1004,122 @@ class BuilderShortcodeConverter
                 self::attrI($a, 'taxonomy_include', $taxInclude ?: null);
                 $taxExclude = is_array($s['taxonomy_exclude'] ?? '') ? implode(',', $s['taxonomy_exclude']) : ($s['taxonomy_exclude'] ?? '');
                 self::attrI($a, 'taxonomy_exclude', $taxExclude ?: null);
+                self::attrI($a, 'carousel_autoplay',       ($s['carousel_autoplay']       ?? false) ? 'yes' : null);
+                self::attrI($a, 'carousel_autoplay_speed', $s['carousel_autoplay_speed']  ?? null, 3000);
+                self::attrI($a, 'carousel_arrows',         ($s['carousel_arrows']         ?? true)  ? null : 'no');
+                self::attrI($a, 'carousel_dots',           ($s['carousel_dots']           ?? true)  ? null : 'no');
+                self::attrI($a, 'carousel_loop',           ($s['carousel_loop']           ?? false) ? 'yes' : null);
+                self::attrI($a, 'items_per_slide',         $s['items_per_slide']         ?? null, 1);
+                self::attrI($a, 'items_per_slide_tablet',  $s['items_per_slide_tablet']  ?? null, 0);
+                self::attrI($a, 'items_per_slide_mobile',  $s['items_per_slide_mobile']  ?? null, 0);
                 return '[lazy_card ' . trim($a) . $vis . ' /]';
+            }
+
+            case 'accordion': {
+                $a = $base;
+                self::attrI($a, 'default_open',          $s['defaultOpen']        ?? null, 0);
+                self::attrI($a, 'allow_multiple',         ($s['allowMultiple'] ?? false) ? 'yes' : null);
+                self::attrI($a, 'icon_type',              $s['iconType']           ?? null, 'plus');
+                self::attrI($a, 'icon_position',          $s['iconPosition']       ?? null, 'right');
+                self::attrI($a, 'title_font_size',        $s['titleFontSize']        ?? null, 15);
+                self::attrI($a, 'title_font_weight',      $s['titleFontWeight']      ?? null, '600');
+                self::attrI($a, 'title_font_family',      $s['titleFontFamily']      ?? null, 'inherit');
+                self::attrI($a, 'title_letter_spacing',   $s['titleLetterSpacing']   ?? null, '0px');
+                self::attrI($a, 'title_line_height',      $s['titleLineHeight']      ?? null, 1.4);
+                self::attrI($a, 'title_text_transform',   $s['titleTextTransform']   ?? null, 'none');
+                self::attrI($a, 'title_color',            $s['titleColor']           ?? null, '#222222');
+                self::attrI($a, 'title_bg_color',         $s['titleBgColor']         ?? null, '#f8fafc');
+                self::attrI($a, 'title_active_bg_color',  $s['titleActiveBgColor']   ?? null, '#0091ea');
+                self::attrI($a, 'title_active_color',     $s['titleActiveColor']     ?? null, '#ffffff');
+                self::attrI($a, 'title_padding',          $s['titlePadding']         ?? null, 16);
+                self::attrI($a, 'content_font_size',      $s['contentFontSize']      ?? null, 14);
+                self::attrI($a, 'content_font_family',    $s['contentFontFamily']    ?? null, 'inherit');
+                self::attrI($a, 'content_letter_spacing', $s['contentLetterSpacing'] ?? null, '0px');
+                self::attrI($a, 'content_line_height',    $s['contentLineHeight']    ?? null, 1.6);
+                self::attrI($a, 'content_color',          $s['contentColor']         ?? null, '#555555');
+                self::attrI($a, 'content_bg_color',       $s['contentBgColor']       ?? null, '#ffffff');
+                self::attrI($a, 'content_padding',        $s['contentPadding']       ?? null, 16);
+                self::attrI($a, 'border_color',           $s['borderColor']        ?? null, '#e2e8f0');
+                self::attrI($a, 'border_radius',          $s['borderRadius']       ?? null, 8);
+                self::attrI($a, 'item_gap',               $s['itemGap']            ?? null, 8);
+                self::attrI($a, 'margin_top',             $s['marginTop']          ?? null);
+                self::attrI($a, 'margin_top_unit',        $s['marginTopUnit']      ?? null, 'px');
+                self::attrI($a, 'margin_bottom',          $s['marginBottom']       ?? null);
+                self::attrI($a, 'margin_bottom_unit',     $s['marginBottomUnit']   ?? null, 'px');
+                self::attrI($a, 'css_class',              $s['cssClass']           ?? null);
+                self::attrI($a, 'css_id',                 $s['cssId']              ?? null);
+                $items = '';
+                foreach ($s['items'] ?? [] as $item) {
+                    $t = htmlspecialchars($item['title'] ?? '', ENT_QUOTES);
+                    $items .= "\n" . '[lazy_acc_item title="' . $t . '"]' . ($item['content'] ?? '') . '[/lazy_acc_item]';
+                }
+                return '[lazy_accordion ' . trim($a) . $vis . ']' . $items . "\n[/lazy_accordion]";
+            }
+
+            case 'tabs': {
+                $a = $base;
+                self::attrI($a, 'default_active',   $s['defaultActive']  ?? null, 0);
+                self::attrI($a, 'style',            $s['style']          ?? null, 'underline');
+                self::attrI($a, 'alignment',        $s['alignment']      ?? null, 'left');
+                self::attrI($a, 'tab_font_size',        $s['tabFontSize']          ?? null, 14);
+                self::attrI($a, 'tab_font_weight',      $s['tabFontWeight']        ?? null, '500');
+                self::attrI($a, 'tab_font_family',      $s['tabFontFamily']        ?? null, 'inherit');
+                self::attrI($a, 'tab_letter_spacing',   $s['tabLetterSpacing']     ?? null, '0px');
+                self::attrI($a, 'tab_color',            $s['tabColor']             ?? null, '#666666');
+                self::attrI($a, 'active_color',         $s['activeColor']          ?? null, '#0091ea');
+                self::attrI($a, 'content_font_size',    $s['contentFontSize']      ?? null, 14);
+                self::attrI($a, 'content_font_family',  $s['contentFontFamily']    ?? null, 'inherit');
+                self::attrI($a, 'content_letter_spacing',$s['contentLetterSpacing']?? null, '0px');
+                self::attrI($a, 'content_line_height',  $s['contentLineHeight']    ?? null, 1.6);
+                self::attrI($a, 'content_color',        $s['contentColor']         ?? null, '#555555');
+                self::attrI($a, 'content_bg_color', $s['contentBgColor'] ?? null, '#ffffff');
+                self::attrI($a, 'content_padding',  $s['contentPadding'] ?? null, 20);
+                self::attrI($a, 'border_color',     $s['borderColor']    ?? null, '#e2e8f0');
+                self::attrI($a, 'border_radius',    $s['borderRadius']   ?? null, 4);
+                self::attrI($a, 'margin_top',       $s['marginTop']      ?? null);
+                self::attrI($a, 'margin_top_unit',  $s['marginTopUnit']  ?? null, 'px');
+                self::attrI($a, 'margin_bottom',    $s['marginBottom']   ?? null);
+                self::attrI($a, 'margin_bottom_unit',$s['marginBottomUnit']?? null, 'px');
+                self::attrI($a, 'css_class',        $s['cssClass']       ?? null);
+                self::attrI($a, 'css_id',           $s['cssId']          ?? null);
+                $items = '';
+                foreach ($s['items'] ?? [] as $item) {
+                    $l = htmlspecialchars($item['label'] ?? '', ENT_QUOTES);
+                    $items .= "\n" . '[lazy_tab_item label="' . $l . '"]' . ($item['content'] ?? '') . '[/lazy_tab_item]';
+                }
+                return '[lazy_tabs ' . trim($a) . $vis . ']' . $items . "\n[/lazy_tabs]";
+            }
+
+            case 'icon_list': {
+                $a = $base;
+                self::attrI($a, 'default_icon',      $s['defaultIcon']     ?? null, 'fa fa-check');
+                self::attrI($a, 'icon_size',         $s['iconSize']        ?? null, 14);
+                self::attrI($a, 'icon_color',        $s['iconColor']       ?? null, '#0091ea');
+                self::attrI($a, 'icon_position',     $s['iconPosition']    ?? null, 'left');
+                self::attrI($a, 'gap',               $s['gap']             ?? null, 10);
+                self::attrI($a, 'item_spacing',      $s['itemSpacing']     ?? null, 10);
+                self::attrI($a, 'text_align',        $s['textAlign']       ?? null, 'left');
+                self::attrI($a, 'text_color',        $s['textColor']       ?? null, '#333333');
+                self::attrI($a, 'font_size',         $s['fontSize']        ?? null, 15);
+                self::attrI($a, 'font_size_unit',    $s['fontSizeUnit']    ?? null, 'px');
+                self::attrI($a, 'font_weight',       $s['fontWeight']      ?? null, '400');
+                self::attrI($a, 'font_family',       $s['fontFamily']      ?? null, 'inherit');
+                self::attrI($a, 'line_height',       $s['lineHeight']      ?? null, '1.5');
+                self::attrI($a, 'margin_top',        $s['marginTop']       ?? null);
+                self::attrI($a, 'margin_top_unit',   $s['marginTopUnit']   ?? null, 'px');
+                self::attrI($a, 'margin_bottom',     $s['marginBottom']    ?? null);
+                self::attrI($a, 'margin_bottom_unit',$s['marginBottomUnit']?? null, 'px');
+                self::attrI($a, 'css_class',         $s['cssClass']        ?? null);
+                self::attrI($a, 'css_id',            $s['cssId']           ?? null);
+                $items = '';
+                foreach ($s['items'] ?? [] as $item) {
+                    $ia  = ' icon="' . htmlspecialchars($item['icon'] ?? 'fa fa-check', ENT_QUOTES) . '"';
+                    if (!empty($item['iconColor']))  $ia .= ' icon_color="' . htmlspecialchars($item['iconColor'], ENT_QUOTES) . '"';
+                    if (!empty($item['link']))       $ia .= ' link="' . htmlspecialchars($item['link'], ENT_QUOTES) . '"';
+                    if (!empty($item['linkTarget'])) $ia .= ' link_target="' . htmlspecialchars($item['linkTarget'], ENT_QUOTES) . '"';
+                    $items .= "\n" . '[lazy_icon_list_item' . $ia . ']' . htmlspecialchars($item['text'] ?? '', ENT_QUOTES) . '[/lazy_icon_list_item]';
+                }
+                return '[lazy_icon_list ' . trim($a) . $vis . ']' . $items . "\n[/lazy_icon_list]";
             }
 
             default: {
@@ -1361,7 +1489,10 @@ class BuilderShortcodeConverter
                     'borderSizeLeft'   => isset($a['border_left'])   ? (int)$a['border_left']   : null,
                     'borderColor'      => $a['border_color'] ?? null,
                     // Hover
-                    'hoverType'     => $a['hover_type'] ?? 'none',
+                    'hoverType'   => $a['hover_type']   ?? 'none',
+                    'aspectRatio' => $a['aspect_ratio'] ?? 'none',
+                    'focusX'      => isset($a['focus_x']) ? (int)$a['focus_x'] : 50,
+                    'focusY'      => isset($a['focus_y']) ? (int)$a['focus_y'] : 50,
                     // CSS
                     'cssClass'      => $a['css_class'] ?? null,
                     'cssId'         => $a['css_id']    ?? null,
@@ -1453,11 +1584,20 @@ class BuilderShortcodeConverter
 
             case 'video':
                 return ['id' => $a['id'] ?? self::uid(), 'type' => 'video', 'settings' => [
-                    'src'        => $a['src']    ?? '',
-                    'type'       => $a['type']   ?? null,
-                    'width'      => $a['width']  ?? null,
-                    'height'     => $a['height'] ?? null,
-                    'visibility' => $vis,
+                    'url'              => $a['url']          ?? '',
+                    'videoSource'      => $a['video_source'] ?? 'youtube',
+                    'aspectRatio'      => $a['aspect_ratio'] ?? '16-9',
+                    'autoplay'         => ($a['autoplay']    ?? '0') === '1',
+                    'muted'            => ($a['muted']       ?? '0') === '1',
+                    'loop'             => ($a['loop']        ?? '0') === '1',
+                    'controls'         => ($a['controls']    ?? '1') !== '0',
+                    'marginTop'        => (int)($a['margin_top']    ?? 0),
+                    'marginTopUnit'    => $a['margin_top_unit']    ?? 'px',
+                    'marginBottom'     => (int)($a['margin_bottom'] ?? 0),
+                    'marginBottomUnit' => $a['margin_bottom_unit'] ?? 'px',
+                    'cssClass'         => $a['css_class'] ?? '',
+                    'cssId'            => $a['css_id']    ?? '',
+                    'visibility'       => $vis,
                 ]];
 
             case 'text_block':
@@ -1694,9 +1834,148 @@ class BuilderShortcodeConverter
                     'taxonomy_slug'         => $a['taxonomy_slug']               ?? '',
                     'taxonomy_include'      => array_values(array_filter(explode(',', trim($a['taxonomy_include'] ?? '')))),
                     'taxonomy_exclude'      => array_values(array_filter(explode(',', trim($a['taxonomy_exclude'] ?? '')))),
+                    'carousel_autoplay'       => ($a['carousel_autoplay']       ?? '') === 'yes',
+                    'carousel_autoplay_speed' => (int)($a['carousel_autoplay_speed'] ?? 3000),
+                    'carousel_arrows'         => ($a['carousel_arrows']         ?? 'yes') !== 'no',
+                    'carousel_dots'           => ($a['carousel_dots']           ?? 'yes') !== 'no',
+                    'carousel_loop'           => ($a['carousel_loop']           ?? '') === 'yes',
+                    'items_per_slide'         => max(1, (int)($a['items_per_slide']        ?? 1)),
+                    'items_per_slide_tablet'  => max(0, (int)($a['items_per_slide_tablet'] ?? 0)),
+                    'items_per_slide_mobile'  => max(0, (int)($a['items_per_slide_mobile'] ?? 0)),
                     'visibility'            => $vis,
                 ];
                 return ['id' => $a['id'] ?? self::uid(), 'type' => 'card', 'settings' => $settings];
+            }
+
+            case 'accordion': {
+                $items = [];
+                if (preg_match_all('/\[lazy_acc_item([^\]]*)\](.*?)\[\/lazy_acc_item\]/s', $inner, $im, PREG_SET_ORDER)) {
+                    foreach ($im as $imatch) {
+                        $ia = self::attrs($imatch[1]);
+                        $items[] = [
+                            'id'      => self::uid(),
+                            'title'   => htmlspecialchars_decode($ia['title'] ?? '', ENT_QUOTES),
+                            'content' => trim($imatch[2]),
+                        ];
+                    }
+                }
+                return ['id' => $a['id'] ?? self::uid(), 'type' => 'accordion', 'settings' => [
+                    'items'              => $items,
+                    'defaultOpen'        => isset($a['default_open'])         ? (int)$a['default_open']         : 0,
+                    'allowMultiple'      => ($a['allow_multiple']             ?? '') === 'yes',
+                    'iconType'           => $a['icon_type']                   ?? 'plus',
+                    'iconPosition'       => $a['icon_position']               ?? 'right',
+                    'titleFontSize'        => isset($a['title_font_size'])        ? (int)$a['title_font_size']      : 15,
+                    'titleFontWeight'      => $a['title_font_weight']           ?? '600',
+                    'titleFontFamily'      => $a['title_font_family']           ?? 'inherit',
+                    'titleLetterSpacing'   => $a['title_letter_spacing']        ?? '0px',
+                    'titleLineHeight'      => isset($a['title_line_height'])    ? (float)$a['title_line_height'] : 1.4,
+                    'titleTextTransform'   => $a['title_text_transform']        ?? 'none',
+                    'titleColor'           => $a['title_color']                 ?? '#222222',
+                    'titleBgColor'         => $a['title_bg_color']              ?? '#f8fafc',
+                    'titleActiveBgColor'   => $a['title_active_bg_color']       ?? '#0091ea',
+                    'titleActiveColor'     => $a['title_active_color']          ?? '#ffffff',
+                    'titlePadding'         => isset($a['title_padding'])        ? (int)$a['title_padding']        : 16,
+                    'contentFontSize'      => isset($a['content_font_size'])    ? (int)$a['content_font_size']    : 14,
+                    'contentFontFamily'    => $a['content_font_family']         ?? 'inherit',
+                    'contentLetterSpacing' => $a['content_letter_spacing']      ?? '0px',
+                    'contentLineHeight'    => isset($a['content_line_height'])  ? (float)$a['content_line_height'] : 1.6,
+                    'contentColor'         => $a['content_color']               ?? '#555555',
+                    'contentBgColor'       => $a['content_bg_color']            ?? '#ffffff',
+                    'contentPadding'       => isset($a['content_padding'])      ? (int)$a['content_padding']      : 16,
+                    'borderColor'        => $a['border_color']                ?? '#e2e8f0',
+                    'borderRadius'       => isset($a['border_radius'])        ? (int)$a['border_radius']        : 8,
+                    'itemGap'            => isset($a['item_gap'])             ? (int)$a['item_gap']             : 8,
+                    'marginTop'          => isset($a['margin_top'])           ? (int)$a['margin_top']           : 0,
+                    'marginTopUnit'      => $a['margin_top_unit']             ?? 'px',
+                    'marginBottom'       => isset($a['margin_bottom'])        ? (int)$a['margin_bottom']        : 0,
+                    'marginBottomUnit'   => $a['margin_bottom_unit']          ?? 'px',
+                    'cssClass'           => $a['css_class']                   ?? '',
+                    'cssId'              => $a['css_id']                      ?? '',
+                    'visibility'         => $vis,
+                ]];
+            }
+
+            case 'tabs': {
+                $items = [];
+                if (preg_match_all('/\[lazy_tab_item([^\]]*)\](.*?)\[\/lazy_tab_item\]/s', $inner, $im, PREG_SET_ORDER)) {
+                    foreach ($im as $imatch) {
+                        $ia = self::attrs($imatch[1]);
+                        $items[] = [
+                            'id'      => self::uid(),
+                            'label'   => htmlspecialchars_decode($ia['label'] ?? '', ENT_QUOTES),
+                            'content' => trim($imatch[2]),
+                        ];
+                    }
+                }
+                return ['id' => $a['id'] ?? self::uid(), 'type' => 'tabs', 'settings' => [
+                    'items'          => $items,
+                    'defaultActive'  => isset($a['default_active'])   ? (int)$a['default_active']   : 0,
+                    'style'          => $a['style']                   ?? 'underline',
+                    'alignment'      => $a['alignment']               ?? 'left',
+                    'tabFontSize'          => isset($a['tab_font_size'])        ? (int)$a['tab_font_size']        : 14,
+                    'tabFontWeight'        => $a['tab_font_weight']             ?? '500',
+                    'tabFontFamily'        => $a['tab_font_family']             ?? 'inherit',
+                    'tabLetterSpacing'     => $a['tab_letter_spacing']          ?? '0px',
+                    'tabColor'             => $a['tab_color']                   ?? '#666666',
+                    'activeColor'          => $a['active_color']                ?? '#0091ea',
+                    'contentFontSize'      => isset($a['content_font_size'])    ? (int)$a['content_font_size']    : 14,
+                    'contentFontFamily'    => $a['content_font_family']         ?? 'inherit',
+                    'contentLetterSpacing' => $a['content_letter_spacing']      ?? '0px',
+                    'contentLineHeight'    => isset($a['content_line_height'])  ? (float)$a['content_line_height'] : 1.6,
+                    'contentColor'         => $a['content_color']               ?? '#555555',
+                    'contentBgColor'       => $a['content_bg_color']            ?? '#ffffff',
+                    'contentPadding'       => isset($a['content_padding'])      ? (int)$a['content_padding']      : 20,
+                    'borderColor'    => $a['border_color']            ?? '#e2e8f0',
+                    'borderRadius'   => isset($a['border_radius'])    ? (int)$a['border_radius']    : 4,
+                    'marginTop'      => isset($a['margin_top'])       ? (int)$a['margin_top']       : 0,
+                    'marginTopUnit'  => $a['margin_top_unit']         ?? 'px',
+                    'marginBottom'   => isset($a['margin_bottom'])    ? (int)$a['margin_bottom']    : 0,
+                    'marginBottomUnit'=> $a['margin_bottom_unit']     ?? 'px',
+                    'cssClass'       => $a['css_class']               ?? '',
+                    'cssId'          => $a['css_id']                  ?? '',
+                    'visibility'     => $vis,
+                ]];
+            }
+
+            case 'icon_list': {
+                $items = [];
+                if (preg_match_all('/\[lazy_icon_list_item([^\]]*)\](.*?)\[\/lazy_icon_list_item\]/s', $inner, $im, PREG_SET_ORDER)) {
+                    foreach ($im as $imatch) {
+                        $ia = self::attrs($imatch[1]);
+                        $items[] = [
+                            'id'         => self::uid(),
+                            'icon'       => $ia['icon']        ?? 'fa fa-check',
+                            'iconColor'  => $ia['icon_color']  ?? '',
+                            'text'       => htmlspecialchars_decode($imatch[2], ENT_QUOTES),
+                            'link'       => $ia['link']        ?? '',
+                            'linkTarget' => $ia['link_target'] ?? '_self',
+                        ];
+                    }
+                }
+                return ['id' => $a['id'] ?? self::uid(), 'type' => 'icon_list', 'settings' => [
+                    'items'          => $items,
+                    'defaultIcon'    => $a['default_icon']       ?? 'fa fa-check',
+                    'iconSize'       => isset($a['icon_size'])   ? (int)$a['icon_size']   : 14,
+                    'iconColor'      => $a['icon_color']         ?? '#0091ea',
+                    'iconPosition'   => $a['icon_position']      ?? 'left',
+                    'gap'            => isset($a['gap'])         ? (int)$a['gap']         : 10,
+                    'itemSpacing'    => isset($a['item_spacing']) ? (int)$a['item_spacing'] : 10,
+                    'textAlign'      => $a['text_align']         ?? 'left',
+                    'textColor'      => $a['text_color']         ?? '#333333',
+                    'fontSize'       => isset($a['font_size'])   ? (int)$a['font_size']   : 15,
+                    'fontSizeUnit'   => $a['font_size_unit']     ?? 'px',
+                    'fontWeight'     => $a['font_weight']        ?? '400',
+                    'fontFamily'     => $a['font_family']        ?? 'inherit',
+                    'lineHeight'     => $a['line_height']        ?? '1.5',
+                    'marginTop'      => isset($a['margin_top'])  ? (int)$a['margin_top']  : 0,
+                    'marginTopUnit'  => $a['margin_top_unit']    ?? 'px',
+                    'marginBottom'   => isset($a['margin_bottom']) ? (int)$a['margin_bottom'] : 0,
+                    'marginBottomUnit'=> $a['margin_bottom_unit'] ?? 'px',
+                    'cssClass'       => $a['css_class']          ?? '',
+                    'cssId'          => $a['css_id']             ?? '',
+                    'visibility'     => $vis,
+                ]];
             }
 
             default: {
@@ -1763,6 +2042,7 @@ class BuilderShortcodeConverter
             'visibility'          => self::visibilityFromAttrs($a),
             'status'              => $a['status']         ?? 'published',
             'cssClass'            => $a['css_class']      ?? null,
+            'global_id'           => $a['global_id']      ?? null,
             'linkColor'           => $a['link_color']     ?? null,
             'linkUrl'             => $a['link']           ?? null,
             'linkTarget'          => $a['link_target']    ?? '_self',

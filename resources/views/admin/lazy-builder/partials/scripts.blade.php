@@ -15,7 +15,7 @@
 </style>
 
 <script>
-    const { createApp, ref, reactive, computed, onMounted, watch, watchEffect } = Vue;
+    const { createApp, ref, reactive, computed, onMounted, nextTick, watch, watchEffect } = Vue;
 
     createApp({
         setup() {
@@ -25,6 +25,14 @@
             const isSaving = ref(false);
             const isDirty = ref(false);
             let lastSavedLayout = '';
+
+            // ── Undo / Redo ────────────────────────────────────────────────
+            const _historyStack = [];
+            const historyIndex = ref(-1);
+            const canUndo = computed(() => historyIndex.value > 0);
+            const canRedo = computed(() => historyIndex.value < _historyStack.length - 1);
+            let _isUndoRedo = false;
+            const MAX_HISTORY = 50;
             const serializedLayout = computed(() => {
                 // Return layout without transient UI state like isHovered or properties starting with _
                 return JSON.stringify(layout.value, (key, value) => {
@@ -223,6 +231,9 @@
 
             const activeIconTab = ref('Solid');
             const searchIconQuery = ref('');
+            const activeAccordionItem = ref(null);
+            const activeTabsItem = ref(null);
+            const activeIconListItem = ref(null);
             const FA_GROUPS = {
                 'Solid': [
                     'fas fa-bars', 'fas fa-bars-staggered', 'fas fa-plus', 'fas fa-minus', 'fas fa-times', 'fas fa-check', 'fas fa-search', 'fas fa-cog', 'fas fa-home', 'fas fa-user', 'fas fa-envelope', 'fas fa-phone',
@@ -325,11 +336,16 @@
             };
 
             const availableElements = [
-                { type: 'title', name: 'Title', icon: 'fa fa-heading' },
-                { type: 'icon_box', name: 'Icon Box', icon: 'fa fa-star-half-alt' },
+                { type: 'accordion', name: 'Accordion', icon: 'fa fa-list-ul' },
                 { type: 'card', name: 'Card', icon: 'fa fa-th-large' },
-                { type: 'spacer', name: 'Spacer', icon: 'fa fa-arrows-alt-v' },
+                { type: 'counter', name: 'Counter', icon: 'fa fa-hashtag' },
                 { type: 'html', name: 'HTML Block', icon: 'fa fa-code' },
+                { type: 'icon_list', name: 'Icon List', icon: 'fa fa-list-check' },
+                { type: 'video', name: 'Video', icon: 'fa fa-play-circle' },
+                { type: 'icon_box', name: 'Icon Box', icon: 'fa fa-star-half-alt' },
+                { type: 'spacer', name: 'Spacer', icon: 'fa fa-arrows-alt-v' },
+                { type: 'tabs', name: 'Tabs', icon: 'fa fa-folder' },
+                { type: 'title', name: 'Title', icon: 'fa fa-heading' },
             ];
             if (postCardMode.value) {
                 availableElements.push({ type: 'post_content', name: 'Content', icon: 'fa fa-paragraph' });
@@ -348,12 +364,14 @@
             });
 
             const filteredAvailableElements = computed(() => {
-                if (!searchElementQuery.value) return availableElements;
                 const query = searchElementQuery.value.toLowerCase();
-                return availableElements.filter(el =>
-                    (el.name && el.name.toLowerCase().includes(query)) ||
-                    el.type.toLowerCase().includes(query)
-                );
+                const list = !query
+                    ? [...availableElements]
+                    : availableElements.filter(el =>
+                        (el.name && el.name.toLowerCase().includes(query)) ||
+                        el.type.toLowerCase().includes(query)
+                    );
+                return list.sort((a, b) => (a.name || a.type).localeCompare(b.name || b.type));
             });
 
             // Dynamic Custom Elements Registration
@@ -505,8 +523,16 @@
                     };
                     scanForCards(layout.value);
 
+                    // Fetch global sections and sync columns from store (so edits on other pages are reflected)
+                    fetchGlobalSections().then(syncGlobalColumnsFromStore);
+
                     // Initialize last saved layout for dirty tracking
                     lastSavedLayout = serializedLayout.value;
+
+                    // Push initial snapshot so Ctrl+Z can undo the very first action
+                    _historyStack.splice(0);
+                    _historyStack.push(JSON.parse(JSON.stringify(layout.value)));
+                    historyIndex.value = 0;
                 }, 100);
             });
 
@@ -515,6 +541,14 @@
                     isDirty.value = (newVal !== lastSavedLayout);
                 }
             });
+
+            watch(layout, () => {
+                if (_isUndoRedo) return;
+                _historyStack.splice(historyIndex.value + 1);
+                _historyStack.push(JSON.parse(JSON.stringify(layout.value)));
+                if (_historyStack.length > MAX_HISTORY) _historyStack.shift();
+                historyIndex.value = _historyStack.length - 1;
+            }, { deep: true, flush: 'sync' });
 
             // Watch isPreview to directly control layout via DOM
             watch(isPreview, (val) => {
@@ -1355,6 +1389,18 @@
             const saveLayout = async () => {
                 isSaving.value = true;
                 try {
+                    // Sync all linked global sections to the global store so other pages get the updates
+                    const globalContainers = layout.value.filter(c => c.settings?.global_id);
+                    if (globalContainers.length) {
+                        await Promise.all(globalContainers.map(container =>
+                            fetch(`{{ url('admin/lazy-builder/global-sections') }}/${container.settings.global_id}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                                body: JSON.stringify({ data: JSON.parse(JSON.stringify(container)) })
+                            }).then(r => r.json()).catch(() => null)
+                        ));
+                    }
+
                     const response = await fetch("{{ $builderSaveUrl ?? route('admin.lazy-builder.save', $post->id) }}", {
                         method: 'POST',
                         headers: {
@@ -1967,6 +2013,7 @@
                 columnModalActiveTab.value = 'columns';
                 showColumnModal.value   = true;
                 fetchLibrary();
+                fetchGlobalSections();
             };
 
             const addContainerFromColumnModal = (item) => {
@@ -2102,9 +2149,8 @@
 
             const getCanvasVisibilityStyle = (settings) => {
                 if (!settings || !settings.visibility) return {};
-                const v = settings.visibility;
-                const anyHidden = v.mobile === false || v.tablet === false || v.desktop === false;
-                return anyHidden ? { opacity: '0.4', outline: '2px dashed #fbbf24', outlineOffset: '-2px' } : {};
+                const hidden = settings.visibility[device.value] === false;
+                return hidden ? { opacity: '0.4', outline: '2px dashed #fbbf24', outlineOffset: '-2px' } : {};
             };
 
             const addElement = (type) => {
@@ -2115,6 +2161,20 @@
                     type: type,
                     settings: {
                         visibility: { mobile: true, tablet: true, desktop: true },
+                        ...(type === 'counter' ? {
+                            endValue: 100, startValue: 0, prefix: '', suffix: '', label: 'Happy Clients',
+                            duration: 2000, decimals: 0, separator: '',
+                            textAlign: 'center',
+                            numberFontSize: '48px', numberFontWeight: '700',
+                            numberColor: '#222222', numberFontFamily: 'inherit',
+                            numberLineHeight: '1.1', numberLetterSpacing: '0px',
+                            labelFontSize: '14px', labelFontWeight: '400', labelColor: '#666666',
+                            labelFontFamily: 'inherit', labelLineHeight: '1.4', labelLetterSpacing: '0px', labelTextTransform: 'none',
+                            icon: '', iconSize: 40, iconColor: '#0091ea',
+                            marginTop: 0, marginTopUnit: 'px', marginBottom: 0, marginBottomUnit: 'px',
+                            cssClass: '', cssId: '',
+                            visibility: { mobile: true, tablet: true, desktop: true },
+                        } : {}),
                         ...(type === 'heading' ? { title: 'New Heading', textAlign: 'left' } : {}),
                         ...(type === 'title' ? {
                             title: 'Title', titleColor: '#222', fontSize: 36, fontSizeUnit: 'px', fontWeight: '800', textAlign: 'center',
@@ -2136,7 +2196,22 @@
                             bgGradientStartPosition: 0, bgGradientEndPosition: 100,
                             dynamic_source: '', link_dynamic_source: '',
                         } : {}),
-                        ...(type === 'image' ? { url: '', alt: '', linkUrl: '', linkTarget: '_self', dynamic_source: '', link_dynamic_source: '' } : {}),
+                        ...(type === 'image' ? { url: '', alt: '', linkUrl: '', linkTarget: '_self', dynamic_source: '', link_dynamic_source: '', aspectRatio: 'none', focusX: 50, focusY: 50 } : {}),
+                        ...(type === 'icon_list' ? {
+                            items: [
+                                { id: Date.now() + '_1', icon: 'fa fa-check', iconColor: '', text: 'List item one',   link: '', linkTarget: '_self' },
+                                { id: Date.now() + '_2', icon: 'fa fa-check', iconColor: '', text: 'List item two',   link: '', linkTarget: '_self' },
+                                { id: Date.now() + '_3', icon: 'fa fa-check', iconColor: '', text: 'List item three', link: '', linkTarget: '_self' },
+                            ],
+                            defaultIcon: 'fa fa-check',
+                            iconSize: 14, iconColor: '#0091ea', iconPosition: 'left',
+                            gap: 10, itemSpacing: 10, textAlign: 'left',
+                            textColor: '#333333', fontSize: 15, fontSizeUnit: 'px',
+                            fontWeight: '400', fontFamily: 'inherit', lineHeight: '1.5',
+                            marginTop: 0, marginTopUnit: 'px', marginBottom: 0, marginBottomUnit: 'px',
+                            cssClass: '', cssId: '',
+                            visibility: { mobile: true, tablet: true, desktop: true },
+                        } : {}),
                         ...(type === 'post_content' ? {
                             content_display: 'excerpt', excerptLength: 120, stripHtml: true,
                             textAlign: 'left', fontFamily: 'inherit', fontSize: 13, fontSizeUnit: 'px',
@@ -2190,6 +2265,53 @@
                             cssClass: '', cssId: '',
                             visibility: { mobile: true, tablet: true, desktop: true },
                         } : {}),
+                        ...(type === 'accordion' ? {
+                            items: [
+                                { id: Date.now() + '_1', title: 'Accordion Item 1', content: '<p>Add your content here.</p>' },
+                                { id: Date.now() + '_2', title: 'Accordion Item 2', content: '<p>Add your content here.</p>' },
+                            ],
+                            defaultOpen: 0, allowMultiple: false,
+                            iconType: 'plus', iconPosition: 'right',
+                            titleFontSize: 15, titleFontWeight: '600',
+                            titleFontFamily: 'inherit', titleLetterSpacing: '0px', titleLineHeight: 1.4, titleTextTransform: 'none',
+                            titleColor: '#222222', titleBgColor: '#f8fafc',
+                            titleActiveBgColor: '#0091ea', titleActiveColor: '#ffffff', titlePadding: 16,
+                            contentFontSize: 14, contentFontFamily: 'inherit', contentLetterSpacing: '0px', contentLineHeight: 1.6,
+                            contentColor: '#555555', contentBgColor: '#ffffff', contentPadding: 16,
+                            borderColor: '#e2e8f0', borderRadius: 8, itemGap: 8,
+                            marginTop: 0, marginTopUnit: 'px', marginBottom: 0, marginBottomUnit: 'px',
+                            cssClass: '', cssId: '',
+                            visibility: { mobile: true, tablet: true, desktop: true },
+                        } : {}),
+                        ...(type === 'tabs' ? {
+                            items: [
+                                { id: Date.now() + '_1', label: 'Tab One', content: '<p>Tab one content goes here.</p>' },
+                                { id: Date.now() + '_2', label: 'Tab Two', content: '<p>Tab two content goes here.</p>' },
+                            ],
+                            defaultActive: 0, style: 'underline', alignment: 'left',
+                            tabFontSize: 14, tabFontWeight: '500',
+                            tabFontFamily: 'inherit', tabLetterSpacing: '0px',
+                            tabColor: '#666666', activeColor: '#0091ea',
+                            contentFontSize: 14, contentFontFamily: 'inherit', contentLetterSpacing: '0px', contentLineHeight: 1.6,
+                            contentColor: '#555555', contentBgColor: '#ffffff', contentPadding: 20,
+                            borderColor: '#e2e8f0', borderRadius: 4,
+                            marginTop: 0, marginTopUnit: 'px', marginBottom: 0, marginBottomUnit: 'px',
+                            cssClass: '', cssId: '',
+                            visibility: { mobile: true, tablet: true, desktop: true },
+                        } : {}),
+                        ...(type === 'video' ? {
+                            url: '',
+                            videoSource: 'youtube',
+                            aspectRatio: '16-9',
+                            controls: true,
+                            autoplay: false,
+                            muted: false,
+                            loop: false,
+                            marginTop: 0, marginTopUnit: 'px',
+                            marginBottom: 0, marginBottomUnit: 'px',
+                            cssClass: '', cssId: '',
+                            visibility: { mobile: true, tablet: true, desktop: true },
+                        } : {}),
                         ...(type === 'card' ? {
                             post_card_id: '',
                             content_source: 'posts',
@@ -2218,6 +2340,14 @@
                             taxonomy_slug: '',
                             taxonomy_include: [],
                             taxonomy_exclude: [],
+                            carousel_autoplay: false,
+                            carousel_autoplay_speed: 3000,
+                            carousel_arrows: true,
+                            carousel_dots: true,
+                            carousel_loop: false,
+                            items_per_slide: 1,
+                            items_per_slide_tablet: 0,
+                            items_per_slide_mobile: 0,
                         } : {}),
                     }
                 };
@@ -2317,8 +2447,14 @@
             const libraryActiveTab   = ref('containers');
             const libraryNewName     = ref('');
             const isSavingToLibrary  = ref(false);
+            const saveAsGlobalChecked = ref(false);
             const libraryContext     = ref(null);
             const libraryItems       = ref({ containers: [], columns: [], nested_columns: [], elements: [] });
+            const globalSections     = ref([]);
+            const showGlobalModal    = ref(false);
+            const globalModalName    = ref('');
+            const globalModalCi      = ref(null);
+            const isSavingGlobal     = ref(false);
             const postCardsList      = ref(window.lazyPostCards || []);
             const recentPosts        = ref(window.lazyRecentPosts || []);
             const lazyTaxonomies     = ref(window.lazyTaxonomies    || []);
@@ -2351,6 +2487,24 @@
                 return elements;
             };
 
+            const execCardPreviewScripts = (elId) => {
+                const container = document.querySelector('[data-card-preview-id="' + elId + '"]');
+                if (!container) return;
+                container.querySelectorAll('script').forEach(old => {
+                    const s = document.createElement('script');
+                    s.textContent = old.textContent;
+                    old.parentNode?.replaceChild(s, old);
+                });
+                // Make carousel arrows & dots clickable in the canvas without triggering element selection.
+                // pointer-events:none on the container prevents general clicks; children with auto override it.
+                nextTick(() => {
+                    container.querySelectorAll('[onclick*="lzSlider"]').forEach(btn => {
+                        btn.style.pointerEvents = 'auto';
+                        btn.addEventListener('click', e => e.stopPropagation(), true);
+                    });
+                });
+            };
+
             const fetchCardPreview = async (el) => {
                 if (!el || el.type !== 'card') return;
                 const elId = el.id;
@@ -2363,6 +2517,7 @@
                     });
                     const data = await res.json();
                     cardPreviewCache[elId] = { loading: false, html: data.success ? data.html : '' };
+                    if (data.success) nextTick(() => execCardPreviewScripts(elId));
                 } catch(e) {
                     cardPreviewCache[elId] = { loading: false, html: '' };
                 }
@@ -2414,13 +2569,17 @@
             });
 
             const libraryTabs = [
-                { key: 'containers',     label: 'Containers',     icon: 'fa fa-table-columns' },
-                { key: 'columns',        label: 'Columns',        icon: 'fa fa-columns' },
-                { key: 'nested_columns', label: 'Nested Columns', icon: 'fa fa-layer-group' },
-                { key: 'elements',       label: 'Elements',       icon: 'fa fa-cube' },
+                { key: 'containers',      label: 'Containers',     icon: 'fa fa-table-columns' },
+                { key: 'columns',         label: 'Columns',        icon: 'fa fa-columns' },
+                { key: 'nested_columns',  label: 'Nested Columns', icon: 'fa fa-layer-group' },
+                { key: 'elements',        label: 'Elements',       icon: 'fa fa-cube' },
+                { key: 'global_sections', label: 'Global',         icon: 'fa fa-globe' },
             ];
 
-            const libraryCurrentItems  = computed(() => libraryItems.value[libraryActiveTab.value] || []);
+            const libraryCurrentItems  = computed(() => {
+                if (libraryActiveTab.value === 'global_sections') return globalSections.value;
+                return libraryItems.value[libraryActiveTab.value] || [];
+            });
             const libraryActiveTabLabel = computed(() => libraryTabs.find(t => t.key === libraryActiveTab.value)?.label || '');
             const libraryTabIcon       = computed(() => libraryTabs.find(t => t.key === libraryActiveTab.value)?.icon || 'fa fa-cube');
             const libraryCanSave       = computed(() => libraryContext.value?.type === libraryActiveTab.value);
@@ -2433,12 +2592,110 @@
                 } catch (e) { console.error('Library fetch failed', e); }
             };
 
+            // ── Global Sections ──────────────────────────────────────────────────
+
+            const fetchGlobalSections = async () => {
+                try {
+                    const res  = await fetch('{{ route("admin.lazy-builder.global-sections.list") }}');
+                    const data = await res.json();
+                    globalSections.value = Array.isArray(data) ? data : [];
+                } catch (e) { console.error('Global sections fetch failed', e); }
+            };
+
+            const syncGlobalColumnsFromStore = () => {
+                layout.value.forEach(container => {
+                    if (container.settings?.global_id) {
+                        const gs = globalSections.value.find(s => s.id === container.settings.global_id);
+                        if (gs?.data?.columns) {
+                            container.columns = JSON.parse(JSON.stringify(gs.data.columns));
+                        }
+                    }
+                });
+            };
+
+            const openGlobalModal = (ci) => {
+                globalModalCi.value = ci;
+                globalModalName.value = '';
+                showGlobalModal.value = true;
+            };
+
+            const saveAsGlobal = async () => {
+                if (!globalModalName.value.trim() || isSavingGlobal.value) return;
+                const ci = globalModalCi.value;
+                if (ci === null || !layout.value[ci]) return;
+
+                isSavingGlobal.value = true;
+                try {
+                    const containerData = JSON.parse(JSON.stringify(layout.value[ci]));
+                    const res = await fetch('{{ route("admin.lazy-builder.global-sections.save") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                        body: JSON.stringify({ name: globalModalName.value.trim(), data: containerData })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        layout.value[ci].settings.global_id = result.section.id;
+                        globalSections.value.unshift(result.section);
+                        showGlobalModal.value = false;
+                        showToast('Section saved as global!', 'success');
+                    } else {
+                        showToast('Failed to save global section.', 'error');
+                    }
+                } catch (e) {
+                    showToast('Save failed!', 'error');
+                } finally {
+                    isSavingGlobal.value = false;
+                }
+            };
+
+            const unlinkGlobal = (ci) => {
+                if (ci === null || !layout.value[ci]) return;
+                delete layout.value[ci].settings.global_id;
+                showToast('Section unlinked from global.', 'success');
+            };
+
+            const ctxSaveAsGlobal = () => {
+                const m = ctxMenu.value;
+                if (m.type !== 'container') return;
+                openLibraryModal('containers', m.ci);
+                closeCtxMenu();
+            };
+
+            const insertGlobalSection = (section) => {
+                const copy = JSON.parse(JSON.stringify(section.data));
+                assignNewIds(copy);
+                copy.settings = copy.settings || {};
+                copy.settings.global_id = section.id;
+                const at = columnModalTarget.value !== null ? columnModalTarget.value : layout.value.length;
+                layout.value.splice(at, 0, copy);
+                showToast('Global section added!', 'success');
+                showColumnModal.value = false;
+            };
+
+            const deleteGlobalSection = async (id) => {
+                try {
+                    const res = await fetch(`{{ url('admin/lazy-builder/global-sections') }}/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        globalSections.value = globalSections.value.filter(s => s.id !== id);
+                        showToast('Global section deleted.', 'success');
+                    }
+                } catch (e) { showToast('Delete failed!', 'error'); }
+            };
+
+            // ── End Global Sections ──────────────────────────────────────────────
+
             const openLibraryModal = (type, ci = null, coli = null, eli = null, ncoli = null, nestedEli = null) => {
                 libraryContext.value  = { type, ci, coli, eli, ncoli, nestedEli };
                 libraryActiveTab.value = type;
                 libraryNewName.value  = '';
+                saveAsGlobalChecked.value = false;
                 showLibraryModal.value = true;
                 fetchLibrary();
+                fetchGlobalSections();
             };
 
             const saveToLibrary = async () => {
@@ -2465,16 +2722,40 @@
 
                 isSavingToLibrary.value = true;
                 try {
+                    const name = libraryNewName.value.trim();
                     const res    = await fetch('{{ route("admin.lazy-builder.library.save") }}', {
                         method:  'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                        body:    JSON.stringify({ type: ctx.type, name: libraryNewName.value.trim(), data: JSON.parse(JSON.stringify(data)) })
+                        body:    JSON.stringify({ type: ctx.type, name, data: JSON.parse(JSON.stringify(data)) })
                     });
                     const result = await res.json();
                     if (result.success) {
                         libraryItems.value[ctx.type].unshift(result.item);
                         libraryNewName.value = '';
-                        showToast('Saved to library!', 'success');
+
+                        // Also save as global section when checkbox is checked (containers only)
+                        if (saveAsGlobalChecked.value && ctx.type === 'containers' && ctx.ci !== null) {
+                            try {
+                                const gsRes = await fetch('{{ route("admin.lazy-builder.global-sections.save") }}', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                                    body: JSON.stringify({ name, data: JSON.parse(JSON.stringify(data)) })
+                                });
+                                const gsResult = await gsRes.json();
+                                if (gsResult.success) {
+                                    layout.value[ctx.ci].settings.global_id = gsResult.section.id;
+                                    globalSections.value.unshift(gsResult.section);
+                                    showToast('Saved to library and as global section!', 'success');
+                                } else {
+                                    showToast('Saved to library (global save failed).', 'success');
+                                }
+                            } catch (e) {
+                                showToast('Saved to library (global save failed).', 'success');
+                            }
+                            saveAsGlobalChecked.value = false;
+                        } else {
+                            showToast('Saved to library!', 'success');
+                        }
                     }
                 } catch (e) { showToast('Save to library failed!', 'error'); }
                 finally { isSavingToLibrary.value = false; }
@@ -2522,6 +2803,18 @@
                 showLibraryModal.value = false;
             };
 
+            const insertGlobalFromLibrary = (section) => {
+                const ctx  = libraryContext.value;
+                const copy = JSON.parse(JSON.stringify(section.data));
+                assignNewIds(copy);
+                copy.settings = copy.settings || {};
+                copy.settings.global_id = section.id;
+                const at = (ctx?.ci !== null && ctx?.ci !== undefined) ? ctx.ci + 1 : layout.value.length;
+                layout.value.splice(at, 0, copy);
+                showToast('Global section added!', 'success');
+                showLibraryModal.value = false;
+            };
+
             const deleteFromLibrary = async (id) => {
                 const type = libraryActiveTab.value;
                 try {
@@ -2537,6 +2830,39 @@
                 } catch (e) { showToast('Delete failed!', 'error'); }
             };
             // ── End Builder Library ──────────────────────────────────────────────
+
+            // ── Undo / Redo Functions ────────────────────────────────────────────
+            function undo() {
+                if (!canUndo.value) return;
+                _isUndoRedo = true;
+                historyIndex.value--;
+                layout.value = JSON.parse(JSON.stringify(_historyStack[historyIndex.value]));
+                _isUndoRedo = false;
+            }
+
+            function redo() {
+                if (!canRedo.value) return;
+                _isUndoRedo = true;
+                historyIndex.value++;
+                layout.value = JSON.parse(JSON.stringify(_historyStack[historyIndex.value]));
+                _isUndoRedo = false;
+            }
+
+            onMounted(() => {
+                document.addEventListener('keydown', (e) => {
+                    const tag = document.activeElement?.tagName;
+                    if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
+                    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
+                        e.preventDefault();
+                        undo();
+                    }
+                    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+                        e.preventDefault();
+                        redo();
+                    }
+                });
+            });
+            // ── End Undo / Redo ──────────────────────────────────────────────────
 
             return {
                 layout, isPreview, isSaving, isDirty, activeTab, activePanelTab, activeColPanelTab, device, activeResponsiveMenu, availableElements,
@@ -2554,18 +2880,20 @@
                 searchColumnQuery, searchElementQuery, filteredColumnLayouts, filteredNestedColumnLayouts, filteredAvailableElements,
                 shouldShowGuide,
                 toasts, showToast,
-                showLibraryModal, libraryActiveTab, libraryNewName, isSavingToLibrary, libraryItems, libraryContext,
+                showLibraryModal, libraryActiveTab, libraryNewName, isSavingToLibrary, saveAsGlobalChecked, libraryItems, libraryContext,
                 postCardsList, postCardsMap, recentPosts, getCardElementsFlat,
                 lazyTaxonomies, lazyTaxonomyTerms, lazyCptList, lazyCptTaxonomies, cardPreviewCache, fetchCardPreview,
                 cardCategoryTerms, cardTagTerms, postsbyValueArr, cardTaxonomiesByPostType,
                 libraryTabs, libraryCurrentItems, libraryActiveTabLabel, libraryTabIcon, libraryCanSave,
-                openLibraryModal, saveToLibrary, insertFromLibrary, deleteFromLibrary,
+                openLibraryModal, saveToLibrary, insertFromLibrary, insertGlobalFromLibrary, deleteFromLibrary,
                 hoveredType, hoveredCi, hoveredColi, hoveredEli, hoveredNcoli, setHover,
                 navDragSrc, navDragOver, navDragStart, navDragEnd, navDragOverHandler, navDrop,
-                ctxMenu, ctxClipboard, ctxMenuTitle, openCtxMenu, closeCtxMenu, ctxEdit, ctxSave, ctxClone, ctxRemove, ctxCopy, ctxPaste,
+                ctxMenu, ctxClipboard, ctxMenuTitle, openCtxMenu, closeCtxMenu, ctxEdit, ctxSave, ctxClone, ctxRemove, ctxCopy, ctxPaste, ctxSaveAsGlobal,
+                globalSections, showGlobalModal, globalModalName, isSavingGlobal, openGlobalModal, saveAsGlobal, unlinkGlobal, insertGlobalSection, deleteGlobalSection,
                 themeBodyFont, themeHeadingFont, builderFontGroups, builderFonts: BUILDER_FONTS,
                 titleFontVariants, loadBuilderFont,
-                applyButtonSize, searchIconQuery, filteredIcons, selectIcon, activeIconTab, clearColorField,
+                undo, redo, canUndo, canRedo,
+                applyButtonSize, searchIconQuery, filteredIcons, selectIcon, activeIconTab, clearColorField, activeAccordionItem, activeTabsItem, activeIconListItem,
                 lazyMenuData: reactive(window.lazyMenuData || {}),
                 lazyMenusList: window.lazyMenusList || {},
                 postCardMode

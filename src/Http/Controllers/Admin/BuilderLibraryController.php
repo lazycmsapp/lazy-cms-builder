@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 class BuilderLibraryController extends Controller
 {
     const OPTION_KEY = 'lazy_builder_library';
+    const GLOBAL_SECTIONS_KEY = 'lazy_global_sections';
 
     private function getLibrary(): array
     {
@@ -135,6 +136,66 @@ class BuilderLibraryController extends Controller
 
         return response()->json(['success' => true, 'item' => $item]);
     }
+
+    // ── Global Sections ──────────────────────────────────────────────────────
+
+    private function getGlobalSections(): array
+    {
+        $raw = get_cms_option(self::GLOBAL_SECTIONS_KEY, null);
+        if ($raw) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) return $decoded;
+        }
+        return [];
+    }
+
+    public function listGlobalSections()
+    {
+        return response()->json($this->getGlobalSections());
+    }
+
+    public function saveGlobalSection(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'data' => 'required|array',
+        ]);
+
+        $sections = $this->getGlobalSections();
+        $section  = [
+            'id'         => (string) \Illuminate\Support\Str::uuid(),
+            'name'       => $request->input('name'),
+            'data'       => $request->input('data'),
+            'created_at' => now()->format('Y-m-d H:i'),
+        ];
+        array_unshift($sections, $section);
+        update_cms_option(self::GLOBAL_SECTIONS_KEY, json_encode($sections));
+        return response()->json(['success' => true, 'section' => $section]);
+    }
+
+    public function updateGlobalSection(Request $request, string $id)
+    {
+        $sections = $this->getGlobalSections();
+        foreach ($sections as &$section) {
+            if ($section['id'] === $id) {
+                if ($request->has('name')) $section['name'] = $request->input('name');
+                if ($request->has('data')) $section['data'] = $request->input('data');
+                break;
+            }
+        }
+        update_cms_option(self::GLOBAL_SECTIONS_KEY, json_encode($sections));
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteGlobalSection(string $id)
+    {
+        $sections = $this->getGlobalSections();
+        $sections = array_values(array_filter($sections, fn($s) => $s['id'] !== $id));
+        update_cms_option(self::GLOBAL_SECTIONS_KEY, json_encode($sections));
+        return response()->json(['success' => true]);
+    }
+
+    // ── Library ──────────────────────────────────────────────────────────────
 
     public function delete(string $type, string $id)
     {

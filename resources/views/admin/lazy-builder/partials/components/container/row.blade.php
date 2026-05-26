@@ -122,6 +122,17 @@
          class="absolute top-0 left-0 bg-[#0091ea] text-white text-[9px] px-2 py-0.5 z-10 flex items-center gap-1 rounded-br-sm select-none pointer-events-none">
         <i class="fa fa-thumbtack"></i> Sticky
     </div>
+    <!-- Global Badge -->
+    <div v-if="!isPreview && container.settings && container.settings.global_id"
+         class="absolute top-0 right-0 bg-[#7c3aed] text-white text-[9px] px-2 py-0.5 z-10 flex items-center gap-1 rounded-bl-sm select-none pointer-events-none">
+        <i class="fa fa-globe"></i> Global
+    </div>
+    <!-- Conditional Visibility Badge -->
+    <div v-if="!isPreview && container.settings && container.settings.vis_condition"
+         class="absolute bottom-0 left-0 bg-[#f59e0b] text-white text-[9px] px-2 py-0.5 z-10 flex items-center gap-1 rounded-tr-sm select-none pointer-events-none">
+        <i class="fa fa-eye-slash"></i>
+        @{{ {logged_in:'Logged In Only', logged_out:'Logged Out Only', schedule:'Scheduled'}[container.settings.vis_condition] || '' }}
+    </div>
     @endif
 
     <!-- Container Content Box -->

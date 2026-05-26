@@ -97,6 +97,12 @@
                 <div id="details-view" class="hidden space-y-4">
                     <div class="flex flex-col gap-3">
                         <img id="detail-thumb" src="" class="w-full h-auto max-h-[150px] object-contain bg-white border border-[#c3c4c7]">
+                        <div id="detail-video-thumb" class="w-full h-[120px] bg-[#0d1117] flex items-center justify-center border border-[#c3c4c7] rounded" style="display:none;">
+                            <div class="flex flex-col items-center gap-2">
+                                <i class="fa fa-film text-white/40 text-3xl"></i>
+                                <span id="detail-video-ext" class="text-white/30 text-[10px] font-bold uppercase tracking-widest">Video</span>
+                            </div>
+                        </div>
                         <div class="text-[12px] break-all">
                             <div id="detail-filename" class="font-bold text-black mt-1">image.jpg</div>
                             <div id="detail-date" class="text-[#646970] mb-1">April 17, 2026</div>
@@ -268,6 +274,33 @@
             handleUpload(e.dataTransfer.files);
         });
 
+        // Video helpers
+        function isVideoFile(path) {
+            return /\.(mp4|webm|ogg|mov|avi|mkv|m4v|flv|wmv)$/i.test(path);
+        }
+
+        function captureVideoThumb(src, callback) {
+            const vid = document.createElement('video');
+            vid.preload = 'metadata';
+            vid.muted = true;
+            vid.playsInline = true;
+            vid.src = src + '#t=1'; // media fragment: browser loads from 1s, no explicit seek needed
+            let done = false;
+            const finish = (result) => { if (!done) { done = true; vid.src = ''; callback(result); } };
+            vid.addEventListener('loadeddata', () => {
+                try {
+                    const c = document.createElement('canvas');
+                    c.width = vid.videoWidth || 320;
+                    c.height = vid.videoHeight || 180;
+                    c.getContext('2d').drawImage(vid, 0, 0, c.width, c.height);
+                    finish(c.toDataURL('image/jpeg', 0.8));
+                } catch(e) { finish(null); }
+            });
+            vid.addEventListener('error', () => finish(null));
+            setTimeout(() => finish(null), 10000);
+            vid.load();
+        }
+
         // Library Logic
         function loadLibrary() {
             document.getElementById('media-loading-spinner').classList.remove('hidden');
@@ -283,11 +316,30 @@
                 data.data.forEach(item => {
                     const div = document.createElement('div');
                     div.className = `relative aspect-square border-2 border-transparent bg-gray-100 cursor-pointer overflow-hidden group item-media-${item.id}`;
-                    div.innerHTML = `<img src="/storage/${item.path}" class="w-full h-full object-cover">
-                                     <div class="absolute inset-0 border-4 border-[#2271b1] hidden check-overlay" id="overlay-${item.id}"></div>
-                                     <div class="absolute top-1 right-1 bg-[#2271b1] text-white rounded-full p-0.5 hidden check-icon" id="icon-${item.id}"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg></div>`;
+                    const isVid = isVideoFile(item.path);
+                    const mediaTpl = isVid
+                        ? `<div class="w-full h-full bg-[#0d1117] flex flex-col items-center justify-center gap-1 vid-placeholder-${item.id}">
+                               <i class="fa fa-film text-white/35 text-xl pointer-events-none"></i>
+                               <span class="text-white/25 text-[9px] font-bold uppercase tracking-wider pointer-events-none">${item.path.split('.').pop()}</span>
+                           </div>`
+                        : `<img src="/storage/${item.path}" class="w-full h-full object-cover">`;
+                    div.innerHTML = mediaTpl +
+                        `<div class="absolute inset-0 border-4 border-[#2271b1] hidden check-overlay" id="overlay-${item.id}"></div>
+                         <div class="absolute top-1 right-1 bg-[#2271b1] text-white rounded-full p-0.5 hidden check-icon" id="icon-${item.id}"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg></div>`;
                     div.addEventListener('click', () => selectItem(item, div));
                     grid.appendChild(div);
+
+                    if (isVid) {
+                        captureVideoThumb('/storage/' + item.path, dataUrl => {
+                            if (!dataUrl) return;
+                            const placeholder = div.querySelector(`.vid-placeholder-${item.id}`);
+                            if (!placeholder) return;
+                            const img = document.createElement('img');
+                            img.src = dataUrl;
+                            img.className = 'w-full h-full object-cover';
+                            placeholder.replaceWith(img);
+                        });
+                    }
                 });
             })
             .finally(() => {
@@ -359,7 +411,24 @@
             detailsView.classList.remove('hidden');
 
             // Fill details
-            document.getElementById('detail-thumb').src = `/storage/${item.path}`;
+            const thumbEl = document.getElementById('detail-thumb');
+            const videoThumbEl = document.getElementById('detail-video-thumb');
+            if (isVideoFile(item.path)) {
+                thumbEl.style.display = 'none';
+                videoThumbEl.style.display = 'flex';
+                document.getElementById('detail-video-ext').innerText = item.path.split('.').pop().toUpperCase();
+                captureVideoThumb('/storage/' + item.path, dataUrl => {
+                    if (dataUrl) {
+                        thumbEl.src = dataUrl;
+                        thumbEl.style.display = '';
+                        videoThumbEl.style.display = 'none';
+                    }
+                });
+            } else {
+                thumbEl.style.display = '';
+                videoThumbEl.style.display = 'none';
+                thumbEl.src = `/storage/${item.path}`;
+            }
             document.getElementById('detail-filename').innerText = item.filename;
             document.getElementById('detail-date').innerText = new Date(item.created_at).toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
             document.getElementById('detail-dimensions').innerText = (item.width && item.height) ? `Width: ${item.width}px by Height: ${item.height}px` : 'N/A';

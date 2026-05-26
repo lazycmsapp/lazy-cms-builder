@@ -548,9 +548,25 @@
 @endonce
 @endif
 
-<{{ $htmlTag }} class="lazy-column {{ $colCid }} {{ $hoverClass }} {{ $visibilityClasses }} {{ $s['cssClass'] ?? '' }} {{ !empty($s['sticky']) ? 'lazy-sticky-col' : '' }}"
+@php
+    $colVisCondition = $s['vis_condition'] ?? '';
+    $colShowByCondition = true;
+    if ($colVisCondition === 'logged_in') {
+        $colShowByCondition = auth()->check();
+    } elseif ($colVisCondition === 'logged_out') {
+        $colShowByCondition = !auth()->check();
+    } elseif ($colVisCondition === 'schedule') {
+        $colNow = time();
+        $colFrom = !empty($s['vis_date_from']) ? strtotime($s['vis_date_from']) : null;
+        $colTo   = !empty($s['vis_date_to'])   ? strtotime($s['vis_date_to'])   : null;
+        $colShowByCondition = (!$colFrom || $colNow >= $colFrom) && (!$colTo || $colNow <= $colTo);
+    }
+    $colAnimType = $s['anim_type'] ?? '';
+@endphp
+@if($colShowByCondition)
+<{{ $htmlTag }} class="lazy-column {{ $colCid }} {{ $hoverClass }} {{ $visibilityClasses }} {{ $s['cssClass'] ?? '' }} {{ !empty($s['sticky']) ? 'lazy-sticky-col' : '' }}{{ $colAnimType ? ' lz-anim lz-anim-' . $colAnimType : '' }}"
     @if(!empty($s['cssId'])) id="{{ $s['cssId'] }}" @endif
-    style="{{ implode('; ', $outerStyles) }}">
+    style="{{ implode('; ', $outerStyles) }}"@if($colAnimType) data-anim-duration="{{ $s['anim_duration'] ?? 600 }}" data-anim-delay="{{ $s['anim_delay'] ?? 0 }}" data-anim-easing="{{ $s['anim_easing'] ?? 'ease' }}"@endif>
     
     @if($link)
         <a href="{{ $link }}" target="{{ $s['linkTarget'] ?? '_self' }}" style="text-decoration: none; color: inherit; display: flex !important; flex-direction: column !important; flex-grow: 1 !important; height: 100% !important; width: 100%;">
@@ -578,9 +594,30 @@
                                      : (\Illuminate\Support\Facades\View::exists($__viewDash) ? $__viewDash : null);
                         $__customDef = $__customBuilderDefs[$__elType] ?? null;
                     @endphp
-                    @if($__elView)
-                        @include($__elView, ['el' => $el])
-                    @elseif($__customDef)
+                    @php
+                        $__elVisCondition = $el['settings']['vis_condition'] ?? '';
+                        $__elShow = true;
+                        if ($__elVisCondition === 'logged_in') {
+                            $__elShow = auth()->check();
+                        } elseif ($__elVisCondition === 'logged_out') {
+                            $__elShow = !auth()->check();
+                        } elseif ($__elVisCondition === 'schedule') {
+                            $__elNow  = time();
+                            $__elFrom = !empty($el['settings']['vis_date_from']) ? strtotime($el['settings']['vis_date_from']) : null;
+                            $__elTo   = !empty($el['settings']['vis_date_to'])   ? strtotime($el['settings']['vis_date_to'])   : null;
+                            $__elShow = (!$__elFrom || $__elNow >= $__elFrom) && (!$__elTo || $__elNow <= $__elTo);
+                        }
+                    @endphp
+                    @if($__elView && $__elShow)
+                        @php $__elAnimType = $el['settings']['anim_type'] ?? ''; @endphp
+                        @if($__elAnimType)
+                            <div class="lz-anim lz-anim-{{ $__elAnimType }}" style="width:100%" data-anim-duration="{{ $el['settings']['anim_duration'] ?? 600 }}" data-anim-delay="{{ $el['settings']['anim_delay'] ?? 0 }}" data-anim-easing="{{ $el['settings']['anim_easing'] ?? 'ease' }}">
+                                @include($__elView, ['el' => $el])
+                            </div>
+                        @else
+                            @include($__elView, ['el' => $el])
+                        @endif
+                    @elseif($__customDef && $__elShow)
                         @if(!empty($__customDef['template']))
                             @include($__customDef['template'], ['el' => $el, 's' => $el['settings'] ?? []])
                         @else
@@ -596,3 +633,4 @@
         </a>
     @endif
 </{{ $htmlTag }}>
+@endif

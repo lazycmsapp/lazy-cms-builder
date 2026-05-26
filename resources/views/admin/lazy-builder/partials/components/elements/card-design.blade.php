@@ -13,8 +13,131 @@
     </div>
 </div>
 
+{{-- Carousel Options --}}
+<div v-if="editingElement.settings.layout === 'carousel'" class="pt-4 border-t border-slate-50">
+    <label class="text-[12px] font-bold text-[#333] block mb-3">Carousel Options</label>
+    <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+            <span class="text-[12px] text-slate-600 font-semibold">Autoplay</span>
+            <button @click="editingElement.settings.carousel_autoplay = !editingElement.settings.carousel_autoplay"
+                    :class="editingElement.settings.carousel_autoplay ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                    class="relative w-9 h-5 rounded-full transition-colors">
+                <span :class="editingElement.settings.carousel_autoplay ? 'translate-x-4' : 'translate-x-0.5'"
+                      class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
+            </button>
+        </div>
+        <div v-if="editingElement.settings.carousel_autoplay" class="pl-1">
+            <div class="flex justify-between items-center mb-1">
+                <label class="text-[11px] font-bold text-slate-400 uppercase">Speed</label>
+                <span class="text-[12px] text-slate-400 font-bold">@{{ editingElement.settings.carousel_autoplay_speed ?? 3000 }}ms</span>
+            </div>
+            <div class="flex gap-3 items-center">
+                <input type="range" v-model.number="editingElement.settings.carousel_autoplay_speed"
+                       min="500" max="10000" step="500" class="flex-1 accent-[#0091ea]">
+                <input type="number" v-model.number="editingElement.settings.carousel_autoplay_speed"
+                       min="500" max="10000" step="500"
+                       class="w-20 border border-slate-200 rounded px-2 py-2 text-[13px] text-center focus:outline-none focus:border-[#0091ea]">
+            </div>
+        </div>
+        <div class="flex items-center justify-between">
+            <span class="text-[12px] text-slate-600 font-semibold">Show Arrows</span>
+            <button @click="editingElement.settings.carousel_arrows = !(editingElement.settings.carousel_arrows ?? true)"
+                    :class="(editingElement.settings.carousel_arrows ?? true) ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                    class="relative w-9 h-5 rounded-full transition-colors">
+                <span :class="(editingElement.settings.carousel_arrows ?? true) ? 'translate-x-4' : 'translate-x-0.5'"
+                      class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
+            </button>
+        </div>
+        <div class="flex items-center justify-between">
+            <span class="text-[12px] text-slate-600 font-semibold">Show Dots</span>
+            <button @click="editingElement.settings.carousel_dots = !(editingElement.settings.carousel_dots ?? true)"
+                    :class="(editingElement.settings.carousel_dots ?? true) ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                    class="relative w-9 h-5 rounded-full transition-colors">
+                <span :class="(editingElement.settings.carousel_dots ?? true) ? 'translate-x-4' : 'translate-x-0.5'"
+                      class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
+            </button>
+        </div>
+        <div class="flex items-center justify-between">
+            <span class="text-[12px] text-slate-600 font-semibold">Infinite Loop</span>
+            <button @click="editingElement.settings.carousel_loop = !editingElement.settings.carousel_loop"
+                    :class="editingElement.settings.carousel_loop ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                    class="relative w-9 h-5 rounded-full transition-colors">
+                <span :class="editingElement.settings.carousel_loop ? 'translate-x-4' : 'translate-x-0.5'"
+                      class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Items Per Slide (carousel only) --}}
+<div v-if="editingElement.settings.layout === 'carousel'" class="pt-4 border-t border-slate-50">
+    <label class="text-[12px] font-bold text-[#333] block mb-3">Items Per Slide</label>
+    <div class="flex flex-col gap-4">
+
+        {{-- Desktop --}}
+        <div>
+            <div class="flex justify-between items-center mb-1.5">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <i class="fa fa-desktop mr-1"></i>Desktop
+                </label>
+                <span class="text-[12px] font-bold text-[#0091ea]">@{{ editingElement.settings.items_per_slide ?? 1 }}</span>
+            </div>
+            <div class="flex gap-2 items-center">
+                <input type="range" v-model.number="editingElement.settings.items_per_slide"
+                       min="1" max="6" step="1" class="flex-1 accent-[#0091ea]">
+                <input type="number" v-model.number="editingElement.settings.items_per_slide"
+                       min="1" max="6"
+                       class="w-12 border border-slate-200 rounded px-1 py-1.5 text-[12px] text-center focus:outline-none focus:border-[#0091ea]">
+            </div>
+        </div>
+
+        {{-- Tablet --}}
+        <div>
+            <div class="flex justify-between items-center mb-1.5">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <i class="fa fa-tablet-alt mr-1"></i>Tablet
+                </label>
+                <span class="text-[12px] font-bold"
+                      :class="(editingElement.settings.items_per_slide_tablet || 0) === 0 ? 'text-slate-300' : 'text-[#0091ea]'">
+                    @{{ (editingElement.settings.items_per_slide_tablet || 0) === 0 ? '= desktop' : editingElement.settings.items_per_slide_tablet }}
+                </span>
+            </div>
+            <div class="flex gap-2 items-center">
+                <input type="range" v-model.number="editingElement.settings.items_per_slide_tablet"
+                       min="0" max="6" step="1" class="flex-1 accent-[#0091ea]">
+                <input type="number" v-model.number="editingElement.settings.items_per_slide_tablet"
+                       min="0" max="6"
+                       class="w-12 border border-slate-200 rounded px-1 py-1.5 text-[12px] text-center focus:outline-none focus:border-[#0091ea]">
+            </div>
+            <p class="text-[10px] text-slate-300 mt-1">0 = same as desktop</p>
+        </div>
+
+        {{-- Mobile --}}
+        <div>
+            <div class="flex justify-between items-center mb-1.5">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <i class="fa fa-mobile-alt mr-1"></i>Mobile
+                </label>
+                <span class="text-[12px] font-bold"
+                      :class="(editingElement.settings.items_per_slide_mobile || 0) === 0 ? 'text-slate-300' : 'text-[#0091ea]'">
+                    @{{ (editingElement.settings.items_per_slide_mobile || 0) === 0 ? '= desktop' : editingElement.settings.items_per_slide_mobile }}
+                </span>
+            </div>
+            <div class="flex gap-2 items-center">
+                <input type="range" v-model.number="editingElement.settings.items_per_slide_mobile"
+                       min="0" max="6" step="1" class="flex-1 accent-[#0091ea]">
+                <input type="number" v-model.number="editingElement.settings.items_per_slide_mobile"
+                       min="0" max="6"
+                       class="w-12 border border-slate-200 rounded px-1 py-1.5 text-[12px] text-center focus:outline-none focus:border-[#0091ea]">
+            </div>
+            <p class="text-[10px] text-slate-300 mt-1">0 = same as desktop</p>
+        </div>
+
+    </div>
+</div>
+
 {{-- 2. Card Alignment (align-items within each grid row) --}}
-<div>
+<div v-if="editingElement.settings.layout !== 'carousel'">
     <label class="text-[12px] font-bold text-[#333] block mb-2">Card Alignment</label>
     <div class="grid grid-cols-2 gap-2">
         <button @click="editingElement.settings.card_alignment = 'flex-start'"
@@ -58,8 +181,8 @@
     </div>
 </div>
 
-{{-- 3. Number of Columns (responsive) --}}
-<div>
+{{-- 3. Number of Columns (responsive) — hidden for carousel --}}
+<div v-if="editingElement.settings.layout !== 'carousel'">
     <label class="text-[12px] font-bold text-[#333] block mb-2">Number of Columns</label>
     <div class="grid grid-cols-3 gap-2">
         <div>
@@ -86,7 +209,9 @@
 {{-- 4. Column Spacing --}}
 <div>
     <div class="flex justify-between items-center mb-2">
-        <label class="text-[12px] font-bold text-[#333]">Column Spacing</label>
+        <label class="text-[12px] font-bold text-[#333]">
+            @{{ editingElement.settings.layout === 'carousel' ? 'Slide Gap' : 'Column Spacing' }}
+        </label>
         <span class="text-[12px] text-slate-400 font-bold">@{{ editingElement.settings.column_spacing ?? 24 }}px</span>
     </div>
     <div class="flex gap-3 items-center">
@@ -98,8 +223,8 @@
     </div>
 </div>
 
-{{-- 5. Row Spacing --}}
-<div>
+{{-- 5. Row Spacing — hidden for carousel --}}
+<div v-if="editingElement.settings.layout !== 'carousel'">
     <div class="flex justify-between items-center mb-2">
         <label class="text-[12px] font-bold text-[#333]">Row Spacing</label>
         <span class="text-[12px] text-slate-400 font-bold">@{{ editingElement.settings.row_spacing ?? 24 }}px</span>
