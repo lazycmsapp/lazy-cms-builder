@@ -1122,6 +1122,16 @@ class BuilderShortcodeConverter
                 return '[lazy_icon_list ' . trim($a) . $vis . ']' . $items . "\n[/lazy_icon_list]";
             }
 
+            case 'counter': {
+                $elSettings = $el['settings'] ?? [];
+                foreach (['prefix','suffix','separator','icon','cssClass','cssId'] as $f) {
+                    if (!isset($elSettings[$f]) || $elSettings[$f] === null) $elSettings[$f] = '';
+                }
+                $out = '[lazy_element type="counter" ' . trim($base) . $vis;
+                $out .= ' settings_b64="' . base64_encode(json_encode($elSettings)) . '"';
+                return $out . ' /]';
+            }
+
             default: {
                 $out = '[lazy_element type="' . $type . '" ' . trim($base) . $vis;
                 $elSettings = $el['settings'] ?? [];
@@ -1984,6 +1994,11 @@ class BuilderShortcodeConverter
                 if (!empty($a['settings_b64'])) {
                     $decoded = json_decode(base64_decode($a['settings_b64']), true);
                     if (is_array($decoded)) $settings = $decoded;
+                }
+                if ($realType === 'counter') {
+                    foreach (['prefix','suffix','separator','icon','cssClass','cssId'] as $f) {
+                        if (!isset($settings[$f]) || $settings[$f] === null) $settings[$f] = '';
+                    }
                 }
                 $settings['visibility'] = $vis;
                 return ['id' => $a['id'] ?? self::uid(), 'type' => $realType, 'settings' => $settings];
