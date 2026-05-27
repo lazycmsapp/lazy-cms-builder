@@ -11,4 +11,7 @@
     <a href="{{ route('admin.settings.api') }}" class="px-4 py-2 text-[14px] {{ request()->routeIs('admin.settings.api') ? 'text-[#1d2327] font-semibold bg-white -mb-[1px] border-l border-t border-r border-[#c3c4c7] border-b-white' : 'text-[#2271b1] hover:text-[#135e96]' }}">
         REST API
     </a>
+    <a href="{{ route('admin.settings.integrations') }}" class="px-4 py-2 text-[14px] {{ request()->routeIs('admin.settings.integrations') ? 'text-[#1d2327] font-semibold bg-white -mb-[1px] border-l border-t border-r border-[#c3c4c7] border-b-white' : 'text-[#2271b1] hover:text-[#135e96]' }}">
+        Integrations
+    </a>
 </div>

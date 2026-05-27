@@ -13,7 +13,12 @@
     $borderRadius = max(0, intval($ap['border_radius']    ?? 8));
     $btnWidth     = $ap['btn_width']                      ?? 'full';
     $btnAlign     = $ap['btn_align']                      ?? 'center';
-    $submitLabel  = $form->settings['submit_label']       ?? 'Submit';
+    $labelAlign   = $ap['label_align']                    ?? 'left';
+    $submitLabel      = $form->settings['submit_label']       ?? 'Submit';
+    $turnstileEnabled = !empty($form->settings['turnstile_enabled'])
+                        && get_cms_option('turnstile_site_key')
+                        && get_cms_option('turnstile_secret_key');
+    $turnstileSiteKey = get_cms_option('turnstile_site_key', '');
     $successMsg   = $form->settings['success_message']    ?? 'Thank you! Your message has been sent.';
     $formId       = 'lazy-form-' . $form->id;
 
@@ -38,23 +43,46 @@
 #{{ $formId }}-wrap .lf-input {
     border: 1px solid {{ $borderClr }};
     background-color: {{ $bgClr }};
-    color: {{ $textClr }};
+    color: {{ $textClr }} !important;
     border-radius: {{ $borderRadius }}px;
     width: 100%;
     display: block;
     transition: border-color .15s, box-shadow .15s;
 }
 #{{ $formId }}-wrap .lf-input::placeholder { color: {{ $phClr }}; }
+#{{ $formId }}-wrap .lf-input:hover:not(:focus) {
+    border-color: {{ $borderClr }};
+    background-color: {{ $bgClr }};
+    box-shadow: none;
+}
 #{{ $formId }}-wrap .lf-input:focus {
     outline: none;
     border-color: {{ $focusClr }};
     box-shadow: 0 0 0 3px {{ $focusClr }}33;
 }
 #{{ $formId }}-wrap .lf-input.lf-err-input { border-color: #ef4444 !important; box-shadow: none !important; }
-#{{ $formId }}-wrap .lf-label { color: {{ $labelClr }}; }
+#{{ $formId }}-wrap .lf-label { color: {{ $labelClr }} !important; text-align: {{ $labelAlign }}; }
+/* Floating label */
+#{{ $formId }}-wrap .lf-field-wrap { position:relative; }
+#{{ $formId }}-wrap .lf-float-input { padding-top:1.3rem !important; padding-bottom:.4rem !important; }
+#{{ $formId }}-wrap .lf-float-label {
+    position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    transition:top .15s ease,transform .15s ease,color .15s ease,padding .15s ease,background-color .15s ease;
+    pointer-events:none; color:{{ $phClr }} !important; font-size:.875rem; font-weight:500; line-height:1;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 28px); z-index:1;
+}
+#{{ $formId }}-wrap .lf-field-wrap.lf-focused .lf-float-label,
+#{{ $formId }}-wrap .lf-field-wrap.lf-filled .lf-float-label {
+    top:0; transform:translateY(-50%) scale(.78); transform-origin:left center;
+    padding:0 3px; background-color:{{ $bgClr }}; color:{{ $labelClr }} !important; max-width:none; overflow:visible;
+}
+#{{ $formId }}-wrap .lf-field-wrap.lf-focused .lf-float-label { color:{{ $focusClr }} !important; }
+#{{ $formId }}-wrap .lf-float-textarea .lf-float-label { top:.9rem; transform:none; }
+#{{ $formId }}-wrap .lf-float-textarea.lf-focused .lf-float-label,
+#{{ $formId }}-wrap .lf-float-textarea.lf-filled .lf-float-label { top:0; transform:translateY(-50%) scale(.78); transform-origin:left center; }
 #{{ $formId }}-wrap .lf-btn {
-    background-color: {{ $btnBg }};
-    color: {{ $btnText }};
+    background-color: {{ $btnBg }} !important;
+    color: {{ $btnText }} !important;
     border: none;
     cursor: pointer;
     border-radius: {{ $borderRadius }}px;
@@ -69,11 +97,25 @@
 #{{ $formId }}-wrap .lf-btn:hover:not(:disabled) { opacity: .88; }
 #{{ $formId }}-wrap .lf-btn:disabled { opacity: .6; cursor: not-allowed; }
 #{{ $formId }}-wrap .lf-field-err {
-    color: #ef4444;
+    color: #ef4444 !important;
     font-size: .72rem;
-    margin-top: .3rem;
+    margin-bottom: .3rem;
     font-weight: 500;
     display: block;
+    text-align: left !important;
+}
+#{{ $formId }}-wrap .lf-help-text {
+    color: {{ $labelClr }} !important;
+    font-size: .72rem;
+    margin-top: .3rem;
+    opacity: .7 !important;
+    display: block;
+    text-align: left !important;
+}
+#{{ $formId }}-wrap *:hover .lf-help-text,
+#{{ $formId }}-wrap .lf-help-text:hover {
+    color: {{ $labelClr }} !important;
+    opacity: .7 !important;
 }
 </style>
 
@@ -87,6 +129,11 @@
           novalidate>
         @csrf
         <input type="hidden" name="form_id" value="{{ $form->id }}">
+        {{-- Honeypot: hidden from real users, bots fill it in --}}
+        <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;" aria-hidden="true">
+            <label for="_lf_hp_{{ $form->id }}">Website</label>
+            <input type="text" name="_lf_hp_{{ $form->id }}" id="_lf_hp_{{ $form->id }}" value="" autocomplete="off" tabindex="-1">
+        </div>
 
         @foreach($form->fields as $field)
             @php
@@ -136,26 +183,27 @@
 
             @elseif($field['type'] === 'textarea')
                 <div {!! $wrapAttrs !!}>
-                    <label class="lf-label block text-sm font-semibold mb-1">
-                        {{ $field['label'] ?? '' }}@if($required)<span class="text-red-500 ml-0.5">*</span>@endif
-                    </label>
-                    <textarea name="{{ $name }}" rows="{{ $field['rows'] ?? 4 }}"
-                              placeholder="{{ $field['placeholder'] ?? '' }}"
-                              class="lf-input {{ $inputSize }} resize-none"></textarea>
+                    <div class="lf-field-wrap lf-float-textarea">
+                        <textarea name="{{ $name }}" rows="{{ $field['rows'] ?? 4 }}" placeholder=" "
+                                  class="lf-input lf-float-input {{ $inputSize }} resize-none"></textarea>
+                        <label class="lf-float-label">{{ $field['label'] ?? '' }}@if($required)<span style="color:#ef4444;margin-left:2px">*</span>@endif</label>
+                    </div>
+                    @if(!empty($field['help_text']))<p class="lf-help-text">{{ $field['help_text'] }}</p>@endif
                 </div>
 
             @elseif($field['type'] === 'select')
                 <div {!! $wrapAttrs !!}>
-                    <label class="lf-label block text-sm font-semibold mb-1">
-                        {{ $field['label'] ?? '' }}@if($required)<span class="text-red-500 ml-0.5">*</span>@endif
-                    </label>
-                    <select name="{{ $name }}" class="lf-input {{ $inputSize }}">
-                        <option value="">-- Select --</option>
-                        @foreach(explode("\n", $field['options'] ?? '') as $opt)
-                            @php $opt = trim($opt); @endphp
-                            @if($opt)<option value="{{ $opt }}">{{ $opt }}</option>@endif
-                        @endforeach
-                    </select>
+                    <div class="lf-field-wrap">
+                        <select name="{{ $name }}" class="lf-input lf-float-input {{ $inputSize }}">
+                            <option value=""></option>
+                            @foreach(explode("\n", $field['options'] ?? '') as $opt)
+                                @php $opt = trim($opt); @endphp
+                                @if($opt)<option value="{{ $opt }}">{{ $opt }}</option>@endif
+                            @endforeach
+                        </select>
+                        <label class="lf-float-label">{{ $field['label'] ?? '' }}@if($required)<span style="color:#ef4444;margin-left:2px">*</span>@endif</label>
+                    </div>
+                    @if(!empty($field['help_text']))<p class="lf-help-text">{{ $field['help_text'] }}</p>@endif
                 </div>
 
             @elseif($field['type'] === 'checkbox')
@@ -173,6 +221,7 @@
                             </label>
                         @endif
                     @endforeach
+                    @if(!empty($field['help_text']))<p class="lf-help-text">{{ $field['help_text'] }}</p>@endif
                 </div>
 
             @elseif($field['type'] === 'radio')
@@ -190,6 +239,7 @@
                             </label>
                         @endif
                     @endforeach
+                    @if(!empty($field['help_text']))<p class="lf-help-text">{{ $field['help_text'] }}</p>@endif
                 </div>
 
             @elseif($field['type'] === 'file')
@@ -198,20 +248,38 @@
                         {{ $field['label'] ?? '' }}@if($required)<span class="text-red-500 ml-0.5">*</span>@endif
                     </label>
                     <input type="file" name="{{ $name }}"
+                           @if(!empty($field['accepted_types'])) accept="{{ $field['accepted_types'] }}" @endif
+                           @if(!empty($field['max_size_mb'])) data-lf-maxsize="{{ $field['max_size_mb'] }}" @endif
                            class="lf-input {{ $inputSize }} file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    @if(!empty($field['help_text']))<p class="lf-help-text">{{ $field['help_text'] }}</p>@endif
                 </div>
 
             @else
                 <div {!! $wrapAttrs !!}>
-                    <label class="lf-label block text-sm font-semibold mb-1">
-                        {{ $field['label'] ?? '' }}@if($required)<span class="text-red-500 ml-0.5">*</span>@endif
-                    </label>
-                    <input type="{{ $field['type'] }}" name="{{ $name }}"
-                           placeholder="{{ $field['placeholder'] ?? '' }}"
-                           class="lf-input {{ $inputSize }}">
+                    <div class="lf-field-wrap{{ $field['type'] === 'date' ? ' lf-filled' : '' }}">
+                        <input type="{{ $field['type'] }}" name="{{ $name }}" placeholder=" "
+                               class="lf-input lf-float-input {{ $inputSize }}"
+                               @if($field['type'] === 'number')
+                                   @if(isset($field['min']) && $field['min'] !== '') min="{{ $field['min'] }}" @endif
+                                   @if(isset($field['max']) && $field['max'] !== '') max="{{ $field['max'] }}" @endif
+                                   @if(isset($field['step']) && $field['step'] !== '') step="{{ $field['step'] }}" @endif
+                               @elseif($field['type'] === 'date')
+                                   @if(!empty($field['min_date'])) min="{{ $field['min_date'] }}" @endif
+                                   @if(!empty($field['max_date'])) max="{{ $field['max_date'] }}" @endif
+                               @endif
+                               >
+                        <label class="lf-float-label">{{ $field['label'] ?? '' }}@if($required)<span style="color:#ef4444;margin-left:2px">*</span>@endif</label>
+                    </div>
+                    @if(!empty($field['help_text']))<p class="lf-help-text">{{ $field['help_text'] }}</p>@endif
                 </div>
             @endif
         @endforeach
+
+        @if($turnstileEnabled)
+        <div style="grid-column:1/-1">
+            <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}" data-theme="light"></div>
+        </div>
+        @endif
 
         <div style="{{ $btnWrapStyle }}">
             <button type="submit" class="lf-btn {{ $btnPad }}" style="{{ $btnInline }}">
@@ -227,6 +295,10 @@
         <div id="{{ $formId }}-ajax-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium" style="grid-column:1/-1"></div>
     </form>
 </div>
+
+@if($turnstileEnabled)
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+@endif
 
 <script>
 (function () {
@@ -247,7 +319,13 @@
         const span = document.createElement('span');
         span.className = 'lf-field-err';
         span.textContent = msg || 'This field is required.';
-        wrap.appendChild(span);
+        const fieldWrap   = wrap.querySelector('.lf-field-wrap');
+        const firstOptLbl = wrap.querySelector('label.flex');
+        const fileInp     = wrap.querySelector('input[type="file"]');
+        if (fieldWrap)       wrap.insertBefore(span, fieldWrap);
+        else if (firstOptLbl) wrap.insertBefore(span, firstOptLbl);
+        else if (fileInp)    wrap.insertBefore(span, fileInp);
+        else                 wrap.appendChild(span);
         const inp = wrap.querySelector('.lf-input');
         if (inp) inp.classList.add('lf-err-input');
     }
@@ -303,6 +381,55 @@
             }
         });
 
+        // 3. File size check
+        form.querySelectorAll('input[type="file"][data-lf-maxsize]').forEach(inp => {
+            if (!inp.files || !inp.files.length) return;
+            const maxMB = parseFloat(inp.getAttribute('data-lf-maxsize'));
+            if (!maxMB) return;
+            const fileMB = inp.files[0].size / (1024 * 1024);
+            if (fileMB > maxMB) {
+                ok = false;
+                const wrap = inp.closest('[data-lf-req]') || inp.parentElement;
+                if (!wrap.querySelector('.lf-field-err')) showErr(wrap, `File size must not exceed ${maxMB}MB.`);
+                if (!first) first = wrap;
+            }
+        });
+
+        // 4. File accepted types check
+        form.querySelectorAll('input[type="file"][accept]').forEach(inp => {
+            if (!inp.files || !inp.files.length) return;
+            const accept = inp.getAttribute('accept');
+            if (!accept) return;
+            const file = inp.files[0];
+            const patterns = accept.split(',').map(s => s.trim().toLowerCase());
+            const valid = patterns.some(p => {
+                if (p.startsWith('.')) return file.name.toLowerCase().endsWith(p);
+                if (p.endsWith('/*'))  return file.type.toLowerCase().startsWith(p.replace('/*', ''));
+                return file.type.toLowerCase() === p;
+            });
+            if (!valid) {
+                ok = false;
+                const wrap = inp.closest('[data-lf-req]') || inp.parentElement;
+                if (!wrap.querySelector('.lf-field-err')) showErr(wrap, `Allowed file types: ${accept}`);
+                if (!first) first = wrap;
+            }
+        });
+
+        @if($turnstileEnabled)
+        // 5. Turnstile check
+        const tsResponse = form.querySelector('[name="cf-turnstile-response"]');
+        if (!tsResponse || !tsResponse.value) {
+            ok = false;
+            const tsWrap = form.querySelector('.cf-turnstile');
+            if (tsWrap && !tsWrap.querySelector('.lf-field-err')) {
+                const errSpan = document.createElement('span');
+                errSpan.className = 'lf-field-err';
+                errSpan.textContent = 'Please complete the security check.';
+                tsWrap.insertAdjacentElement('afterend', errSpan);
+            }
+        }
+        @endif
+
         if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return ok;
     }
@@ -349,6 +476,35 @@
         btn.disabled = false;
         spinner.classList.add('hidden');
         btnText.textContent = origLabel;
+    });
+
+    // ── floating labels ──────────────────────────────────────────────
+    form.querySelectorAll('.lf-field-wrap').forEach(wrap => {
+        const inp = wrap.querySelector('.lf-float-input');
+        if (!inp) return;
+
+        function updateFill() {
+            const filled = inp.tagName === 'SELECT' ? inp.value !== '' : inp.value.trim() !== '';
+            wrap.classList.toggle('lf-filled', filled || inp.type === 'date');
+        }
+
+        inp.addEventListener('focus',  () => wrap.classList.add('lf-focused'));
+        inp.addEventListener('blur',   () => { wrap.classList.remove('lf-focused'); updateFill(); });
+        inp.addEventListener('input',  updateFill);
+        inp.addEventListener('change', updateFill);
+
+        updateFill();
+    });
+
+    // Re-clear floating labels on form reset
+    form.addEventListener('reset', () => {
+        setTimeout(() => {
+            form.querySelectorAll('.lf-field-wrap').forEach(wrap => {
+                const inp = wrap.querySelector('.lf-float-input');
+                if (inp) wrap.classList.toggle('lf-filled', inp.type === 'date');
+                wrap.classList.remove('lf-focused');
+            });
+        }, 10);
     });
 })();
 </script>

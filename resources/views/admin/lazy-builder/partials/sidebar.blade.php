@@ -2054,6 +2054,240 @@
 
                             </div>
 
+                            <!-- ══ GALLERY ELEMENT ══ -->
+                            <div v-else-if="editingElement?.type === 'gallery'" class="space-y-6">
+
+                                <!-- Images list -->
+                                <div>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Images</label>
+                                        <span class="text-[10px] text-slate-400">@{{ (editingElement.settings.images || []).length }} image<span v-if="(editingElement.settings.images || []).length !== 1">s</span></span>
+                                    </div>
+
+                                    <div class="space-y-2 mb-3">
+                                        <div v-for="(img, idx) in (editingElement.settings.images || [])" :key="idx"
+                                             class="border border-slate-200 rounded-lg overflow-hidden bg-white"
+                                             draggable="true"
+                                             @dragstart.stop="galleryDragStart(idx)"
+                                             @dragover.prevent
+                                             @drop.prevent="galleryDrop(idx)">
+                                            <!-- Image row header -->
+                                            <div class="flex items-center gap-2 px-2 py-1.5 bg-slate-50 border-b border-slate-100">
+                                                <i class="fa fa-grip-vertical text-slate-300 hover:text-slate-500 text-[10px] cursor-grab flex-shrink-0" title="Drag to reorder"></i>
+                                                <div class="w-8 h-8 rounded overflow-hidden flex-shrink-0 bg-slate-200 border border-slate-100 cursor-pointer"
+                                                     @click="openGalleryImageMedia(idx)">
+                                                    <img v-if="img.url" :src="img.url" class="w-full h-full object-cover">
+                                                    <div v-else class="w-full h-full flex items-center justify-center">
+                                                        <i class="fa fa-image text-slate-300 text-xs"></i>
+                                                    </div>
+                                                </div>
+                                                <span class="flex-1 text-[10px] text-slate-500 font-bold truncate">Image @{{ idx + 1 }}</span>
+                                                <div class="flex gap-0.5">
+                                                    <button @click="editingElement.settings.images.splice(idx, 1)"
+                                                            class="w-6 h-6 rounded flex items-center justify-center text-red-400 hover:bg-red-50 text-[9px] transition-colors">
+                                                        <i class="fa fa-trash-alt"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <!-- URL + Browse + Alt + Caption inputs -->
+                                            <div class="p-2 space-y-1.5">
+                                                <div class="flex gap-1.5">
+                                                    <input type="text" v-model="img.url" placeholder="Image URL..."
+                                                           class="flex-1 border border-slate-200 rounded px-2 py-1.5 text-[11px] focus:outline-none focus:border-[#0091ea]">
+                                                    <button @click="openGalleryImageMedia(idx)"
+                                                            class="px-2 py-1.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-bold text-slate-600 hover:bg-[#0091ea] hover:text-white hover:border-[#0091ea] transition-all whitespace-nowrap flex-shrink-0">
+                                                        <i class="fa fa-upload text-[9px]"></i>
+                                                    </button>
+                                                </div>
+                                                <input type="text" v-model="img.alt" placeholder="Alt text..."
+                                                       class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] focus:outline-none focus:border-[#0091ea]">
+                                                <input type="text" v-model="img.caption" placeholder="Caption (optional)..."
+                                                       class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] focus:outline-none focus:border-[#0091ea]">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-2">
+                                        <button @click="editingElement.settings.images.push({url:'',alt:'',caption:''})"
+                                                class="flex-1 py-2.5 border-2 border-dashed border-slate-200 rounded-lg text-[11px] font-bold text-slate-500 hover:border-[#0091ea] hover:text-[#0091ea] hover:bg-blue-50/30 transition-all flex items-center justify-center gap-2">
+                                            <i class="fa fa-plus text-xs"></i> Add
+                                        </button>
+                                        <button @click="openGalleryBulkMedia()"
+                                                class="flex-1 py-2.5 border-2 border-dashed border-slate-200 rounded-lg text-[11px] font-bold text-slate-500 hover:border-[#0091ea] hover:text-[#0091ea] hover:bg-blue-50/30 transition-all flex items-center justify-center gap-2">
+                                            <i class="fa fa-images text-xs"></i> Bulk Upload
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Caption Alignment -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Caption Alignment</label>
+                                    <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
+                                        <button @click="editingElement.settings.captionAlign = 'left'"
+                                                :class="(editingElement.settings.captionAlign || 'center') === 'left' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                class="flex-1 py-2 text-[11px] font-bold border-r border-slate-100 transition-all">Left</button>
+                                        <button @click="editingElement.settings.captionAlign = 'center'"
+                                                :class="(!editingElement.settings.captionAlign || editingElement.settings.captionAlign === 'center') ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                class="flex-1 py-2 text-[11px] font-bold border-r border-slate-100 transition-all">Center</button>
+                                        <button @click="editingElement.settings.captionAlign = 'right'"
+                                                :class="editingElement.settings.captionAlign === 'right' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                class="flex-1 py-2 text-[11px] font-bold transition-all">Right</button>
+                                    </div>
+                                </div>
+
+                                <!-- Visibility -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
+                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-mobile-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
+                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-tablet-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
+                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-desktop text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- CSS Class & ID -->
+                                <div class="grid grid-cols-1 gap-4 pt-4 border-t border-slate-50">
+                                    <div>
+                                        <label class="text-[12px] font-bold text-[#333] block mb-2">CSS Class</label>
+                                        <input type="text" v-model="editingElement.settings.cssClass"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                    <div>
+                                        <label class="text-[12px] font-bold text-[#333] block mb-2">CSS ID</label>
+                                        <input type="text" v-model="editingElement.settings.cssId"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- ══ STAR RATING ELEMENT ══ -->
+                            <div v-else-if="editingElement?.type === 'star_rating'" class="space-y-6">
+
+                                <!-- Interactive star picker -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-3">Rating</label>
+                                    <div class="flex items-center justify-center gap-1 mb-3 py-3 bg-slate-50 rounded-lg">
+                                        <template v-for="i in (editingElement.settings.maxStars || 5)" :key="i">
+                                            <span style="position:relative;display:inline-block;line-height:1;cursor:pointer;user-select:none;"
+                                                  :style="{ fontSize: '32px' }"
+                                                  @click="editingElement.settings.rating = $event.offsetX < ($event.currentTarget.offsetWidth / 2) ? i - 0.5 : i">
+                                                <span v-if="(editingElement.settings.rating !== undefined ? editingElement.settings.rating : 5) >= i"
+                                                      :style="{ color: editingElement.settings.starColor || '#f59e0b' }">★</span>
+                                                <span v-else-if="(editingElement.settings.rating !== undefined ? editingElement.settings.rating : 5) >= i - 0.5"
+                                                      style="position:relative;display:inline-block;">
+                                                    <span :style="{ color: editingElement.settings.emptyColor || '#d1d5db' }">★</span>
+                                                    <span style="position:absolute;left:0;top:0;width:50%;overflow:hidden;"
+                                                          :style="{ color: editingElement.settings.starColor || '#f59e0b' }">★</span>
+                                                </span>
+                                                <span v-else :style="{ color: editingElement.settings.emptyColor || '#d1d5db' }">★</span>
+                                            </span>
+                                        </template>
+                                        <span class="ml-2 text-[13px] font-bold text-slate-500">
+                                            @{{ editingElement.settings.rating !== undefined ? editingElement.settings.rating : 5 }}
+                                        </span>
+                                    </div>
+                                    <input type="range" v-model.number="editingElement.settings.rating"
+                                           min="0" :max="editingElement.settings.maxStars || 5" step="0.5"
+                                           class="w-full accent-amber-400">
+                                    <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                                        <span>0</span>
+                                        <span>@{{ editingElement.settings.maxStars || 5 }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Max Stars -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Max Stars</label>
+                                    <input type="number" v-model.number="editingElement.settings.maxStars" min="1" max="10"
+                                           class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                </div>
+
+                                <!-- Label -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Label <span class="text-slate-400 font-normal">(optional)</span></label>
+                                    <input type="text" v-model="editingElement.settings.label" placeholder="e.g. Based on 127 reviews"
+                                           class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                </div>
+
+                                <!-- Alignment + Gap -->
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Alignment</label>
+                                    <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
+                                        <button @click="editingElement.settings.textAlign = 'left'"
+                                                :class="(editingElement.settings.textAlign || 'center') === 'left' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                class="flex-1 py-2 text-[11px] font-bold border-r border-slate-100 transition-all">Left</button>
+                                        <button @click="editingElement.settings.textAlign = 'center'"
+                                                :class="(!editingElement.settings.textAlign || editingElement.settings.textAlign === 'center') ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                class="flex-1 py-2 text-[11px] font-bold border-r border-slate-100 transition-all">Center</button>
+                                        <button @click="editingElement.settings.textAlign = 'right'"
+                                                :class="editingElement.settings.textAlign === 'right' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                class="flex-1 py-2 text-[11px] font-bold border-r border-slate-100 transition-all">Right</button>
+                                        <button @click="editingElement.settings.textAlign = 'full'"
+                                                :class="editingElement.settings.textAlign === 'full' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                class="flex-1 py-2 text-[11px] font-bold transition-all">Full</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Gap between stars (px)</label>
+                                    <input type="number" v-model.number="editingElement.settings.gap" min="0" max="40"
+                                           class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                </div>
+
+                                <!-- Visibility -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
+                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-mobile-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
+                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-tablet-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
+                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                            <i class="fa fa-desktop text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- CSS Class & ID -->
+                                <div class="grid grid-cols-1 gap-4 pt-4 border-t border-slate-50">
+                                    <div>
+                                        <label class="text-[12px] font-bold text-[#333] block mb-2">CSS Class</label>
+                                        <input type="text" v-model="editingElement.settings.cssClass"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                    <div>
+                                        <label class="text-[12px] font-bold text-[#333] block mb-2">CSS ID</label>
+                                        <input type="text" v-model="editingElement.settings.cssId"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                </div>
+
+                            </div>
+
                             <!-- ══ COUNTER ELEMENT ══ -->
                             <div v-else-if="editingElement?.type === 'counter'" class="space-y-6">
                                 <div>
@@ -2301,8 +2535,17 @@
 
                         <!-- ══ DESIGN TAB ══ -->
                         <div v-if="editingContext.tab === 'design'" class="p-5 space-y-6">
+                             <!-- Design Settings for Gallery -->
+                             <div v-if="editingElement?.type === 'gallery'" class="space-y-6">
+                                 @include('cms-dashboard::admin.lazy-builder.partials.components.elements.gallery-design')
+                             </div>
+                             <!-- Design Settings for Star Rating -->
+                             <div v-else-if="editingElement?.type === 'star_rating'" class="space-y-6">
+                                 @include('cms-dashboard::admin.lazy-builder.partials.components.elements.star-rating-design')
+                             </div>
+
                              <!-- Design Settings for Counter -->
-                             <div v-if="editingElement?.type === 'counter'" class="space-y-6">
+                             <div v-else-if="editingElement?.type === 'counter'" class="space-y-6">
                                  @include('cms-dashboard::admin.lazy-builder.partials.components.elements.counter-design')
                              </div>
 

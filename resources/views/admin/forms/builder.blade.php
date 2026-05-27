@@ -1,6 +1,7 @@
 <x-cms-dashboard::layouts.admin>
     <x-slot name="title">Form Builder - {{ $form->title }}</x-slot>
 
+    <link rel="stylesheet" href="{{ asset('vendor/cms-dashboard/css/pickr.classic.min.css') }}">
     <style>
         .field-item { transition: box-shadow 0.2s, border-color 0.15s; }
         .field-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
@@ -10,6 +11,17 @@
         #drop-zone.drag-over { border-color: #3b82f6; background: #eff6ff; }
         .tab-btn.active { border-bottom: 2px solid #2563eb; color: #2563eb; }
         .col-badge { font-size: .6rem; padding: 1px 5px; border-radius: 4px; font-weight: 700; background: #ede9fe; color: #7c3aed; }
+        .lz-fb-color-btn { width:2rem; height:2rem; border-radius:6px; border:1px solid #d1d5db; box-shadow:0 1px 3px rgba(0,0,0,.1); cursor:pointer; flex-shrink:0; transition:box-shadow .15s; }
+        .lz-fb-color-btn:hover { box-shadow:0 2px 6px rgba(0,0,0,.18); }
+        /* Compact Pickr */
+        .pcr-app { width:222px !important; }
+        .pcr-app .pcr-palette { height:105px !important; }
+        .pcr-app .pcr-swatches { overflow:visible !important; padding:2px 6px 6px !important; max-height:none !important; }
+        .pcr-app .pcr-interaction { padding:5px 8px 8px !important; gap:5px !important; }
+        .pcr-app .pcr-interaction input.pcr-result { font-size:11px !important; height:24px !important; padding:0 6px !important; }
+        .pcr-app .pcr-interaction .pcr-type { font-size:10px !important; height:24px !important; padding:0 5px !important; line-height:24px !important; }
+        .pcr-app .pcr-interaction .pcr-save { font-size:11px !important; height:24px !important; padding:0 10px !important; line-height:24px !important; }
+        .pcr-app .pcr-interaction .pcr-clear { font-size:11px !important; height:24px !important; padding:0 8px !important; }
     </style>
 
     @php $savedCols = (int)(($form->settings['appearance']['columns'] ?? 1)); @endphp
@@ -64,7 +76,7 @@
             <div class="flex-1 overflow-y-auto p-5">
                 <div id="drop-zone"
                      class="min-h-64 border-2 border-dashed border-gray-300 rounded-xl p-4 transition-colors"
-                     style="display:grid; grid-template-columns:repeat({{ $savedCols }},1fr); gap:.75rem; align-items:start;">
+                     style="display:grid; grid-template-columns:repeat({{ $savedCols }},1fr); gap:.75rem; align-items:start; align-content:start;">
                     <p id="empty-msg"
                        style="grid-column:1/-1"
                        class="text-center text-gray-400 text-sm py-10 {{ count($form->fields ?? []) > 0 ? 'hidden' : '' }}">
@@ -111,6 +123,32 @@
 
                     <label class="block text-xs font-semibold text-gray-700 mb-1">Notify Email</label>
                     <input type="email" id="notify-email" value="{{ ($form->settings ?? [])['notify_email'] ?? '' }}" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="admin@example.com">
+
+                    @php $hasTurnstileKeys = get_cms_option('turnstile_site_key') && get_cms_option('turnstile_secret_key'); @endphp
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <label class="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[14px] text-orange-500">security</span>
+                                    Turnstile Protection
+                                </label>
+                                @if(!$hasTurnstileKeys)
+                                    <p class="text-[10px] text-orange-500 mt-0.5">
+                                        Keys not set —
+                                        <a href="{{ route('admin.settings.integrations') }}" target="_blank" class="underline">configure here</a>
+                                    </p>
+                                @else
+                                    <p class="text-[10px] text-gray-400 mt-0.5">Block bots with Cloudflare Turnstile</p>
+                                @endif
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer {{ !$hasTurnstileKeys ? 'opacity-40 pointer-events-none' : '' }}">
+                                <input type="checkbox" id="turnstile-enabled" class="sr-only peer"
+                                       {{ ($form->settings['turnstile_enabled'] ?? false) ? 'checked' : '' }}
+                                       {{ !$hasTurnstileKeys ? 'disabled' : '' }}>
+                                <div class="w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-4 peer-checked:bg-blue-500 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all"></div>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -140,12 +178,33 @@
                     </select>
                 </div>
 
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Label Alignment</label>
+                    <select id="app-label_align" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none">
+                        <option value="left"   {{ ($app['label_align'] ?? 'left') === 'left'   ? 'selected' : '' }}>Left</option>
+                        <option value="center" {{ ($app['label_align'] ?? 'left') === 'center' ? 'selected' : '' }}>Center</option>
+                        <option value="right"  {{ ($app['label_align'] ?? 'left') === 'right'  ? 'selected' : '' }}>Right</option>
+                    </select>
+                </div>
+
                 @foreach($appearanceFields as $af)
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">{{ $af['label'] }}</label>
-                        <input type="{{ $af['type'] }}" id="app-{{ $af['id'] }}" value="{{ $app[$af['id']] ?? $af['default'] }}"
-                            @if($af['type'] === 'number') min="0" @endif
-                            class="{{ $af['type'] === 'color' ? 'h-8 w-full' : 'w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs' }} focus:outline-none">
+                        @if($af['type'] === 'color')
+                            @php $colorVal = $app[$af['id']] ?? $af['default']; @endphp
+                            <div class="flex items-center gap-2.5">
+                                <button type="button" class="lz-fb-color-btn"
+                                        style="background-color:{{ $colorVal }}"
+                                        data-target="app-{{ $af['id'] }}"
+                                        data-hex-id="fbhex-{{ $af['id'] }}"></button>
+                                <input type="hidden" id="app-{{ $af['id'] }}" value="{{ $colorVal }}">
+                                <code id="fbhex-{{ $af['id'] }}" class="text-xs font-mono text-gray-500">{{ $colorVal }}</code>
+                            </div>
+                        @else
+                            <input type="{{ $af['type'] }}" id="app-{{ $af['id'] }}" value="{{ $app[$af['id']] ?? $af['default'] }}"
+                                min="0"
+                                class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none">
+                        @endif
                     </div>
                 @endforeach
 
@@ -168,7 +227,13 @@
                 {{-- Shortcode --}}
                 <div class="pt-2 border-t border-gray-100">
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Shortcode</p>
-                    <code class="block bg-gray-100 text-blue-700 px-3 py-2 rounded-lg text-xs break-all">[lazy_form slug="{{ $form->slug }}"]</code>
+                    <div class="flex items-stretch gap-1.5">
+                        <code id="form-shortcode-text" class="flex-1 block bg-gray-100 text-blue-700 px-3 py-2 rounded-lg text-xs break-all">[lazy_form slug="{{ $form->slug }}"]</code>
+                        <button onclick="copyShortcode(this)" title="Copy shortcode"
+                                class="shrink-0 flex items-center justify-center px-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors">
+                            <span class="material-symbols-outlined text-[15px]">content_copy</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -246,13 +311,13 @@
             text:      { label:'Text Field',  placeholder:'Enter text...',    required:false, error_message:'This field is required' },
             email:     { label:'Email',        placeholder:'Enter email...',   required:false, error_message:'Please enter a valid email' },
             tel:       { label:'Phone',        placeholder:'Enter phone...',   required:false, error_message:'This field is required' },
-            number:    { label:'Number',       placeholder:'0',               required:false, error_message:'This field is required' },
+            number:    { label:'Number',       placeholder:'0',               required:false, error_message:'This field is required', min:'', max:'', step:'' },
             textarea:  { label:'Message',      placeholder:'Your message...', required:false, error_message:'This field is required', rows:4 },
-            select:    { label:'Select',       options:'Option 1\nOption 2\nOption 3', required:false, error_message:'Please select an option' },
+            select:    { label:'Select',       options:'Option 1\nOption 2\nOption 3', placeholder:'-- Select --', required:false, error_message:'Please select an option' },
             checkbox:  { label:'Checkbox',     options:'Option 1\nOption 2',   required:false, error_message:'Please check at least one' },
             radio:     { label:'Radio',        options:'Option A\nOption B',   required:false, error_message:'Please choose an option' },
-            date:      { label:'Date',         required:false, error_message:'Please select a date' },
-            file:      { label:'File Upload',  required:false, error_message:'Please upload a file' },
+            date:      { label:'Date',         required:false, error_message:'Please select a date', min_date:'', max_date:'' },
+            file:      { label:'File Upload',  required:false, error_message:'Please upload a file', accepted_types:'', max_size_mb:'' },
             hidden:    { label:'Hidden Field', value:'' },
             heading:   { content:'Section Heading', level:'h2' },
             paragraph: { content:'Enter some descriptive text here.' },
@@ -309,6 +374,9 @@
                     ${badgeTxt ? `<span class="col-badge">${badgeTxt}</span>` : ''}
                 </div>
             </div>
+            <button onclick="duplicateField('${field.id}',event)" title="Duplicate" class="opacity-0 group-hover:opacity-100 text-blue-400 hover:text-blue-600 transition-all shrink-0">
+                <span class="material-symbols-outlined text-[16px]">content_copy</span>
+            </button>
             <button onclick="removeField('${field.id}',event)" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all shrink-0">
                 <span class="material-symbols-outlined text-[16px]">delete</span>
             </button>
@@ -342,12 +410,20 @@
             html += row('Field Name', `<input type="text" value="${esc(field.name||'')}" oninput="updateField('name',this.value)" class="${inp}">`);
         }
 
+        if (!['divider','paragraph','heading','hidden'].includes(field.type)) {
+            html += row('Help Text', `<input type="text" value="${esc(field.help_text||'')}" oninput="updateField('help_text',this.value)" placeholder="Optional hint shown below the field" class="${inp}">`);
+        }
+
         if (['text','email','tel','number','textarea'].includes(field.type)) {
             html += row('Placeholder', `<input type="text" value="${esc(field.placeholder||'')}" oninput="updateField('placeholder',this.value)" class="${inp}">`);
         }
 
         if (['select','checkbox','radio'].includes(field.type)) {
             html += row('Options (one per line)', `<textarea oninput="updateField('options',this.value)" class="${inp} resize-none" rows="4">${esc(field.options||'')}</textarea>`);
+        }
+
+        if (field.type === 'select') {
+            html += row('Placeholder Text', `<input type="text" value="${esc(field.placeholder||'-- Select --')}" oninput="updateField('placeholder',this.value)" placeholder="-- Select --" class="${inp}">`);
         }
 
         if (field.type === 'heading') {
@@ -365,6 +441,12 @@
             html += row('Rows', `<input type="number" value="${field.rows||4}" min="2" max="20" oninput="updateField('rows',this.value)" class="${inp}">`);
         }
 
+        if (field.type === 'number') {
+            html += row('Min Value', `<input type="number" value="${esc(field.min !== undefined ? field.min : '')}" oninput="updateField('min',this.value)" placeholder="No limit" class="${inp}">`);
+            html += row('Max Value', `<input type="number" value="${esc(field.max !== undefined ? field.max : '')}" oninput="updateField('max',this.value)" placeholder="No limit" class="${inp}">`);
+            html += row('Step', `<input type="number" value="${esc(field.step !== undefined ? field.step : '')}" oninput="updateField('step',this.value)" placeholder="1" min="0" class="${inp}">`);
+        }
+
         if (field.type === 'hidden') {
             html += row('Value', `<input type="text" value="${esc(field.value||'')}" oninput="updateField('value',this.value)" class="${inp}">`);
         }
@@ -379,6 +461,29 @@
                 <input type="text" value="${esc(field.error_message||'')}" oninput="updateField('error_message',this.value)"
                     class="w-full border border-blue-200 rounded-lg px-2 py-1.5 text-[11px] focus:outline-none" placeholder="This field is required">
             </div>`;
+
+            // Date min/max
+            if (field.type === 'date') {
+                html += row('Min Date', `<input type="date" value="${esc(field.min_date||'')}" oninput="updateField('min_date',this.value)" class="${inp}">`);
+                html += row('Max Date', `<input type="date" value="${esc(field.max_date||'')}" oninput="updateField('max_date',this.value)" class="${inp}">`);
+            }
+            // File settings
+            if (field.type === 'file') {
+                const _ftypes = [
+                    { label: 'Any File',                value: '' },
+                    { label: 'Images Only',             value: 'image/*' },
+                    { label: 'PDF Only',                value: '.pdf' },
+                    { label: 'Word Documents',          value: '.doc,.docx' },
+                    { label: 'Excel Files',             value: '.xls,.xlsx' },
+                    { label: 'PDF + Word',              value: '.pdf,.doc,.docx' },
+                    { label: 'Images + PDF',            value: 'image/*,.pdf' },
+                    { label: 'All Documents',           value: '.pdf,.doc,.docx,.xls,.xlsx' },
+                    { label: 'Images + All Documents',  value: 'image/*,.pdf,.doc,.docx,.xls,.xlsx' },
+                ];
+                const _ftOpts = _ftypes.map(ft => `<option value="${ft.value}" ${(field.accepted_types||'') === ft.value ? 'selected' : ''}>${ft.label}</option>`).join('');
+                html += row('Accepted Types', `<select onchange="updateField('accepted_types',this.value)" class="${inp}">${_ftOpts}</select>`);
+                html += row('Max File Size (MB)', `<input type="number" value="${esc(field.max_size_mb||'')}" oninput="updateField('max_size_mb',this.value)" placeholder="No limit" min="0" class="${inp}">`);
+            }
 
             // Column Width — only when total columns > 1
             const cols = totalCols();
@@ -442,6 +547,23 @@
         }
     }
 
+    // ── duplicate field ───────────────────────────────────────────────
+    function duplicateField(id, event) {
+        event.stopPropagation();
+        const original = fields.find(f => f.id === id);
+        if (!original) return;
+        const copy = JSON.parse(JSON.stringify(original));
+        copy.id   = uid();
+        copy.name = original.type + '_' + Date.now();
+        const origIdx = fields.indexOf(original);
+        fields.splice(origIdx + 1, 0, copy);
+        renderField(copy, false);
+        const origEl = dropZone.querySelector(`[data-id="${id}"]`);
+        const copyEl = dropZone.querySelector(`[data-id="${copy.id}"]`);
+        if (origEl && copyEl) origEl.insertAdjacentElement('afterend', copyEl);
+        selectField(copy.id);
+    }
+
     // ── sync order after drag ─────────────────────────────────────────
     function syncFieldOrder() {
         const order = [];
@@ -462,11 +584,13 @@
 
         const settings = {
             success_message: document.getElementById('success-message').value,
-            notify_email:    document.getElementById('notify-email').value,
+            notify_email:      document.getElementById('notify-email').value,
+            turnstile_enabled: document.getElementById('turnstile-enabled')?.checked || false,
             submit_label:    document.getElementById('submit-label').value,
             appearance: {
                 columns:           parseInt(document.getElementById('app-columns').value) || 1,
                 size:              document.getElementById('app-size').value,
+                label_align:       document.getElementById('app-label_align').value,
                 label_color:       document.getElementById('app-label_color').value,
                 text_color:        document.getElementById('app-text_color').value,
                 field_bg:          document.getElementById('app-field_bg').value,
@@ -496,11 +620,70 @@
         }, 2000);
     }
 
+    function copyShortcode(btn) {
+        const text = document.getElementById('form-shortcode-text').textContent.trim();
+        navigator.clipboard.writeText(text).then(() => {
+            const icon = btn.querySelector('.material-symbols-outlined');
+            icon.textContent = 'check';
+            btn.classList.replace('text-blue-600','text-green-600');
+            btn.classList.replace('bg-blue-50','bg-green-50');
+            setTimeout(() => {
+                icon.textContent = 'content_copy';
+                btn.classList.replace('text-green-600','text-blue-600');
+                btn.classList.replace('bg-green-50','bg-blue-50');
+            }, 2000);
+        });
+    }
+
     // Init
     fields.forEach(f => renderField(f, false));
 
     dropZone.addEventListener('dragover',  () => dropZone.classList.add('drag-over'));
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
     dropZone.addEventListener('drop',      () => dropZone.classList.remove('drag-over'));
+    </script>
+
+    <script src="{{ asset('vendor/cms-dashboard/js/pickr.min.js') }}"></script>
+    <script>
+    (function () {
+        function initFormColorPickers() {
+            document.querySelectorAll('.lz-fb-color-btn').forEach(function (btn) {
+                if (btn.dataset.pickrInit) return;
+                btn.dataset.pickrInit = '1';
+                var input  = document.getElementById(btn.dataset.target);
+                var hexEl  = document.getElementById(btn.dataset.hexId);
+
+                var pickr = Pickr.create({
+                    el: btn,
+                    useAsButton: true,
+                    theme: 'classic',
+                    default: input ? input.value : '#ffffff',
+                    defaultRepresentation: 'HEXA',
+                    position: 'left-middle',
+                    components: {
+                        preview: true, opacity: false, hue: true,
+                        interaction: { hex: true, rgba: false, input: true, clear: false, save: true }
+                    },
+                    swatches: ['#000000','#ffffff','#f44336','#e91e63','#9c27b0','#3f51b5',
+                               '#2196f3','#00bcd4','#009688','#4caf50','#cddc39','#ff9800']
+                });
+
+                function applyColor(color) {
+                    if (!color) return;
+                    var hex = '#' + color.toHEXA()[0] + color.toHEXA()[1] + color.toHEXA()[2];
+                    if (input) input.value = hex;
+                    btn.style.backgroundColor = hex;
+                    if (hexEl) hexEl.textContent = hex;
+                }
+
+                pickr.on('save',   function (c, i) { applyColor(c); i.hide(); })
+                     .on('change', function (c)    { applyColor(c); });
+            });
+        }
+
+        document.readyState === 'loading'
+            ? document.addEventListener('DOMContentLoaded', initFormColorPickers)
+            : initFormColorPickers();
+    })();
     </script>
 </x-cms-dashboard::layouts.admin>

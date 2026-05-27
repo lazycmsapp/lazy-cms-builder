@@ -1509,7 +1509,7 @@ if (!function_exists('get_lazy_builder_fonts')) {
     function get_lazy_builder_fonts($layout, &$fonts = []) {
         if (empty($layout) || !is_array($layout)) return $fonts;
         
-        $fontKeys = ['fontFamily', 'numberFontFamily', 'labelFontFamily', 'titleFontFamily'];
+        $fontKeys = ['fontFamily', 'numberFontFamily', 'labelFontFamily', 'titleFontFamily', 'captionFontFamily', 'descFontFamily', 'contentFontFamily', 'tabFontFamily'];
         foreach ($layout as $item) {
             foreach ($fontKeys as $fk) {
                 if (!empty($item['settings'][$fk]) && $item['settings'][$fk] !== 'inherit') {

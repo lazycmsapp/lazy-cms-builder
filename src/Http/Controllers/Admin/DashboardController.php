@@ -385,9 +385,38 @@ class DashboardController extends Controller
         if (!auth()->user()->hasPermission('manage_settings')) {
             abort(403);
         }
-        
+
         $settings = DB::table('cms_settings')->pluck('value', 'key')->toArray();
         return view('cms-dashboard::admin.settings.api', compact('settings'));
+    }
+
+    public function integrationsSettings()
+    {
+        if (!auth()->user()->hasPermission('manage_settings')) {
+            abort(403);
+        }
+
+        $settings = DB::table('cms_settings')->pluck('value', 'key')->toArray();
+        return view('cms-dashboard::admin.settings.integrations', compact('settings'));
+    }
+
+    public function updateIntegrationsSettings(Request $request)
+    {
+        if (!auth()->user()->hasPermission('manage_settings')) {
+            abort(403);
+        }
+
+        $keys = ['turnstile_site_key', 'turnstile_secret_key'];
+        foreach ($keys as $key) {
+            DB::table('cms_settings')->updateOrInsert(
+                ['key' => $key],
+                ['value' => $request->input($key, ''), 'updated_at' => now()]
+            );
+        }
+
+        lazy_log_activity('settings_updated', 'Updated integrations settings');
+
+        return redirect()->back()->with('success', 'Integrations settings saved successfully!');
     }
 
     public function analytics()

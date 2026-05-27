@@ -242,6 +242,9 @@
                         
                         <!-- All element types rendered via shared partials (mirrors col.blade.php for full live preview) -->
                         <template v-for="el in [nestedEl]" :key="el.id">
+                            @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.counter')
+                            @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.star-rating')
+                            @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.gallery')
                             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.heading')
                             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.title')
                             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.text')

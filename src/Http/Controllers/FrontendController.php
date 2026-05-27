@@ -526,8 +526,34 @@ class FrontendController extends Controller
         try {
             $form = \Acme\CmsDashboard\Models\Form::findOrFail($request->input('form_id'));
 
-            // Build submission data from all fields except _token and form_id
-            $data = $request->except(['_token', 'form_id']);
+            // Turnstile verification
+            if (!empty($form->settings['turnstile_enabled'])) {
+                $secretKey = get_cms_option('turnstile_secret_key', '');
+                if ($secretKey) {
+                    $token = $request->input('cf-turnstile-response', '');
+                    if (!$token) {
+                        return response()->json(['success' => false, 'message' => 'Please complete the security check.'], 422);
+                    }
+                    $verify = \Illuminate\Support\Facades\Http::asForm()->post(
+                        'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+                        ['secret' => $secretKey, 'response' => $token, 'remoteip' => $request->ip()]
+                    );
+                    if (!($verify->json('success') ?? false)) {
+                        return response()->json(['success' => false, 'message' => 'Security check failed. Please try again.'], 422);
+                    }
+                }
+            }
+
+            // Honeypot check — bots fill in this hidden field, real users never see it
+            if ($request->filled('_lf_hp_' . $form->id)) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $form->settings['success_message'] ?? 'Thank you! Your message has been sent.',
+                ]);
+            }
+
+            // Build submission data from all fields except internal fields
+            $data = $request->except(['_token', 'form_id', '_lf_hp_' . $form->id, 'cf-turnstile-response']);
 
             // Handle file uploads — store and replace value with path
             foreach ($request->allFiles() as $key => $file) {
@@ -551,32 +577,38 @@ class FrontendController extends Controller
                 try {
                     $submittedAt = now()->format('d M Y, H:i');
                     $ip          = $request->ip();
-                    $rows = '';
-                    foreach ($data as $key => $value) {
-                        $label = ucwords(str_replace('_', ' ', $key));
-                        $val   = is_array($value) ? implode(', ', $value) : (string) $value;
-                        $isFile = str_starts_with($val, 'form-uploads/');
-                        $display = $isFile
-                            ? '<a href="' . url('storage/' . $val) . '" style="color:#2563eb;">Download File</a>'
-                            : nl2br(htmlspecialchars($val, ENT_QUOTES, 'UTF-8'));
-                        $rows .= '<tr><td style="padding:8px 12px;font-size:12px;font-weight:600;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;width:35%">' . htmlspecialchars($label) . '</td>'
-                               . '<td style="padding:8px 12px;font-size:13px;color:#111827;border:1px solid #e5e7eb">' . $display . '</td></tr>';
+
+                    // Build label map from form field definitions
+                    $labelMap = [];
+                    foreach ($form->fields ?? [] as $f) {
+                        if (!empty($f['name'])) {
+                            $labelMap[$f['name']] = $f['label'] ?? ucwords(str_replace('_', ' ', $f['name']));
+                        }
                     }
-                    $html = '<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f3f4f6;padding:24px;margin:0">'
-                        . '<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.1)">'
-                        . '<div style="background:#2563eb;padding:20px 24px">'
-                        . '<h2 style="margin:0;color:#fff;font-size:16px">New Form Submission</h2>'
-                        . '<p style="margin:4px 0 0;color:#bfdbfe;font-size:13px">' . htmlspecialchars($form->title) . '</p>'
-                        . '</div>'
-                        . '<div style="padding:20px 24px">'
-                        . '<p style="margin:0 0 4px;font-size:12px;color:#9ca3af">Submitted: <strong style="color:#374151">' . $submittedAt . '</strong> &nbsp;·&nbsp; IP: <strong style="color:#374151">' . $ip . '</strong></p>'
-                        . '<table style="width:100%;border-collapse:collapse;margin-top:16px">' . $rows . '</table>'
-                        . '</div>'
-                        . '<div style="padding:12px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af">Sent by Lazy CMS — do not reply to this email.</div>'
-                        . '</div></body></html>';
-                    \Illuminate\Support\Facades\Mail::html($html, function ($msg) use ($notifyEmail, $form) {
-                        $msg->to($notifyEmail)->subject('New Submission: ' . $form->title);
-                    });
+
+                    // Build rows array for the email view
+                    $rows = [];
+                    foreach ($data as $key => $value) {
+                        $label  = $labelMap[$key] ?? ucwords(str_replace('_', ' ', $key));
+                        $val    = is_array($value) ? implode(', ', $value) : (string) $value;
+                        $isFile = str_starts_with($val, 'form-uploads/');
+                        $rows[] = [
+                            'label'    => $label,
+                            'is_file'  => $isFile,
+                            'is_empty' => !$isFile && trim($val) === '',
+                            'display'  => $isFile
+                                ? url('storage/' . $val)
+                                : nl2br(htmlspecialchars($val, ENT_QUOTES, 'UTF-8')),
+                        ];
+                    }
+
+                    \Illuminate\Support\Facades\Mail::send(
+                        'cms-dashboard::emails.form.notification',
+                        compact('form', 'rows', 'submittedAt', 'ip'),
+                        function ($msg) use ($notifyEmail, $form) {
+                            $msg->to($notifyEmail)->subject('New Submission: ' . $form->title);
+                        }
+                    );
                 } catch (\Exception $e) {}
             }
 

@@ -346,6 +346,8 @@
                 { type: 'spacer', name: 'Spacer', icon: 'fa fa-arrows-alt-v' },
                 { type: 'tabs', name: 'Tabs', icon: 'fa fa-folder' },
                 { type: 'title', name: 'Title', icon: 'fa fa-heading' },
+                { type: 'star_rating', name: 'Star Rating', icon: 'fa fa-star' },
+                { type: 'gallery', name: 'Gallery', icon: 'fa fa-images' },
             ];
             if (postCardMode.value) {
                 availableElements.push({ type: 'post_content', name: 'Content', icon: 'fa fa-paragraph' });
@@ -1317,6 +1319,53 @@
                 }
             };
 
+            const openGalleryImageMedia = (idx) => {
+                const el = editingElement.value;
+                if (!el || !el.settings || !Array.isArray(el.settings.images)) return;
+                if (window.openMediaModal) {
+                    window.openMediaModal((selectedMedia) => {
+                        const url = '/storage/' + selectedMedia.path;
+                        if (el.settings.images[idx] !== undefined) el.settings.images[idx].url = url;
+                    });
+                } else {
+                    const currentVal = (el.settings.images[idx] || {}).url || '';
+                    const url = prompt('Enter image URL:', currentVal);
+                    if (url !== null && el.settings.images[idx] !== undefined) el.settings.images[idx].url = url;
+                }
+            };
+
+            const openGalleryBulkMedia = () => {
+                const el = editingElement.value;
+                if (!el || !el.settings || !Array.isArray(el.settings.images)) return;
+                if (window.openMediaModal) {
+                    window.openMediaModal((selectedItems) => {
+                        selectedItems.forEach(media => {
+                            el.settings.images.push({ url: '/storage/' + media.path, alt: media.alt_text || '', caption: media.caption || '' });
+                        });
+                    }, { multiple: true });
+                } else {
+                    const urls = prompt('Enter image URLs (comma-separated):');
+                    if (urls) {
+                        urls.split(',').forEach(u => {
+                            const url = u.trim();
+                            if (url) el.settings.images.push({ url, alt: '', caption: '' });
+                        });
+                    }
+                }
+            };
+
+            let _galleryDragSrc = -1;
+            const galleryDragStart = (idx) => { _galleryDragSrc = idx; };
+            const galleryDrop = (targetIdx) => {
+                if (_galleryDragSrc < 0 || _galleryDragSrc === targetIdx) { _galleryDragSrc = -1; return; }
+                const el = editingElement.value;
+                if (!el?.settings?.images) { _galleryDragSrc = -1; return; }
+                const imgs = el.settings.images;
+                const [moved] = imgs.splice(_galleryDragSrc, 1);
+                imgs.splice(targetIdx, 0, moved);
+                _galleryDragSrc = -1;
+            };
+
             const openColorPicker = (event, obj, colorKey, opacityKey = null, cascadeColor = null) => {
                 _closeActivePickr(true);
 
@@ -2175,6 +2224,31 @@
                             cssClass: '', cssId: '',
                             visibility: { mobile: true, tablet: true, desktop: true },
                         } : {}),
+                        ...(type === 'star_rating' ? {
+                            rating: 4.5, maxStars: 5, label: '',
+                            starSize: 24, starColor: '#f59e0b', emptyColor: '#d1d5db',
+                            textAlign: 'center', gap: 4,
+                            labelFontFamily: 'inherit', labelFontSize: '13px', labelFontWeight: '400',
+                            labelLineHeight: '1.4', labelLetterSpacing: '0px', labelTextTransform: 'none',
+                            labelColor: '#6b7280',
+                            marginTop: 0, marginTopUnit: 'px', marginBottom: 0, marginBottomUnit: 'px',
+                            cssClass: '', cssId: '',
+                            visibility: { mobile: true, tablet: true, desktop: true },
+                        } : {}),
+                        ...(type === 'gallery' ? {
+                            images: [],
+                            columns: 3, columnsTablet: 2, columnsMobile: 1,
+                            gap: 8, aspectRatio: 'square', borderRadius: 0,
+                            imgBorderWidth: 0, imgBorderStyle: 'solid', imgBorderColor: '#e2e8f0',
+                            lightbox: true, hoverEffect: 'zoom',
+                            captionAlign: 'center',
+                            captionFontFamily: 'inherit', captionFontSize: '13px', captionFontWeight: '400',
+                            captionLineHeight: '1.4', captionLetterSpacing: '0px', captionTextTransform: 'none',
+                            captionColor: '#6b7280',
+                            marginTop: 0, marginTopUnit: 'px', marginBottom: 0, marginBottomUnit: 'px',
+                            cssClass: '', cssId: '',
+                            visibility: { mobile: true, tablet: true, desktop: true },
+                        } : {}),
                         ...(type === 'heading' ? { title: 'New Heading', textAlign: 'left' } : {}),
                         ...(type === 'title' ? {
                             title: 'Title', titleColor: '#222', fontSize: 36, fontSizeUnit: 'px', fontWeight: '800', textAlign: 'center',
@@ -2872,7 +2946,7 @@
                 addElementFromElementModal, addNestedColumnFromElementModal,
                 showElementModal, elementModalTab, elementModalRestricted, elementModalAllowedTabs, openElementModal, selectNestedLayout,
                 editingColumn, editingElement,
-                addContainer, addColumn, addNestedColumn, addElement, duplicateContainer, duplicateColumn, duplicateElement, duplicateNestedColumn, duplicateNestedRow, duplicateNestedElement, saveLayout, openMediaModal, openColorPicker,
+                addContainer, addColumn, addNestedColumn, addElement, duplicateContainer, duplicateColumn, duplicateElement, duplicateNestedColumn, duplicateNestedRow, duplicateNestedElement, saveLayout, openMediaModal, openGalleryImageMedia, openGalleryBulkMedia, galleryDragStart, galleryDrop, openColorPicker,
                 isDragging, isColumnDrag, dragType, dragSource, dragCi, dragColi, dragEli, dragNcoli, startDrag,
                 onDragStart, onDragEnd, onDragOver, onDrop, dragTarget, dragPosition,
                 canvasStyle, containerStyle, containerInnerStyle, columnOuterStyle, columnInnerStyle, formatBasisToFraction, updateBasis, hexToRgba, getUnitVal,

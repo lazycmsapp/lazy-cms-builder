@@ -193,6 +193,8 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     Route::get('settings/activity-logs', [DashboardController::class, 'activityLogs'])->name('settings.activity-logs');
     Route::post('settings/activity-logs/bulk', [DashboardController::class, 'bulkDeleteLogs'])->name('settings.activity-logs.bulk');
     Route::get('settings/api', [DashboardController::class, 'apiSettings'])->name('settings.api');
+    Route::get('settings/integrations', [DashboardController::class, 'integrationsSettings'])->name('settings.integrations');
+    Route::post('settings/integrations', [DashboardController::class, 'updateIntegrationsSettings'])->name('settings.integrations.update');
     
     // Backups
     Route::get('tools/backup', [\Acme\CmsDashboard\Http\Controllers\Admin\BackupController::class, 'index'])->name('backup.index');

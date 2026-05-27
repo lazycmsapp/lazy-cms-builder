@@ -61,7 +61,7 @@
          data-prefix="{{ $prefix }}"
          data-suffix="{{ $suffix }}"
          style="color:{{ $numColor }};font-size:{{ $numSize }};font-weight:{{ $numWeight }};font-family:{{ $numFamily }};line-height:{{ $numLineHeight }};letter-spacing:{{ $numLetterSpacing }};display:block;">
-        {{ $prefix }}{{ number_format($endValue, $decimals) }}{{ $suffix }}
+        {{ $prefix }}{{ number_format($endValue, $decimals, '.', $separator) }}{{ $suffix }}
     </div>
 
     @if($label)

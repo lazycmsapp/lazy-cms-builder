@@ -536,6 +536,112 @@
                 }
                 return '[lazy_row ' + base.trim() + vis + ' /]';
             }
+            case 'counter': {
+                var a = base;
+                a = attrI(a, 'end',        s.endValue);
+                a = attrI(a, 'start',      s.startValue,       0);
+                a = attrI(a, 'prefix',     s.prefix);
+                a = attrI(a, 'suffix',     s.suffix);
+                a = attrI(a, 'label',      s.label);
+                a = attrI(a, 'dur',        s.duration,         2000);
+                a = attrI(a, 'dec',        s.decimals,         0);
+                a = attrI(a, 'sep',        s.separator);
+                a = attrI(a, 'align',      s.textAlign,        'center');
+                a = attrI(a, 'num_size',   s.numberFontSize,   '48px');
+                a = attrI(a, 'num_weight', s.numberFontWeight, '700');
+                a = attrI(a, 'num_color',  s.numberColor);
+                a = attrI(a, 'num_family', s.numberFontFamily, 'inherit');
+                a = attrI(a, 'num_lh',     s.numberLineHeight,    '1.1');
+                a = attrI(a, 'num_ls',     s.numberLetterSpacing, '0px');
+                a = attrI(a, 'lbl_size',   s.labelFontSize,   '14px');
+                a = attrI(a, 'lbl_weight', s.labelFontWeight, '400');
+                a = attrI(a, 'lbl_color',  s.labelColor);
+                a = attrI(a, 'lbl_family', s.labelFontFamily, 'inherit');
+                a = attrI(a, 'lbl_lh',     s.labelLineHeight,    '1.4');
+                a = attrI(a, 'lbl_ls',     s.labelLetterSpacing, '0px');
+                a = attrI(a, 'lbl_tt',     s.labelTextTransform, 'none');
+                a = attrI(a, 'icon',       s.icon);
+                a = attrI(a, 'icon_size',  s.iconSize,   40);
+                a = attrI(a, 'icon_color', s.iconColor, '#0091ea');
+                a = attrI(a, 'mt',         s.marginTop,    0);
+                a = attrI(a, 'mt_unit',    s.marginTopUnit,    'px');
+                a = attrI(a, 'mb',         s.marginBottom, 0);
+                a = attrI(a, 'mb_unit',    s.marginBottomUnit, 'px');
+                a = attrI(a, 'css_class',  s.cssClass);
+                a = attrI(a, 'css_id',     s.cssId);
+                return '[lazy_counter ' + a.trim() + vis + ' /]';
+            }
+            case 'star_rating': {
+                var a = base;
+                a = attrI(a, 'rating',      s.rating,              5);
+                a = attrI(a, 'max',         s.maxStars,            5);
+                a = attrI(a, 'label',       s.label);
+                a = attrI(a, 'size',        s.starSize,            24);
+                a = attrI(a, 'color',       s.starColor,           '#f59e0b');
+                a = attrI(a, 'empty',       s.emptyColor,          '#d1d5db');
+                a = attrI(a, 'align',       s.textAlign,           'center');
+                a = attrI(a, 'gap',         s.gap,                 4);
+                a = attrI(a, 'lbl_family',  s.labelFontFamily,     'inherit');
+                a = attrI(a, 'lbl_size',    s.labelFontSize,       '13px');
+                a = attrI(a, 'lbl_weight',  s.labelFontWeight,     '400');
+                a = attrI(a, 'lbl_lh',      s.labelLineHeight,     '1.4');
+                a = attrI(a, 'lbl_ls',      s.labelLetterSpacing,  '0px');
+                a = attrI(a, 'lbl_tt',      s.labelTextTransform,  'none');
+                a = attrI(a, 'lbl_color',   s.labelColor,          '#6b7280');
+                a = attrI(a, 'mt',          s.marginTop,           0);
+                a = attrI(a, 'mt_unit',     s.marginTopUnit,       'px');
+                a = attrI(a, 'mb',          s.marginBottom,        0);
+                a = attrI(a, 'mb_unit',     s.marginBottomUnit,    'px');
+                a = attrI(a, 'css_class',   s.cssClass);
+                a = attrI(a, 'css_id',      s.cssId);
+                return '[lazy_star_rating ' + a.trim() + vis + ' /]';
+            }
+            case 'gallery': {
+                var a = base;
+                var imgs = s.images || [];
+                if (imgs.length > 0) {
+                    a = attrI(a, 'img_n', imgs.length);
+                    for (var i = 0; i < imgs.length; i++) {
+                        a = attrI(a, 'img_' + i,           imgs[i].url);
+                        a = attrI(a, 'img_' + i + '_a',    imgs[i].alt);
+                        a = attrI(a, 'img_' + i + '_c',    imgs[i].caption);
+                    }
+                }
+                a = attrI(a, 'cols',    s.columns,         3);
+                a = attrI(a, 'cols_t',  s.columnsTablet,   2);
+                a = attrI(a, 'cols_m',  s.columnsMobile,   1);
+                a = attrI(a, 'gap',     s.gap,             8);
+                a = attrI(a, 'ratio',   s.aspectRatio,     'square');
+                a = attrI(a, 'radius',  s.borderRadius,    0);
+                a = attrI(a, 'lightbox', s.lightbox !== undefined ? (s.lightbox ? '1' : '0') : null, '1');
+                a = attrI(a, 'hover',      s.hoverEffect,          'zoom');
+                a = attrI(a, 'cap_align', s.captionAlign,         'center');
+                a = attrI(a, 'cap_family',s.captionFontFamily,    'inherit');
+                a = attrI(a, 'cap_size',  s.captionFontSize,      '13px');
+                a = attrI(a, 'cap_weight',s.captionFontWeight,    '400');
+                a = attrI(a, 'cap_lh',    s.captionLineHeight,    '1.4');
+                a = attrI(a, 'cap_ls',    s.captionLetterSpacing, '0px');
+                a = attrI(a, 'cap_tt',    s.captionTextTransform, 'none');
+                a = attrI(a, 'cap_color', s.captionColor,         '#6b7280');
+                a = attrI(a, 'img_bw',   s.imgBorderWidth,   0);
+                a = attrI(a, 'img_bs',   s.imgBorderStyle,   'solid');
+                a = attrI(a, 'img_bc',   s.imgBorderColor,   '#e2e8f0');
+                a = attrI(a, 'mt',        s.marginTop,            0);
+                a = attrI(a, 'mt_unit', s.marginTopUnit,   'px');
+                a = attrI(a, 'mb',      s.marginBottom,    0);
+                a = attrI(a, 'mb_unit', s.marginBottomUnit,'px');
+                a = attrI(a, 'mt_t',      (s['marginTop_tablet']    !== undefined && s['marginTop_tablet']    !== '' && s['marginTop_tablet']    !== null) ? s['marginTop_tablet']    : null);
+                a = attrI(a, 'mt_t_unit', (s['marginTop_tablet']    !== undefined && s['marginTop_tablet']    !== '' && s['marginTop_tablet']    !== null) ? (s['marginTopUnit_tablet']    || 'px') : null);
+                a = attrI(a, 'mb_t',      (s['marginBottom_tablet'] !== undefined && s['marginBottom_tablet'] !== '' && s['marginBottom_tablet'] !== null) ? s['marginBottom_tablet'] : null);
+                a = attrI(a, 'mb_t_unit', (s['marginBottom_tablet'] !== undefined && s['marginBottom_tablet'] !== '' && s['marginBottom_tablet'] !== null) ? (s['marginBottomUnit_tablet'] || 'px') : null);
+                a = attrI(a, 'mt_m',      (s['marginTop_mobile']    !== undefined && s['marginTop_mobile']    !== '' && s['marginTop_mobile']    !== null) ? s['marginTop_mobile']    : null);
+                a = attrI(a, 'mt_m_unit', (s['marginTop_mobile']    !== undefined && s['marginTop_mobile']    !== '' && s['marginTop_mobile']    !== null) ? (s['marginTopUnit_mobile']    || 'px') : null);
+                a = attrI(a, 'mb_m',      (s['marginBottom_mobile'] !== undefined && s['marginBottom_mobile'] !== '' && s['marginBottom_mobile'] !== null) ? s['marginBottom_mobile'] : null);
+                a = attrI(a, 'mb_m_unit', (s['marginBottom_mobile'] !== undefined && s['marginBottom_mobile'] !== '' && s['marginBottom_mobile'] !== null) ? (s['marginBottomUnit_mobile'] || 'px') : null);
+                a = attrI(a, 'css_class', s.cssClass);
+                a = attrI(a, 'css_id',    s.cssId);
+                return '[lazy_gallery ' + a.trim() + vis + ' /]';
+            }
             default:
                 return '[lazy_element type="' + type + '" ' + base.trim() + vis + ' /]';
         }
@@ -844,6 +950,117 @@
                     if (nestedCols.length) rowObj.columns = nestedCols;
                 }
                 return rowObj;
+            }
+
+            case 'counter':
+                return { id: a.id || generateId(), type: 'counter', settings: {
+                    endValue:            a.end        !== undefined ? parseFloat(a.end)      : 100,
+                    startValue:          a.start      !== undefined ? parseFloat(a.start)    : 0,
+                    prefix:              a.prefix     || '',
+                    suffix:              a.suffix     || '',
+                    label:               a.label      || '',
+                    duration:            a.dur        !== undefined ? parseInt(a.dur)        : 2000,
+                    decimals:            a.dec        !== undefined ? parseInt(a.dec)        : 0,
+                    separator:           a.sep        || '',
+                    textAlign:           a.align      || 'center',
+                    numberFontSize:      a.num_size   || '48px',
+                    numberFontWeight:    a.num_weight || '700',
+                    numberColor:         a.num_color  || '#222222',
+                    numberFontFamily:    a.num_family || 'inherit',
+                    numberLineHeight:    a.num_lh     || '1.1',
+                    numberLetterSpacing: a.num_ls     || '0px',
+                    labelFontSize:       a.lbl_size   || '14px',
+                    labelFontWeight:     a.lbl_weight || '400',
+                    labelColor:          a.lbl_color  || '#666666',
+                    labelFontFamily:     a.lbl_family || 'inherit',
+                    labelLineHeight:     a.lbl_lh     || '1.4',
+                    labelLetterSpacing:  a.lbl_ls     || '0px',
+                    labelTextTransform:  a.lbl_tt     || 'none',
+                    icon:                a.icon       || '',
+                    iconSize:            a.icon_size  !== undefined ? parseInt(a.icon_size)  : 40,
+                    iconColor:           a.icon_color || '#0091ea',
+                    marginTop:           a.mt         !== undefined ? parseFloat(a.mt)       : 0,
+                    marginTopUnit:       a.mt_unit    || 'px',
+                    marginBottom:        a.mb         !== undefined ? parseFloat(a.mb)       : 0,
+                    marginBottomUnit:    a.mb_unit    || 'px',
+                    cssClass:            a.css_class  || '',
+                    cssId:               a.css_id     || '',
+                    visibility:          vis
+                }};
+
+            case 'star_rating':
+                return { id: a.id || generateId(), type: 'star_rating', settings: {
+                    rating:              a.rating     !== undefined ? parseFloat(a.rating)  : 5,
+                    maxStars:            a.max        !== undefined ? parseInt(a.max)        : 5,
+                    label:               a.label      || '',
+                    starSize:            a.size       !== undefined ? parseInt(a.size)       : 24,
+                    starColor:           a.color      || '#f59e0b',
+                    emptyColor:          a.empty      || '#d1d5db',
+                    textAlign:           a.align      || 'center',
+                    gap:                 a.gap        !== undefined ? parseInt(a.gap)        : 4,
+                    labelFontFamily:     a.lbl_family || 'inherit',
+                    labelFontSize:       a.lbl_size   || '13px',
+                    labelFontWeight:     a.lbl_weight || '400',
+                    labelLineHeight:     a.lbl_lh     || '1.4',
+                    labelLetterSpacing:  a.lbl_ls     || '0px',
+                    labelTextTransform:  a.lbl_tt     || 'none',
+                    labelColor:          a.lbl_color  || '#6b7280',
+                    marginTop:           a.mt         !== undefined ? parseFloat(a.mt)      : 0,
+                    marginTopUnit:       a.mt_unit    || 'px',
+                    marginBottom:        a.mb         !== undefined ? parseFloat(a.mb)      : 0,
+                    marginBottomUnit:    a.mb_unit    || 'px',
+                    cssClass:            a.css_class  || '',
+                    cssId:               a.css_id     || '',
+                    visibility:          vis
+                }};
+
+            case 'gallery': {
+                var n = a.img_n !== undefined ? parseInt(a.img_n) : 0;
+                var imgs = [];
+                for (var i = 0; i < n; i++) {
+                    imgs.push({
+                        url:     a['img_' + i]         || '',
+                        alt:     a['img_' + i + '_a']  || '',
+                        caption: a['img_' + i + '_c']  || ''
+                    });
+                }
+                return { id: a.id || generateId(), type: 'gallery', settings: {
+                    images:          imgs,
+                    columns:         a.cols   !== undefined ? parseInt(a.cols)   : 3,
+                    columnsTablet:   a.cols_t !== undefined ? parseInt(a.cols_t) : 2,
+                    columnsMobile:   a.cols_m !== undefined ? parseInt(a.cols_m) : 1,
+                    gap:             a.gap    !== undefined ? parseInt(a.gap)    : 8,
+                    aspectRatio:     a.ratio  || 'square',
+                    borderRadius:    a.radius !== undefined ? parseInt(a.radius) : 0,
+                    lightbox:             (a.lightbox !== undefined ? a.lightbox : '1') !== '0',
+                    hoverEffect:          a.hover      || 'zoom',
+                    captionAlign:         a.cap_align  || 'center',
+                    captionFontFamily:    a.cap_family || 'inherit',
+                    captionFontSize:      a.cap_size   || '13px',
+                    captionFontWeight:    a.cap_weight || '400',
+                    captionLineHeight:    a.cap_lh     || '1.4',
+                    captionLetterSpacing: a.cap_ls     || '0px',
+                    captionTextTransform: a.cap_tt     || 'none',
+                    captionColor:         a.cap_color  || '#6b7280',
+                    imgBorderWidth:  a.img_bw !== undefined ? parseInt(a.img_bw)   : 0,
+                    imgBorderStyle:  a.img_bs  || 'solid',
+                    imgBorderColor:  a.img_bc  || '#e2e8f0',
+                    marginTop:       a.mt      !== undefined ? parseFloat(a.mt)   : 0,
+                    marginTopUnit:   a.mt_unit || 'px',
+                    marginBottom:    a.mb      !== undefined ? parseFloat(a.mb)   : 0,
+                    marginBottomUnit: a.mb_unit || 'px',
+                    'marginTop_tablet':       a.mt_t     !== undefined ? parseFloat(a.mt_t)   : null,
+                    'marginTopUnit_tablet':   a.mt_t_unit || null,
+                    'marginBottom_tablet':    a.mb_t     !== undefined ? parseFloat(a.mb_t)   : null,
+                    'marginBottomUnit_tablet': a.mb_t_unit || null,
+                    'marginTop_mobile':       a.mt_m     !== undefined ? parseFloat(a.mt_m)   : null,
+                    'marginTopUnit_mobile':   a.mt_m_unit || null,
+                    'marginBottom_mobile':    a.mb_m     !== undefined ? parseFloat(a.mb_m)   : null,
+                    'marginBottomUnit_mobile': a.mb_m_unit || null,
+                    cssClass:        a.css_class || '',
+                    cssId:           a.css_id    || '',
+                    visibility:      vis
+                }};
             }
 
             default:
