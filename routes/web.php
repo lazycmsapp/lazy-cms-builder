@@ -195,6 +195,9 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     Route::get('settings/api', [DashboardController::class, 'apiSettings'])->name('settings.api');
     Route::get('settings/integrations', [DashboardController::class, 'integrationsSettings'])->name('settings.integrations');
     Route::post('settings/integrations', [DashboardController::class, 'updateIntegrationsSettings'])->name('settings.integrations.update');
+    Route::get('settings/email-templates', [DashboardController::class, 'emailTemplates'])->name('settings.email-templates');
+    Route::post('settings/email-templates', [DashboardController::class, 'updateEmailTemplate'])->name('settings.email-templates.update');
+    Route::post('settings/email-templates/test', [DashboardController::class, 'testEmailTemplate'])->name('settings.email-templates.test');
     
     // Backups
     Route::get('tools/backup', [\Acme\CmsDashboard\Http\Controllers\Admin\BackupController::class, 'index'])->name('backup.index');

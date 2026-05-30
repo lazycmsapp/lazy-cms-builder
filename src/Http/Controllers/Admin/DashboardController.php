@@ -419,6 +419,131 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'Integrations settings saved successfully!');
     }
 
+    public static function emailTemplateDefaults(): array
+    {
+        return [
+            'form_notification' => [
+                'label'   => 'Form Submission Notification',
+                'subject' => 'New Submission: {{form_name}}',
+                'intro'   => 'You have received a new submission. Review the details below to follow up promptly.',
+                'footer'  => 'This is an automated notification — no reply is needed.',
+                'variables' => ['{{form_name}}', '{{submitted_at}}', '{{ip_address}}', '{{site_name}}'],
+            ],
+            'order_placed_customer' => [
+                'label'   => 'Order Placed — Customer Email',
+                'subject' => 'Order Confirmation - Order #{{order_number}}',
+                'message' => 'We have received your order <strong>#{{order_number}}</strong> and are currently getting it ready. You will receive another notification once your order status updates.',
+                'variables' => ['{{order_number}}', '{{customer_name}}', '{{site_name}}'],
+            ],
+            'order_placed_admin' => [
+                'label'   => 'Order Placed — Admin Notification',
+                'subject' => '[New Order] #{{order_number}} — {{customer_name}}',
+                'message' => 'A new order <strong>#{{order_number}}</strong> has been placed by <strong>{{customer_name}}</strong>.',
+                'variables' => ['{{order_number}}', '{{customer_name}}', '{{order_total}}', '{{site_name}}'],
+            ],
+            'order_status_updated' => [
+                'label'   => 'Order Status Updated',
+                'subject' => 'Update on your order #{{order_number}} [{{new_status}}]',
+                'message_default'    => 'Your order <strong>#{{order_number}}</strong> status has been updated to <strong>{{new_status}}</strong>.',
+                'message_completed'  => 'Good news! Your order is completed and fulfilled. Thank you for shopping with us!',
+                'message_processing' => 'We are actively preparing your items. We\'ll let you know once it\'s on its way.',
+                'variables' => ['{{order_number}}', '{{customer_name}}', '{{new_status}}', '{{site_name}}'],
+            ],
+        ];
+    }
+
+    public function emailTemplates()
+    {
+        if (!auth()->user()->hasPermission('manage_settings')) abort(403);
+
+        $defaults  = self::emailTemplateDefaults();
+        $templates = [];
+        foreach ($defaults as $key => $default) {
+            $saved = json_decode(get_cms_option('email_template_' . $key, '{}'), true) ?: [];
+            $templates[$key] = array_merge($default, $saved);
+        }
+
+        return view('cms-dashboard::admin.settings.email-templates', compact('templates', 'defaults'));
+    }
+
+    public function updateEmailTemplate(Request $request)
+    {
+        if (!auth()->user()->hasPermission('manage_settings')) abort(403);
+
+        $key = $request->input('template_key');
+        $defaults = self::emailTemplateDefaults();
+
+        if (!array_key_exists($key, $defaults)) {
+            return redirect()->back()->with('error', 'Invalid template.');
+        }
+
+        // Collect all fields for this template (exclude template_key)
+        $data = $request->except(['_token', 'template_key']);
+
+        DB::table('cms_settings')->updateOrInsert(
+            ['key' => 'email_template_' . $key],
+            ['value' => json_encode($data), 'updated_at' => now()]
+        );
+
+        lazy_log_activity('settings_updated', "Updated email template: {$key}");
+
+        return redirect()->route('admin.settings.email-templates', ['tab' => $key])
+            ->with('success', 'Email template saved successfully.');
+    }
+
+    public function testEmailTemplate(Request $request)
+    {
+        if (!auth()->user()->hasPermission('manage_settings')) abort(403);
+
+        $key      = $request->input('template_key');
+        $toEmail  = auth()->user()->email;
+        $defaults = self::emailTemplateDefaults();
+
+        if (!array_key_exists($key, $defaults)) {
+            return response()->json(['success' => false, 'message' => 'Invalid template.']);
+        }
+
+        $saved    = json_decode(get_cms_option('email_template_' . $key, '{}'), true) ?: [];
+        $tpl      = array_merge($defaults[$key], $saved);
+        $siteName = get_cms_option('site_name', config('app.name', 'Lazy CMS'));
+
+        try {
+            if ($key === 'form_notification') {
+                $subject     = str_replace(['{{form_name}}', '{{site_name}}'], ['Test Form', $siteName], $tpl['subject']);
+                $introText   = str_replace('{{site_name}}', $siteName, $tpl['intro']);
+                $footerText  = $tpl['footer'];
+                $form        = (object)['title' => 'Test Form', 'id' => 0, 'settings' => []];
+                $rows        = [
+                    ['label' => 'Name', 'is_file' => false, 'is_empty' => false, 'display' => 'John Doe'],
+                    ['label' => 'Email', 'is_file' => false, 'is_empty' => false, 'display' => $toEmail],
+                    ['label' => 'Message', 'is_file' => false, 'is_empty' => false, 'display' => 'This is a test submission.'],
+                ];
+                $submittedAt = now()->format('d M Y, H:i');
+                $ip          = request()->ip();
+
+                \Illuminate\Support\Facades\Mail::send(
+                    'cms-dashboard::emails.form.notification',
+                    compact('form', 'rows', 'submittedAt', 'ip', 'introText', 'footerText'),
+                    fn($msg) => $msg->to($toEmail)->subject($subject)
+                );
+            } elseif (in_array($key, ['order_placed_customer', 'order_placed_admin', 'order_status_updated'])) {
+                $subject = str_replace(
+                    ['{{order_number}}', '{{customer_name}}', '{{new_status}}', '{{site_name}}'],
+                    ['12345', 'John Doe', 'Processing', $siteName],
+                    $tpl['subject']
+                );
+                \Illuminate\Support\Facades\Mail::raw(
+                    "This is a test email for the \"{$tpl['label']}\" template.\n\nSubject: {$subject}\n\nTemplate key: {$key}",
+                    fn($msg) => $msg->to($toEmail)->subject("[TEST] {$subject}")
+                );
+            }
+
+            return response()->json(['success' => true, 'message' => "Test email sent to {$toEmail}"]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
     public function analytics()
     {
         if (!auth()->user()->hasPermission('manage_settings')) {

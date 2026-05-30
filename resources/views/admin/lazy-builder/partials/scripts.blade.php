@@ -383,6 +383,293 @@
                     availableElements.push(el);
                 });
             }
+            // Expose to converter so it can handle custom shortcode tags
+            window.lazyCustomElements = customElements;
+
+            // Canvas preview helpers for custom elements
+            const _CE_TEXT_TYPES  = ['text', 'textarea', 'textfield'];
+            const _CE_COLOR_TYPES = ['color', 'colorpicker', 'colorpickeralpha'];
+            const _CE_IMAGE_TYPES = ['image', 'media'];
+
+            // Derive the storage key for a param (handles array param_name sugar via _ceResolveName).
+            const customParamKey = (param) => {
+                if (Array.isArray(param.param_name)) return _ceResolveName(param).key;
+                return param.param_name || (param.heading ? param.heading.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') : null);
+            };
+
+            // Array param_name sugar → derive {key, applyTo, applyAs} (suffix decides property, prefix decides target)
+            const _CE_SUFFIX_AS = [['_hover_color','hover_color'],['_hover_bg','hover_bg'],['_color','color'],['_bg','bg'],['_typo',''],['_pad','padding'],['_margin','margin']];
+            const _ceStripBase = (k) => {
+                for (const [suf, as] of _CE_SUFFIX_AS) { if (k.endsWith(suf)) return [k.slice(0, -suf.length), as]; }
+                return [k, ''];
+            };
+            const _ceSlug = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+            const _ceResolveName = (p, contentKeys = []) => {
+                const pn = p.param_name;
+                if (Array.isArray(pn) && pn.length) {
+                    const [b0, as0] = _ceStripBase(pn[0]);
+                    if (b0 !== pn[0]) {
+                        // suffixed entries → first is storage key, strip suffix for targets
+                        return { key: pn[0], applyTo: p.apply_to || pn.map(k => _ceStripBase(k)[0]), applyAs: p.apply_as || as0 };
+                    }
+                    // bare target names → synthesise a non-colliding storage key
+                    let key = p.heading ? _ceSlug(p.heading) : ('cf_' + pn.join('_'));
+                    while (contentKeys.includes(key)) key += '_x';
+                    const nt = (p.type === 'colorpickeralpha' || p.type === 'colorpicker') ? 'color' : p.type;
+                    return { key, applyTo: p.apply_to || pn, applyAs: p.apply_as || (nt === 'dimensions' ? 'padding' : (nt === 'color' ? 'color' : '')) };
+                }
+                return { key: customParamKey(p), applyTo: p.apply_to, applyAs: p.apply_as };
+            };
+
+            // Type-aware default value for a param
+            const customParamDefault = (param) => {
+                if (param.value !== undefined) return param.value;
+                if (param.type === 'checkbox' || param.type === 'repeater') return [];
+                if (param.type === 'toggle') return false;
+                return '';
+            };
+
+            const getCustomElementPreviewColor = (el) => {
+                const def = customElements[el.type];
+                if (!def) return '';
+                for (const p of (def.params || [])) {
+                    if (_CE_COLOR_TYPES.includes(p.type)) return el.settings[p.param_name] || '';
+                }
+                for (const [k, f] of Object.entries(def.fields || {})) {
+                    if (_CE_COLOR_TYPES.includes(f.type || '')) return el.settings[k] || '';
+                }
+                return '';
+            };
+
+            // Returns array of { type: 'text'|'image', value, color } for all non-empty general fields
+            const getCustomElementPreviewFields = (el) => {
+                const def = customElements[el.type];
+                if (!def) return [];
+                const color  = getCustomElementPreviewColor(el);
+                const result = [];
+                const _autoKey = (p) => p.param_name || (p.heading ? p.heading.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') : null);
+                const allParams = def.params
+                    ? def.params.map(p => ({ key: _autoKey(p), type: p.type, tab: p.tab || 'general' }))
+                    : Object.entries(def.fields || {}).map(([k, f]) => ({ key: k, type: f.type || 'text', tab: f.tab || 'general' }));
+
+                for (const p of allParams) {
+                    const val = el.settings[p.key];
+                    if (val === undefined || val === null || val === '') continue;
+                    if (_CE_IMAGE_TYPES.includes(p.type)) {
+                        result.push({ type: 'image', value: String(val) });
+                    } else if (_CE_TEXT_TYPES.includes(p.type) && p.tab !== 'design') {
+                        result.push({ type: 'text', value: String(val), color, primary: result.filter(r => r.type === 'text').length === 0 });
+                    }
+                    if (result.length >= 4) break;
+                }
+                return result;
+            };
+
+            const getCustomElementPreviewText = (el) => {
+                const fields = getCustomElementPreviewFields(el);
+                const tf = fields.find(f => f.type === 'text');
+                return tf ? tf.value : '';
+            };
+
+            // ── Convention-based live canvas renderer for custom elements ──────────────
+            // Content fields are rendered; design fields relate by prefix:
+            //   {base}_color, {base}_bg, {base}_typo_*, {base}_pad_*, {base}_margin_*, {base}_align
+            const _CE_CONTENT_TYPES = ['text','textfield','textarea','wysiwyg','image','media','icon','button','repeater','date','number','slider','select','radio','checkbox','url','link'];
+            // A field renders as content unless it's a design modifier (an align select/radio, or an apply_to/array relation).
+            const _ceIsContent = (f) => _CE_CONTENT_TYPES.includes(f.type)
+                && !((f.type === 'select' || f.type === 'radio') && (f.key || '').endsWith('_align'))
+                && !f.applyTo;
+
+            const _ceFields = (def) => {
+                if (def.params && def.params.length) {
+                    // pre-scan content-field keys so bare-target arrays avoid colliding with them
+                    const contentKeys = def.params
+                        .filter(p => _CE_CONTENT_TYPES.includes(p.type))
+                        .map(p => (Array.isArray(p.param_name) ? p.param_name[0] : p.param_name) || (p.heading ? _ceSlug(p.heading) : ''))
+                        .filter(Boolean);
+                    return def.params.map(p => {
+                        const r = _ceResolveName(p, contentKeys);
+                        return { key: r.key, type: p.type, raw: p, applyTo: r.applyTo, applyAs: r.applyAs };
+                    });
+                }
+                if (def.fields) return Object.entries(def.fields).map(([k, f]) => ({ key: k, type: f.type, raw: f, applyTo: f.apply_to, applyAs: f.apply_as }));
+                return [];
+            };
+
+            const _ceUnit = (v) => (v !== undefined && v !== null && v !== '' && /^-?\d+(\.\d+)?$/.test(String(v))) ? v + 'px' : v;
+
+            // typography CSS from a prefix (reads {prefix}_family/_size/_weight/_line_height/_letter_spacing/_transform)
+            const _ceTypo = (s, tp) => {
+                const o = {};
+                if (s[tp + '_family'] && s[tp + '_family'] !== 'inherit') o.fontFamily = s[tp + '_family'];
+                if (s[tp + '_size'])           o.fontSize = _ceUnit(s[tp + '_size']);
+                if (s[tp + '_weight'])         o.fontWeight = s[tp + '_weight'];
+                if (s[tp + '_line_height'])    o.lineHeight = s[tp + '_line_height'];
+                if (s[tp + '_letter_spacing'] !== undefined && s[tp + '_letter_spacing'] !== '') o.letterSpacing = _ceUnit(s[tp + '_letter_spacing']);
+                if (s[tp + '_transform'] && s[tp + '_transform'] !== 'none') o.textTransform = s[tp + '_transform'];
+                return o;
+            };
+
+            // T/R/B/L edges from a prefix (reads {prefix}_top etc, responsive-aware) → CSS shorthand or null
+            const _ceEdges = (s, prefix) => {
+                const e = ['top','right','bottom','left'].map(side => {
+                    const v = getResponsiveVal(s, prefix + '_' + side, device.value);
+                    if (v === undefined || v === null || v === '') return null;
+                    const u = getResponsiveVal(s, prefix + '_' + side + '_unit', device.value) || 'px';
+                    return v + u;
+                });
+                return e.some(x => x !== null) ? e.map(x => x || '0').join(' ') : null;
+            };
+
+            // Build a CSS style object for a content field `base` from its prefix-related modifiers.
+            const _ceStyle = (s, base) => {
+                const st = {};
+                if (s[base + '_color']) st.color = s[base + '_color'];
+                if (s[base + '_bg'])    st.backgroundColor = s[base + '_bg'];
+                if (s[base + '_align']) st.textAlign = s[base + '_align'];
+                Object.assign(st, _ceTypo(s, base + '_typo'));
+                const p = _ceEdges(s, base + '_pad');    if (p) st.padding = p;
+                const m = _ceEdges(s, base + '_margin'); if (m) st.margin = m;
+                return st;
+            };
+
+            // Hover styles for a base → {color?, backgroundColor?} from {base}_hover_color / {base}_hover_bg
+            const _ceHover = (s, base) => {
+                const h = {};
+                if (s[base + '_hover_color']) h.color = s[base + '_hover_color'];
+                if (s[base + '_hover_bg'])    h.backgroundColor = s[base + '_hover_bg'];
+                return h;
+            };
+
+            // Contribution of a design field (with apply_to) to a target → { style:{}, hover:{} }
+            const _ceContrib = (s, f) => {
+                const out = { style: {}, hover: {} };
+                const as = f.applyAs || (f.type === 'dimensions' ? 'padding' : (['color','colorpicker','colorpickeralpha'].includes(f.type) ? 'color' : ''));
+                if (['color','colorpicker','colorpickeralpha'].includes(f.type)) {
+                    const v = s[f.key]; if (!v) return out;
+                    if (as === 'bg')              out.style.backgroundColor = v;
+                    else if (as === 'hover_color') out.hover.color = v;
+                    else if (as === 'hover_bg')    out.hover.backgroundColor = v;
+                    else                           out.style.color = v;
+                } else if (f.type === 'typography') {
+                    Object.assign(out.style, _ceTypo(s, f.key));
+                } else if (f.type === 'dimensions') {
+                    const e = _ceEdges(s, f.key);
+                    if (e) out.style[as === 'margin' ? 'margin' : 'padding'] = e;
+                }
+                return out;
+            };
+
+            // Detect which content base a design/modifier field targets (by type + suffix).
+            const _ceModifierBase = (f) => {
+                const k = f.key; if (!k) return null;
+                if (['color','colorpicker','colorpickeralpha'].includes(f.type)) {
+                    if (k.endsWith('_hover_color')) return k.slice(0, -12);
+                    if (k.endsWith('_hover_bg'))    return k.slice(0, -9);
+                    if (k.endsWith('_color'))       return k.slice(0, -6);
+                    if (k.endsWith('_bg'))          return k.slice(0, -3);
+                }
+                if (f.type === 'typography' && k.endsWith('_typo')) return k.slice(0, -5);
+                if (f.type === 'dimensions') {
+                    if (k.endsWith('_pad'))    return k.slice(0, -4);
+                    if (k.endsWith('_margin')) return k.slice(0, -7);
+                }
+                if ((f.type === 'select' || f.type === 'radio') && k.endsWith('_align')) return k.slice(0, -6);
+                return null;
+            };
+
+            // Returns { wrapperStyle, items, hoverCss } for live canvas rendering.
+            const getCustomElementRender = (el) => {
+                const def = customElements[el.type];
+                if (!def) return { wrapperStyle: {}, items: [], hoverCss: '' };
+                const s = el.settings || {};
+                const elId = el.id || 'x';
+                const fields = _ceFields(def);
+                const contentKeys = fields.filter(_ceIsContent).map(f => f.key);
+
+                let hoverCss = '';
+                let _hcSeq = 0;
+                const _hoverClass = (hv) => {
+                    const decl = [];
+                    if (hv.color)           decl.push('color:' + hv.color + ' !important');
+                    if (hv.backgroundColor) decl.push('background-color:' + hv.backgroundColor + ' !important');
+                    if (!decl.length) return '';
+                    const cls = 'lzceh-' + elId + '-' + (_hcSeq++);
+                    hoverCss += '.' + cls + ':hover{' + decl.join(';') + '}';
+                    return cls;
+                };
+
+                // Explicit multi-target relations: a design field with `apply_to` styles one or more content fields.
+                const explicit = {};
+                fields.forEach(f => {
+                    if (!f.applyTo) return;
+                    const targets = Array.isArray(f.applyTo) ? f.applyTo : [f.applyTo];
+                    const c = _ceContrib(s, f);
+                    targets.forEach(t => {
+                        if (!explicit[t]) explicit[t] = { style: {}, hover: {} };
+                        Object.assign(explicit[t].style, c.style);
+                        Object.assign(explicit[t].hover, c.hover);
+                    });
+                });
+
+                const items = [];
+                fields.forEach(f => {
+                    if (!_ceIsContent(f)) return;
+                    const style = Object.assign(_ceStyle(s, f.key), explicit[f.key] ? explicit[f.key].style : {});
+                    const hover = Object.assign(_ceHover(s, f.key), explicit[f.key] ? explicit[f.key].hover : {});
+                    const hoverClass = _hoverClass(hover);
+                    if (f.type === 'repeater') {
+                        const subDefs = f.raw.fields || f.raw.params || [];
+                        const subFields = subDefs.map(sp => ({ key: customParamKey(sp), type: sp.type }));
+                        items.push({ kind: 'repeater', key: f.key, style, hoverClass, rows: Array.isArray(s[f.key]) ? s[f.key] : [], subFields });
+                    } else {
+                        // checkbox → comma list; everything else → its scalar value
+                        const v = (f.type === 'checkbox') ? (Array.isArray(s[f.key]) ? s[f.key].join(', ') : '') : s[f.key];
+                        items.push({ kind: f.type, key: f.key, value: v, style, hoverClass });
+                    }
+                });
+
+                // Orphan prefix modifiers (no matching content field, no apply_to) → apply to wrapper
+                const wrapperStyle = {};
+                let wrapperHoverClass = '';
+                fields.forEach(f => {
+                    if (f.applyTo) return;
+                    const base = _ceModifierBase(f);
+                    if (base && !contentKeys.includes(base)) {
+                        Object.assign(wrapperStyle, _ceStyle(s, base));
+                        const hc = _hoverClass(_ceHover(s, base));
+                        if (hc) wrapperHoverClass = hc;
+                    }
+                });
+
+                return { wrapperStyle, wrapperHoverClass, items, hoverCss };
+            };
+
+            // Conditional field visibility for custom elements.
+            // cond can be a single object {field, value, operator?} or an array of them (AND logic).
+            const customFieldVisible = (settings, cond) => {
+                if (!cond) return true;
+                const checks = Array.isArray(cond) ? cond : [cond];
+                return checks.every(c => {
+                    if (!c || !c.field) return true;
+                    const actual   = settings ? settings[c.field] : undefined;
+                    const expected = c.value;
+                    switch (c.operator || '==') {
+                        case '==':       return actual == expected;
+                        case '!=':       return actual != expected;
+                        case '>':        return Number(actual) >  Number(expected);
+                        case '<':        return Number(actual) <  Number(expected);
+                        case '>=':       return Number(actual) >= Number(expected);
+                        case '<=':       return Number(actual) <= Number(expected);
+                        case 'in':       return Array.isArray(expected) && expected.includes(actual);
+                        case 'not_in':   return Array.isArray(expected) && !expected.includes(actual);
+                        case 'contains': return Array.isArray(actual) && actual.includes(expected);
+                        case 'truthy':   return !!actual;
+                        case 'falsy':    return !actual;
+                        default:         return actual == expected;
+                    }
+                });
+            };
 
             // Initialize layout
             onMounted(() => {
@@ -460,12 +747,24 @@
                                     // Apply defaults for missing settings from custom element definitions
                                     const type = item.type;
                                     const customDef = customElements[type] || Object.values(customElements).find(e => e.type === type);
-                                    if (customDef && customDef.fields) {
-                                        Object.entries(customDef.fields).forEach(([key, field]) => {
-                                            if (field.default !== undefined && item.settings[key] === undefined) {
-                                                item.settings[key] = field.default;
-                                            }
-                                        });
+                                    if (customDef) {
+                                        // Old fields format: { key: { default, type, ... } }
+                                        if (customDef.fields) {
+                                            Object.entries(customDef.fields).forEach(([key, field]) => {
+                                                if (field.default !== undefined && item.settings[key] === undefined) {
+                                                    item.settings[key] = field.default;
+                                                }
+                                            });
+                                        }
+                                        // New params format (Avada-style): [{ param_name, value, ... }]
+                                        if (customDef.params) {
+                                            customDef.params.forEach(param => {
+                                                const key = customParamKey(param);
+                                                if (key && item.settings[key] === undefined) {
+                                                    item.settings[key] = customParamDefault(param);
+                                                }
+                                            });
+                                        }
                                     }
                                 }
                             });
@@ -639,38 +938,49 @@
                     if (!editingElement.value) return;
                     const elId = editingElement.value.id;
                     const type = editingElement.value.type;
-                    
-                    // Look for custom element definition
-                    const customDef = customElements[type] || Object.values(customElements).find(e => e.type === type);
-                    if (!customDef || !customDef.fields) return;
 
-                    Object.entries(customDef.fields).forEach(([key, field]) => {
-                        if (field.type === 'wysiwyg') {
-                            const selector = `#rich-editor-${elId}-${key}`;
-                            tinymce.remove(selector);
-                            tinymce.init({
-                                selector: selector,
-                                menubar: false,
-                                height: 350,
-                                plugins: 'lists link code table lists wordcount preview fullscreen',
-                                toolbar1: 'formatselect | bold italic underline strikethrough blockquote',
-                                toolbar2: 'alignleft aligncenter alignright alignjustify',
-                                toolbar3: 'bullist numlist outdent indent link table | code fullscreen',
-                                valid_elements: '*[*]',
-                                extended_valid_elements: '*[*]',
-                                entity_encoding: 'raw',
-                                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; font-size:14px; padding: 10px; }',
-                                branding: false,
-                                setup: (editor) => {
-                                    editor.on('change keyup', () => {
-                                        editingElement.value.settings[key] = editor.getContent();
-                                    });
-                                    editor.on('init', () => {
-                                        editor.setContent(editingElement.value.settings[key] || '');
-                                    });
-                                }
-                            });
+                    const customDef = customElements[type] || Object.values(customElements).find(e => e.type === type);
+                    if (!customDef) return;
+
+                    // Collect wysiwyg field keys from both params (new) and fields (old) formats
+                    const wysiwygKeys = [];
+                    const _autoKey = (p) => p.param_name || (p.heading ? p.heading.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') : null);
+                    (customDef.params || []).forEach(p => {
+                        if (p.type === 'wysiwyg' || p.type === 'textarea_html') {
+                            const k = _autoKey(p);
+                            if (k) wysiwygKeys.push(k);
                         }
+                    });
+                    Object.entries(customDef.fields || {}).forEach(([key, field]) => {
+                        if (field.type === 'wysiwyg' || field.type === 'textarea_html') wysiwygKeys.push(key);
+                    });
+                    if (!wysiwygKeys.length) return;
+
+                    wysiwygKeys.forEach(key => {
+                        const selector = `#rich-editor-${elId}-${key}`;
+                        tinymce.remove(selector);
+                        tinymce.init({
+                            selector: selector,
+                            menubar: false,
+                            height: 350,
+                            plugins: 'lists link code table lists wordcount preview fullscreen',
+                            toolbar1: 'formatselect | bold italic underline strikethrough blockquote',
+                            toolbar2: 'alignleft aligncenter alignright alignjustify',
+                            toolbar3: 'bullist numlist outdent indent link table | code fullscreen',
+                            valid_elements: '*[*]',
+                            extended_valid_elements: '*[*]',
+                            entity_encoding: 'raw',
+                            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; font-size:14px; padding: 10px; }',
+                            branding: false,
+                            setup: (editor) => {
+                                editor.on('change keyup', () => {
+                                    editingElement.value.settings[key] = editor.getContent();
+                                });
+                                editor.on('init', () => {
+                                    editor.setContent(editingElement.value.settings[key] || '');
+                                });
+                            }
+                        });
                     });
                 }, 100);
             };
@@ -1319,6 +1629,19 @@
                 }
             };
 
+            // Generic media picker that writes into any target object (used by custom element repeater rows & sub-fields)
+            const openMediaModalForTarget = (targetObj, key) => {
+                if (!targetObj) return;
+                if (window.openMediaModal) {
+                    window.openMediaModal((selectedMedia) => {
+                        targetObj[key] = '/storage/' + selectedMedia.path;
+                    });
+                } else {
+                    const url = prompt('Enter image URL:', targetObj[key] || '');
+                    if (url !== null) targetObj[key] = url;
+                }
+            };
+
             const openGalleryImageMedia = (idx) => {
                 const el = editingElement.value;
                 if (!el || !el.settings || !Array.isArray(el.settings.images)) return;
@@ -1367,7 +1690,9 @@
             };
 
             const openColorPicker = (event, obj, colorKey, opacityKey = null, cascadeColor = null) => {
-                _closeActivePickr(true);
+                // Commit (don't revert) any previously open picker — its value was already applied live.
+                // Reverting here wiped colors set on other targets (e.g. column bg vs element color).
+                _closeActivePickr(false);
 
                 const target = event.currentTarget;
                 const origColor = (obj[colorKey] !== undefined && obj[colorKey] !== null && obj[colorKey] !== '')
@@ -1386,7 +1711,7 @@
                     defaultRepresentation: 'HEXA',
                     components: {
                         preview: true,
-                        opacity: !!opacityKey,
+                        opacity: true,
                         hue: true,
                         interaction: {
                             hex: true,
@@ -1406,9 +1731,13 @@
 
                 pickr.on('save', (color, instance) => {
                     const rgba = color.toRGBA();
-                    obj[colorKey] = '#' + color.toHEXA()[0] + color.toHEXA()[1] + color.toHEXA()[2];
                     if (opacityKey) {
+                        // separate opacity key: keep 6-digit hex + numeric opacity (legacy behaviour)
+                        obj[colorKey]   = '#' + color.toHEXA()[0] + color.toHEXA()[1] + color.toHEXA()[2];
                         obj[opacityKey] = parseFloat((rgba[3]).toFixed(2));
+                    } else {
+                        // no opacity key: bake alpha into the value as 8-digit hex (#RRGGBBAA)
+                        obj[colorKey] = color.toHEXA().toString();
                     }
                     instance.hide();
                     instance.destroy();
@@ -1426,9 +1755,11 @@
                 }).on('change', (color, source) => {
                     if (source === 'input') return;
                     const rgba = color.toRGBA();
-                    obj[colorKey] = '#' + color.toHEXA()[0] + color.toHEXA()[1] + color.toHEXA()[2];
                     if (opacityKey) {
+                        obj[colorKey]   = '#' + color.toHEXA()[0] + color.toHEXA()[1] + color.toHEXA()[2];
                         obj[opacityKey] = parseFloat((rgba[3]).toFixed(2));
+                    } else {
+                        obj[colorKey] = color.toHEXA().toString();
                     }
                 });
 
@@ -2426,12 +2757,20 @@
                     }
                 };
 
-                // Apply custom element defaults
+                // Apply custom element defaults (both old fields + new params format)
                 const customDef = Object.values(customElements).find(e => e.type === type);
-                if (customDef && customDef.fields) {
-                    Object.entries(customDef.fields).forEach(([key, field]) => {
-                        if (field.default !== undefined) newEl.settings[key] = field.default;
-                    });
+                if (customDef) {
+                    if (customDef.fields) {
+                        Object.entries(customDef.fields).forEach(([key, field]) => {
+                            if (field.default !== undefined) newEl.settings[key] = field.default;
+                        });
+                    }
+                    if (customDef.params) {
+                        customDef.params.forEach(param => {
+                            const k = customParamKey(param);
+                            if (k) newEl.settings[k] = customParamDefault(param);
+                        });
+                    }
                 }
 
                 // Initialize transient UI state for specific elements
@@ -2946,7 +3285,7 @@
                 addElementFromElementModal, addNestedColumnFromElementModal,
                 showElementModal, elementModalTab, elementModalRestricted, elementModalAllowedTabs, openElementModal, selectNestedLayout,
                 editingColumn, editingElement,
-                addContainer, addColumn, addNestedColumn, addElement, duplicateContainer, duplicateColumn, duplicateElement, duplicateNestedColumn, duplicateNestedRow, duplicateNestedElement, saveLayout, openMediaModal, openGalleryImageMedia, openGalleryBulkMedia, galleryDragStart, galleryDrop, openColorPicker,
+                addContainer, addColumn, addNestedColumn, addElement, duplicateContainer, duplicateColumn, duplicateElement, duplicateNestedColumn, duplicateNestedRow, duplicateNestedElement, saveLayout, openMediaModal, openMediaModalForTarget, openGalleryImageMedia, openGalleryBulkMedia, galleryDragStart, galleryDrop, openColorPicker,
                 isDragging, isColumnDrag, dragType, dragSource, dragCi, dragColi, dragEli, dragNcoli, startDrag,
                 onDragStart, onDragEnd, onDragOver, onDrop, dragTarget, dragPosition,
                 canvasStyle, containerStyle, containerInnerStyle, columnOuterStyle, columnInnerStyle, formatBasisToFraction, updateBasis, hexToRgba, getUnitVal,
@@ -2970,7 +3309,13 @@
                 applyButtonSize, searchIconQuery, filteredIcons, selectIcon, activeIconTab, clearColorField, activeAccordionItem, activeTabsItem, activeIconListItem,
                 lazyMenuData: reactive(window.lazyMenuData || {}),
                 lazyMenusList: window.lazyMenusList || {},
-                postCardMode
+                postCardMode,
+                customElements,
+                getCustomElementPreviewText,
+                getCustomElementPreviewColor,
+                getCustomElementPreviewFields,
+                getCustomElementRender,
+                customFieldVisible
             };
         }
     }).directive('tomselect', {

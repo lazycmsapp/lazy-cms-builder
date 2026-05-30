@@ -16,20 +16,38 @@ class OrderNotificationMail extends Mailable
     public $order;
     public $notificationType;
     public $customMessage;
+    public $recipientType;
 
-    public function __construct(Order $order, $notificationType = 'placed', $customMessage = null)
+    public function __construct(Order $order, $notificationType = 'placed', $customMessage = null, $recipientType = 'customer')
     {
         $this->order = $order;
         $this->notificationType = $notificationType; // 'placed', 'status_updated'
         $this->customMessage = $customMessage;
+        $this->recipientType = $recipientType; // 'customer', 'admin'
     }
 
     public function envelope(): Envelope
     {
         $shopName = get_cms_option('site_name', get_shop_option('shop_store_name', 'Lazy Shop'));
-        $subject = $this->notificationType === 'placed' 
-            ? "Order Confirmation - Order #{$this->order->order_number}"
-            : "Update on your order #{$this->order->order_number} [" . strtoupper($this->order->status) . "]";
+
+        if ($this->notificationType === 'status_updated') {
+            $tplKey = 'email_template_order_status_updated';
+            $defaultSubject = 'Update on your order #{{order_number}} [{{new_status}}]';
+        } elseif ($this->recipientType === 'admin') {
+            $tplKey = 'email_template_order_placed_admin';
+            $defaultSubject = '[New Order] #{{order_number}} — {{customer_name}}';
+        } else {
+            $tplKey = 'email_template_order_placed_customer';
+            $defaultSubject = 'Order Confirmation - Order #{{order_number}}';
+        }
+
+        $tplData = json_decode(get_cms_option($tplKey, '{}'), true) ?: [];
+        $subjectTpl = $tplData['subject'] ?? $defaultSubject;
+        $subject = str_replace(
+            ['{{order_number}}', '{{customer_name}}', '{{new_status}}', '{{site_name}}'],
+            [$this->order->order_number, $this->order->first_name . ' ' . $this->order->last_name, ucfirst($this->order->status), $shopName],
+            $subjectTpl
+        );
 
         return new Envelope(
             from: new \Illuminate\Mail\Mailables\Address(

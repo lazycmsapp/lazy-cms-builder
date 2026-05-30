@@ -41,14 +41,29 @@ class CustomFieldController extends Controller
             $order = 0;
             foreach ($request->fields as $fieldData) {
                 if (empty($fieldData['label']) || empty($fieldData['name'])) continue;
+                $type = $fieldData['type'] ?? 'text';
+                if ($type === 'repeater') {
+                    $sfLabels = $fieldData['sf_label'] ?? [];
+                    $sfNames  = $fieldData['sf_name']  ?? [];
+                    $sfTypes  = $fieldData['sf_type']  ?? [];
+                    $subFields = [];
+                    foreach ($sfLabels as $i => $label) {
+                        if (empty($label)) continue;
+                        $subFields[] = ['label' => $label, 'name' => $sfNames[$i] ?? '', 'type' => $sfTypes[$i] ?? 'text'];
+                    }
+                    $params = ['sub_fields' => $subFields];
+                } else {
+                    $params = ['options' => $fieldData['options'] ?? ''];
+                }
                 Field::create([
                     'field_group_id' => $group->id,
-                    'label' => $fieldData['label'],
-                    'name' => $fieldData['name'],
-                    'type' => $fieldData['type'] ?? 'text',
-                    'instructions' => $fieldData['instructions'] ?? null,
-                    'required' => isset($fieldData['required']),
-                    'order' => $order++,
+                    'label'          => $fieldData['label'],
+                    'name'           => $fieldData['name'],
+                    'type'           => $type,
+                    'instructions'   => $fieldData['instructions'] ?? null,
+                    'required'       => isset($fieldData['required']),
+                    'params'         => $params,
+                    'order'          => $order++,
                 ]);
             }
         }
@@ -79,11 +94,26 @@ class CustomFieldController extends Controller
         // Update existing fields
         if ($request->has('fields')) {
             foreach ($request->fields as $id => $data) {
+                $type = $data['type'];
+                if ($type === 'repeater') {
+                    $sfLabels = $data['sf_label'] ?? [];
+                    $sfNames  = $data['sf_name']  ?? [];
+                    $sfTypes  = $data['sf_type']  ?? [];
+                    $subFields = [];
+                    foreach ($sfLabels as $i => $label) {
+                        if (empty($label)) continue;
+                        $subFields[] = ['label' => $label, 'name' => $sfNames[$i] ?? '', 'type' => $sfTypes[$i] ?? 'text'];
+                    }
+                    $params = json_encode(['sub_fields' => $subFields]);
+                } else {
+                    $params = json_encode(['options' => $data['options'] ?? '']);
+                }
                 Field::where('id', $id)->update([
-                    'label' => $data['label'],
-                    'name' => $data['name'],
-                    'type' => $data['type'],
+                    'label'    => $data['label'],
+                    'name'     => $data['name'],
+                    'type'     => $type,
                     'required' => isset($data['required']),
+                    'params'   => $params,
                 ]);
             }
         }
@@ -92,12 +122,27 @@ class CustomFieldController extends Controller
         if ($request->has('new_fields')) {
             foreach ($request->new_fields as $data) {
                 if (empty($data['label']) || empty($data['name'])) continue;
+                $type = $data['type'] ?? 'text';
+                if ($type === 'repeater') {
+                    $sfLabels = $data['sf_label'] ?? [];
+                    $sfNames  = $data['sf_name']  ?? [];
+                    $sfTypes  = $data['sf_type']  ?? [];
+                    $subFields = [];
+                    foreach ($sfLabels as $i => $label) {
+                        if (empty($label)) continue;
+                        $subFields[] = ['label' => $label, 'name' => $sfNames[$i] ?? '', 'type' => $sfTypes[$i] ?? 'text'];
+                    }
+                    $params = ['sub_fields' => $subFields];
+                } else {
+                    $params = ['options' => $data['options'] ?? ''];
+                }
                 Field::create([
                     'field_group_id' => $field->id,
-                    'label' => $data['label'],
-                    'name' => $data['name'],
-                    'type' => $data['type'] ?? 'text',
-                    'required' => isset($data['required']),
+                    'label'          => $data['label'],
+                    'name'           => $data['name'],
+                    'type'           => $type,
+                    'required'       => isset($data['required']),
+                    'params'         => $params,
                 ]);
             }
         }

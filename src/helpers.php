@@ -784,6 +784,343 @@ if (!function_exists('apply_lazy_filters')) {
     }
 }
 
+if (!function_exists('lazy_normalize_custom_fields')) {
+    /**
+     * Normalize a custom builder element definition (registered via lazy_builder_elements)
+     * into a flat, keyed fields array the builder + frontend can consume consistently.
+     *
+     * Handles both the legacy `fields` map and the Avada-style indexed `params` array,
+     * auto-generates param_name from heading, normalizes type aliases, and preserves
+     * extended keys (condition, options, unit, step, fields/params for repeaters, etc.).
+     *
+     * @return array<string,array> keyed by field key
+     */
+    function lazy_normalize_custom_fields(array $custEl): array
+    {
+        $typeMap = [
+            'textfield'        => 'text',
+            'colorpickeralpha' => 'color',
+            'colorpicker'      => 'color',
+            'textarea_html'    => 'wysiwyg',
+        ];
+
+        // suffix → apply_as + base stripping (shared with the array param_name sugar)
+        $suffixAs = ['_hover_color' => 'hover_color', '_hover_bg' => 'hover_bg', '_color' => 'color', '_bg' => 'bg', '_typo' => '', '_pad' => 'padding', '_margin' => 'margin'];
+        $stripBase = function ($k) use ($suffixAs) {
+            foreach ($suffixAs as $suf => $as) {
+                if (str_ends_with($k, $suf)) return [substr($k, 0, -strlen($suf)), $as];
+            }
+            return [$k, ''];
+        };
+
+        $slug = fn($t) => trim(preg_replace('/[^a-z0-9]+/', '_', strtolower($t)), '_');
+        $contentTypes = ['text','textfield','textarea','wysiwyg','image','media','icon','button','repeater'];
+
+        // Pre-scan content-field keys so array param_name sugar can avoid colliding with them
+        $contentKeys = [];
+        foreach (($custEl['params'] ?? []) as $p) {
+            if (!in_array($p['type'] ?? 'text', $contentTypes, true)) continue;
+            $pn = $p['param_name'] ?? null;
+            $ck = is_array($pn) ? ($pn[0] ?? null) : $pn;
+            if (!$ck && !empty($p['heading'])) $ck = $slug($p['heading']);
+            if ($ck) $contentKeys[] = $ck;
+        }
+
+        $autoKey = function ($p) use ($slug) {
+            $pn = $p['param_name'] ?? null;
+            if (is_array($pn) && !empty($pn)) return $pn[0];
+            if (!empty($pn)) return $pn;
+            if (!empty($p['heading'])) return $slug($p['heading']);
+            return null;
+        };
+
+        // Start from legacy fields map (already keyed)
+        $fields = $custEl['fields'] ?? [];
+
+        foreach (($custEl['params'] ?? []) as $p) {
+            $key = $autoKey($p);
+            if (!$key) continue;
+            $rawType = $p['type'] ?? 'text';
+
+            // Array param_name → sugar for relating one field to many targets
+            $applyTo = $p['apply_to'] ?? null;
+            $applyAs = $p['apply_as'] ?? null;
+            if (is_array($p['param_name'] ?? null) && !empty($p['param_name'])) {
+                $entries = $p['param_name'];
+                [$b0, $as0] = $stripBase($entries[0]);
+                if ($b0 !== $entries[0]) {
+                    // Suffixed entries (e.g. title_color) → first is the storage key, strip suffix for targets
+                    if ($applyAs === null) $applyAs = $as0;
+                    if ($applyTo === null) $applyTo = array_map(fn($k) => $stripBase($k)[0], $entries);
+                } else {
+                    // Bare target names (e.g. ['title','subtitle']) → synthesise a non-colliding storage key
+                    $base = !empty($p['heading']) ? $slug($p['heading']) : ('cf_' . substr(md5(implode(',', $entries)), 0, 6));
+                    while (in_array($base, $contentKeys, true)) $base .= '_x';
+                    $key = $base;
+                    if ($applyTo === null) $applyTo = $entries;
+                    if ($applyAs === null) {
+                        $nt = $typeMap[$rawType] ?? $rawType;
+                        $applyAs = $nt === 'dimensions' ? 'padding' : ($nt === 'color' ? 'color' : '');
+                    }
+                }
+            }
+
+            $fields[$key] = [
+                'type'        => $typeMap[$rawType] ?? $rawType,
+                'raw_type'    => $rawType,
+                'label'       => $p['heading'] ?? $key,
+                'default'     => $p['value'] ?? '',
+                'tab'         => $p['tab'] ?? 'general',
+                'placeholder' => $p['placeholder'] ?? '',
+                'description' => $p['description'] ?? '',
+                'options'     => $p['options'] ?? [],
+                'rows'        => $p['rows'] ?? null,
+                'min'         => $p['min'] ?? null,
+                'max'         => $p['max'] ?? null,
+                'step'        => $p['step'] ?? null,
+                'unit'        => $p['unit'] ?? '',
+                'condition'   => $p['condition'] ?? null,
+                'dynamic'     => $p['dynamic'] ?? false,
+                'apply_to'    => $applyTo,
+                'apply_as'    => $applyAs,
+                // repeater sub-fields (either key works)
+                'fields'      => $p['fields'] ?? [],
+                'params'      => $p['params'] ?? [],
+            ];
+        }
+
+        return $fields;
+    }
+}
+
+if (!function_exists('lazy_resolve_dynamic_value')) {
+    /**
+     * Resolve a custom element dynamic-source token (post_title, post_url, …) to a real value
+     * using the current post context. Returns '' when unresolvable.
+     */
+    function lazy_resolve_dynamic_value(string $source, $post = null)
+    {
+        if ($post === null) {
+            $shared = view()->getShared();
+            $post = $shared['post'] ?? null;
+        }
+
+        switch ($source) {
+            case 'site_name':
+                return function_exists('get_cms_option') ? get_cms_option('site_name', config('app.name', '')) : config('app.name', '');
+            case 'post_title':
+                return $post->title ?? '';
+            case 'post_url':
+                return ($post && function_exists('get_lazy_permalink')) ? get_lazy_permalink($post) : ($post->slug ?? '#');
+            case 'post_excerpt':
+                if (!$post) return '';
+                return $post->excerpt ?? (function_exists('get_lazy_excerpt') ? get_lazy_excerpt($post) : '');
+            case 'post_date':
+                return ($post && isset($post->created_at)) ? $post->created_at->format('F j, Y') : '';
+            case 'post_author':
+                return $post->author->name ?? ($post->user->name ?? '');
+            case 'featured_image':
+                if (!$post) return '';
+                $img = $post->featured_image ?? $post->thumbnail ?? '';
+                if ($img && !str_starts_with($img, 'http') && !str_starts_with($img, '/storage')) $img = '/storage/' . ltrim($img, '/');
+                return $img;
+            default:
+                return '';
+        }
+    }
+}
+
+if (!function_exists('lazy_apply_custom_dynamic')) {
+    /**
+     * Replace any `{key}_dynamic` setting with the resolved value into `{key}`,
+     * so both custom templates and the generic renderer receive final values.
+     */
+    function lazy_apply_custom_dynamic(array $settings, $post = null): array
+    {
+        foreach ($settings as $k => $v) {
+            if (is_string($k) && str_ends_with($k, '_dynamic') && !empty($v)) {
+                $base = substr($k, 0, -strlen('_dynamic'));
+                $settings[$base] = lazy_resolve_dynamic_value($v, $post);
+            }
+        }
+        return $settings;
+    }
+}
+
+if (!function_exists('lazy_custom_element_render')) {
+    /**
+     * Build the convention-based render data for a custom element — the PHP mirror of the
+     * builder canvas (getCustomElementRender). Used by the generic frontend renderer so the
+     * front-end output matches the canvas preview 1:1 (incl. prefix relations + hover).
+     *
+     * Returns: ['wrapperStyle' => string, 'wrapperHoverClass' => string,
+     *           'hoverCss' => string, 'items' => [ {kind,key,value,style,hoverClass, url?,target?, rows?,subFields?} ]]
+     */
+    function lazy_custom_element_render(array $el, array $customDef): array
+    {
+        $s    = $el['settings'] ?? [];
+        $elId = $el['id'] ?? uniqid('ce');
+        $fields = lazy_normalize_custom_fields($customDef); // keyed, ordered
+        $contentTypes = ['text','textarea','wysiwyg','image','media','icon','button','repeater','date','number','slider','select','radio','checkbox','url','link'];
+        // A field renders as content unless it's a design modifier (align select/radio, or an apply_to relation).
+        $isContent = function (string $k, array $f) use ($contentTypes): bool {
+            if (!in_array($f['type'], $contentTypes, true)) return false;
+            if (in_array($f['type'], ['select','radio'], true) && str_ends_with($k, '_align')) return false;
+            if (!empty($f['apply_to'])) return false;
+            return true;
+        };
+
+        $contentKeys = [];
+        foreach ($fields as $k => $f) {
+            if ($isContent($k, $f)) $contentKeys[] = $k;
+        }
+
+        $unit = fn($v) => (is_numeric($v) ? $v . 'px' : $v);
+
+        // typography CSS decls from a prefix
+        $typoFor = function (string $tp) use ($s, $unit): array {
+            $css = [];
+            if (!empty($s[$tp . '_family']) && $s[$tp . '_family'] !== 'inherit') $css[] = 'font-family:' . $s[$tp . '_family'];
+            if (!empty($s[$tp . '_size']))   $css[] = 'font-size:' . $unit($s[$tp . '_size']);
+            if (!empty($s[$tp . '_weight'])) $css[] = 'font-weight:' . $s[$tp . '_weight'];
+            if (!empty($s[$tp . '_line_height'])) $css[] = 'line-height:' . $s[$tp . '_line_height'];
+            if (isset($s[$tp . '_letter_spacing']) && $s[$tp . '_letter_spacing'] !== '') $css[] = 'letter-spacing:' . $unit($s[$tp . '_letter_spacing']);
+            if (!empty($s[$tp . '_transform']) && $s[$tp . '_transform'] !== 'none') $css[] = 'text-transform:' . $s[$tp . '_transform'];
+            return $css;
+        };
+
+        // T/R/B/L shorthand from a prefix, or null
+        $edgesFor = function (string $prefix) use ($s): ?string {
+            $edges = []; $has = false;
+            foreach (['top','right','bottom','left'] as $side) {
+                $v = $s[$prefix . '_' . $side] ?? '';
+                if ($v === '' || $v === null) { $edges[] = '0'; }
+                else { $edges[] = $v . ($s[$prefix . '_' . $side . '_unit'] ?? 'px'); $has = true; }
+            }
+            return $has ? implode(' ', $edges) : null;
+        };
+
+        // Assemble inline CSS for a base from its prefix-related modifiers
+        $styleFor = function (string $base) use ($s, $typoFor, $edgesFor): string {
+            $css = [];
+            if (!empty($s[$base . '_color'])) $css[] = 'color:' . $s[$base . '_color'];
+            if (!empty($s[$base . '_bg']))    $css[] = 'background-color:' . $s[$base . '_bg'];
+            if (!empty($s[$base . '_align'])) $css[] = 'text-align:' . $s[$base . '_align'];
+            $css = array_merge($css, $typoFor($base . '_typo'));
+            if ($p = $edgesFor($base . '_pad'))    $css[] = 'padding:' . $p;
+            if ($m = $edgesFor($base . '_margin')) $css[] = 'margin:' . $m;
+            return implode(';', $css);
+        };
+
+        $hoverDecls = function (string $base) use ($s): array {
+            $d = [];
+            if (!empty($s[$base . '_hover_color'])) $d[] = 'color:' . $s[$base . '_hover_color'] . ' !important';
+            if (!empty($s[$base . '_hover_bg']))    $d[] = 'background-color:' . $s[$base . '_hover_bg'] . ' !important';
+            return $d;
+        };
+
+        // Contribution of an apply_to design field to a target → ['style' => string, 'hover' => array]
+        $contribFor = function (array $f) use ($s, $typoFor, $edgesFor): array {
+            $type = $f['type']; $key = $f['key'];
+            $as = $f['apply_as'] ?: ($type === 'dimensions' ? 'padding' : ($type === 'color' ? 'color' : ''));
+            $style = []; $hover = [];
+            if ($type === 'color') {
+                $v = $s[$key] ?? ''; if ($v === '' || $v === null) return ['style' => '', 'hover' => []];
+                if ($as === 'bg')              $style[] = 'background-color:' . $v;
+                elseif ($as === 'hover_color') $hover[] = 'color:' . $v . ' !important';
+                elseif ($as === 'hover_bg')    $hover[] = 'background-color:' . $v . ' !important';
+                else                           $style[] = 'color:' . $v;
+            } elseif ($type === 'typography') {
+                $style = $typoFor($key);
+            } elseif ($type === 'dimensions') {
+                $e = $edgesFor($key);
+                if ($e) $style[] = ($as === 'margin' ? 'margin:' : 'padding:') . $e;
+            }
+            return ['style' => implode(';', $style), 'hover' => $hover];
+        };
+
+        $modBase = function (string $key, string $type): ?string {
+            if ($type === 'color') {
+                if (str_ends_with($key, '_hover_color')) return substr($key, 0, -12);
+                if (str_ends_with($key, '_hover_bg'))    return substr($key, 0, -9);
+                if (str_ends_with($key, '_color'))        return substr($key, 0, -6);
+                if (str_ends_with($key, '_bg'))           return substr($key, 0, -3);
+            }
+            if ($type === 'typography' && str_ends_with($key, '_typo')) return substr($key, 0, -5);
+            if ($type === 'dimensions') {
+                if (str_ends_with($key, '_pad'))    return substr($key, 0, -4);
+                if (str_ends_with($key, '_margin')) return substr($key, 0, -7);
+            }
+            if (in_array($type, ['select','radio'], true) && str_ends_with($key, '_align')) return substr($key, 0, -6);
+            return null;
+        };
+
+        $hoverCss = ''; $hcSeq = 0;
+        $mkHoverClass = function (array $decls) use (&$hoverCss, &$hcSeq, $elId): string {
+            if (empty($decls)) return '';
+            $cls = 'lzceh-' . $elId . '-' . ($hcSeq++);
+            $hoverCss .= '.' . $cls . ':hover{' . implode(';', $decls) . '}';
+            return $cls;
+        };
+
+        // Explicit multi-target relations: design fields with `apply_to` style one or more content fields.
+        $explicit = []; // base => ['style' => [..], 'hover' => [..]]
+        foreach ($fields as $k => $f) {
+            if (empty($f['apply_to'])) continue;
+            $targets = is_array($f['apply_to']) ? $f['apply_to'] : [$f['apply_to']];
+            $c = $contribFor($f + ['key' => $k]);
+            foreach ($targets as $t) {
+                if (!isset($explicit[$t])) $explicit[$t] = ['style' => [], 'hover' => []];
+                if ($c['style'] !== '') $explicit[$t]['style'][] = $c['style'];
+                if (!empty($c['hover']))  $explicit[$t]['hover'] = array_merge($explicit[$t]['hover'], $c['hover']);
+            }
+        }
+
+        $items = [];
+        foreach ($fields as $k => $f) {
+            if (!$isContent($k, $f)) continue;
+            $style = $styleFor($k);
+            $hoverD = $hoverDecls($k);
+            if (isset($explicit[$k])) {
+                if (!empty($explicit[$k]['style'])) $style = trim($style . ';' . implode(';', $explicit[$k]['style']), ';');
+                $hoverD = array_merge($hoverD, $explicit[$k]['hover']);
+            }
+            $hoverClass = $mkHoverClass($hoverD);
+            if ($f['type'] === 'repeater') {
+                $subDefs = !empty($f['fields']) ? $f['fields'] : ($f['params'] ?? []);
+                $subFields = [];
+                foreach ($subDefs as $sp) {
+                    $sk = $sp['param_name'] ?? trim(preg_replace('/[^a-z0-9]+/', '_', strtolower($sp['heading'] ?? '')), '_');
+                    $subFields[] = ['key' => $sk, 'type' => $sp['type'] ?? 'text'];
+                }
+                $items[] = ['kind' => 'repeater', 'key' => $k, 'style' => $style, 'hoverClass' => $hoverClass,
+                            'rows' => (is_array($s[$k] ?? null) ? $s[$k] : []), 'subFields' => $subFields];
+            } elseif ($f['type'] === 'button') {
+                $items[] = ['kind' => 'button', 'key' => $k, 'value' => $s[$k] ?? '', 'style' => $style, 'hoverClass' => $hoverClass,
+                            'url' => $s[$k . '_url'] ?? '', 'target' => $s[$k . '_target'] ?? '_self'];
+            } else {
+                $val = ($f['type'] === 'checkbox') ? (is_array($s[$k] ?? null) ? implode(', ', $s[$k]) : '') : ($s[$k] ?? null);
+                $items[] = ['kind' => $f['type'], 'key' => $k, 'value' => $val, 'style' => $style, 'hoverClass' => $hoverClass];
+            }
+        }
+
+        // Orphan prefix modifiers (no matching content field, no apply_to) → wrapper
+        $wrapperStyle = ''; $wrapperHoverClass = '';
+        foreach ($fields as $k => $f) {
+            if (!empty($f['apply_to'])) continue;
+            $base = $modBase($k, $f['type']);
+            if ($base && !in_array($base, $contentKeys, true)) {
+                $ws = $styleFor($base);
+                if ($ws) $wrapperStyle .= ($wrapperStyle ? ';' : '') . $ws;
+                $hc = $mkHoverClass($hoverDecls($base));
+                if ($hc) $wrapperHoverClass = $hc;
+            }
+        }
+
+        return compact('wrapperStyle', 'wrapperHoverClass', 'hoverCss', 'items');
+    }
+}
+
 if (!function_exists('remove_lazy_action')) {
     function remove_lazy_action($tag, $callback, $priority = 10) {
         return \Acme\CmsDashboard\Core\HookManager::getInstance()->removeAction($tag, $callback, $priority);

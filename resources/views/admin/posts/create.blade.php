@@ -129,18 +129,76 @@
                                     @elseif($field->type === 'textarea')
                                         <textarea name="custom_fields[{{ $field->id }}]" rows="4" class="wp-input w-full" {{ $field->required ? 'required' : '' }}>{{ old('custom_fields.'.$field->id) }}</textarea>
                                     @elseif($field->type === 'select')
+                                        @php $selectOpts = array_filter(array_map('trim', explode("\n", $field->params['options'] ?? ''))); @endphp
                                         <select name="custom_fields[{{ $field->id }}]" class="wp-input w-full h-8 py-0" {{ $field->required ? 'required' : '' }}>
-                                            <option value="">Select an option</option>
+                                            <option value="">— Select —</option>
+                                            @foreach($selectOpts as $opt)
+                                                <option value="{{ $opt }}" {{ old('custom_fields.'.$field->id) === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                            @endforeach
                                         </select>
+                                    @elseif($field->type === 'checkbox')
+                                        @php
+                                            $cbOpts = array_filter(array_map('trim', explode("\n", $field->params['options'] ?? '')));
+                                            $cbOld  = (array) old('custom_fields.'.$field->id, []);
+                                        @endphp
+                                        <div class="space-y-2">
+                                            @foreach($cbOpts as $opt)
+                                                <label class="flex items-center gap-2 text-[13px] text-[#2c3338] cursor-pointer">
+                                                    <input type="checkbox" name="custom_fields[{{ $field->id }}][]" value="{{ $opt }}" {{ in_array($opt, $cbOld) ? 'checked' : '' }} class="rounded border-[#c3c4c7]">
+                                                    {{ $opt }}
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    @elseif($field->type === 'radio')
+                                        @php $radioOpts = array_filter(array_map('trim', explode("\n", $field->params['options'] ?? ''))); @endphp
+                                        <div class="space-y-2">
+                                            @foreach($radioOpts as $opt)
+                                                <label class="flex items-center gap-2 text-[13px] text-[#2c3338] cursor-pointer">
+                                                    <input type="radio" name="custom_fields[{{ $field->id }}]" value="{{ $opt }}" {{ old('custom_fields.'.$field->id) === $opt ? 'checked' : '' }}>
+                                                    {{ $opt }}
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    @elseif($field->type === 'repeater')
+                                        @php $subFields = $field->params['sub_fields'] ?? []; @endphp
+                                        @if(count($subFields) > 0)
+                                        <div class="repeater-field" data-field-id="{{ $field->id }}">
+                                            <div class="rep-rows space-y-3">
+                                                <div class="rep-row border border-[#c3c4c7] rounded-sm p-3 relative bg-[#f9f9f9]">
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        @foreach($subFields as $sf)
+                                                        <div>
+                                                            <label class="block text-[12px] font-bold text-[#1d2327] mb-1">{{ $sf['label'] }}</label>
+                                                            @if(($sf['type'] ?? 'text') === 'textarea')
+                                                                <textarea name="custom_fields[{{ $field->id }}][0][{{ $sf['name'] }}]" rows="2" class="wp-input w-full text-[13px]"></textarea>
+                                                            @elseif($sf['type'] === 'image')
+                                                                <div class="flex items-center gap-2">
+                                                                    <div class="w-14 h-14 bg-[#f0f0f1] border border-[#c3c4c7] rounded-sm flex items-center justify-center overflow-hidden shrink-0 cf-img-preview">
+                                                                        <svg class="w-6 h-6 text-[#c3c4c7]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                                    </div>
+                                                                    <button type="button" class="wp-btn-secondary h-8 px-3 text-[12px] cf-img-btn">Choose Image</button>
+                                                                    <input type="hidden" name="custom_fields[{{ $field->id }}][0][{{ $sf['name'] }}]" value="">
+                                                                </div>
+                                                            @else
+                                                                <input type="text" name="custom_fields[{{ $field->id }}][0][{{ $sf['name'] }}]" class="wp-input w-full text-[13px]">
+                                                            @endif
+                                                        </div>
+                                                        @endforeach
+                                                    </div>
+                                                    <button type="button" onclick="removeRepRow(this)" class="absolute top-2 right-2 text-[11px] text-[#d63638] hover:underline">Remove</button>
+                                                </div>
+                                            </div>
+                                            <button type="button" onclick="addRepRow(this, {{ $field->id }}, {{ json_encode($subFields) }})" class="mt-3 text-[12px] text-[#2271b1] hover:underline font-medium">+ Add Row</button>
+                                        </div>
+                                        @endif
                                     @elseif($field->type === 'wysiwyg')
                                         <textarea name="custom_fields[{{ $field->id }}]" class="wp-input w-full h-32" {{ $field->required ? 'required' : '' }}>{{ old('custom_fields.'.$field->id) }}</textarea>
                                     @elseif($field->type === 'image')
                                         <div class="flex items-center gap-4">
-                                            <div class="w-20 h-20 bg-[#f0f0f1] border border-[#c3c4c7] rounded-sm flex items-center justify-center overflow-hidden">
-                                                <img src="" class="hidden w-full h-full object-cover">
+                                            <div class="w-20 h-20 bg-[#f0f0f1] border border-[#c3c4c7] rounded-sm flex items-center justify-center overflow-hidden cf-img-preview">
                                                 <svg class="w-8 h-8 text-[#c3c4c7]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                             </div>
-                                            <button type="button" class="wp-btn-secondary h-8 px-4 text-[12px]">Choose Image</button>
+                                            <button type="button" class="wp-btn-secondary h-8 px-4 text-[12px] cf-img-btn">Choose Image</button>
                                             <input type="hidden" name="custom_fields[{{ $field->id }}]" value="{{ old('custom_fields.'.$field->id) }}" {{ $field->required ? 'required' : '' }}>
                                         </div>
                                     @else
@@ -984,6 +1042,52 @@
             if (!validatePostForm(e)) {
                 return false;
             }
+        });
+
+        function addRepRow(btn, fieldId, subFields) {
+            const container = btn.closest('.repeater-field');
+            const rowsContainer = container.querySelector('.rep-rows');
+            const rowIndex = rowsContainer.querySelectorAll('.rep-row').length;
+            let html = '<div class="rep-row border border-[#c3c4c7] rounded-sm p-3 relative bg-[#f9f9f9]"><div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
+            subFields.forEach(sf => {
+                html += `<div><label class="block text-[12px] font-bold text-[#1d2327] mb-1">${sf.label}</label>`;
+                if (sf.type === 'textarea') {
+                    html += `<textarea name="custom_fields[${fieldId}][${rowIndex}][${sf.name}]" rows="2" class="wp-input w-full text-[13px]"></textarea>`;
+                } else if (sf.type === 'image') {
+                    html += `<div class="flex items-center gap-2">
+                        <div class="w-14 h-14 bg-[#f0f0f1] border border-[#c3c4c7] rounded-sm flex items-center justify-center overflow-hidden shrink-0 cf-img-preview">
+                            <svg class="w-6 h-6 text-[#c3c4c7]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <button type="button" class="wp-btn-secondary h-8 px-3 text-[12px] cf-img-btn">Choose Image</button>
+                        <input type="hidden" name="custom_fields[${fieldId}][${rowIndex}][${sf.name}]" value="">
+                    </div>`;
+                } else {
+                    html += `<input type="text" name="custom_fields[${fieldId}][${rowIndex}][${sf.name}]" class="wp-input w-full text-[13px]">`;
+                }
+                html += '</div>';
+            });
+            html += '</div><button type="button" onclick="removeRepRow(this)" class="absolute top-2 right-2 text-[11px] text-[#d63638] hover:underline">Remove</button></div>';
+            rowsContainer.insertAdjacentHTML('beforeend', html);
+        }
+
+        function removeRepRow(btn) {
+            const row = btn.closest('.rep-row');
+            const container = row.closest('.rep-rows');
+            if (container.querySelectorAll('.rep-row').length > 1) row.remove();
+        }
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.cf-img-btn');
+            if (!btn) return;
+            const wrap = btn.parentElement;
+            const hidden = wrap.querySelector('input[type="hidden"]');
+            const preview = wrap.querySelector('.cf-img-preview');
+            if (!hidden) return;
+            window.openMediaModal(function(media) {
+                hidden.value = media.path;
+                if (preview) preview.innerHTML = `<img src="/storage/${media.path}" class="w-full h-full object-cover">`;
+                btn.textContent = 'Change Image';
+            });
         });
     </script>
 </x-cms-dashboard::layouts.admin>

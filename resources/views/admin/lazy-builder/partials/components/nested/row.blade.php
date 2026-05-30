@@ -261,13 +261,33 @@
                             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.menu')
                             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.card')
                             @includeIf('cms-dashboard::admin.lazy-builder.partials.components.elements.post-content')
-                            @foreach($customElements ?? [] as $type => $custEl)
-                                @if(in_array($type, ['text_block', 'button', 'special_text', 'image', 'menu'])) @continue @endif
-                                <div v-if="el.type === '{{ $type }}'" class="p-2 text-center border border-dashed border-slate-200 rounded bg-slate-50/50">
-                                    <i class="{{ $custEl['icon'] ?? 'fa fa-cube' }} text-lg text-slate-400 block mb-1"></i>
-                                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">{{ $custEl['name'] ?? $type }}</p>
-                                </div>
-                            @endforeach
+                            <!-- Custom Registered Blocks — convention-based live preview (excludes built-in types) -->
+                            @php
+                            $builtInTypesNested = "['text_block','special_text','text','button','image','menu','title','heading','spacer','html','counter','star_rating','gallery','accordion','icon_box','icon_list','tabs','video','card','post_grid','post_content','row']";
+                            @endphp
+                            <div v-if="customElements[el.type] !== undefined && !{!! $builtInTypesNested !!}.includes(el.type)"
+                                 :style="[{ width: '100%' }, getCustomElementRender(el).wrapperStyle, getCanvasVisibilityStyle(el.settings)]"
+                                 :class="['lazy-ce-preview', getCustomElementRender(el).wrapperHoverClass]">
+                                <component :is="'style'" v-if="getCustomElementRender(el).hoverCss" v-text="getCustomElementRender(el).hoverCss"></component>
+                                <template v-for="(it, ci) in getCustomElementRender(el).items" :key="ci">
+                                    <img v-if="(it.kind === 'image' || it.kind === 'media') && it.value" :src="it.value" :style="it.style" :class="it.hoverClass" class="max-w-full h-auto block">
+                                    <i v-else-if="it.kind === 'icon' && it.value" :class="[it.value, it.hoverClass]" :style="it.style"></i>
+                                    <button v-else-if="it.kind === 'button'" :style="it.style" :class="it.hoverClass" class="inline-block px-3 py-1.5 rounded bg-[#0091ea] text-white text-[12px] font-semibold" v-text="it.value || 'Button'"></button>
+                                    <div v-else-if="it.kind === 'repeater'" :style="it.style" :class="it.hoverClass" class="space-y-1.5">
+                                        <div v-for="(row, ri) in it.rows" :key="ri" class="flex items-center gap-2 flex-wrap">
+                                            <template v-for="(sf, si) in it.subFields" :key="si">
+                                                <img v-if="(sf.type === 'image' || sf.type === 'media') && row[sf.key]" :src="row[sf.key]" class="w-8 h-8 object-cover rounded">
+                                                <i v-else-if="sf.type === 'icon' && row[sf.key]" :class="row[sf.key]"></i>
+                                                <span v-else-if="row[sf.key]" class="text-[12px]" v-text="row[sf.key]"></span>
+                                            </template>
+                                        </div>
+                                        <p v-if="!it.rows.length" class="text-[10px] text-slate-300 italic">No rows</p>
+                                    </div>
+                                    <div v-else-if="it.value" :style="it.style" :class="it.hoverClass" v-html="it.value"></div>
+                                </template>
+                                <p v-if="!getCustomElementRender(el).items.length" class="text-[12px] font-semibold text-slate-400 text-center py-2"
+                                   v-text="customElements[el.type]?.name || el.type"></p>
+                            </div>
                         </template>
 
                         <!-- Nested Element Toolbar (Center, Compact & Expandable) -->

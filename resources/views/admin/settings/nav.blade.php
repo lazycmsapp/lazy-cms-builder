@@ -14,4 +14,7 @@
     <a href="{{ route('admin.settings.integrations') }}" class="px-4 py-2 text-[14px] {{ request()->routeIs('admin.settings.integrations') ? 'text-[#1d2327] font-semibold bg-white -mb-[1px] border-l border-t border-r border-[#c3c4c7] border-b-white' : 'text-[#2271b1] hover:text-[#135e96]' }}">
         Integrations
     </a>
+    <a href="{{ route('admin.settings.email-templates') }}" class="px-4 py-2 text-[14px] {{ request()->routeIs('admin.settings.email-templates') ? 'text-[#1d2327] font-semibold bg-white -mb-[1px] border-l border-t border-r border-[#c3c4c7] border-b-white' : 'text-[#2271b1] hover:text-[#135e96]' }}">
+        Email Templates
+    </a>
 </div>

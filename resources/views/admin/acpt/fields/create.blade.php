@@ -110,18 +110,30 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-[13px] font-bold text-[#1d2327] mb-1">Field Type</label>
-                                <select name="fields[{ID}][type]" onchange="updateDisplay(this, '.field-type-display')" class="wp-input w-full h-8 py-0">
+                                <select name="fields[{ID}][type]" onchange="updateDisplay(this, '.field-type-display'); toggleSelectOptions(this)" class="wp-input w-full h-8 py-0">
                                     <option value="text">Text</option>
                                     <option value="textarea">Textarea</option>
                                     <option value="select">Select</option>
+                                    <option value="checkbox">Checkbox</option>
+                                    <option value="radio">Radio Button</option>
                                     <option value="image">Image</option>
                                     <option value="wysiwyg">Rich Editor</option>
+                                    <option value="repeater">Repeater</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-[13px] font-bold text-[#1d2327] mb-1">Default Value</label>
                                 <input type="text" name="fields[{ID}][default_value]" class="wp-input w-full text-[13px]">
                             </div>
+                        </div>
+                        <div class="select-options-row hidden">
+                            <label class="block text-[13px] font-bold text-[#1d2327] mb-1">Options <span class="font-normal text-[#646970]">(one per line)</span></label>
+                            <textarea name="fields[{ID}][options]" rows="4" class="wp-input w-full text-[13px]" placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
+                        </div>
+                        <div class="repeater-subfields-row hidden mt-4">
+                            <label class="block text-[13px] font-bold text-[#1d2327] mb-2">Sub Fields</label>
+                            <div class="sf-list space-y-2 mb-3"></div>
+                            <button type="button" onclick="addSubField(this)" class="text-[12px] text-[#2271b1] hover:underline">+ Add Sub Field</button>
                         </div>
                     </div>
 
@@ -183,6 +195,39 @@
         function updateDisplay(input, targetClass) {
             const item = input.closest('.field-item');
             item.querySelector(targetClass).innerText = input.value;
+        }
+
+        function toggleSelectOptions(selectEl) {
+            const item = selectEl.closest('.field-item');
+            const optRow = item.querySelector('.select-options-row');
+            const repRow = item.querySelector('.repeater-subfields-row');
+            const val = selectEl.value;
+            if (optRow) optRow.classList.toggle('hidden', !['select', 'checkbox', 'radio'].includes(val));
+            if (repRow) repRow.classList.toggle('hidden', val !== 'repeater');
+        }
+
+        function addSubField(btn) {
+            const item = btn.closest('.field-item');
+            const rawId = item.dataset.id;
+            const prefix = String(rawId).startsWith('new_') ? `new_fields[${rawId.replace('new_', '')}]` : `fields[${rawId}]`;
+            const sfList = item.querySelector('.sf-list');
+            const html = `<div class="sf-row flex items-center gap-2 mt-1">
+                <input type="text" name="${prefix}[sf_label][]" placeholder="Label" oninput="autoSlugSF(this)" class="wp-input flex-1 text-[13px] h-8 py-0">
+                <input type="text" name="${prefix}[sf_name][]" placeholder="slug" class="wp-input flex-1 text-[13px] h-8 py-0 font-mono sf-name-input">
+                <select name="${prefix}[sf_type][]" class="wp-input w-28 h-8 py-0 text-[13px]">
+                    <option value="text">Text</option>
+                    <option value="textarea">Textarea</option>
+                    <option value="image">Image</option>
+                </select>
+                <button type="button" onclick="this.closest('.sf-row').remove()" class="text-[#d63638] text-[12px] hover:underline shrink-0">Remove</button>
+            </div>`;
+            sfList.insertAdjacentHTML('beforeend', html);
+        }
+
+        function autoSlugSF(input) {
+            const row = input.closest('.sf-row');
+            const nameInput = row.querySelector('.sf-name-input');
+            if (nameInput) nameInput.value = input.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
         }
 
         function switchFieldTab(btn, tabName) {

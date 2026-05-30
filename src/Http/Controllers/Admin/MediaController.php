@@ -110,6 +110,7 @@ class MediaController extends Controller
             
             $filename = Str::slug($originalName) . '-' . time();
             $isImage = strpos($mimeType, 'image/') === 0;
+            $yearMonth = now()->format('Y/m');
 
             $width = null;
             $height = null;
@@ -136,7 +137,7 @@ class MediaController extends Controller
                     $targetMime = $mimeType;
                 }
                 
-                $savePath = 'media/' . $saveFilename;
+                $savePath = 'media/' . $yearMonth . '/' . $saveFilename;
                 $processed = false;
 
                 // Try processing with GD
@@ -189,12 +190,12 @@ class MediaController extends Controller
                 // Fallback if processing failed or skipped
                 if (!$processed) {
                     $filename = $filename . '.' . $extension;
-                    $path = $file->storeAs('media', $filename, 'public');
+                    $path = $file->storeAs('media/' . $yearMonth, $filename, 'public');
                 }
             } else {
                 // Non-image files
                 $filename = $filename . '.' . $extension;
-                $path = $file->storeAs('media', $filename, 'public');
+                $path = $file->storeAs('media/' . $yearMonth, $filename, 'public');
             }
 
             // Ensure we have a path
@@ -264,13 +265,14 @@ class MediaController extends Controller
             $extension = pathinfo($media->path, PATHINFO_EXTENSION);
             $slug = \Illuminate\Support\Str::slug($newTitle);
             
-            // Generate unique filename
+            // Generate unique filename — preserve existing year/month directory
+            $dir = dirname($media->path);
             $newFilename = $slug . '.' . $extension;
-            $newPath = 'media/' . $newFilename;
+            $newPath = $dir . '/' . $newFilename;
 
             if (\Illuminate\Support\Facades\Storage::disk('public')->exists($newPath)) {
                 $newFilename = $slug . '-' . time() . '.' . $extension;
-                $newPath = 'media/' . $newFilename;
+                $newPath = $dir . '/' . $newFilename;
             }
 
             // Move the file
@@ -345,7 +347,8 @@ class MediaController extends Controller
                 $filename = pathinfo($media->filename, PATHINFO_FILENAME);
                 $extension = $autoWebp ? 'webp' : pathinfo($media->path, PATHINFO_EXTENSION);
                 $newFilename = $filename . '-' . time() . '.' . $extension;
-                $newPath = 'media/' . $newFilename;
+                $dir = dirname($media->path);
+                $newPath = $dir . '/' . $newFilename;
 
                 ob_start();
                 $success = false;

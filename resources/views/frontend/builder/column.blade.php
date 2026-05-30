@@ -618,10 +618,40 @@
                             @include($__elView, ['el' => $el])
                         @endif
                     @elseif($__customDef && $__elShow)
-                        @if(!empty($__customDef['template']))
-                            @include($__customDef['template'], ['el' => $el, 's' => $el['settings'] ?? []])
-                        @else
-                            @include('cms-dashboard::frontend.builder.elements.custom', ['el' => $el, 'customDef' => $__customDef])
+                        @php
+                            // Resolve dynamic-source fields into final values for both template + generic renderer
+                            $el['settings'] = lazy_apply_custom_dynamic($el['settings'] ?? [], $post ?? null);
+
+                            $__tpl        = !empty($__customDef['template'])
+                                         && \Illuminate\Support\Facades\View::exists($__customDef['template'])
+                                          ? $__customDef['template'] : null;
+                            $__elAnimType = $el['settings']['anim_type'] ?? '';
+                            // Master wrapper attributes
+                            $__ceV   = $el['settings']['visibility'] ?? ['mobile'=>true,'tablet'=>true,'desktop'=>true];
+                            $__ceVis = '';
+                            if (($__ceV['mobile']  ?? true) === false) $__ceVis .= ' lazy-hide-mobile';
+                            if (($__ceV['tablet']  ?? true) === false) $__ceVis .= ' lazy-hide-tablet';
+                            if (($__ceV['desktop'] ?? true) === false) $__ceVis .= ' lazy-hide-desktop';
+                            $__ceCssClass = $el['settings']['cssClass'] ?? '';
+                            $__ceCssId    = $el['settings']['cssId']    ?? '';
+                        @endphp
+                        @if($__elAnimType)
+                            <div class="lz-anim lz-anim-{{ $__elAnimType }}" style="width:100%"
+                                 data-anim-duration="{{ $el['settings']['anim_duration'] ?? 600 }}"
+                                 data-anim-delay="{{ $el['settings']['anim_delay'] ?? 0 }}"
+                                 data-anim-easing="{{ $el['settings']['anim_easing'] ?? 'ease' }}">
+                        @endif
+                        {{-- Master wrapper: builder handles visibility, class, id here --}}
+                        <div class="lazy-builder-element lazy-custom-block w-full{{ $__ceVis ? ' '.$__ceVis : '' }}{{ $__ceCssClass ? ' '.$__ceCssClass : '' }}"
+                             @if($__ceCssId) id="{{ $__ceCssId }}" @endif>
+                            @if($__tpl)
+                                @include($__tpl, ['el' => $el, 's' => $el['settings'] ?? []])
+                            @else
+                                @include('cms-dashboard::frontend.builder.elements.custom', ['el' => $el, 'customDef' => $__customDef])
+                            @endif
+                        </div>
+                        @if($__elAnimType)
+                            </div>
                         @endif
                     @endif
                 @endif

@@ -190,8 +190,29 @@
 <body>
 
 @php
-    $shopName = get_cms_option('site_name', get_shop_option('shop_store_name', 'Lazy Shop'));
+    $shopName  = get_cms_option('site_name', get_shop_option('shop_store_name', 'Lazy Shop'));
     $shopEmail = get_cms_option('site_email', 'support@' . request()->getHost());
+
+    $recipientType = $recipientType ?? 'customer';
+    $vars = [
+        '{{order_number}}'  => $order->order_number,
+        '{{customer_name}}' => $order->first_name . ' ' . $order->last_name,
+        '{{new_status}}'    => ucfirst($order->status),
+        '{{site_name}}'     => $shopName,
+    ];
+
+    if ($notificationType === 'status_updated') {
+        $tplData = json_decode(get_cms_option('email_template_order_status_updated', '{}'), true) ?: [];
+        $msgCompleted   = str_replace(array_keys($vars), array_values($vars), $tplData['message_completed'] ?? 'Good news! Your order is completed and fulfilled. Thank you for shopping with us!');
+        $msgProcessing  = str_replace(array_keys($vars), array_values($vars), $tplData['message_processing'] ?? 'We are actively preparing your items. We\'ll let you know once it\'s on its way.');
+        $msgDefault     = str_replace(array_keys($vars), array_values($vars), $tplData['message_default'] ?? 'Your order <strong>#{{order_number}}</strong> status has been updated to <strong>{{new_status}}</strong>.');
+    } elseif ($recipientType === 'admin') {
+        $tplData = json_decode(get_cms_option('email_template_order_placed_admin', '{}'), true) ?: [];
+        $msgPlaced = str_replace(array_keys($vars), array_values($vars), $tplData['message'] ?? 'A new order <strong>#{{order_number}}</strong> has been placed by <strong>{{customer_name}}</strong>.');
+    } else {
+        $tplData = json_decode(get_cms_option('email_template_order_placed_customer', '{}'), true) ?: [];
+        $msgPlaced = str_replace(array_keys($vars), array_values($vars), $tplData['message'] ?? 'We have received your order <strong>#{{order_number}}</strong> and are currently getting it ready. You will receive another notification once your order status updates.');
+    }
 @endphp
 
 <div class="wrapper">
@@ -214,7 +235,7 @@
             <div class="greeting">Hi {{ $order->first_name }},</div>
 
             @if($notificationType === 'placed')
-                <p style="margin-bottom: 25px;">We have received your order <strong>#{{ $order->order_number }}</strong> and are currently getting it ready. You will receive another notification once your order status updates.</p>
+                <p style="margin-bottom: 25px;">{!! $msgPlaced !!}</p>
             @else
                 <p style="margin-bottom: 20px;">Your order <strong>#{{ $order->order_number }}</strong> status has been updated to:</p>
                 @php
@@ -225,11 +246,13 @@
                     elseif (in_array($order->status, ['cancelled', 'refunded', 'failed'])) $badgeClass = 'status-cancelled';
                 @endphp
                 <div class="status-badge {{ $badgeClass }}">{{ ucfirst($order->status) }}</div>
-                
+
                 @if($order->status === 'completed')
-                    <p style="margin-bottom: 25px; color: #059669; font-weight: 600;">Good news! Your order is completed and fulfilled. Thank you for shopping with us!</p>
+                    <p style="margin-bottom: 25px; color: #059669; font-weight: 600;">{!! $msgCompleted !!}</p>
                 @elseif($order->status === 'processing')
-                    <p style="margin-bottom: 25px;">We are actively preparing your items. We'll let you know once it's on its way.</p>
+                    <p style="margin-bottom: 25px;">{!! $msgProcessing !!}</p>
+                @else
+                    <p style="margin-bottom: 25px;">{!! $msgDefault !!}</p>
                 @endif
             @endif
 

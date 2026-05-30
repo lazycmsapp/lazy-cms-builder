@@ -27,6 +27,7 @@
                     <a href="#templates" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200">Custom Templates</a>
                     <a href="#custom-widgets" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200">Custom Widgets</a>
                     <a href="#hooks" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200">Hooks (Actions & Filters)</a>
+                    <a href="#builder-elements" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200">Custom Builder Elements</a>
                     <a href="#rest-api" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200">REST API & Headless</a>
                     <a href="#multilingual" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200">Multilingual & Localization</a>
                     <a href="#rbac" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200">Roles & Permissions (RBAC)</a>
@@ -601,6 +602,324 @@ add_lazy_filter('lazy_general_settings_fields', function($fields) {
                     </div>
                 </section>
 
+                {{-- Section: Custom Builder Elements --}}
+                <section id="builder-elements">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">Custom Builder Elements</h2>
+                    <p class="text-gray-700 mb-6">Register your own drag-and-drop elements for the Lazy Builder using the <code>lazy_builder_elements</code> filter inside your theme's <code>functions.php</code>. Each element gets its own fields, live canvas preview, automatic shortcode conversion, and a frontend template you fully control.</p>
+
+                    {{-- 1. Registering an element --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">1. Registering an Element</h3>
+                        <p class="text-sm text-gray-600 mb-4">Add a filter that pushes a definition into the elements array. The array key and <code>type</code> should match and be unique.</p>
+                        <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-xs overflow-x-auto">
+                            <pre><code>@verbatim
+// resources/views/themes/your-theme/functions.php
+add_lazy_filter('lazy_builder_elements', function ($elements) {
+    $elements['my_card'] = [
+        'type'      => 'my_card',                 // unique identifier (required)
+        'name'      => 'My Card',                 // label shown in the element picker
+        'icon'      => 'fa fa-th-large',          // Font Awesome icon
+        'shortcode' => 'my_card',                 // optional: own shortcode tag
+        'template'  => 'your-theme::builder.elements.my-card', // frontend blade
+        'params'    => [
+            ['type' => 'textfield', 'heading' => 'Title', 'param_name' => 'title', 'value' => 'Hello', 'tab' => 'general'],
+            ['type' => 'colorpickeralpha', 'heading' => 'Title Color', 'param_name' => 'color', 'value' => '#222', 'tab' => 'design'],
+        ],
+    ];
+    return $elements;
+});
+@endverbatim</code></pre>
+                        </div>
+                        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            <div class="p-3 bg-gray-50 rounded border-l-4 border-blue-400"><b>type</b> <span class="text-gray-500">— required unique key.</span></div>
+                            <div class="p-3 bg-gray-50 rounded border-l-4 border-blue-400"><b>name</b> <span class="text-gray-500">— shown in the picker & navigator.</span></div>
+                            <div class="p-3 bg-gray-50 rounded border-l-4 border-blue-400"><b>icon</b> <span class="text-gray-500">— Font Awesome class.</span></div>
+                            <div class="p-3 bg-gray-50 rounded border-l-4 border-blue-400"><b>shortcode</b> <span class="text-gray-500">— optional. Own readable tag, else <code>lazy_element</code>.</span></div>
+                            <div class="p-3 bg-gray-50 rounded border-l-4 border-blue-400"><b>template</b> <span class="text-gray-500">— frontend blade view. Omit for the generic auto-renderer.</span></div>
+                            <div class="p-3 bg-gray-50 rounded border-l-4 border-blue-400"><b>params</b> <span class="text-gray-500">— array of field definitions.</span></div>
+                        </div>
+                    </div>
+
+                    {{-- 2. Field anatomy --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">2. Field Anatomy (shared keys)</h3>
+                        <p class="text-sm text-gray-600 mb-4">Every field in <code>params</code> accepts these keys:</p>
+                        <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-left border border-gray-200 rounded-lg overflow-hidden">
+                            <thead class="bg-gray-50 text-gray-500 uppercase">
+                                <tr><th class="px-3 py-2">Key</th><th class="px-3 py-2">Description</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr><td class="px-3 py-2 font-mono text-blue-600">type</td><td class="px-3 py-2">Field type (see list below). Required.</td></tr>
+                                <tr><td class="px-3 py-2 font-mono text-blue-600">heading</td><td class="px-3 py-2">Field label.</td></tr>
+                                <tr><td class="px-3 py-2 font-mono text-blue-600">param_name</td><td class="px-3 py-2">Setting key. Optional — auto-generated from heading (e.g. "Sub Title" → <code>sub_title</code>).</td></tr>
+                                <tr><td class="px-3 py-2 font-mono text-blue-600">value</td><td class="px-3 py-2">Default value.</td></tr>
+                                <tr><td class="px-3 py-2 font-mono text-blue-600">tab</td><td class="px-3 py-2"><code>general</code> · <code>design</code> · <code>extra</code> — which settings tab the field appears in.</td></tr>
+                                <tr><td class="px-3 py-2 font-mono text-blue-600">description</td><td class="px-3 py-2">Helper text under the field.</td></tr>
+                                <tr><td class="px-3 py-2 font-mono text-blue-600">condition</td><td class="px-3 py-2">Show field only when another field matches (see §5).</td></tr>
+                                <tr><td class="px-3 py-2 font-mono text-blue-600">dynamic</td><td class="px-3 py-2"><code>true</code> to enable the dynamic-source toggle (text / url / link only).</td></tr>
+                            </tbody>
+                        </table>
+                        </div>
+                        <div class="mt-3 bg-blue-50 border-l-4 border-blue-400 p-3 text-xs text-blue-700">
+                            <b>Default tabs:</b> Every custom element automatically gets <b>General</b>, <b>Design</b>, and <b>Extra</b> tabs. The General tab always includes Element Visibility, CSS Class and CSS ID. The Extra tab includes Conditional Visibility and Scroll Entrance Animation — exactly like built-in elements.
+                        </div>
+                    </div>
+
+                    {{-- 3. Field types --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-4">3. Supported Field Types</h3>
+                        <div class="space-y-5">
+
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm mb-1">Text &amp; Content</h4>
+                                <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+['type' => 'textfield', 'heading' => 'Title',   'param_name' => 'title'],
+['type' => 'textarea',  'heading' => 'Desc',    'param_name' => 'desc', 'rows' => 4],
+['type' => 'wysiwyg',   'heading' => 'Body',    'param_name' => 'body'],   // TinyMCE rich editor
+@endverbatim</code></pre></div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm mb-1">Numbers</h4>
+                                <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+['type' => 'number', 'heading' => 'Count',   'param_name' => 'count', 'min' => 0, 'max' => 100, 'step' => 1],
+['type' => 'slider', 'heading' => 'Opacity', 'param_name' => 'opacity', 'min' => 0, 'max' => 100, 'step' => 5, 'unit' => '%'],
+@endverbatim</code></pre></div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm mb-1">Choices</h4>
+                                <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+['type' => 'select',   'heading' => 'Size',  'param_name' => 'size', 'value' => 'md',
+    'options' => ['sm' => 'Small', 'md' => 'Medium', 'lg' => 'Large']],
+['type' => 'radio',    'heading' => 'Align', 'param_name' => 'align',
+    'options' => ['left' => 'Left', 'center' => 'Center', 'right' => 'Right']],
+['type' => 'checkbox', 'heading' => 'Features', 'param_name' => 'features',  // value is an array
+    'options' => ['wifi' => 'WiFi', 'ac' => 'AC', 'tv' => 'TV']],
+['type' => 'toggle',   'heading' => 'Show Icon', 'param_name' => 'show_icon', 'value' => true], // boolean
+@endverbatim</code></pre></div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm mb-1">Visual</h4>
+                                <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+['type' => 'colorpickeralpha', 'heading' => 'Color', 'param_name' => 'color', 'value' => '#222'],
+['type' => 'icon',       'heading' => 'Icon', 'param_name' => 'icon'],  // full FA picker (search + Solid/Regular/Brands)
+['type' => 'typography', 'heading' => 'Heading Font', 'param_name' => 'typo'], // family/size/weight/line-height/spacing/transform
+['type' => 'dimensions', 'heading' => 'Padding', 'param_name' => 'pad', 'unit' => 'px'], // T/R/B/L + unit + responsive
+@endverbatim</code></pre></div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm mb-1">Media &amp; Links</h4>
+                                <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+['type' => 'media',  'heading' => 'Image', 'param_name' => 'img'],   // full media-library picker (same as 'image')
+['type' => 'url',    'heading' => 'Link',  'param_name' => 'link'],   // text input + upload button
+['type' => 'link',   'heading' => 'Link',  'param_name' => 'lnk'],    // url + open-in → {key}, {key}_target
+['type' => 'button', 'heading' => 'Button','param_name' => 'btn'],    // label + url + target → {key}, {key}_url, {key}_target
+['type' => 'date',   'heading' => 'Date',  'param_name' => 'date'],
+@endverbatim</code></pre></div>
+                                <p class="text-[11px] text-gray-500 mt-2">Every color picker now includes an <b>opacity slider</b> — alpha is saved into the value as 8-digit hex (<code>#RRGGBBAA</code>).</p>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {{-- 3b. Canvas Live Preview (prefix convention) --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">3b. Live Canvas Preview — Prefix Convention</h3>
+                        <p class="text-sm text-gray-600 mb-4">The builder canvas renders a <b>live, real-time preview</b> of your fields automatically — you write <b>no canvas code</b>. It figures out which design field styles which content field purely from the <b>param_name prefix</b>.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 text-xs">
+                            <div class="p-3 bg-blue-50 rounded border-l-4 border-blue-400">
+                                <b class="text-blue-700">Content fields</b> <span class="text-gray-600">(rendered on canvas):</span>
+                                <p class="font-mono mt-1">text · textarea · wysiwyg · image · media · icon · button · repeater</p>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded border-l-4 border-blue-400">
+                                <b class="text-blue-700">Design modifiers</b> <span class="text-gray-600">(relate by prefix):</span>
+                                <p class="font-mono mt-1">{base}_color · {base}_hover_color · {base}_bg · {base}_hover_bg · {base}_typo · {base}_pad · {base}_margin · {base}_align</p>
+                            </div>
+                        </div>
+
+                        <p class="text-sm text-gray-600 mb-2">Name a design field <code>{contentField}_color</code> and it auto-applies to that content field — live:</p>
+                        <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+['type' => 'textfield',        'param_name' => 'title'],              // content
+['type' => 'colorpickeralpha', 'param_name' => 'title_color'],        // → colors `title`
+['type' => 'colorpickeralpha', 'param_name' => 'title_hover_color'],  // → `title` color on :hover
+['type' => 'typography',       'param_name' => 'title_typo'],         // → fonts  `title`
+['type' => 'dimensions',       'param_name' => 'title_pad'],          // → pads   `title`
+
+['type' => 'textarea',         'param_name' => 'content'],            // content
+['type' => 'colorpickeralpha', 'param_name' => 'content_color'],      // → colors `content`
+@endverbatim</code></pre></div>
+                        <ul class="mt-3 text-xs text-gray-600 list-disc list-inside space-y-1">
+                            <li>Change any field → the canvas updates <b>instantly</b> (no save, no reload).</li>
+                            <li><b>Hover:</b> <code>{base}_hover_color</code> / <code>{base}_hover_bg</code> generate a real <code>:hover</code> rule — works on both canvas and front-end.</li>
+                            <li>A modifier whose base has no matching content field (e.g. <code>box_bg</code>) applies to the whole element wrapper.</li>
+                            <li>When you don't supply a <code>template</code>, the front-end auto-renders with this <b>same convention</b> — so the live site mirrors the canvas exactly (no custom code needed).</li>
+                        </ul>
+
+                        <h4 class="text-sm font-bold text-gray-800 mt-5 mb-2">One field → many targets</h4>
+                        <p class="text-sm text-gray-600 mb-2">Prefix relation is 1-to-1. To relate <b>one design field to multiple content fields</b>, give <code>param_name</code> an <b>array</b>. Two equally valid ways:</p>
+
+                        <p class="text-xs font-bold text-gray-700 mt-3 mb-1">A) Bare target names <span class="font-normal text-gray-500">— simplest; just list the content fields it styles</span></p>
+                        <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+['type' => 'textfield', 'param_name' => 'title'],
+['type' => 'textfield', 'param_name' => 'subtitle'],
+['type' => 'wysiwyg',   'param_name' => 'content'],
+
+// One color field that styles title + subtitle + content:
+['type' => 'colorpickeralpha', 'heading' => 'Text Color',
+    'param_name' => ['title', 'subtitle', 'content']],
+
+// One typography field shared by title + subtitle:
+['type' => 'typography', 'heading' => 'Heading Font', 'param_name' => ['title', 'subtitle']],
+@endverbatim</code></pre></div>
+                        <p class="text-xs text-gray-500 mt-2">The field's storage key is taken from its <b>heading</b> (so <code>Text Color</code> → <code>text_color</code>) — it never collides with your content fields. The property comes from the field type (color → color, typography → all font props, dimensions → padding).</p>
+
+                        <p class="text-xs font-bold text-gray-700 mt-4 mb-1">B) Suffixed keys <span class="font-normal text-gray-500">— when you want different properties per target</span></p>
+                        <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+// Normal color on title + subtitle:
+['type' => 'colorpickeralpha', 'param_name' => ['title_color', 'subtitle_color']],
+
+// Hover color on title + subtitle:
+['type' => 'colorpickeralpha', 'param_name' => ['title_hover_color', 'subtitle_hover_color']],
+
+// Mixed: title text color + box background:
+['type' => 'colorpickeralpha', 'param_name' => ['title_color', 'box_bg']],
+@endverbatim</code></pre></div>
+                        <p class="text-xs text-gray-500 mt-2">Each entry follows the <code>{base}_{suffix}</code> convention — <code>_color</code> · <code>_bg</code> · <code>_hover_color</code> · <code>_hover_bg</code> · <code>_typo</code> · <code>_pad</code> · <code>_margin</code>.</p>
+
+                        <details class="mt-4">
+                            <summary class="text-xs font-bold text-gray-600 cursor-pointer">Advanced: explicit <code>apply_to</code> / <code>apply_as</code></summary>
+                            <p class="text-xs text-gray-600 mt-2 mb-2">Both array forms are sugar for these keys, which you can also write explicitly:</p>
+                            <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+['type' => 'colorpickeralpha', 'param_name' => 'brand_color',
+    'apply_to' => ['title', 'content', 'subtitle'],   // target content keys
+    'apply_as' => 'color',                             // color | bg | hover_color | hover_bg
+],
+@endverbatim</code></pre></div>
+                            <ul class="mt-2 text-xs text-gray-600 list-disc list-inside space-y-1">
+                                <li><code>apply_as</code> (color): <code>color</code> (default) · <code>bg</code> · <code>hover_color</code> · <code>hover_bg</code>.</li>
+                                <li><code>apply_as</code> (dimensions): <code>padding</code> (default) · <code>margin</code>. Typography applies all its properties.</li>
+                            </ul>
+                        </details>
+                        <p class="text-xs text-gray-600 mt-3">All forms work on <b>canvas &amp; front-end</b> and layer on top of normal prefix relations.</p>
+                    </div>
+
+                    {{-- 4. Repeater --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">4. Repeater Fields</h3>
+                        <p class="text-sm text-gray-600 mb-4">A repeater holds an unlimited list of rows. Each row contains its own set of sub-fields (any field type above). Rows can be added, deleted, and reordered. The stored value is an array of row objects.</p>
+                        <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+['type' => 'repeater', 'heading' => 'Team', 'param_name' => 'members', 'tab' => 'general',
+    'fields' => [
+        ['type' => 'textfield', 'heading' => 'Name',  'param_name' => 'name'],
+        ['type' => 'media',     'heading' => 'Photo', 'param_name' => 'photo'],
+        ['type' => 'icon',      'heading' => 'Icon',  'param_name' => 'icon'],
+    ],
+],
+@endverbatim</code></pre></div>
+                        <p class="text-xs text-gray-500 mt-3">Access in your template as an array: <code>$s['members']</code> → each item is <code>['name' => ..., 'photo' => ..., 'icon' => ...]</code>.</p>
+                    </div>
+
+                    {{-- 5. Conditional fields --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">5. Conditional Fields</h3>
+                        <p class="text-sm text-gray-600 mb-4">Use <code>condition</code> to show a field only when another field matches a value. The controlling field can be <b>any</b> type (toggle, select, text, number…).</p>
+                        <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+['type' => 'toggle', 'heading' => 'Use Link', 'param_name' => 'use_link', 'value' => false],
+['type' => 'url', 'heading' => 'Link URL', 'param_name' => 'link_url',
+    'condition' => ['field' => 'use_link', 'value' => true]],   // shown only when Use Link is ON
+
+['type' => 'select', 'heading' => 'Style', 'param_name' => 'style',
+    'options' => ['basic' => 'Basic', 'pro' => 'Pro']],
+['type' => 'colorpickeralpha', 'heading' => 'Pro Color', 'param_name' => 'pro_color',
+    'condition' => ['field' => 'style', 'value' => 'pro']],     // shown only when Style = Pro
+@endverbatim</code></pre></div>
+                        <div class="mt-3 text-xs text-gray-600">
+                            <b>Operators</b> (<code>operator</code> key): <code>==</code> (default), <code>!=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>in</code>, <code>not_in</code>, <code>contains</code>, <code>truthy</code>, <code>falsy</code>.
+                            Pass an <b>array of conditions</b> for AND logic.
+                        </div>
+                    </div>
+
+                    {{-- 6. Dynamic source --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">6. Dynamic Sources</h3>
+                        <p class="text-sm text-gray-600 mb-4">Add <code>'dynamic' => true</code> to a <code>text</code>, <code>url</code> or <code>link</code> field to show the database toggle. The editor can then bind the field to live post data, resolved automatically on the frontend.</p>
+                        <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+['type' => 'text', 'heading' => 'Title', 'param_name' => 'title', 'dynamic' => true],
+['type' => 'link', 'heading' => 'Read More', 'param_name' => 'more', 'dynamic' => true],
+@endverbatim</code></pre></div>
+                        <p class="text-xs text-gray-500 mt-3">Available sources: <code>post_title</code>, <code>post_url</code>, <code>post_excerpt</code>, <code>post_date</code>, <code>post_author</code>, <code>featured_image</code>, <code>site_name</code>.</p>
+                    </div>
+
+                    {{-- 7. Frontend template --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">7. Frontend Template (full control)</h3>
+                        <p class="text-sm text-gray-600 mb-4">Point <code>template</code> to a blade view. All field values arrive in <code>$s</code> (alias of <code>$el['settings']</code>). Dynamic values are already resolved. Visibility, CSS class and CSS ID are applied by the builder's master wrapper — you only write the inner markup.</p>
+                        <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+{{-- resources/views/themes/your-theme/builder/elements/my-card.blade.php --}}
+@php $s = $el['settings'] ?? []; @endphp
+
+<div class="my-card" style="color: {{ $s['color'] ?? '#222' }}">
+    <h3>{{ $s['title'] ?? '' }}</h3>
+    <p>{!! $s['content'] ?? '' !!}</p>
+
+    @if(!empty($s['bg_image']))
+        <img src="{{ $s['bg_image'] }}" alt="">
+    @endif
+
+    {{-- Repeater rows --}}
+    @foreach($s['members'] ?? [] as $m)
+        <div class="member">
+            @if(!empty($m['photo']))<img src="{{ $m['photo'] }}">@endif
+            <i class="{{ $m['icon'] ?? '' }}"></i>
+            <span>{{ $m['name'] ?? '' }}</span>
+        </div>
+    @endforeach
+</div>
+@endverbatim</code></pre></div>
+                        <div class="mt-3 bg-amber-50 border-l-4 border-amber-400 p-3 text-xs text-amber-800">
+                            If you omit <code>template</code>, the front-end auto-renders using the <b>same prefix convention as the canvas</b> (§3b) — text, images, icons, buttons, repeaters with all <code>_color</code>/<code>_typo</code>/<code>_pad</code>/<code>_hover_*</code> styling applied. The live site mirrors the canvas with zero custom code.
+                        </div>
+                    </div>
+
+                    {{-- 8. Shortcode conversion --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">8. Automatic Shortcode Conversion</h3>
+                        <p class="text-sm text-gray-600 mb-4">Every field is serialized into a clean, human-readable shortcode automatically — and parsed back losslessly. Fields you remove from the definition are dropped from the shortcode on the next save.</p>
+                        <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+[my_card title="Hello" color="#222" features="wifi,ac"]
+    [lzr_members name="Jane" photo="/storage/2026/05/jane.webp" icon="fa fa-star" /]
+    [lzr_members name="John" icon="fa fa-heart" /]
+[/my_card]
+@endverbatim</code></pre></div>
+                        <ul class="mt-3 text-xs text-gray-600 list-disc list-inside space-y-1">
+                            <li>Scalars → plain attributes (<code>title="…"</code>)</li>
+                            <li>Checkbox arrays → comma list (<code>features="wifi,ac"</code>)</li>
+                            <li>Booleans → <code>1</code> / <code>0</code></li>
+                            <li>Repeater rows → child shortcodes <code>[lzr_&lt;key&gt; … /]</code></li>
+                            <li>Global Extra-tab options (animation, conditional visibility, CSS class/ID) are always preserved.</li>
+                            <li>No base64 / encryption — everything stays readable &amp; editable.</li>
+                        </ul>
+
+                        <div class="mt-5 pt-4 border-t border-gray-100">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2">Whitelisting extra custom keys</h4>
+                            <p class="text-xs text-gray-600 mb-3">Need a setting key that isn't a declared field to survive the round-trip? Add it to <code>shortcode_keys</code> in the element definition:</p>
+                            <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] overflow-x-auto"><pre><code>@verbatim
+$elements['my_card'] = [
+    'type'           => 'my_card',
+    'shortcode'      => 'my_card',
+    'shortcode_keys' => ['layout_mode', 'custom_data'], // persisted in the shortcode
+    'params'         => [ /* ... */ ],
+];
+@endverbatim</code></pre></div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- REST API Section -->
                 <section id="rest-api" class="doc-section mb-12">
                     <h2 class="text-2xl font-bold text-gray-900 mb-4">REST API & Headless</h2>
@@ -734,6 +1053,76 @@ add_lazy_filter('lazy_api_post_data', function($data, $post) {
             }, options);
 
             sections.forEach(section => observer.observe(section));
+
+            // 3. One-click Copy buttons on all code blocks
+            const copyText = (text) => {
+                if (navigator.clipboard && window.isSecureContext) {
+                    return navigator.clipboard.writeText(text);
+                }
+                // Fallback for non-secure contexts
+                return new Promise((resolve, reject) => {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.focus(); ta.select();
+                    try { document.execCommand('copy'); resolve(); } catch (e) { reject(e); }
+                    document.body.removeChild(ta);
+                });
+            };
+
+            document.querySelectorAll('pre').forEach(pre => {
+                const container = pre.closest('.bg-gray-900, .bg-gray-100, .bg-gray-50') || pre;
+                if (container.querySelector('.doc-copy-btn')) return; // avoid duplicates
+                if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'doc-copy-btn';
+                btn.textContent = 'Copy';
+                btn.addEventListener('click', () => {
+                    const text = pre.innerText.replace(/\s+$/,'');
+                    copyText(text).then(() => {
+                        btn.textContent = '✓ Copied';
+                        btn.classList.add('copied');
+                        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+                    }).catch(() => {
+                        btn.textContent = 'Failed';
+                        setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+                    });
+                });
+                container.appendChild(btn);
+            });
         });
     </script>
+
+    <style>
+        .doc-copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 5;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1;
+            padding: 5px 10px;
+            border-radius: 6px;
+            color: #cbd5e1;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            cursor: pointer;
+            opacity: 0;
+            transition: all .15s ease;
+        }
+        .bg-gray-900:hover .doc-copy-btn,
+        .bg-gray-100:hover .doc-copy-btn,
+        .bg-gray-50:hover .doc-copy-btn,
+        pre:hover .doc-copy-btn { opacity: 1; }
+        .doc-copy-btn:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
+        .doc-copy-btn.copied { background: #16a34a; color: #fff; border-color: #16a34a; opacity: 1; }
+        /* light-background blocks need a darker button */
+        .bg-gray-100 .doc-copy-btn,
+        .bg-gray-50 .doc-copy-btn { color: #475569; background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
+    </style>
 </x-cms-dashboard::layouts.admin>

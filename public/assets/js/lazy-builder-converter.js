@@ -42,6 +42,71 @@
         return str + ' ' + key + '="' + value + '"';
     }
 
+    // ── Custom element helpers (shared by serialize + parse) ────────────────────
+    /** Unicode-safe base64 encode of a JSON-able value */
+    function ceEncode(val) {
+        try { return btoa(unescape(encodeURIComponent(JSON.stringify(val)))); }
+        catch (e) { return ''; }
+    }
+    /** Decode a base64(JSON) attribute value */
+    function ceDecode(str) {
+        try { return JSON.parse(decodeURIComponent(escape(atob(str)))); }
+        catch (e) { return null; }
+    }
+    var _CE_SUFFIXES = ['_hover_color','_hover_bg','_color','_bg','_typo','_pad','_margin'];
+    function _ceHasSuffix(k) { for (var i=0;i<_CE_SUFFIXES.length;i++){ if (k.endsWith(_CE_SUFFIXES[i])) return true; } return false; }
+    /** Derive the storage key for a param. Array param_name: suffixed → first entry; bare targets → heading slug. */
+    function ceAutoKey(p) {
+        var pn = p.param_name;
+        if (Array.isArray(pn) && pn.length) {
+            if (_ceHasSuffix(pn[0])) return pn[0];
+            return p.heading ? p.heading.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') : ('cf_' + pn.join('_'));
+        }
+        if (pn) return pn;
+        if (p.heading) return p.heading.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+        return null;
+    }
+    /** Flat list of {key,type,value} for a custom element definition (params or fields) */
+    function ceFieldList(def) {
+        if (def.params && def.params.length) {
+            return def.params.map(function (p) { return { key: ceAutoKey(p), type: p.type, value: p.value }; });
+        }
+        if (def.fields) {
+            return Object.keys(def.fields).map(function (k) {
+                return { key: k, type: def.fields[k].type, value: def.fields[k]['default'] };
+            });
+        }
+        return [];
+    }
+    /** Array of base field keys (for prefix-based pruning of removed fields). null = allow all */
+    function ceAllowedKeys(def) {
+        var list = ceFieldList(def);
+        if (!list.length) return null;
+        return list.map(function (f) { return f.key; }).filter(Boolean);
+    }
+    /** True if `key` equals a base or starts with `base + "_"` (covers _top, _size, _tablet, _unit, _target, _dynamic…) */
+    function ceKeyAllowed(bases, key) {
+        if (!bases) return true;
+        for (var i = 0; i < bases.length; i++) {
+            if (key === bases[i] || key.indexOf(bases[i] + '_') === 0) return true;
+        }
+        return false;
+    }
+    /** Global setting keys every element shares (Extra tab: visibility cond, animation, css). Always serialized. */
+    var CE_GLOBAL_KEYS = [
+        'cssClass', 'cssId',
+        'anim_type', 'anim_duration', 'anim_delay', 'anim_easing',
+        'vis_condition', 'vis_date_from', 'vis_date_to'
+    ];
+    function ceGlobalAllowed(key) {
+        return CE_GLOBAL_KEYS.indexOf(key) !== -1;
+    }
+    /** Parse a numeric-looking string to Number, otherwise return as-is (keeps units like "px") */
+    function maybeNum(v) {
+        if (typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v)) return Number(v);
+        return v;
+    }
+
     /** Append _tablet/_mobile variant attrs onto array; skip null/undefined/empty */
     function rAttr(a, attrKey, s, sKey) {
         var tv = s[sKey + '_tablet'];
@@ -642,8 +707,56 @@
                 a = attrI(a, 'css_id',    s.cssId);
                 return '[lazy_gallery ' + a.trim() + vis + ' /]';
             }
-            default:
+            default: {
+                // Custom element: registered via lazy_builder_elements
+                var _cdefs = (typeof window !== 'undefined' && window.lazyCustomElements) ? window.lazyCustomElements : {};
+                var _cdef  = _cdefs[type] || (Object.values(_cdefs).find(function(e) { return e.type === type; }) || null);
+                if (_cdef) {
+                    var _tag    = _cdef.shortcode ? _cdef.shortcode : 'lazy_element';
+                    var bases   = ceAllowedKeys(_cdef); // null = allow all
+                    var extraKeys = Array.isArray(_cdef.shortcode_keys) ? _cdef.shortcode_keys : [];
+                    var repKeys = ceFieldList(_cdef).filter(function(f){ return f.type === 'repeater'; }).map(function(f){ return f.key; });
+                    var a = base;
+                    if (!_cdef.shortcode) a = attrI(a, 'type', type); // lazy_element needs the type attr
+                    Object.keys(s).forEach(function(k) {
+                        if (k === 'visibility' || k.charAt(0) === '_') return;     // skip transient/UI keys
+                        if (repKeys.indexOf(k) !== -1) return;                     // repeater → child shortcodes
+                        // prune keys that aren't a declared field, a global key, or a user-whitelisted key
+                        if (bases && !ceKeyAllowed(bases, k) && !ceGlobalAllowed(k) && extraKeys.indexOf(k) === -1) return;
+                        var v = s[k];
+                        if (v === null || v === undefined || v === '') return;
+                        if (typeof v === 'boolean') { a = attrI(a, k, v ? '1' : '0'); return; }
+                        if (Array.isArray(v))       { a = attrI(a, k, v.join(',')); return; } // checkbox → comma list
+                        if (typeof v === 'object')  return;                                   // skip unknown objects
+                        a = attrI(a, k, String(v));
+                    });
+
+                    // Repeater rows → readable child shortcodes [lzr_<key> sub="..." /]
+                    var children = '';
+                    repKeys.forEach(function(rk) {
+                        var rows = s[rk];
+                        if (!Array.isArray(rows)) return;
+                        var childTag = 'lzr_' + rk;
+                        rows.forEach(function(row) {
+                            if (!row || typeof row !== 'object') return;
+                            var ra = '';
+                            Object.keys(row).forEach(function(sk) {
+                                if (sk.charAt(0) === '_') return;
+                                var rv = row[sk];
+                                if (rv === null || rv === undefined || rv === '') return;
+                                if (typeof rv === 'boolean') { ra = attrI(ra, sk, rv ? '1' : '0'); return; }
+                                if (typeof rv === 'object')  return;
+                                ra = attrI(ra, sk, String(rv));
+                            });
+                            children += '[' + childTag + ra + ' /]';
+                        });
+                    });
+
+                    if (children) return '[' + _tag + ' ' + a.trim() + vis + ']' + children + '[/' + _tag + ']';
+                    return '[' + _tag + ' ' + a.trim() + vis + ' /]';
+                }
                 return '[lazy_element type="' + type + '" ' + base.trim() + vis + ' /]';
+            }
         }
     }
 
@@ -733,14 +846,96 @@
     }
 
     function parseElements(inner) {
-        var elems = [];
+        var results = [];
         var elemRx = /\[lazy_(?!section\b|col\b)(\w+)([^\]]*?)(?:\/\]|\]([\s\S]*?)\[\/lazy_\1\])/g;
         var m;
         while ((m = elemRx.exec(inner)) !== null) {
             var elem = parseElement(m[1], m[2], m[3] || '');
-            if (elem) elems.push(elem);
+            if (elem) results.push({ pos: m.index, elem: elem });
         }
-        return elems;
+
+        // Also match custom element shortcode tags registered via lazy_builder_elements
+        var _cdefs = (typeof window !== 'undefined' && window.lazyCustomElements) ? window.lazyCustomElements : {};
+        Object.values(_cdefs).forEach(function(def) {
+            var tag = def.shortcode || def.type;
+            if (!tag || /^lazy_/.test(tag)) return; // already handled above
+            var escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            var rx = new RegExp('\\[' + escapedTag + '([^\\]]*?)(?:\\/\\]|\\]([\\s\\S]*?)\\[\\/' + escapedTag + '\\])', 'g');
+            while ((m = rx.exec(inner)) !== null) {
+                var ce = parseCustomElement(def, m[1], m[2] || '');
+                if (ce) results.push({ pos: m.index, elem: ce });
+            }
+        });
+
+        results.sort(function(a, b) { return a.pos - b.pos; });
+        return results.map(function(r) { return r.elem; });
+    }
+
+    function parseRepeaterChildren(inner, rkey) {
+        var rows = [];
+        if (!inner) return rows;
+        var childTag = 'lzr_' + rkey;
+        var esc = childTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        var rx = new RegExp('\\[' + esc + '([^\\]]*?)(?:\\/\\]|\\]([\\s\\S]*?)\\[\\/' + esc + '\\])', 'g');
+        var m;
+        while ((m = rx.exec(inner)) !== null) {
+            var ra = parseAttrs(m[1]);
+            var row = {};
+            Object.keys(ra).forEach(function(k) { row[k] = maybeNum(ra[k]); });
+            rows.push(row);
+        }
+        return rows;
+    }
+
+    function parseCustomElement(def, attrStr, inner) {
+        var a   = parseAttrs(attrStr);
+        var vis = visibilityFromAttrs(a);
+        var settings = { visibility: vis };
+
+        var fieldList = ceFieldList(def);
+        if (fieldList.length) {
+            fieldList.forEach(function(f) {
+                if (!f.key) return;
+                var t = f.type;
+                if (t === 'repeater') {
+                    settings[f.key] = parseRepeaterChildren(inner, f.key);
+                } else if (t === 'checkbox') {
+                    settings[f.key] = a[f.key] !== undefined ? String(a[f.key]).split(',').filter(Boolean) : (Array.isArray(f.value) ? f.value : []);
+                } else if (t === 'toggle') {
+                    settings[f.key] = a[f.key] !== undefined ? (a[f.key] === '1' || a[f.key] === 'yes' || a[f.key] === 'true') : !!f.value;
+                } else if (t === 'dimensions' || t === 'typography') {
+                    // restore every sub-key attr (responsive + unit variants included)
+                    Object.keys(a).forEach(function(ak) {
+                        if (ak.indexOf(f.key + '_') === 0) settings[ak] = maybeNum(a[ak]);
+                    });
+                } else if (t === 'number' || t === 'slider') {
+                    settings[f.key] = a[f.key] !== undefined ? num(a[f.key]) : (f.value !== undefined ? f.value : '');
+                } else {
+                    settings[f.key] = a[f.key] !== undefined ? a[f.key] : (f.value !== undefined ? f.value : '');
+                }
+                // composite extras shared by many types (link/button targets, dynamic source, button url)
+                if (a[f.key + '_target'] !== undefined)  settings[f.key + '_target']  = a[f.key + '_target'];
+                if (a[f.key + '_dynamic'] !== undefined) settings[f.key + '_dynamic'] = a[f.key + '_dynamic'];
+                if (a[f.key + '_url'] !== undefined)     settings[f.key + '_url']     = a[f.key + '_url'];
+            });
+            // Restore global keys (Extra tab: css, animation, conditional visibility) + whitelisted keys
+            var extraKeys = Array.isArray(def.shortcode_keys) ? def.shortcode_keys : [];
+            Object.keys(a).forEach(function(k) {
+                if (k === 'id') return;
+                if ((ceGlobalAllowed(k) || extraKeys.indexOf(k) !== -1) && settings[k] === undefined) {
+                    settings[k] = maybeNum(a[k]);
+                }
+            });
+        } else {
+            // No field definitions: restore all attrs as settings
+            Object.keys(a).forEach(function(k) {
+                if (k !== 'id' && k !== 'hide_mobile' && k !== 'hide_tablet' && k !== 'hide_desktop') {
+                    settings[k] = a[k];
+                }
+            });
+        }
+
+        return { id: a.id || generateId(), type: def.type || def.shortcode, settings: settings };
     }
 
     function parseElement(type, attrStr, inner) {

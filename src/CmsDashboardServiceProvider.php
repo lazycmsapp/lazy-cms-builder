@@ -60,7 +60,13 @@ class CmsDashboardServiceProvider extends ServiceProvider
             \Acme\CmsDashboard\Console\Commands\InstallLazyCms::class,
             \Acme\CmsDashboard\Console\Commands\SeedLazyCms::class,
             \Acme\CmsDashboard\Console\Commands\UpdateLazyCms::class,
+            \Acme\CmsDashboard\Console\Commands\PublishScheduledPosts::class,
         ]);
+
+        // Register scheduled tasks from within the package
+        $this->callAfterResolving(\Illuminate\Console\Scheduling\Schedule::class, function ($schedule) {
+            $schedule->command('lazy:publish-scheduled')->everyMinute()->withoutOverlapping();
+        });
 
         if ($this->app->runningInConsole()) {
             $this->publishes([

@@ -7,7 +7,14 @@
 </head>
 <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
 
-@php $siteName = function_exists('get_cms_option') ? get_cms_option('site_name', config('app.name', 'Lazy CMS')) : config('app.name', 'Lazy CMS'); @endphp
+@php
+    $siteName = function_exists('get_cms_option') ? get_cms_option('site_name', config('app.name', 'Lazy CMS')) : config('app.name', 'Lazy CMS');
+    if (!isset($introText)) {
+        $tplData = json_decode(get_cms_option('email_template_form_notification', '{}'), true) ?: [];
+        $introText = $tplData['intro'] ?? 'You have received a new submission. Review the details below to follow up promptly.';
+        $footerText = $tplData['footer'] ?? 'This is an automated notification — no reply is needed.';
+    }
+@endphp
 
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;padding:40px 16px;">
     <tr>
@@ -64,7 +71,7 @@
                     <td style="padding:32px 40px 24px;">
 
                         <p style="margin:0 0 22px;font-size:14px;color:#475569;line-height:1.6;">
-                            You have received a new submission. Review the details below to follow up promptly.
+                            {{ $introText }}
                         </p>
 
                         {{-- ── FIELDS TABLE ── --}}
@@ -107,7 +114,7 @@
                 <tr>
                     <td style="padding:20px 40px 28px;text-align:center;">
                         <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">
-                            This is an automated notification &mdash; no reply is needed.
+                            {{ $footerText }}
                         </p>
                     </td>
                 </tr>

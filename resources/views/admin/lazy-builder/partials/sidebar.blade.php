@@ -2345,189 +2345,35 @@
                             <!-- ══ CUSTOM REGISTERED ELEMENTS ══ -->
                             @foreach($customElements ?? [] as $type => $custEl)
                             @if($type === 'text_block' || $type === 'button' || $type === 'image') @continue @endif
+                            @php
+                                $__allFields     = lazy_normalize_custom_fields($custEl);
+                                $__generalFields = array_filter($__allFields, fn($f) => !isset($f['tab']) || in_array($f['tab'], ['general','content','']));
+                            @endphp
                             <div v-else-if="editingElement?.type === '{{ $type }}'" class="space-y-8">
                                 @if($type === 'menu')
                                     @include('cms-dashboard::admin.lazy-builder.partials.components.elements.menu-content')
                                 @endif
 
                                 @if($type !== 'menu')
-                                    @foreach($custEl['fields'] ?? [] as $fieldKey => $field)
-                                    @if(isset($field['tab']) && $field['tab'] === 'design') @continue @endif
-                                @if(($field['type'] ?? 'text') === 'text')
-                                <div>
-                                    <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                    </div>
-                                    <input type="text" v-model="editingElement.settings.{{ $fieldKey }}"
-                                           placeholder="{{ $field['placeholder'] ?? '' }}"
-                                           class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                </div>
-                                @elseif($field['type'] === 'textarea')
-                                <div>
-                                    <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                    </div>
-                                    <textarea v-model="editingElement.settings.{{ $fieldKey }}"
-                                              rows="{{ $field['rows'] ?? 4 }}"
-                                              placeholder="{{ $field['placeholder'] ?? '' }}"
-                                              class="w-full border border-slate-200 rounded p-3 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea] focus:ring-1 focus:ring-[#0091ea]/10 transition-all"></textarea>
-                                </div>
-                                @elseif($field['type'] === 'number')
-                                <div>
-                                    <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                    </div>
-                                    <input type="number" v-model.number="editingElement.settings.{{ $fieldKey }}"
-                                           @if(isset($field['min'])) min="{{ $field['min'] }}" @endif
-                                           @if(isset($field['max'])) max="{{ $field['max'] }}" @endif
-                                           class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                </div>
-                                @elseif($field['type'] === 'select')
-                                <div>
-                                    <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                    </div>
-                                    <select v-model="editingElement.settings.{{ $fieldKey }}"
-                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                        @foreach($field['options'] ?? [] as $optVal => $optLabel)
-                                            <option value="{{ $optVal }}">{{ $optLabel }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                @elseif($field['type'] === 'toggle')
-                                <div>
-                                    <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                    </div>
-                                    <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
-                                        <button @click="editingElement.settings.{{ $fieldKey }} = true"
-                                                :class="editingElement.settings.{{ $fieldKey }} ? 'bg-[#0091ea] text-white shadow-md' : 'text-slate-400'"
-                                                class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">On</button>
-                                        <button @click="editingElement.settings.{{ $fieldKey }} = false"
-                                                :class="!editingElement.settings.{{ $fieldKey }} ? 'bg-white text-slate-600 shadow-sm' : 'text-slate-400'"
-                                                class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">Off</button>
-                                    </div>
-                                </div>
-                                 @elseif($field['type'] === 'media')
-                                 <div class="mb-6">
-                                     <div class="flex justify-between items-center mb-3">
-                                         <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                     </div>
-
-                                     <!-- Empty State -->
-                                     <div v-if="!editingElement.settings.{{ $fieldKey }}" 
-                                          @click="openMediaModal('{{ $fieldKey }}')"
-                                          class="w-full aspect-[16/10] border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#0091ea] hover:bg-blue-50/30 transition-all group">
-                                         <div class="w-10 h-10 bg-[#0091ea] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
-                                             <i class="fa fa-plus"></i>
-                                         </div>
-                                     </div>
-
-                                     <!-- Selected State -->
-                                     <div v-else class="space-y-3">
-                                         <div class="relative group aspect-[16/10] bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
-                                             <img :src="editingElement.settings.{{ $fieldKey }}" class="w-full h-full object-cover">
-                                             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                 <button @click="openMediaModal('{{ $fieldKey }}')" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0091ea] hover:bg-[#0091ea] hover:text-white transition-all shadow-sm">
-                                                     <i class="fa fa-edit text-xs"></i>
-                                                 </button>
-                                                 <button @click="editingElement.settings.{{ $fieldKey }} = ''" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
-                                                     <i class="fa fa-trash text-xs"></i>
-                                                 </button>
-                                             </div>
-                                         </div>
-                                         <div class="flex gap-2">
-                                             <button @click="editingElement.settings.{{ $fieldKey }} = ''" class="flex-1 h-9 flex items-center justify-center border border-slate-200 rounded text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-colors">Remove</button>
-                                             <button @click="openMediaModal('{{ $fieldKey }}')" class="flex-1 h-9 flex items-center justify-center bg-[#0091ea] text-white rounded text-[11px] font-bold hover:bg-[#007cc0] transition-colors">Edit</button>
-                                         </div>
-                                     </div>
-                                 </div>
-                                @elseif($field['type'] === 'color')
-                                <div>
-                                    <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                    </div>
-                                    <div class="flex gap-2 items-center">
-                                        <input type="color" v-model="editingElement.settings.{{ $fieldKey }}"
-                                               class="w-10 h-10 border border-slate-200 rounded cursor-pointer p-0.5 shrink-0">
-                                        <input type="text" v-model="editingElement.settings.{{ $fieldKey }}"
-                                               placeholder="#000000"
-                                               class="flex-1 border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                    </div>
-                                </div>
-                                @elseif($field['type'] === 'image')
-                                <div>
-                                    <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <div v-if="editingElement.settings.{{ $fieldKey }}" class="border border-slate-100 rounded overflow-hidden">
-                                            <img :src="editingElement.settings.{{ $fieldKey }}" class="w-full h-24 object-cover">
-                                        </div>
-                                        <input type="text" v-model="editingElement.settings.{{ $fieldKey }}"
-                                               placeholder="Image URL..."
-                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                        <button @click="openMediaModal('{{ $fieldKey }}')"
-                                                class="w-full py-2 bg-slate-100 text-slate-600 text-[11px] font-bold rounded hover:bg-[#0091ea] hover:text-white transition-all">
-                                            Browse Media Library
-                                        </button>
-                                    </div>
-                                </div>
-                                @elseif($field['type'] === 'wysiwyg')
-                                <div>
-                                    <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">{{ $field['label'] ?? $fieldKey }}</label>
-                                    </div>
-                                    <div class="builder-rich-editor-wrapper">
-                                        <textarea :id="'rich-editor-' + editingElement.id + '-' + '{{ $fieldKey }}'" 
-                                                  class="builder-rich-editor w-full border border-slate-200 rounded p-3 text-[13px]"
-                                                  v-model="editingElement.settings.{{ $fieldKey }}"></textarea>
-                                    </div>
-                                </div>
-                                @endif
-                                @endforeach
+                                    @foreach($__generalFields as $fieldKey => $field)
+                                        @if(!empty($field['condition']))
+                                            <template v-if="customFieldVisible(editingElement.settings, {{ Illuminate\Support\Js::from($field['condition']) }})">
+                                                @include('cms-dashboard::admin.lazy-builder.partials.components.elements.custom-field-renderer', compact('field', 'fieldKey'))
+                                            </template>
+                                        @else
+                                            @include('cms-dashboard::admin.lazy-builder.partials.components.elements.custom-field-renderer', compact('field', 'fieldKey'))
+                                        @endif
+                                    @endforeach
                                 @endif
 
-                                <!-- Default: Element Visibility -->
+                                <!-- Default: Element Visibility (shared partial) -->
                                 <div v-if="editingElement?.type !== 'menu'" class="pt-4 border-t border-slate-50">
-                                    <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
-                                    </div>
-                                    <div class="grid grid-cols-3 gap-1">
-                                        <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
-                                            <i class="fa fa-mobile-alt text-sm"></i>
-                                        </button>
-                                        <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
-                                            <i class="fa fa-tablet-alt text-sm"></i>
-                                        </button>
-                                        <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
-                                            <i class="fa fa-desktop text-sm"></i>
-                                        </button>
-                                    </div>
+                                    @include('cms-dashboard::admin.lazy-builder.partials.components.fields.element-visibility')
                                 </div>
 
-                                <!-- Default: CSS Class & ID -->
-                                <div v-if="editingElement?.type !== 'menu'" class="grid grid-cols-1 gap-6 pt-4 border-t border-slate-50">
-                                    <div>
-                                        <div class="flex justify-between items-center mb-3">
-                                            <label class="text-[12px] font-bold text-[#333]">CSS Class</label>
-                                        </div>
-                                        <input type="text" v-model="editingElement.settings.cssClass"
-                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between items-center mb-3">
-                                            <label class="text-[12px] font-bold text-[#333]">CSS ID</label>
-                                        </div>
-                                        <input type="text" v-model="editingElement.settings.cssId"
-                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
-                                    </div>
+                                <!-- Default: CSS Class & ID (shared partial) -->
+                                <div v-if="editingElement?.type !== 'menu'" class="pt-4 border-t border-slate-50">
+                                    @include('cms-dashboard::admin.lazy-builder.partials.components.fields.css-attributes')
                                 </div>
                             </div>
                             @endforeach
@@ -3661,15 +3507,30 @@
                              <div v-else-if="editingElement?.type === 'post_content'" class="space-y-6">
                                  @include('cms-dashboard::admin.lazy-builder.partials.components.elements.post-content-design')
                              </div>
-                             <!-- Custom Elements: empty design tab -->
+                             <!-- Custom Elements: design tab fields -->
                              @foreach($customElements ?? [] as $type => $custEl)
                              @if($type === 'text_block') @continue @endif
+                             @php
+                                 $__allFields2    = lazy_normalize_custom_fields($custEl);
+                                 $__designFields2 = array_filter($__allFields2, fn($f) => isset($f['tab']) && $f['tab'] === 'design');
+                             @endphp
                              <div v-else-if="editingElement?.type === '{{ $type }}'" class="space-y-6">
-                                 <div class="p-4 bg-slate-50 rounded border border-dashed border-slate-200 text-center">
-                                     <i class="{{ $custEl['icon'] ?? 'fa fa-cube' }} text-slate-300 text-3xl mb-3 block"></i>
-                                     <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest">{{ $custEl['name'] ?? $type }}</p>
-                                     <p class="text-[10px] text-slate-400 mt-1">Add design settings via the <code>design_fields</code> key.</p>
-                                 </div>
+                                 @if(!empty($__designFields2))
+                                     @foreach($__designFields2 as $fieldKey => $field)
+                                         @if(!empty($field['condition']))
+                                             <template v-if="customFieldVisible(editingElement.settings, {{ Illuminate\Support\Js::from($field['condition']) }})">
+                                                 @include('cms-dashboard::admin.lazy-builder.partials.components.elements.custom-field-renderer', compact('field', 'fieldKey'))
+                                             </template>
+                                         @else
+                                             @include('cms-dashboard::admin.lazy-builder.partials.components.elements.custom-field-renderer', compact('field', 'fieldKey'))
+                                         @endif
+                                     @endforeach
+                                 @else
+                                     <div class="p-4 bg-slate-50 rounded border border-dashed border-slate-200 text-center">
+                                         <i class="{{ $custEl['icon'] ?? 'fa fa-cube' }} text-slate-300 text-xl mb-2 block"></i>
+                                         <p class="text-[11px] text-slate-400">No design fields defined for this element.</p>
+                                     </div>
+                                 @endif
                              </div>
                              @endforeach
                         </div>
@@ -3688,88 +3549,9 @@
                              </div>
                         </div>
 
-                        <!-- ══ EXTRAS TAB ══ -->
-                        <div v-if="editingContext.tab === 'extras'" class="p-5 space-y-5">
-                            <!-- Conditional Visibility -->
-                            <div>
-                                <div class="flex justify-between items-center mb-3">
-                                    <label class="text-[11px] font-bold text-[#444]">Conditional Visibility</label>
-                                </div>
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="text-[10px] text-slate-500 block mb-1.5">Show When</label>
-                                        <select :value="editingElement.settings.vis_condition || ''"
-                                                @change="editingElement.settings.vis_condition = $event.target.value"
-                                                class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
-                                            <option value="">Default (Always Show)</option>
-                                            <option value="logged_in">User is Logged In</option>
-                                            <option value="logged_out">User is Logged Out</option>
-                                            <option value="schedule">By Schedule</option>
-                                        </select>
-                                    </div>
-                                    <template v-if="(editingElement.settings.vis_condition || '') === 'schedule'">
-                                        <div>
-                                            <label class="text-[10px] text-slate-500 block mb-1.5">Show From</label>
-                                            <input type="datetime-local" v-model="editingElement.settings.vis_date_from"
-                                                   class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
-                                        </div>
-                                        <div>
-                                            <label class="text-[10px] text-slate-500 block mb-1.5">Show Until</label>
-                                            <input type="datetime-local" v-model="editingElement.settings.vis_date_to"
-                                                   class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-
-                            <!-- Scroll Entrance Animation -->
-                            <div>
-                                <div class="flex justify-between items-center mb-3">
-                                    <label class="text-[11px] font-bold text-[#444]">Scroll Entrance Animation</label>
-                                </div>
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="text-[10px] text-slate-500 block mb-1.5">Animation Type</label>
-                                        <select v-model="editingElement.settings.anim_type"
-                                                class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
-                                            <option value="">None</option>
-                                            <option value="fade-in">Fade In</option>
-                                            <option value="slide-up">Slide Up</option>
-                                            <option value="slide-down">Slide Down</option>
-                                            <option value="slide-left">Slide Left</option>
-                                            <option value="slide-right">Slide Right</option>
-                                            <option value="zoom-in">Zoom In</option>
-                                            <option value="zoom-out">Zoom Out</option>
-                                            <option value="bounce-in">Bounce In</option>
-                                        </select>
-                                    </div>
-                                    <template v-if="editingElement.settings.anim_type">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="text-[10px] text-slate-500 block mb-1.5">Duration (ms)</label>
-                                                <input type="number" v-model.number="editingElement.settings.anim_duration" placeholder="600" min="100" max="3000" step="100"
-                                                       class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
-                                            </div>
-                                            <div>
-                                                <label class="text-[10px] text-slate-500 block mb-1.5">Delay (ms)</label>
-                                                <input type="number" v-model.number="editingElement.settings.anim_delay" placeholder="0" min="0" max="3000" step="100"
-                                                       class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label class="text-[10px] text-slate-500 block mb-1.5">Easing</label>
-                                            <select v-model="editingElement.settings.anim_easing"
-                                                    class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
-                                                <option value="ease">Ease</option>
-                                                <option value="ease-in">Ease In</option>
-                                                <option value="ease-out">Ease Out</option>
-                                                <option value="ease-in-out">Ease In Out</option>
-                                                <option value="linear">Linear</option>
-                                            </select>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
+                        <!-- ══ EXTRAS TAB (shared partial) ══ -->
+                        <div v-if="editingContext.tab === 'extras'" class="p-5">
+                            @include('cms-dashboard::admin.lazy-builder.partials.components.fields.extra-options')
                         </div>
                     </div>
                 </div>

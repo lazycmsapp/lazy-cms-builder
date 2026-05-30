@@ -602,11 +602,17 @@ class FrontendController extends Controller
                         ];
                     }
 
+                    $tplData    = json_decode(get_cms_option('email_template_form_notification', '{}'), true) ?: [];
+                    $subjectTpl = $tplData['subject'] ?? 'New Submission: {{form_name}}';
+                    $subject    = str_replace('{{form_name}}', $form->title, $subjectTpl);
+                    $introText  = $tplData['intro'] ?? 'You have received a new submission. Review the details below to follow up promptly.';
+                    $footerText = $tplData['footer'] ?? 'This is an automated notification — no reply is needed.';
+
                     \Illuminate\Support\Facades\Mail::send(
                         'cms-dashboard::emails.form.notification',
-                        compact('form', 'rows', 'submittedAt', 'ip'),
-                        function ($msg) use ($notifyEmail, $form) {
-                            $msg->to($notifyEmail)->subject('New Submission: ' . $form->title);
+                        compact('form', 'rows', 'submittedAt', 'ip', 'introText', 'footerText'),
+                        function ($msg) use ($notifyEmail, $subject) {
+                            $msg->to($notifyEmail)->subject($subject);
                         }
                     );
                 } catch (\Exception $e) {}

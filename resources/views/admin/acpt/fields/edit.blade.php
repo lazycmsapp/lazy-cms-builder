@@ -105,14 +105,40 @@
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div>
                                                 <label class="block text-[13px] font-bold text-[#1d2327] mb-1">Field Type</label>
-                                                <select name="fields[{{ $field->id }}][type]" onchange="updateDisplay(this, '.field-type-display')" class="wp-input w-full h-8 py-0">
+                                                <select name="fields[{{ $field->id }}][type]" onchange="updateDisplay(this, '.field-type-display'); toggleSelectOptions(this)" class="wp-input w-full h-8 py-0">
                                                     <option value="text" {{ $field->type === 'text' ? 'selected' : '' }}>Text</option>
                                                     <option value="textarea" {{ $field->type === 'textarea' ? 'selected' : '' }}>Textarea</option>
                                                     <option value="select" {{ $field->type === 'select' ? 'selected' : '' }}>Select</option>
+                                                    <option value="checkbox" {{ $field->type === 'checkbox' ? 'selected' : '' }}>Checkbox</option>
+                                                    <option value="radio" {{ $field->type === 'radio' ? 'selected' : '' }}>Radio Button</option>
                                                     <option value="image" {{ $field->type === 'image' ? 'selected' : '' }}>Image</option>
                                                     <option value="wysiwyg" {{ $field->type === 'wysiwyg' ? 'selected' : '' }}>Rich Editor</option>
+                                                    <option value="repeater" {{ $field->type === 'repeater' ? 'selected' : '' }}>Repeater</option>
                                                 </select>
                                             </div>
+                                        </div>
+                                        <div class="select-options-row {{ !in_array($field->type, ['select', 'checkbox', 'radio']) ? 'hidden' : '' }}">
+                                            <label class="block text-[13px] font-bold text-[#1d2327] mb-1">Options <span class="font-normal text-[#646970]">(one per line)</span></label>
+                                            <textarea name="fields[{{ $field->id }}][options]" rows="4" class="wp-input w-full text-[13px]" placeholder="Option 1&#10;Option 2&#10;Option 3">{{ $field->params['options'] ?? '' }}</textarea>
+                                        </div>
+                                        @php $subFields = $field->params['sub_fields'] ?? []; @endphp
+                                        <div class="repeater-subfields-row {{ $field->type !== 'repeater' ? 'hidden' : '' }} mt-4">
+                                            <label class="block text-[13px] font-bold text-[#1d2327] mb-2">Sub Fields</label>
+                                            <div class="sf-list space-y-2 mb-3">
+                                                @foreach($subFields as $sf)
+                                                <div class="sf-row flex items-center gap-2 mt-1">
+                                                    <input type="text" name="fields[{{ $field->id }}][sf_label][]" value="{{ $sf['label'] }}" placeholder="Label" oninput="autoSlugSF(this)" class="wp-input flex-1 text-[13px] h-8 py-0">
+                                                    <input type="text" name="fields[{{ $field->id }}][sf_name][]" value="{{ $sf['name'] }}" placeholder="slug" class="wp-input flex-1 text-[13px] h-8 py-0 font-mono sf-name-input">
+                                                    <select name="fields[{{ $field->id }}][sf_type][]" class="wp-input w-28 h-8 py-0 text-[13px]">
+                                                        <option value="text" {{ ($sf['type'] ?? 'text') === 'text' ? 'selected' : '' }}>Text</option>
+                                                        <option value="textarea" {{ ($sf['type'] ?? '') === 'textarea' ? 'selected' : '' }}>Textarea</option>
+                                                        <option value="image" {{ ($sf['type'] ?? '') === 'image' ? 'selected' : '' }}>Image</option>
+                                                    </select>
+                                                    <button type="button" onclick="this.closest('.sf-row').remove()" class="text-[#d63638] text-[12px] hover:underline shrink-0">Remove</button>
+                                                </div>
+                                                @endforeach
+                                            </div>
+                                            <button type="button" onclick="addSubField(this)" class="text-[12px] text-[#2271b1] hover:underline">+ Add Sub Field</button>
                                         </div>
                                     </div>
 
@@ -179,14 +205,26 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-[13px] font-bold text-[#1d2327] mb-1">Field Type</label>
-                                <select name="new_fields[{ID}][type]" onchange="updateDisplay(this, '.field-type-display')" class="wp-input w-full h-8 py-0 select-type-input">
+                                <select name="new_fields[{ID}][type]" onchange="updateDisplay(this, '.field-type-display'); toggleSelectOptions(this)" class="wp-input w-full h-8 py-0 select-type-input">
                                     <option value="text">Text</option>
                                     <option value="textarea">Textarea</option>
                                     <option value="select">Select</option>
+                                    <option value="checkbox">Checkbox</option>
+                                    <option value="radio">Radio Button</option>
                                     <option value="image">Image</option>
                                     <option value="wysiwyg">Rich Editor</option>
+                                    <option value="repeater">Repeater</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="select-options-row hidden">
+                            <label class="block text-[13px] font-bold text-[#1d2327] mb-1">Options <span class="font-normal text-[#646970]">(one per line)</span></label>
+                            <textarea name="new_fields[{ID}][options]" rows="4" class="wp-input w-full text-[13px]" placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
+                        </div>
+                        <div class="repeater-subfields-row hidden mt-4">
+                            <label class="block text-[13px] font-bold text-[#1d2327] mb-2">Sub Fields</label>
+                            <div class="sf-list space-y-2 mb-3"></div>
+                            <button type="button" onclick="addSubField(this)" class="text-[12px] text-[#2271b1] hover:underline">+ Add Sub Field</button>
                         </div>
                     </div>
                     <div class="field-tab-content hidden space-y-5" data-tab="validation">
@@ -239,6 +277,39 @@
         function updateDisplay(input, targetClass) {
             const item = input.closest('.field-item');
             item.querySelector(targetClass).innerText = input.value;
+        }
+
+        function toggleSelectOptions(selectEl) {
+            const item = selectEl.closest('.field-item');
+            const optRow = item.querySelector('.select-options-row');
+            const repRow = item.querySelector('.repeater-subfields-row');
+            const val = selectEl.value;
+            if (optRow) optRow.classList.toggle('hidden', !['select', 'checkbox', 'radio'].includes(val));
+            if (repRow) repRow.classList.toggle('hidden', val !== 'repeater');
+        }
+
+        function addSubField(btn) {
+            const item = btn.closest('.field-item');
+            const rawId = item.dataset.id;
+            const prefix = String(rawId).startsWith('new_') ? `new_fields[${rawId.replace('new_', '')}]` : `fields[${rawId}]`;
+            const sfList = item.querySelector('.sf-list');
+            const html = `<div class="sf-row flex items-center gap-2 mt-1">
+                <input type="text" name="${prefix}[sf_label][]" placeholder="Label" oninput="autoSlugSF(this)" class="wp-input flex-1 text-[13px] h-8 py-0">
+                <input type="text" name="${prefix}[sf_name][]" placeholder="slug" class="wp-input flex-1 text-[13px] h-8 py-0 font-mono sf-name-input">
+                <select name="${prefix}[sf_type][]" class="wp-input w-28 h-8 py-0 text-[13px]">
+                    <option value="text">Text</option>
+                    <option value="textarea">Textarea</option>
+                    <option value="image">Image</option>
+                </select>
+                <button type="button" onclick="this.closest('.sf-row').remove()" class="text-[#d63638] text-[12px] hover:underline shrink-0">Remove</button>
+            </div>`;
+            sfList.insertAdjacentHTML('beforeend', html);
+        }
+
+        function autoSlugSF(input) {
+            const row = input.closest('.sf-row');
+            const nameInput = row.querySelector('.sf-name-input');
+            if (nameInput) nameInput.value = input.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
         }
 
         function switchFieldTab(btn, tabName) {
