@@ -53,6 +53,111 @@
         try { return JSON.parse(decodeURIComponent(escape(atob(str)))); }
         catch (e) { return null; }
     }
+
+    // ── Lossless fidelity — readable "extra" attributes (mirror of PHP, no base64) ──
+    // The per-type serializers emit only a subset of each settings object; the rest is
+    // appended as plain attributes named after the literal setting key (e.g. dividerWidth="60")
+    // so a rich-editor round-trip stays lossless AND the shortcode stays human-readable.
+    var FIDELITY_STRUCTURAL = ['id', 'type', 'width', 'width_tablet', 'width_mobile', 'hide_mobile', 'hide_tablet', 'hide_desktop'];
+    // Element types with a concrete built-in serializer/parser case (parsed via parseElementInner).
+    var BUILTIN_TYPES = ['heading', 'title', 'text', 'button', 'image', 'spacer', 'video', 'menu', 'row', 'counter', 'star_rating', 'gallery'];
+    var _suppressExtras = false;
+
+    function isTransientKey(k) {
+        return !k || k.charAt(0) === '_' || k === 'isHovered' || k === 'isTextHovered';
+    }
+
+    /** Custom element defs keyed by type (mirror of PHP customDefs). */
+    function customDefsJs() {
+        var d = (typeof window !== 'undefined' && window.lazyCustomElements) ? window.lazyCustomElements : {};
+        var out = {};
+        Object.keys(d).forEach(function (k) { var def = d[k]; if (def) out[def.type || k] = def; });
+        return out;
+    }
+
+    /** Attribute names on the opening tag of a shortcode string. */
+    function tagAttrNames(sc) {
+        var m = /^\s*\[[a-z0-9_]+([^\]]*)\]/i.exec(sc || '');
+        if (!m) return [];
+        var names = [], rx = /([A-Za-z_][\w-]*)\s*=\s*"/g, mm;
+        while ((mm = rx.exec(m[1])) !== null) names.push(mm[1]);
+        return names;
+    }
+
+    function looseEq(a, b) {
+        if (typeof a === 'boolean' || typeof b === 'boolean') return !!a === !!b;
+        if (a === null || b === null || a === undefined || b === undefined) return a === b;
+        if (typeof a === 'object' || typeof b === 'object') return JSON.stringify(a) === JSON.stringify(b);
+        return String(a) === String(b);
+    }
+
+    function coerceAttr(v) {
+        if (v === 'true') return true;
+        if (v === 'false') return false;
+        if (v === 'null') return null;
+        if (v !== '' && !isNaN(v)) {
+            if (/^-?\d+$/.test(v)) { var i = parseInt(v, 10); return (String(i) === v) ? i : v; }
+            return parseFloat(v);
+        }
+        return v;
+    }
+
+    function stripChildren(node) {
+        var n = {}; Object.keys(node || {}).forEach(function (k) { if (k !== 'columns' && k !== 'elements') n[k] = node[k]; });
+        return n;
+    }
+
+    /** Append readable "extra" attributes for any scalar setting the per-type round-trip drops. */
+    function appendExtras(sc, settings, recovered) {
+        if (_suppressExtras) return sc;
+        settings = settings || {}; recovered = recovered || {};
+        var extras = [];
+        Object.keys(settings).forEach(function (k) {
+            if (isTransientKey(k)) return;
+            var v = settings[k];
+            if (v === null || v === undefined || v === '' || (typeof v === 'object')) return;
+            if (Object.prototype.hasOwnProperty.call(recovered, k) && looseEq(recovered[k], v)) return;
+            var val = (typeof v === 'boolean') ? (v ? 'true' : 'false') : String(v);
+            if (val.indexOf('"') !== -1) return;
+            extras.push(k + '="' + val + '"');
+        });
+        if (!extras.length) return sc;
+        return sc.replace(/^(\s*\[[a-z0-9_]+\s)/i, '$1' + extras.join(' ') + ' ');
+    }
+
+    /** Merge back any attribute the per-type serializer doesn't itself emit (and isn't structural). */
+    function mergeExtras(attrs, settings, perTypeNames) {
+        Object.keys(attrs || {}).forEach(function (k) {
+            if (!k) return;
+            if (FIDELITY_STRUCTURAL.indexOf(k) !== -1) return;
+            if (perTypeNames.indexOf(k) !== -1) return;
+            settings[k] = (typeof attrs[k] === 'string') ? coerceAttr(attrs[k]) : attrs[k];
+        });
+        return settings;
+    }
+
+    /** The attribute names the per-type serializer alone emits for a node (extras suppressed). */
+    function perTypeNames(kind, node) {
+        var prev = _suppressExtras; _suppressExtras = true; var sc;
+        try {
+            if (kind === 'container')   sc = containerToShortcode(stripChildren(node));
+            else if (kind === 'column') sc = columnToShortcode(stripChildren(node));
+            else                        sc = elementToShortcode(stripChildren(node));
+        } finally { _suppressExtras = prev; }
+        return (typeof sc === 'string') ? tagAttrNames(sc) : [];
+    }
+
+    /** What parsing a freshly-serialized element shortcode recovers — used to find dropped fields. */
+    function elementRecovered(sc, type, settings) {
+        var m = /^\s*\[([^\s\]\/]+)\s*([\s\S]*?)(?:\/\]|\]([\s\S]*)\[\/\1\])\s*$/i.exec(sc || '');
+        if (!m) return settings;
+        var attrStr = m[2], inner = m[3] || '';
+        var cdef = customDefsJs()[type];
+        var el = (cdef && BUILTIN_TYPES.indexOf(type) === -1)
+            ? parseCustomElement(cdef, attrStr, inner)
+            : parseElementInner(type, attrStr, inner);
+        return (el && el.settings) ? el.settings : settings;
+    }
     var _CE_SUFFIXES = ['_hover_color','_hover_bg','_color','_bg','_typo','_pad','_margin'];
     function _ceHasSuffix(k) { for (var i=0;i<_CE_SUFFIXES.length;i++){ if (k.endsWith(_CE_SUFFIXES[i])) return true; } return false; }
     /** Derive the storage key for a param. Array param_name: suffixed → first entry; bare targets → heading slug. */
@@ -290,7 +395,9 @@
         });
         var inner = colLines.length ? '\n' + colLines.join('\n') + '\n' : '';
 
-        return '[lazy_section ' + a.join(' ') + ']' + inner + '[/lazy_section]';
+        var attrStr   = a.join(' ');
+        var recovered = containerSettings(parseAttrs(attrStr));
+        return appendExtras('[lazy_section ' + attrStr + ']' + inner + '[/lazy_section]', s, recovered);
     }
 
     function columnToShortcode(col) {
@@ -388,10 +495,17 @@
             attr(a, 'radius_' + pair[1], s['borderRadius' + pair[0]]);
         });
 
-        var elems = (col.elements || []).map(elementToShortcode);
+        var elems = (col.elements || []).map(function (el) {
+            var sc = elementToShortcode(el);
+            var eSettings = el.settings || {};
+            var recovered = elementRecovered(sc, el.type || 'text', eSettings);
+            return appendExtras(sc, eSettings, recovered);
+        });
         var inner = elems.length ? ' ' + elems.join(' ') + ' ' : '';
 
-        return '[lazy_col ' + a.join(' ') + ']' + inner + '[/lazy_col]';
+        var attrStr   = a.join(' ');
+        var recovered = columnSettings(parseAttrs(attrStr));
+        return appendExtras('[lazy_col ' + attrStr + ']' + inner + '[/lazy_col]', s, recovered);
     }
 
     function elementToShortcode(el) {
@@ -764,7 +878,20 @@
     // Shortcodes → JSON
     // -------------------------------------------------------------------------
 
+    // Strip rich-editor (TinyMCE) <p>/<br> wrapping + encoded brackets around builder shortcodes
+    function unwrapEditorMarkup(content) {
+        content = content
+            .replace(/&#91;|&lbrack;|&#x5[Bb];/g, '[')
+            .replace(/&#93;|&rbrack;|&#x5[Dd];/g, ']');
+        content = content.replace(/<p[^>]*>\s*(\[\/?(?:lazy_|lzr_)[^\]]*\])/gi, '$1');
+        content = content.replace(/(\[\/?(?:lazy_|lzr_)[^\]]*\])\s*<\/p>/gi, '$1');
+        content = content.replace(/(\])\s*<br\s*\/?>\s*(\[)/gi, '$1$2');
+        content = content.replace(/<p[^>]*>\s*(?:&nbsp;)?\s*<\/p>/gi, '');
+        return content;
+    }
+
     function shortcodesToJson(content) {
+        content = unwrapEditorMarkup(content);
         var layout = [];
         var containerRx = /\[lazy_section([^\]]*)\]([\s\S]*?)\[\/lazy_section\]/g;
         var m;
@@ -776,11 +903,16 @@
     }
 
     function parseContainer(attrStr, inner) {
-        var a = parseAttrs(attrStr);
+        var a  = parseAttrs(attrStr);
+        var id = a.id || generateId();
+        var tp = a.type || 'container';
+        var settings = containerSettings(a);
+        var names = perTypeNames('container', { id: id, type: tp, settings: settings, columns: [] });
+        settings = mergeExtras(a, settings, names);
         return {
-            id:       a.id   || generateId(),
-            type:     a.type || 'container',
-            settings: containerSettings(a),
+            id:       id,
+            type:     tp,
+            settings: settings,
             columns:  parseColumns(inner)
         };
     }
@@ -836,11 +968,16 @@
     }
 
     function parseColumn(attrStr, inner) {
-        var a = parseAttrs(attrStr);
+        var a  = parseAttrs(attrStr);
+        var id = a.id || generateId();
+        var basis = a.width || '100%';
+        var settings = columnSettings(a);
+        var names = perTypeNames('column', { id: id, basis: basis, settings: settings, elements: [] });
+        settings = mergeExtras(a, settings, names);
         return {
-            id:       a.id    || generateId(),
-            basis:    a.width || '100%',
-            settings: columnSettings(a),
+            id:       id,
+            basis:    basis,
+            settings: settings,
             elements: parseElements(inner)
         };
     }
@@ -935,10 +1072,23 @@
             });
         }
 
-        return { id: a.id || generateId(), type: def.type || def.shortcode, settings: settings };
+        var el = { id: a.id || generateId(), type: def.type || def.shortcode, settings: settings };
+        var names = perTypeNames('element', el);
+        el.settings = mergeExtras(a, settings, names);
+        return el;
     }
 
     function parseElement(type, attrStr, inner) {
+        var el = parseElementInner(type, attrStr, inner);
+        if (el && typeof el === 'object') {
+            var a = parseAttrs(attrStr);
+            var names = perTypeNames('element', el);
+            el.settings = mergeExtras(a, el.settings || {}, names);
+        }
+        return el;
+    }
+
+    function parseElementInner(type, attrStr, inner) {
         var a   = parseAttrs(attrStr);
         var vis = visibilityFromAttrs(a);
 
@@ -1258,8 +1408,14 @@
                 }};
             }
 
-            default:
-                return { id: a.id || generateId(), type: type === 'element' ? (a.type || 'text') : type, settings: {} };
+            default: {
+                // [lazy_element type="x"] or a bare custom tag → resolve the real type and
+                // route to the custom-element parser (mirror of PHP) so fields + visibility survive.
+                var realType = (type === 'element') ? (a.type || 'text') : type;
+                var cdef = customDefsJs()[realType];
+                if (cdef) return parseCustomElement(cdef, attrStr, inner);
+                return { id: a.id || generateId(), type: realType, settings: { visibility: vis } };
+            }
         }
     }
 
@@ -1552,32 +1708,22 @@
         var form = document.getElementById('post-form');
         if (!form) return;
 
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', function () {
             var richContainer = document.getElementById('rich-editor-container');
 
-            // Only intercept when the rich editor is the active tab
+            // Only act when the rich editor is the active tab
             if (richContainer && richContainer.classList.contains('hidden')) return;
 
-            // Sync TinyMCE → textarea so we read the latest typed content
+            // Sync TinyMCE → textarea so the latest typed content is submitted.
             if (typeof tinymce !== 'undefined') {
                 var ed = tinymce.get('wp-editor');
                 if (ed) ed.save();
             }
 
-            var currentContent = textarea.value;
-            if (!isBuilderShortcode(currentContent)) return;
-
-            e.preventDefault();
-
-            try {
-                var json = shortcodesToJson(currentContent);
-                textarea.value = json;
-                // Keep editor_type as 'rich' — user saved from rich editor, not page builder
-            } catch (err) {
-                console.error('[LazyBuilder] Could not convert shortcodes to JSON:', err);
-            }
-
-            form.submit();
+            // NOTE: We intentionally submit the shortcode content as-is and let the server-side
+            // BuilderShortcodeMiddleware convert shortcodes → JSON with the complete (lossless,
+            // readable) PHP converter. The browser converter omits a few element cases, so doing
+            // the conversion here could drop data on submit. Server conversion keeps it lossless.
         });
     }
 

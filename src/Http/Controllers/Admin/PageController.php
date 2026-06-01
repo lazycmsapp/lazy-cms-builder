@@ -4,6 +4,7 @@ namespace Acme\CmsDashboard\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
 use Acme\CmsDashboard\Models\Page;
+use Acme\CmsDashboard\Models\Revision;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -147,6 +148,9 @@ class PageController extends Controller
             $validated['template'] = 'site-width';
         }
 
+        // Interpret the publish date in the CMS timezone → store UTC, and decide status on the server.
+        $validated = lazy_normalize_publish($validated);
+
         $page = Page::create($validated);
 
         // Save Custom Fields
@@ -215,7 +219,93 @@ class PageController extends Controller
             $page->content = BuilderShortcodeConverter::jsonToShortcodes($page->content);
         }
 
-        return view('cms-dashboard::admin.pages.edit', compact('page', 'allPages', 'fieldGroups', 'fieldValues'));
+        // Pending autosave (recovery banner) + revision count for the Revisions button
+        $pendingAutosave = null;
+        $revisionCount = 0;
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('cms_revisions')) {
+                $base = Revision::where('revisionable_type', $page->getMorphClass())
+                    ->where('revisionable_id', $page->getKey());
+                $revisionCount = (clone $base)->where('type', 'revision')->count();
+                $auto = (clone $base)->where('type', 'autosave')->first();
+                if ($auto && $page->updated_at && $auto->updated_at->gt($page->updated_at)) {
+                    $pendingAutosave = ['id' => $auto->id, 'time' => $auto->updated_at->format('M j, Y g:i A')];
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        return view('cms-dashboard::admin.pages.edit', compact('page', 'allPages', 'fieldGroups', 'fieldValues', 'pendingAutosave', 'revisionCount'));
+    }
+
+    /** Full revisions comparison page for a Page — before/after diff + restore. */
+    public function revisionsPage(Request $request, $id)
+    {
+        $page = Page::findOrFail($id);
+        $revs = Revision::where('revisionable_type', $page->getMorphClass())
+            ->where('revisionable_id', $page->getKey())
+            ->orderByDesc('id')->with('user:id,name')->limit(80)->get();
+
+        $entries = [];
+        $entries['current'] = ['key' => 'current', 'label' => 'Current Version (live)', 'title' => $page->title, 'content' => $page->content, 'meta' => 'Currently published', 'type' => 'current'];
+        foreach ($revs as $r) {
+            $entries[(string) $r->id] = [
+                'key'     => (string) $r->id,
+                'label'   => ($r->type === 'autosave' ? 'Autosave' : 'Revision') . ' — ' . $r->created_at->format('M j, Y g:i A'),
+                'title'   => $r->title,
+                'content' => $r->content,
+                'meta'    => ($r->user->name ?? 'System') . ' · ' . $r->created_at->diffForHumans(),
+                'type'    => $r->type,
+            ];
+        }
+        $to   = (string) $request->get('to', 'current');
+        $from = (string) $request->get('from', $revs->count() ? (string) $revs->first()->id : 'current');
+        if (!isset($entries[$to]))   $to = 'current';
+        if (!isset($entries[$from])) $from = $to;
+        $diff = lazy_revision_diff($entries[$from]['content'] ?? '', $entries[$to]['content'] ?? '');
+
+        return view('cms-dashboard::admin.pages.revisions', compact('page', 'entries', 'from', 'to', 'diff'));
+    }
+
+    /** Page autosave — snapshots title + content without touching the live page. */
+    public function autosaveClassic(Request $request, $id)
+    {
+        $page = Page::findOrFail($id);
+        $draft = clone $page;
+        $draft->title   = $request->input('title', $page->title);
+        $draft->content = $request->input('content', $page->content);
+        $rev = Revision::snapshot($draft, 'autosave');
+        return response()->json(['success' => (bool) $rev, 'time' => $rev ? $rev->updated_at->format('g:i:s A') : null]);
+    }
+
+    /** Restore a revision's title + content onto the page. */
+    public function restoreRevisionClassic(Request $request, $id, $revisionId)
+    {
+        $page = Page::findOrFail($id);
+        $rev  = Revision::where('revisionable_type', $page->getMorphClass())
+            ->where('revisionable_id', $page->getKey())->findOrFail($revisionId);
+        Revision::snapshot($page, 'revision');
+        $page->update(['title' => $rev->title ?: $page->title, 'content' => $rev->content]);
+        Revision::clearAutosave($page);
+        clear_page_cache();
+        return redirect()->route('admin.pages.edit', $page)->with('success', 'Revision restored.');
+    }
+
+    /** Delete a single page revision. */
+    public function deleteRevision(Request $request, $id, $revisionId)
+    {
+        $page = Page::findOrFail($id);
+        Revision::where('revisionable_type', $page->getMorphClass())
+            ->where('revisionable_id', $page->getKey())->where('id', $revisionId)->delete();
+        return redirect()->route('admin.pages.revisions', $page->id)->with('success', 'Revision deleted.');
+    }
+
+    /** Delete all revisions for a page. */
+    public function clearRevisions(Request $request, $id)
+    {
+        $page = Page::findOrFail($id);
+        Revision::where('revisionable_type', $page->getMorphClass())
+            ->where('revisionable_id', $page->getKey())->delete();
+        return redirect()->route('admin.pages.revisions', $page->id)->with('success', 'All revisions cleared.');
     }
 
     public function update(Request $request, Page $page)
@@ -263,7 +353,26 @@ class PageController extends Controller
         }
 
         $oldSlug = $page->getOriginal('slug');
+
+        // Protect builder content ONLY when staying in builder mode with non-builder (empty/HTML) content.
+        // Explicit rich-mode edits are always saved so they appear on the front-end.
+        $currentContent = $page->content;
+        $isCurrentBuilder = $page->editor_type === 'builder' || (is_string($currentContent) && (\Illuminate\Support\Str::startsWith($currentContent, '[') || \Illuminate\Support\Str::startsWith($currentContent, '{')));
+        $targetEditorType = $validated['editor_type'] ?? $page->editor_type;
+        $incoming = $validated['content'] ?? '';
+        $isIncomingBuilder = is_string($incoming) && (\Illuminate\Support\Str::startsWith($incoming, '[') || \Illuminate\Support\Str::startsWith($incoming, '{'));
+        if ($isCurrentBuilder && $targetEditorType === 'builder' && !$isIncomingBuilder) {
+            unset($validated['content']);
+        }
+
+        // Snapshot the PRIOR state BEFORE overwriting (true undo on restore)
+        Revision::snapshot($page, 'revision');
+
+        // Interpret the publish date in the CMS timezone → store UTC, and decide status on the server.
+        $validated = lazy_normalize_publish($validated);
+
         $page->update($validated);
+        Revision::clearAutosave($page);
 
         // Automatic Redirection Logic
         if ($oldSlug !== $page->slug) {

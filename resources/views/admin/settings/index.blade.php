@@ -56,6 +56,29 @@
                     </td>
                 </tr>
 
+                <!-- Timezone -->
+                <tr>
+                    <th scope="row" class="w-[200px] text-left align-top pt-2">
+                        <label for="timezone" class="text-[14px] font-semibold text-[#1d2327]">Timezone</label>
+                    </th>
+                    <td>
+                        @php $selectedTz = $settings['timezone'] ?? config('app.timezone') ?? 'UTC'; @endphp
+                        <select name="timezone" id="timezone" class="wp-input w-[400px] h-8 py-0 shadow-sm mb-1">
+                            @foreach(lazy_timezone_list() as $region => $zones)
+                                <optgroup label="{{ $region }}">
+                                    @foreach($zones as $tzId => $tzLabel)
+                                        <option value="{{ $tzId }}" {{ $selectedTz === $tzId ? 'selected' : '' }}>{{ $tzLabel }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endforeach
+                        </select>
+                        <p class="text-[12px] text-[#646970]">
+                            Choose the timezone for publishing &amp; scheduling. Dates are stored in UTC and shown in this timezone.
+                            Current time here: <strong>{{ \Illuminate\Support\Carbon::now($selectedTz)->format('M j, Y H:i') }}</strong>
+                        </p>
+                    </td>
+                </tr>
+
                 <!-- Homepage Selection -->
                 <tr>
                     <th scope="row" class="w-[200px] text-left align-top pt-2">
@@ -282,6 +305,36 @@
                     });
                 });
 
+            });
+        </script>
+    @endpush
+
+    {{-- Searchable Timezone dropdown (TomSelect) — same UX as the shop country selector --}}
+    @push('scripts')
+        <link href="{{ asset('vendor/cms-dashboard/css/tom-select.default.min.css') }}" rel="stylesheet">
+        <script src="{{ asset('vendor/cms-dashboard/js/tom-select.complete.min.js') }}"></script>
+        <style>
+            .ts-wrapper.wp-input { padding: 0 !important; border: none !important; box-shadow: none !important; height: auto !important; min-height: 32px !important; }
+            #timezone + .ts-wrapper { max-width: 400px; }
+            .ts-control {
+                border: 1px solid #8c8f94 !important; border-radius: 3px !important; padding: 4px 12px !important;
+                font-size: 14px !important; color: #1d2327 !important; background-color: #fff !important;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.07) inset !important; min-height: 32px !important;
+                display: flex !important; align-items: center !important;
+            }
+            .ts-dropdown { font-size: 13px; }
+            .ts-dropdown .optgroup-header { font-weight: 600; color: #646970; }
+        </style>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.TomSelect && document.getElementById('timezone')) {
+                    new TomSelect('#timezone', {
+                        create: false,
+                        maxOptions: null,           // show all timezones; search narrows the list
+                        placeholder: 'Search timezone (e.g. Dhaka, +06, Asia)…',
+                        searchField: ['text', 'value'],
+                    });
+                }
             });
         </script>
     @endpush

@@ -68,6 +68,25 @@ class CmsDashboardServiceProvider extends ServiceProvider
             $schedule->command('lazy:publish-scheduled')->everyMinute()->withoutOverlapping();
         });
 
+        // Cron-independent fallback: many hosts (and local dev) never run `schedule:run`,
+        // so scheduled posts/pages/products/CPTs would never go live. After EVERY web response is
+        // sent (terminating = zero user-facing latency), flip any scheduled item whose time has
+        // arrived to published. No throttle, so the very first visit at/after the scheduled time
+        // publishes it — as close to "exactly on time" as traffic allows. Type-agnostic (the base
+        // Post model has no global scope) so it covers post, page, product and every CPT.
+        if (!$this->app->runningInConsole()) {
+            $this->app->terminating(function () {
+                try {
+                    \Acme\CmsDashboard\Models\Post::where('status', 'scheduled')
+                        ->whereNotNull('published_at')
+                        ->where('published_at', '<=', now())
+                        ->update(['status' => 'published']);
+                } catch (\Throwable $e) {
+                    // Never let scheduling maintenance affect the request.
+                }
+            });
+        }
+
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__ . '/../resources/views' => resource_path('views/vendor/cms-dashboard'),

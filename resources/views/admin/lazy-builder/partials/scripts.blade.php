@@ -60,7 +60,16 @@
                 _pickerCtx = null;
             };
 
-            watch(device, () => { _closeActivePickr(true); });
+            watch(device, () => {
+                _closeActivePickr(true);
+                // Re-fetch card previews so the carousel shows the correct per-device "items per slide".
+                const walkCards = (items) => (items || []).forEach(it => {
+                    if (it.type === 'card' && it.settings && it.settings.post_card_id) fetchCardPreview(it);
+                    if (it.columns) it.columns.forEach(c => walkCards(c.elements));
+                    if (it.elements) walkCards(it.elements);
+                });
+                walkCards(layout.value);
+            });
 
             const getResponsiveVal = (settings, prop, deviceMode) => {
                 if (!settings) return undefined;
@@ -74,6 +83,30 @@
                     return settings[prop];
                 }
                 return settings[prop];
+            };
+
+            // Card carousel "items per slide" for the CURRENT device (live canvas preview).
+            // Mirrors the front-end: tablet auto = min(desktop, 2), mobile auto = 1.
+            const cardPerView = (s) => {
+                const d = parseInt(s.items_per_slide) || 1;
+                if (device.value === 'tablet') { const t = parseInt(s.items_per_slide_tablet) || 0; return t > 0 ? t : Math.min(d, 2); }
+                if (device.value === 'mobile') { const m = parseInt(s.items_per_slide_mobile) || 0; return m > 0 ? m : 1; }
+                return d;
+            };
+            // How many grid columns the canvas card preview should show for the current device.
+            const cardPreviewCols = (s) => {
+                if (!s) return 3;
+                if (s.layout === 'list') return 1;
+                if (s.layout === 'carousel') return cardPerView(s);
+                if (device.value === 'tablet') return parseInt(s.columns_tablet) || parseInt(s.columns) || 3;
+                if (device.value === 'mobile') return parseInt(s.columns_mobile) || 1;
+                return parseInt(s.columns) || 3;
+            };
+            // How many card placeholders to render in the canvas preview.
+            const cardPreviewCount = (s) => {
+                if (!s) return 6;
+                if (s.layout === 'carousel') return cardPerView(s);
+                return parseInt(s.posts_count) || 6;
             };
 
             const setResponsiveVal = (settings, prop, deviceMode, val) => {
@@ -687,9 +720,29 @@
                                     parsed = [];
                                 }
                             } else {
-                                // Content is a string but not JSON (likely raw HTML)
-                                console.warn('Content is not JSON. It might be legacy HTML.');
-                                parsed = [];
+                                // Content is a plain string (raw HTML/text from the rich editor),
+                                // NOT builder JSON. Preserve it by loading it into a Text Block element
+                                // so switching an existing page/post/product/CPT into the builder does
+                                // not wipe the existing rich-editor content. (Builder JSON/shortcode is
+                                // handled by the branch above and is unaffected.)
+                                if (trimmed !== '') {
+                                    parsed = [{
+                                        id: uid(),
+                                        type: 'container',
+                                        settings: { visibility: { mobile: true, tablet: true, desktop: true } },
+                                        columns: [{
+                                            id: uid(), basis: '100%', basis_tablet: null, basis_mobile: null,
+                                            settings: makeColumnSettings(),
+                                            elements: [{
+                                                id: Date.now(),
+                                                type: 'text_block',
+                                                settings: { content: rawContent, visibility: { mobile: true, tablet: true, desktop: true } }
+                                            }]
+                                        }]
+                                    }];
+                                } else {
+                                    parsed = [];
+                                }
                             }
                         } else {
                             parsed = rawContent;
@@ -1804,6 +1857,91 @@
                     isSaving.value = false;
                 }
             };
+
+            // ── Revisions + Autosave ───────────────────────────────────────────────
+            @isset($post)
+            const revisionsEnabled = !postCardMode.value;
+            const autosaveUrl   = "{{ route('admin.lazy-builder.autosave', $post->id) }}";
+            const revisionsUrl  = "{{ route('admin.lazy-builder.revisions', $post->id) }}";
+            const restoreUrlFor = (rid) => "{{ url('admin/lazy-builder/'.$post->id.'/revisions') }}/" + rid + "/restore";
+            const deleteUrlFor  = (rid) => "{{ url('admin/lazy-builder/'.$post->id.'/revisions') }}/" + rid;
+            @else
+            const revisionsEnabled = false;
+            const autosaveUrl = null, revisionsUrl = null;
+            const restoreUrlFor = () => null;
+            const deleteUrlFor  = () => null;
+            @endisset
+
+            const autosaveStatus = ref('');
+            const showRevisions  = ref(false);
+            const revisionList   = ref([]);
+            const isRestoring    = ref(false);
+            const autosaveBanner = ref(@json($pendingAutosave ?? null));
+            const _csrfTok = () => document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            const runAutosave = async () => {
+                if (!revisionsEnabled || !autosaveUrl || !isDirty.value) return;
+                try {
+                    const res = await fetch(autosaveUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfTok() },
+                        body: JSON.stringify({ layout: layout.value })
+                    });
+                    const d = await res.json();
+                    if (d.success) autosaveStatus.value = 'Draft saved ' + d.time;
+                } catch (e) { /* silent — autosave is best-effort */ }
+            };
+
+            const openRevisions = async () => {
+                if (!revisionsUrl) return;
+                showRevisions.value = true;
+                try {
+                    const res = await fetch(revisionsUrl, { headers: { 'X-CSRF-TOKEN': _csrfTok() } });
+                    const d = await res.json();
+                    revisionList.value = d.revisions || [];
+                } catch (e) { revisionList.value = []; }
+            };
+
+            const restoreRevision = async (rid) => {
+                if (isRestoring.value || !restoreUrlFor(rid)) return;
+                if (!confirm('Restore this version? Your current layout will be saved as a revision first.')) return;
+                isRestoring.value = true;
+                try {
+                    const res = await fetch(restoreUrlFor(rid), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfTok() },
+                        body: JSON.stringify({})
+                    });
+                    const d = await res.json();
+                    if (d.success && Array.isArray(d.layout)) {
+                        layout.value = d.layout;
+                        lastSavedLayout = serializedLayout.value;
+                        isDirty.value = false;
+                        showRevisions.value = false;
+                        autosaveBanner.value = null;
+                        showToast('Version restored!', 'success');
+                    } else {
+                        showToast('Restore failed', 'error');
+                    }
+                } catch (e) { showToast('Restore failed', 'error'); }
+                finally { isRestoring.value = false; }
+            };
+
+            const deleteRevisionItem = async (rid) => {
+                if (!deleteUrlFor(rid) || !confirm('Delete this revision permanently?')) return;
+                try {
+                    const res = await fetch(deleteUrlFor(rid), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': _csrfTok() } });
+                    const d = await res.json();
+                    if (d.success) revisionList.value = revisionList.value.filter(r => r.id !== rid);
+                } catch (e) { showToast('Delete failed', 'error'); }
+            };
+
+            const dismissAutosaveBanner = () => { autosaveBanner.value = null; };
+
+            // Autosave loop — every 30s when there are unsaved changes
+            if (revisionsEnabled) {
+                setInterval(runAutosave, 30000);
+            }
 
             const editingColumn = computed(() => {
                 const ctx = editingContext.value;
@@ -2926,7 +3064,7 @@
                     const res = await fetch('{{ route("admin.lazy-builder.card-preview") }}', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                        body: JSON.stringify({ settings: el.settings })
+                        body: JSON.stringify({ settings: el.settings, device: device.value })
                     });
                     const data = await res.json();
                     cardPreviewCache[elId] = { loading: false, html: data.success ? data.html : '' };
@@ -3290,6 +3428,7 @@
                 onDragStart, onDragEnd, onDragOver, onDrop, dragTarget, dragPosition,
                 canvasStyle, containerStyle, containerInnerStyle, columnOuterStyle, columnInnerStyle, formatBasisToFraction, updateBasis, hexToRgba, getUnitVal,
                 getVisibilityClasses, getCanvasVisibilityStyle, getResponsiveVal, setResponsiveVal, resetResponsiveVal,
+                cardPerView, cardPreviewCols, cardPreviewCount,
                 searchColumnQuery, searchElementQuery, filteredColumnLayouts, filteredNestedColumnLayouts, filteredAvailableElements,
                 shouldShowGuide,
                 toasts, showToast,
@@ -3315,7 +3454,9 @@
                 getCustomElementPreviewColor,
                 getCustomElementPreviewFields,
                 getCustomElementRender,
-                customFieldVisible
+                customFieldVisible,
+                autosaveStatus, showRevisions, revisionList, isRestoring, autosaveBanner,
+                openRevisions, restoreRevision, deleteRevisionItem, dismissAutosaveBanner
             };
         }
     }).directive('tomselect', {

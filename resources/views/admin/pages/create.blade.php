@@ -218,21 +218,62 @@
                                 <svg class="w-4 h-4 mr-1 mt-[2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> 
                                 <div class="flex-grow">
                                     <span id="publish-display-prefix">Publish</span> <strong class="text-black" id="publish-display-text">immediately</strong> <a href="#" class="text-[#2271b1] underline ml-1 toggle-publish-edit" data-target="publish-edit">Edit</a>
-                                    <div id="publish-edit" class="hidden mt-2 p-2 bg-[#f6f7f7] border border-[#dfdfdf]">
-                                        <div class="flex flex-wrap items-center gap-1 mb-2 text-[12px]">
-                                            @php $months = ['01-Jan','02-Feb','03-Mar','04-Apr','05-May','06-Jun','07-Jul','08-Aug','09-Sep','10-Oct','11-Nov','12-Dec']; @endphp
-                                            <select id="pub-mm" class="wp-input text-[12px] py-0 h-[24px] w-20">
-                                                @foreach($months as $m)
-                                                <option value="{{ substr($m, 0, 2) }}" {{ (now()->format('m')) == substr($m, 0, 2) ? 'selected' : '' }}>{{ substr($m, 3) }}</option>
-                                                @endforeach
-                                            </select>
-                                            <input type="text" id="pub-dd" value="{{ now()->format('d') }}" class="wp-input w-8 text-center text-[12px] h-[24px]">,
-                                            <input type="text" id="pub-yy" value="{{ now()->format('Y') }}" class="wp-input w-[42px] text-center text-[12px] h-[24px]"> at
-                                            <input type="text" id="pub-hr" value="{{ now()->format('H') }}" class="wp-input w-8 text-center text-[12px] h-[24px]"> :
-                                            <input type="text" id="pub-min" value="{{ now()->format('i') }}" class="wp-input w-8 text-center text-[12px] h-[24px]">
+                                    <div id="publish-edit" class="hidden mt-2 p-3 bg-[#f6f7f7] border border-[#dfdfdf] rounded">
+                                        @php
+                                            $months = ['01'=>'Jan','02'=>'Feb','03'=>'Mar','04'=>'Apr','05'=>'May','06'=>'Jun','07'=>'Jul','08'=>'Aug','09'=>'Sep','10'=>'Oct','11'=>'Nov','12'=>'Dec'];
+                                            $pDate = now(cms_timezone());
+                                            $curY  = (int) date('Y');
+                                            $years = range($curY - 1, $curY + 6);
+                                        @endphp
+                                        <div class="grid grid-cols-3 gap-2 mb-2">
+                                            <div>
+                                                <label class="block text-[10px] font-medium text-[#646970] uppercase mb-1">Month</label>
+                                                <select id="pub-mm" class="wp-input text-[12px] h-[30px] w-full">
+                                                    @foreach($months as $mNum => $mName)
+                                                    <option value="{{ $mNum }}" {{ $pDate->format('m') === $mNum ? 'selected' : '' }}>{{ $mName }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-medium text-[#646970] uppercase mb-1">Day</label>
+                                                <select id="pub-dd" class="wp-input text-[12px] h-[30px] w-full">
+                                                    @for($d = 1; $d <= 31; $d++)
+                                                    @php $dd = sprintf('%02d', $d); @endphp
+                                                    <option value="{{ $dd }}" {{ $pDate->format('d') === $dd ? 'selected' : '' }}>{{ $dd }}</option>
+                                                    @endfor
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-medium text-[#646970] uppercase mb-1">Year</label>
+                                                <select id="pub-yy" class="wp-input text-[12px] h-[30px] w-full">
+                                                    @foreach($years as $y)
+                                                    <option value="{{ $y }}" {{ (int)$pDate->format('Y') === $y ? 'selected' : '' }}>{{ $y }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-2 mb-2">
+                                            <div>
+                                                <label class="block text-[10px] font-medium text-[#646970] uppercase mb-1">Hour</label>
+                                                <select id="pub-hr" class="wp-input text-[12px] h-[30px] w-full">
+                                                    @for($h = 0; $h <= 23; $h++)
+                                                    @php $hh = sprintf('%02d', $h); @endphp
+                                                    <option value="{{ $hh }}" {{ $pDate->format('H') === $hh ? 'selected' : '' }}>{{ $hh }}</option>
+                                                    @endfor
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-medium text-[#646970] uppercase mb-1">Minute</label>
+                                                <select id="pub-min" class="wp-input text-[12px] h-[30px] w-full">
+                                                    @for($mi = 0; $mi <= 59; $mi++)
+                                                    @php $mm = sprintf('%02d', $mi); @endphp
+                                                    <option value="{{ $mm }}" {{ $pDate->format('i') === $mm ? 'selected' : '' }}>{{ $mm }}</option>
+                                                    @endfor
+                                                </select>
+                                            </div>
                                         </div>
                                         <input type="hidden" name="published_at" id="published-at-hidden">
-                                        <div class="text-right"><button type="button" id="ok-publish-btn" class="wp-btn-secondary text-[12px] h-[24px]">OK</button></div>
+                                        <div class="text-right"><button type="button" id="ok-publish-btn" class="wp-btn-secondary text-[12px] h-[28px]">OK</button></div>
                                     </div>
                                 </div>
                             </div>
@@ -383,7 +424,8 @@
                     min = document.getElementById('pub-min').value;
                 
                 let selDate = new Date(`${yy}-${mm}-${dd}T${hr}:${min}:00`);
-                let isFuture = selDate > new Date();
+                // Compare against the CMS timezone "now" (Settings → General), not the browser clock.
+                let isFuture = selDate > new Date("{{ now(cms_timezone())->format('Y-m-d\TH:i:s') }}");
                 let monthName = document.getElementById('pub-mm').options[document.getElementById('pub-mm').selectedIndex].text;
                 
                 document.getElementById('publish-display-prefix').innerText = isFuture ? 'Scheduled for' : 'Publish';

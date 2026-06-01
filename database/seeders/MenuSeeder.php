@@ -159,8 +159,9 @@ class MenuSeeder extends Seeder
             'order' => 85,
         ]);
         $toolsMenu->children()->createMany([
-            ['title' => 'Backup & Restore', 'route' => 'admin.backup.index',    'order' => 1],
-            ['title' => 'Languages',        'route' => 'admin.languages.index', 'order' => 2],
+            ['title' => 'Backup & Restore',  'route' => 'admin.backup.index',    'order' => 1],
+            ['title' => 'WordPress Import',  'route' => 'admin.wp-import.index', 'order' => 2],
+            ['title' => 'Languages',         'route' => 'admin.languages.index', 'order' => 3],
         ]);
 
         // 11. Analytics

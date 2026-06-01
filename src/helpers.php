@@ -94,6 +94,73 @@ if (!function_exists('update_cms_option')) {
     }
 }
 
+if (!function_exists('cms_timezone')) {
+    /**
+     * The CMS display/input timezone chosen in Settings → General.
+     * Storage stays UTC; this is only used to render/interpret dates for the admin.
+     */
+    function cms_timezone(): string
+    {
+        try {
+            $tz = get_cms_option('timezone');
+            if ($tz && in_array($tz, timezone_identifiers_list(), true)) {
+                return $tz;
+            }
+        } catch (\Throwable $e) {
+        }
+        return config('app.timezone') ?: 'UTC';
+    }
+}
+
+if (!function_exists('lazy_timezone_list')) {
+    /**
+     * All PHP timezones grouped by region, each labelled with its CURRENT UTC offset
+     * (e.g. "(UTC+06:00) Asia/Dhaka"). Offsets are computed live, so DST/changes stay correct.
+     * @return array<string, array<string,string>>  region => [identifier => label]
+     */
+    function lazy_timezone_list(): array
+    {
+        $groups = [];
+        foreach (timezone_identifiers_list() as $tz) {
+            try {
+                $offset = (new \DateTime('now', new \DateTimeZone($tz)))->getOffset();
+            } catch (\Throwable $e) {
+                continue;
+            }
+            $sign  = $offset < 0 ? '-' : '+';
+            $abs   = abs($offset);
+            $label = sprintf('(UTC%s%02d:%02d) %s', $sign, intdiv($abs, 3600), intdiv($abs % 3600, 60), $tz);
+            $region = strpos($tz, '/') !== false ? explode('/', $tz)[0] : 'Other';
+            $groups[$region][$tz] = $label;
+        }
+        return $groups;
+    }
+}
+
+if (!function_exists('lazy_normalize_publish')) {
+    /**
+     * Normalise a save payload's publish fields:
+     *  - interpret the incoming naive `published_at` in the CMS timezone and convert to UTC for storage,
+     *  - then set `status` (scheduled vs published) from that UTC time on the server.
+     * Keeps the DB in UTC while letting the admin work in their chosen timezone.
+     */
+    function lazy_normalize_publish(array $data): array
+    {
+        if (!empty($data['published_at'])) {
+            try {
+                $data['published_at'] = \Illuminate\Support\Carbon::parse($data['published_at'], cms_timezone())
+                    ->utc()->format('Y-m-d H:i:s');
+            } catch (\Throwable $e) {
+            }
+        }
+        $data['status'] = \Acme\CmsDashboard\Models\Post::resolveStatusForSchedule(
+            $data['status'] ?? null,
+            $data['published_at'] ?? null
+        );
+        return $data;
+    }
+}
+
 if (!function_exists('get_custom_field')) {
     function get_custom_field($post, $fieldName, $default = null)
     {
@@ -1118,6 +1185,67 @@ if (!function_exists('lazy_custom_element_render')) {
         }
 
         return compact('wrapperStyle', 'wrapperHoverClass', 'hoverCss', 'items');
+    }
+}
+
+if (!function_exists('lazy_revision_diff')) {
+    /**
+     * Produce an HTML line-level diff between two content versions (for the revisions compare page).
+     * Builder JSON is converted to readable shortcodes first. Uses an LCS line diff — no external deps.
+     */
+    function lazy_revision_diff(string $old, string $new): string
+    {
+        $prep = function ($s) {
+            $s = (string) $s;
+            if (\Acme\CmsDashboard\Services\BuilderShortcodeConverter::isBuilderJson($s)) {
+                $s = \Acme\CmsDashboard\Services\BuilderShortcodeConverter::jsonToShortcodes($s);
+            }
+            $s = preg_replace('/>\s*</', ">\n<", $s);        // break HTML onto separate lines
+            $lines = preg_split('/\r\n|\r|\n/', $s);
+            return array_values(array_filter($lines, fn($l) => trim($l) !== '' || $l === ''));
+        };
+
+        $a = $prep($old);
+        $b = $prep($new);
+        $n = count($a);
+        $m = count($b);
+
+        // Safety cap — very large contents skip the O(n*m) diff
+        if ($n + $m > 4000) {
+            return '<div class="diff-note">Content too large to diff line-by-line. Use Restore to roll back.</div>';
+        }
+
+        // LCS dynamic programming table
+        $dp = array_fill(0, $n + 1, array_fill(0, $m + 1, 0));
+        for ($i = $n - 1; $i >= 0; $i--) {
+            for ($j = $m - 1; $j >= 0; $j--) {
+                $dp[$i][$j] = ($a[$i] === $b[$j])
+                    ? $dp[$i + 1][$j + 1] + 1
+                    : max($dp[$i + 1][$j], $dp[$i][$j + 1]);
+            }
+        }
+
+        $rows = [];
+        $i = 0; $j = 0;
+        while ($i < $n && $j < $m) {
+            if ($a[$i] === $b[$j])              { $rows[] = [' ', $a[$i]]; $i++; $j++; }
+            elseif ($dp[$i + 1][$j] >= $dp[$i][$j + 1]) { $rows[] = ['-', $a[$i]]; $i++; }
+            else                                { $rows[] = ['+', $b[$j]]; $j++; }
+        }
+        while ($i < $n) { $rows[] = ['-', $a[$i]]; $i++; }
+        while ($j < $m) { $rows[] = ['+', $b[$j]]; $j++; }
+
+        $changed = false;
+        $html = '';
+        foreach ($rows as [$op, $line]) {
+            $esc = e($line);
+            if ($op === '+')      { $html .= '<div class="diff-line diff-add"><span class="diff-sign">+</span>' . $esc . '</div>'; $changed = true; }
+            elseif ($op === '-')  { $html .= '<div class="diff-line diff-del"><span class="diff-sign">-</span>' . $esc . '</div>'; $changed = true; }
+            else                  { $html .= '<div class="diff-line diff-eq"><span class="diff-sign"> </span>' . $esc . '</div>'; }
+        }
+
+        if (!$changed) return '<div class="diff-note">No differences between these two versions.</div>';
+        return $html;
     }
 }
 

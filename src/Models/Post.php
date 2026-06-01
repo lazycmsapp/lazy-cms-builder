@@ -67,6 +67,24 @@ class Post extends Model
                      });
     }
 
+    /**
+     * Decide the effective publish status from a publish date, on the SERVER (timezone-safe).
+     * A future publish date ⇒ "scheduled"; a past/now date ⇒ "published". Drafts stay drafts.
+     * This avoids relying on the browser clock, which breaks when the app timezone (UTC) differs
+     * from the editor's local timezone (e.g. a +2 min bump still looked "past" to the browser).
+     */
+    public static function resolveStatusForSchedule(?string $status, $publishedAt): ?string
+    {
+        if ($status === 'draft' || empty($publishedAt)) {
+            return $status;
+        }
+        try {
+            return \Illuminate\Support\Carbon::parse($publishedAt)->isFuture() ? 'scheduled' : 'published';
+        } catch (\Throwable $e) {
+            return $status;
+        }
+    }
+
     public function scopeType(Builder $query, string $type): Builder
     {
         return $query->where('type', $type);

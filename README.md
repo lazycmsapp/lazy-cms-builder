@@ -1,4 +1,4 @@
-# Lazy CMS Rebuild v4.0.0
+# Lazy CMS Rebuild v5.13.0
 
 A powerful, modular, and easy-to-use CMS package for Laravel applications with built-in multi-language support, robust Role-Based Access Control (RBAC), and a WordPress-like theme & hook system.
 
@@ -100,6 +100,39 @@ add_lazy_action('lazy_after_post_content', function($post) {
     echo "<div>Related Content Here</div>";
 });
 ```
+
+## 🧪 Testing
+
+Automated tests live in the host app under `tests/Feature/Cms/` and run on an isolated
+in-memory SQLite database (configured in `phpunit.xml`) — they never touch real data.
+
+Requirements: the `pdo_sqlite` PHP extension must be enabled (`extension=pdo_sqlite` in `php.ini`).
+
+```bash
+# run every test
+php artisan test
+
+# run only the CMS tests
+php artisan test tests/Feature/Cms
+
+# run a single file
+php artisan test tests/Feature/Cms/ScheduleStatusTest.php
+
+# filter by test name
+php artisan test --filter=future_publish_date_becomes_scheduled
+```
+
+Current coverage (the regression-prone areas):
+
+| File | Guards |
+|------|--------|
+| `BuilderShortcodeConverterTest` | JSON ↔ shortcode round-trip stays lossless & readable (no base64) |
+| `ScheduleStatusTest` | "schedule only on a future time" status logic |
+| `PublishTimezoneTest` | publish date is interpreted in the CMS timezone and stored as UTC |
+| `SchedulePublishFlowTest` | due posts auto-publish; scheduled posts stay hidden until live |
+
+Green ✓ = safe; red ⨯ = something regressed (the diff shows expected vs actual).
+Run the suite after changing the converter, scheduling, or save/publish code.
 
 ---
 

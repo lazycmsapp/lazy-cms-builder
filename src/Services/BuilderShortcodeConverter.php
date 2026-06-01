@@ -16,6 +16,9 @@ class BuilderShortcodeConverter
     /** @var array<string,array>|null cached custom element definitions keyed by type */
     private static $customDefs = null;
 
+    /** When true, appendExtras() is a no-op — used to probe the bare per-type attribute names. */
+    private static $suppressExtras = false;
+
     /** Lazily resolve + cache registered custom element definitions (keyed by type). */
     private static function customDefs(): array
     {
@@ -127,8 +130,27 @@ class BuilderShortcodeConverter
         return implode("\n\n", array_map([self::class, 'containerToShortcode'], $layout));
     }
 
+    /**
+     * Rich editors (TinyMCE) wrap shortcodes in <p>/<br> and HTML-encode brackets. Strip that
+     * wrapping around structural builder tags so the layout parses faithfully after a rich-editor edit.
+     */
+    private static function unwrapEditorMarkup(string $content): string
+    {
+        // Decode encoded brackets that some editors produce.
+        $content = str_replace(['&#91;', '&#93;', '&lbrack;', '&rbrack;', '&#x5B;', '&#x5D;', '&#x5b;', '&#x5d;'], ['[', ']', '[', ']', '[', ']', '[', ']'], $content);
+        // Drop <p>/</p>/<br> immediately adjacent to ANY builder shortcode tag (open or close).
+        $content = preg_replace('#<p[^>]*>\s*(\[/?(?:lazy_|lzr_)[^\]]*\])#i', '$1', $content);
+        $content = preg_replace('#(\[/?(?:lazy_|lzr_)[^\]]*\])\s*</p>#i', '$1', $content);
+        // Stray <br> between shortcode tags.
+        $content = preg_replace('#(\])\s*<br\s*/?>\s*(\[)#i', '$1$2', $content);
+        // Empty paragraphs left behind.
+        $content = preg_replace('#<p[^>]*>\s*(?:&nbsp;)?\s*</p>#i', '', $content);
+        return $content;
+    }
+
     public static function shortcodesToJson(string $content): string
     {
+        $content = self::unwrapEditorMarkup($content);
         $layout  = [];
         $pattern = '/\[lazy_section([^\]]*)\](.*?)\[\/lazy_section\]/s';
         if (!preg_match_all($pattern, $content, $m, PREG_SET_ORDER)) return $content;
@@ -142,6 +164,133 @@ class BuilderShortcodeConverter
     // =========================================================================
     // JSON → Shortcode
     // =========================================================================
+
+    // =========================================================================
+    // Lossless fidelity — readable "extra" attributes (no base64)
+    // -------------------------------------------------------------------------
+    // The per-type serializers only emit a hand-picked subset of each settings
+    // object, so a rich-editor round-trip (shortcode → JSON → shortcode) would
+    // silently drop the rest (padding, margins, dividers, etc.). To stay lossless
+    // *and* keep shortcodes human-readable, we append the dropped fields as plain
+    // attributes named after the literal setting key — e.g. dividerWidth="60".
+    //
+    //   • Serialize: parse our own output back; any setting value the round-trip
+    //     fails to recover is appended as a readable attribute.
+    //   • Parse: after the per-type parse, any attribute the per-type serializer
+    //     does NOT itself emit (and that isn't structural) is merged back in.
+    // This is symmetric and collision-free: the per-type attribute names and the
+    // extra (literal-key) names never overlap on recoverable fields.
+    // =========================================================================
+
+    private const FIDELITY_STRUCTURAL = ['id', 'type', 'width', 'width_tablet', 'width_mobile', 'hide_mobile', 'hide_tablet', 'hide_desktop'];
+
+    private static function isTransientKey($k): bool
+    {
+        return is_string($k) && ($k === '' || $k[0] === '_' || $k === 'isHovered' || $k === 'isTextHovered');
+    }
+
+    /** Attribute names present on the opening tag of a shortcode string. */
+    private static function tagAttrNames(string $sc): array
+    {
+        if (!preg_match('/^\s*\[[a-z0-9_]+([^\]]*)\]/i', $sc, $m)) return [];
+        preg_match_all('/([A-Za-z_][\w-]*)\s*=\s*"/', $m[1], $mm);
+        return $mm[1] ?? [];
+    }
+
+    /** Loose scalar equality (string-normalised), used to detect already-recovered values. */
+    private static function looseEq($a, $b): bool
+    {
+        if (is_bool($a) || is_bool($b)) return (bool)$a === (bool)$b;
+        if ($a === null || $b === null) return $a === $b;
+        if (is_array($a) || is_array($b)) return $a === $b;
+        return (string)$a === (string)$b;
+    }
+
+    /** Coerce a readable attribute value back to bool / number / string. */
+    private static function coerceAttr(string $v)
+    {
+        if ($v === 'true') return true;
+        if ($v === 'false') return false;
+        if ($v === 'null') return null;
+        if (is_numeric($v)) {
+            // keep large id-like ints as strings only if they overflow; otherwise numeric
+            if (preg_match('/^-?\d+$/', $v)) {
+                $i = (int)$v;
+                return ((string)$i === $v) ? $i : $v;
+            }
+            return (float)$v;
+        }
+        return $v;
+    }
+
+    /**
+     * Append readable "extra" attributes for any scalar setting the per-type round-trip drops.
+     * $recovered is what parsing $sc back yields, so only genuinely-lost values are emitted.
+     */
+    private static function appendExtras(string $sc, array $settings, array $recovered): string
+    {
+        if (self::$suppressExtras) return $sc;
+        $extras = [];
+        foreach ($settings as $k => $v) {
+            if (self::isTransientKey($k)) continue;
+            if ($v === null || $v === '' || is_array($v)) continue; // arrays are content the per-type handles
+            if (array_key_exists($k, $recovered) && self::looseEq($recovered[$k], $v)) continue;
+            $val = is_bool($v) ? ($v ? 'true' : 'false') : (string)$v;
+            if (strpos($val, '"') !== false) continue; // never break attribute quoting
+            $extras[] = $k . '="' . $val . '"';
+        }
+        if (empty($extras)) return $sc;
+        return preg_replace('/^(\s*\[[a-z0-9_]+\s)/i', '${1}' . implode(' ', $extras) . ' ', $sc, 1);
+    }
+
+    /**
+     * Merge back any attribute the per-type serializer does not itself emit (and that isn't
+     * structural). $perTypeNames are the attribute names the per-type serializer produces.
+     */
+    private static function mergeExtras(array $attrs, array $settings, array $perTypeNames): array
+    {
+        foreach ($attrs as $k => $v) {
+            if (!is_string($k) || $k === '') continue;
+            if (in_array($k, self::FIDELITY_STRUCTURAL, true)) continue;
+            if (in_array($k, $perTypeNames, true)) continue;
+            $settings[$k] = is_string($v) ? self::coerceAttr($v) : $v;
+        }
+        return $settings;
+    }
+
+    /** Strip child-holding keys so re-serialization only yields the node's own opening-tag attrs. */
+    private static function stripChildren(array $node): array
+    {
+        unset($node['columns'], $node['elements']);
+        return $node;
+    }
+
+    /** The attribute names the per-type serializer alone emits for a node (extras suppressed). */
+    private static function perTypeNames(string $kind, array $node): array
+    {
+        $prev = self::$suppressExtras;
+        self::$suppressExtras = true;
+        try {
+            if ($kind === 'container')   $sc = self::containerToShortcode(self::stripChildren($node));
+            elseif ($kind === 'column')  $sc = self::columnToShortcode(self::stripChildren($node));
+            else                         $sc = self::elementToShortcode(self::stripChildren($node));
+        } finally {
+            self::$suppressExtras = $prev;
+        }
+        return is_string($sc) ? self::tagAttrNames($sc) : [];
+    }
+
+    /** What parsing a freshly-serialized element shortcode recovers — used to find dropped fields. */
+    private static function elementRecovered(string $sc, string $type, array $settings): array
+    {
+        if (!preg_match('/^\s*\[([^\s\]\/]+)\s*([^\]]*?)(?:\/\]|\](.*)\[\/\1\])\s*$/is', $sc, $m)) return $settings;
+        // Built-in types win (some, e.g. "menu", are ALSO registered as custom defs for the panel UI).
+        $el  = self::parseElementInner($type, $m[2], $m[3] ?? '');
+        if (!is_array($el) && isset(self::customDefs()[$type])) {
+            $el = self::parseCustomElement(self::customDefs()[$type], $m[2], $m[3] ?? '');
+        }
+        return is_array($el) ? ($el['settings'] ?? []) : $settings;
+    }
 
     private static function containerToShortcode(array $container): string
     {
@@ -287,7 +436,9 @@ class BuilderShortcodeConverter
         }
         $inner = $colLines ? "\n" . implode("\n", $colLines) . "\n" : '';
 
-        return '[lazy_section ' . implode(' ', $a) . ']' . $inner . '[/lazy_section]';
+        $attrStr   = implode(' ', $a);
+        $recovered = self::containerSettings(self::attrs($attrStr));
+        return self::appendExtras('[lazy_section ' . $attrStr . ']' . $inner . '[/lazy_section]', $s, $recovered);
     }
 
     private static function columnToShortcode(array $column): string
@@ -454,11 +605,16 @@ class BuilderShortcodeConverter
 
         $elems = [];
         foreach ($column['elements'] ?? [] as $el) {
-            $elems[] = self::elementToShortcode($el);
+            $sc        = self::elementToShortcode($el);
+            $eSettings = $el['settings'] ?? [];
+            $recovered = self::elementRecovered($sc, $el['type'] ?? 'text', $eSettings);
+            $elems[]   = self::appendExtras($sc, $eSettings, $recovered);
         }
         $inner = $elems ? ' ' . implode(' ', $elems) . ' ' : '';
 
-        return '[lazy_col ' . implode(' ', $a) . ']' . $inner . '[/lazy_col]';
+        $attrStr   = implode(' ', $a);
+        $recovered = self::columnSettings(self::attrs($attrStr));
+        return self::appendExtras('[lazy_col ' . $attrStr . ']' . $inner . '[/lazy_col]', $s, $recovered);
     }
 
     private static function elementToShortcode(array $el): string
@@ -1140,8 +1296,9 @@ class BuilderShortcodeConverter
                 self::attrI($a, 'css_id',                 $s['cssId']              ?? null);
                 $items = '';
                 foreach ($s['items'] ?? [] as $item) {
-                    $t = htmlspecialchars($item['title'] ?? '', ENT_QUOTES);
-                    $items .= "\n" . '[lazy_acc_item title="' . $t . '"]' . ($item['content'] ?? '') . '[/lazy_acc_item]';
+                    $t  = htmlspecialchars($item['title'] ?? '', ENT_QUOTES);
+                    $iid = !empty($item['id']) ? ' id="' . htmlspecialchars((string) $item['id'], ENT_QUOTES) . '"' : '';
+                    $items .= "\n" . '[lazy_acc_item' . $iid . ' title="' . $t . '"]' . ($item['content'] ?? '') . '[/lazy_acc_item]';
                 }
                 return '[lazy_accordion ' . trim($a) . $vis . ']' . $items . "\n[/lazy_accordion]";
             }
@@ -1174,8 +1331,9 @@ class BuilderShortcodeConverter
                 self::attrI($a, 'css_id',           $s['cssId']          ?? null);
                 $items = '';
                 foreach ($s['items'] ?? [] as $item) {
-                    $l = htmlspecialchars($item['label'] ?? '', ENT_QUOTES);
-                    $items .= "\n" . '[lazy_tab_item label="' . $l . '"]' . ($item['content'] ?? '') . '[/lazy_tab_item]';
+                    $l  = htmlspecialchars($item['label'] ?? '', ENT_QUOTES);
+                    $iid = !empty($item['id']) ? ' id="' . htmlspecialchars((string) $item['id'], ENT_QUOTES) . '"' : '';
+                    $items .= "\n" . '[lazy_tab_item' . $iid . ' label="' . $l . '"]' . ($item['content'] ?? '') . '[/lazy_tab_item]';
                 }
                 return '[lazy_tabs ' . trim($a) . $vis . ']' . $items . "\n[/lazy_tabs]";
             }
@@ -1203,7 +1361,8 @@ class BuilderShortcodeConverter
                 self::attrI($a, 'css_id',            $s['cssId']           ?? null);
                 $items = '';
                 foreach ($s['items'] ?? [] as $item) {
-                    $ia  = ' icon="' . htmlspecialchars($item['icon'] ?? 'fa fa-check', ENT_QUOTES) . '"';
+                    $ia  = !empty($item['id']) ? ' id="' . htmlspecialchars((string) $item['id'], ENT_QUOTES) . '"' : '';
+                    $ia .= ' icon="' . htmlspecialchars($item['icon'] ?? 'fa fa-check', ENT_QUOTES) . '"';
                     if (!empty($item['iconColor']))  $ia .= ' icon_color="' . htmlspecialchars($item['iconColor'], ENT_QUOTES) . '"';
                     if (!empty($item['link']))       $ia .= ' link="' . htmlspecialchars($item['link'], ENT_QUOTES) . '"';
                     if (!empty($item['linkTarget'])) $ia .= ' link_target="' . htmlspecialchars($item['linkTarget'], ENT_QUOTES) . '"';
@@ -1384,16 +1543,20 @@ class BuilderShortcodeConverter
 
     private static function parseContainer(string $attrStr, string $inner): ?array
     {
-        $a = self::attrs($attrStr);
+        $a  = self::attrs($attrStr);
+        $id = $a['id'] ?? self::uid();
+        $tp = $a['type'] ?? 'container';
 
-        $container = [
-            'id'       => $a['id']   ?? self::uid(),
-            'type'     => $a['type'] ?? 'container',
-            'settings' => self::containerSettings($a),
+        $settings = self::containerSettings($a);
+        $names    = self::perTypeNames('container', ['id' => $id, 'type' => $tp, 'settings' => $settings, 'columns' => []]);
+        $settings = self::mergeExtras($a, $settings, $names);
+
+        return [
+            'id'       => $id,
+            'type'     => $tp,
+            'settings' => $settings,
             'columns'  => self::parseColumnsFromContent($inner),
         ];
-
-        return $container;
     }
 
     /**
@@ -1455,14 +1618,19 @@ class BuilderShortcodeConverter
 
     private static function parseColumn(string $attrStr, string $inner): ?array
     {
-        $a = self::attrs($attrStr);
+        $a  = self::attrs($attrStr);
+        $id = $a['id'] ?? self::uid();
+
+        $settings = self::columnSettings($a);
+        $names    = self::perTypeNames('column', ['id' => $id, 'basis' => $a['width'] ?? '100%', 'settings' => $settings, 'elements' => []]);
+        $settings = self::mergeExtras($a, $settings, $names);
 
         $column = [
-            'id'       => $a['id']    ?? self::uid(),
+            'id'       => $id,
             'basis'        => $a['width']        ?? '100%',
             'basis_tablet' => $a['width_tablet'] ?? null,
             'basis_mobile' => $a['width_mobile'] ?? null,
-            'settings' => self::columnSettings($a),
+            'settings' => $settings,
             'elements' => [],
         ];
 
@@ -1539,7 +1707,11 @@ class BuilderShortcodeConverter
             }
         }
 
-        return ['id' => $a['id'] ?? self::uid(), 'type' => $def['type'] ?? ($def['shortcode'] ?? 'custom'), 'settings' => $settings];
+        $el    = ['id' => $a['id'] ?? self::uid(), 'type' => $def['type'] ?? ($def['shortcode'] ?? 'custom'), 'settings' => $settings];
+        // Merge back any readable extra attribute the custom serializer didn't itself emit (lossless round-trip).
+        $names = self::perTypeNames('element', $el);
+        $el['settings'] = self::mergeExtras($a, $settings, $names);
+        return $el;
     }
 
     /** Parse repeater child shortcodes [lzr_<key> sub="..." /] from element inner content. */
@@ -1561,6 +1733,18 @@ class BuilderShortcodeConverter
     }
 
     private static function parseElement(string $type, string $attrStr, string $inner): ?array
+    {
+        $el = self::parseElementInner($type, $attrStr, $inner);
+        if (is_array($el)) {
+            $a        = self::attrs($attrStr);
+            $settings = $el['settings'] ?? [];
+            $names    = self::perTypeNames('element', $el);
+            $el['settings'] = self::mergeExtras($a, $settings, $names);
+        }
+        return $el;
+    }
+
+    private static function parseElementInner(string $type, string $attrStr, string $inner): ?array
     {
         $a   = self::attrs($attrStr);
         $vis = self::visibilityFromAttrs($a);
@@ -2181,7 +2365,7 @@ class BuilderShortcodeConverter
                     foreach ($im as $imatch) {
                         $ia = self::attrs($imatch[1]);
                         $items[] = [
-                            'id'      => self::uid(),
+                            'id'      => $ia['id'] ?? self::uid(),
                             'title'   => htmlspecialchars_decode($ia['title'] ?? '', ENT_QUOTES),
                             'content' => trim($imatch[2]),
                         ];
@@ -2230,7 +2414,7 @@ class BuilderShortcodeConverter
                     foreach ($im as $imatch) {
                         $ia = self::attrs($imatch[1]);
                         $items[] = [
-                            'id'      => self::uid(),
+                            'id'      => $ia['id'] ?? self::uid(),
                             'label'   => htmlspecialchars_decode($ia['label'] ?? '', ENT_QUOTES),
                             'content' => trim($imatch[2]),
                         ];
@@ -2272,7 +2456,7 @@ class BuilderShortcodeConverter
                     foreach ($im as $imatch) {
                         $ia = self::attrs($imatch[1]);
                         $items[] = [
-                            'id'         => self::uid(),
+                            'id'         => $ia['id'] ?? self::uid(),
                             'icon'       => $ia['icon']        ?? 'fa fa-check',
                             'iconColor'  => $ia['icon_color']  ?? '',
                             'text'       => htmlspecialchars_decode($imatch[2], ENT_QUOTES),

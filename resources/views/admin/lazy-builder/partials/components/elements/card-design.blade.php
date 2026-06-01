@@ -66,6 +66,15 @@
                       class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
             </button>
         </div>
+        <div class="flex items-center justify-between">
+            <span class="text-[12px] text-slate-600 font-semibold">Equal Height</span>
+            <button @click="editingElement.settings.carousel_equal_height = !editingElement.settings.carousel_equal_height"
+                    :class="editingElement.settings.carousel_equal_height ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                    class="relative w-9 h-5 rounded-full transition-colors">
+                <span :class="editingElement.settings.carousel_equal_height ? 'translate-x-4' : 'translate-x-0.5'"
+                      class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -99,7 +108,7 @@
                 </label>
                 <span class="text-[12px] font-bold"
                       :class="(editingElement.settings.items_per_slide_tablet || 0) === 0 ? 'text-slate-300' : 'text-[#0091ea]'">
-                    @{{ (editingElement.settings.items_per_slide_tablet || 0) === 0 ? '= desktop' : editingElement.settings.items_per_slide_tablet }}
+                    @{{ (editingElement.settings.items_per_slide_tablet || 0) === 0 ? '= auto' : editingElement.settings.items_per_slide_tablet }}
                 </span>
             </div>
             <div class="flex gap-2 items-center">
@@ -109,7 +118,7 @@
                        min="0" max="6"
                        class="w-12 border border-slate-200 rounded px-1 py-1.5 text-[12px] text-center focus:outline-none focus:border-[#0091ea]">
             </div>
-            <p class="text-[10px] text-slate-300 mt-1">0 = same as desktop</p>
+            <p class="text-[10px] text-slate-300 mt-1">0 = auto (2 per slide on tablet)</p>
         </div>
 
         {{-- Mobile --}}
@@ -120,7 +129,7 @@
                 </label>
                 <span class="text-[12px] font-bold"
                       :class="(editingElement.settings.items_per_slide_mobile || 0) === 0 ? 'text-slate-300' : 'text-[#0091ea]'">
-                    @{{ (editingElement.settings.items_per_slide_mobile || 0) === 0 ? '= desktop' : editingElement.settings.items_per_slide_mobile }}
+                    @{{ (editingElement.settings.items_per_slide_mobile || 0) === 0 ? '= auto' : editingElement.settings.items_per_slide_mobile }}
                 </span>
             </div>
             <div class="flex gap-2 items-center">
@@ -130,9 +139,100 @@
                        min="0" max="6"
                        class="w-12 border border-slate-200 rounded px-1 py-1.5 text-[12px] text-center focus:outline-none focus:border-[#0091ea]">
             </div>
-            <p class="text-[10px] text-slate-300 mt-1">0 = same as desktop</p>
+            <p class="text-[10px] text-slate-300 mt-1">0 = auto (1 per slide on mobile)</p>
         </div>
 
+    </div>
+</div>
+
+{{-- Arrow Style (carousel only) --}}
+<div v-if="editingElement.settings.layout === 'carousel' && (editingElement.settings.carousel_arrows ?? true)" class="pt-4 border-t border-slate-50">
+    <label class="text-[12px] font-bold text-[#333] block mb-3">Arrow Style</label>
+    <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+            <span class="text-[12px] text-slate-600 font-semibold">Background</span>
+            <div class="checkerboard rounded overflow-hidden w-9 h-7 flex-shrink-0 border border-slate-200 shadow-sm cursor-pointer"
+                 @click="openColorPicker($event, editingElement.settings, 'carousel_arrow_bg')">
+                <div :style="{ backgroundColor: editingElement.settings.carousel_arrow_bg || '#ffffff' }" class="w-full h-full"></div>
+            </div>
+        </div>
+        <div class="flex items-center justify-between">
+            <span class="text-[12px] text-slate-600 font-semibold">Icon Color</span>
+            <div class="checkerboard rounded overflow-hidden w-9 h-7 flex-shrink-0 border border-slate-200 shadow-sm cursor-pointer"
+                 @click="openColorPicker($event, editingElement.settings, 'carousel_arrow_icon_color')">
+                <div :style="{ backgroundColor: editingElement.settings.carousel_arrow_icon_color || '#374151' }" class="w-full h-full"></div>
+            </div>
+        </div>
+        <div>
+            <div class="flex justify-between items-center mb-1">
+                <label class="text-[11px] font-bold text-slate-400 uppercase">Size</label>
+                <span class="text-[12px] text-slate-400 font-bold">@{{ editingElement.settings.carousel_arrow_size ?? 40 }}px</span>
+            </div>
+            <input type="range" v-model.number="editingElement.settings.carousel_arrow_size" min="24" max="72" step="1" class="w-full accent-[#0091ea]">
+        </div>
+        <div>
+            <div class="flex justify-between items-center mb-1">
+                <label class="text-[11px] font-bold text-slate-400 uppercase">Gap to slider edge</label>
+                <span class="text-[12px] text-slate-400 font-bold">@{{ editingElement.settings.carousel_arrow_offset ?? 8 }}px</span>
+            </div>
+            <input type="range" v-model.number="editingElement.settings.carousel_arrow_offset" min="-24" max="40" step="1" class="w-full accent-[#0091ea]">
+        </div>
+    </div>
+</div>
+
+{{-- Dot Style (carousel only) --}}
+<div v-if="editingElement.settings.layout === 'carousel' && (editingElement.settings.carousel_dots ?? true)" class="pt-4 border-t border-slate-50">
+    <label class="text-[12px] font-bold text-[#333] block mb-3">Dot Style</label>
+    <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+            <span class="text-[12px] text-slate-600 font-semibold">Dot Color</span>
+            <div class="checkerboard rounded overflow-hidden w-9 h-7 flex-shrink-0 border border-slate-200 shadow-sm cursor-pointer"
+                 @click="openColorPicker($event, editingElement.settings, 'carousel_dot_color')">
+                <div :style="{ backgroundColor: editingElement.settings.carousel_dot_color || '#cbd5e1' }" class="w-full h-full"></div>
+            </div>
+        </div>
+        <div class="flex items-center justify-between">
+            <span class="text-[12px] text-slate-600 font-semibold">Active Color</span>
+            <div class="checkerboard rounded overflow-hidden w-9 h-7 flex-shrink-0 border border-slate-200 shadow-sm cursor-pointer"
+                 @click="openColorPicker($event, editingElement.settings, 'carousel_dot_active_color')">
+                <div :style="{ backgroundColor: editingElement.settings.carousel_dot_active_color || '#2271b1' }" class="w-full h-full"></div>
+            </div>
+        </div>
+        <div>
+            <div class="flex justify-between items-center mb-1">
+                <label class="text-[11px] font-bold text-slate-400 uppercase">Dot Size</label>
+                <span class="text-[12px] text-slate-400 font-bold">@{{ editingElement.settings.carousel_dot_size ?? 8 }}px</span>
+            </div>
+            <input type="range" v-model.number="editingElement.settings.carousel_dot_size" min="4" max="20" step="1" class="w-full accent-[#0091ea]">
+        </div>
+        <div>
+            <div class="flex justify-between items-center mb-1">
+                <label class="text-[11px] font-bold text-slate-400 uppercase">Border Width</label>
+                <span class="text-[12px] text-slate-400 font-bold">@{{ editingElement.settings.carousel_dot_border ?? 0 }}px</span>
+            </div>
+            <input type="range" v-model.number="editingElement.settings.carousel_dot_border" min="0" max="6" step="1" class="w-full accent-[#0091ea]">
+        </div>
+        <div class="flex items-center justify-between" v-if="(editingElement.settings.carousel_dot_border ?? 0) > 0">
+            <span class="text-[12px] text-slate-600 font-semibold">Border Color</span>
+            <div class="checkerboard rounded overflow-hidden w-9 h-7 flex-shrink-0 border border-slate-200 shadow-sm cursor-pointer"
+                 @click="openColorPicker($event, editingElement.settings, 'carousel_dot_border_color')">
+                <div :style="{ backgroundColor: editingElement.settings.carousel_dot_border_color || '#ffffff' }" class="w-full h-full"></div>
+            </div>
+        </div>
+        <div>
+            <div class="flex justify-between items-center mb-1">
+                <label class="text-[11px] font-bold text-slate-400 uppercase">Gap Between Dots</label>
+                <span class="text-[12px] text-slate-400 font-bold">@{{ editingElement.settings.carousel_dot_gap ?? 6 }}px</span>
+            </div>
+            <input type="range" v-model.number="editingElement.settings.carousel_dot_gap" min="0" max="24" step="1" class="w-full accent-[#0091ea]">
+        </div>
+        <div>
+            <div class="flex justify-between items-center mb-1">
+                <label class="text-[11px] font-bold text-slate-400 uppercase">Gap to slider</label>
+                <span class="text-[12px] text-slate-400 font-bold">@{{ editingElement.settings.carousel_dots_offset ?? 14 }}px</span>
+            </div>
+            <input type="range" v-model.number="editingElement.settings.carousel_dots_offset" min="0" max="60" step="1" class="w-full accent-[#0091ea]">
+        </div>
     </div>
 </div>
 
@@ -181,8 +281,8 @@
     </div>
 </div>
 
-{{-- 3. Number of Columns (responsive) — hidden for carousel --}}
-<div v-if="editingElement.settings.layout !== 'carousel'">
+{{-- 3. Number of Columns (responsive) — hidden for carousel and list (list is always 1 column) --}}
+<div v-if="editingElement.settings.layout !== 'carousel' && editingElement.settings.layout !== 'list'">
     <label class="text-[12px] font-bold text-[#333] block mb-2">Number of Columns</label>
     <div class="grid grid-cols-3 gap-2">
         <div>

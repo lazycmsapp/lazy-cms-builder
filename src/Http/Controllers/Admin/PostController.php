@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Acme\CmsDashboard\Models\ProductData;
+use Acme\CmsDashboard\Models\Revision;
 use Acme\CmsDashboard\Services\BuilderShortcodeConverter;
 
 class PostController extends Controller
@@ -25,22 +26,173 @@ class PostController extends Controller
         $themeBodyFont    = $bodyFont['family']    ?? null;
         $themeHeadingFont = $headingFont['family'] ?? null;
 
+        // Detect a pending autosave newer than the saved content (for the recovery banner)
+        $pendingAutosave = null;
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('cms_revisions')) {
+                $auto = Revision::where('revisionable_type', $post->getMorphClass())
+                    ->where('revisionable_id', $post->getKey())
+                    ->where('type', 'autosave')->first();
+                if ($auto && $post->updated_at && $auto->updated_at->gt($post->updated_at)) {
+                    $pendingAutosave = ['id' => $auto->id, 'time' => $auto->updated_at->format('M j, Y g:i A')];
+                }
+            }
+        } catch (\Throwable $e) {}
+
         return view('cms-dashboard::admin.lazy-builder.index', compact(
-            'post', 'customElements', 'themeBodyFont', 'themeHeadingFont'
+            'post', 'customElements', 'themeBodyFont', 'themeHeadingFont', 'pendingAutosave'
         ));
     }
 
     public function saveBuilder(Request $request, $id)
     {
         $post = Post::findOrFail($id);
+
+        // Snapshot the PRIOR state BEFORE overwriting, so restoring the latest revision
+        // brings back the version from before this save (true undo).
+        Revision::snapshot($post, 'revision');
+
         $post->update([
             'content' => json_encode($request->input('layout')),
             'editor_type' => 'builder'
         ]);
+        Revision::clearAutosave($post);
 
         clear_page_cache();
 
         return response()->json(['success' => true, 'message' => 'Page layout saved successfully.']);
+    }
+
+    /**
+     * Autosave the builder layout into a recoverable revision WITHOUT touching the live post content.
+     */
+    public function autosaveBuilder(Request $request, $id)
+    {
+        $post = Post::findOrFail($id);
+
+        // Build a transient clone-like model carrying the in-progress content (do not persist to post).
+        $draft = clone $post;
+        $draft->content = json_encode($request->input('layout'));
+
+        $rev = Revision::snapshot($draft, 'autosave');
+
+        return response()->json([
+            'success'  => (bool) $rev,
+            'saved_at' => $rev ? $rev->updated_at->toIso8601String() : null,
+            'time'     => $rev ? $rev->updated_at->format('g:i:s A') : null,
+        ]);
+    }
+
+    /** List revisions (newest first) for the builder revisions panel. */
+    public function revisions($id)
+    {
+        $post = Post::findOrFail($id);
+        $rows = Revision::where('revisionable_type', $post->getMorphClass())
+            ->where('revisionable_id', $post->getKey())
+            ->orderByDesc('id')
+            ->with('user:id,name')
+            ->limit(60)
+            ->get()
+            ->map(fn($r) => [
+                'id'       => $r->id,
+                'type'     => $r->type,
+                'user'     => $r->user->name ?? 'System',
+                'time'     => $r->created_at->format('M j, Y g:i A'),
+                'ago'      => $r->created_at->diffForHumans(),
+                'is_autosave' => $r->type === 'autosave',
+            ]);
+
+        return response()->json(['success' => true, 'revisions' => $rows]);
+    }
+
+    /** Restore a revision's content onto the post (snapshots current state first). */
+    public function restoreRevision(Request $request, $id, $revisionId)
+    {
+        $post = Post::findOrFail($id);
+        $rev  = Revision::where('revisionable_type', $post->getMorphClass())
+            ->where('revisionable_id', $post->getKey())
+            ->findOrFail($revisionId);
+
+        // Preserve the current state as a revision before overwriting.
+        Revision::snapshot($post, 'revision');
+
+        $post->update(['content' => $rev->content, 'editor_type' => 'builder']);
+        Revision::clearAutosave($post);
+        clear_page_cache();
+
+        // Return the layout so the builder can reload it live.
+        $layout = json_decode($rev->content, true);
+        return response()->json(['success' => true, 'layout' => is_array($layout) ? $layout : [], 'message' => 'Revision restored.']);
+    }
+
+    /** Delete a single revision from the builder panel (JSON response). */
+    public function deleteRevisionBuilder($id, $revisionId)
+    {
+        $post = Post::findOrFail($id);
+        Revision::where('revisionable_type', $post->getMorphClass())
+            ->where('revisionable_id', $post->getKey())
+            ->where('id', $revisionId)
+            ->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    /** Classic editor autosave — snapshots title + content without touching the live post. */
+    public function autosaveClassic(Request $request, $id)
+    {
+        $post = Post::findOrFail($id);
+        $draft = clone $post;
+        $draft->title   = $request->input('title', $post->title);
+        $draft->content = $request->input('content', $post->content);
+
+        $rev = Revision::snapshot($draft, 'autosave');
+
+        return response()->json([
+            'success' => (bool) $rev,
+            'time'    => $rev ? $rev->updated_at->format('g:i:s A') : null,
+        ]);
+    }
+
+    /** Classic editor restore — persists a revision's title + content, then reloads the edit screen. */
+    public function restoreRevisionClassic(Request $request, $id, $revisionId)
+    {
+        $post = Post::findOrFail($id);
+        $rev  = Revision::where('revisionable_type', $post->getMorphClass())
+            ->where('revisionable_id', $post->getKey())
+            ->findOrFail($revisionId);
+
+        Revision::snapshot($post, 'revision'); // preserve current first
+        $post->update([
+            'title'   => $rev->title ?: $post->title,
+            'content' => $rev->content,
+        ]);
+        Revision::clearAutosave($post);
+        clear_page_cache();
+
+        return redirect()->route('admin.posts.edit', $post)->with('success', 'Revision restored.');
+    }
+
+    /** Delete a single revision. */
+    public function deleteRevision(Request $request, $id, $revisionId)
+    {
+        $post = Post::findOrFail($id);
+        Revision::where('revisionable_type', $post->getMorphClass())
+            ->where('revisionable_id', $post->getKey())
+            ->where('id', $revisionId)
+            ->delete();
+
+        return redirect()->route('admin.posts.revisions', $post->id)->with('success', 'Revision deleted.');
+    }
+
+    /** Delete all revisions for a post (keeps the live content untouched). */
+    public function clearRevisions(Request $request, $id)
+    {
+        $post = Post::findOrFail($id);
+        Revision::where('revisionable_type', $post->getMorphClass())
+            ->where('revisionable_id', $post->getKey())
+            ->delete();
+
+        return redirect()->route('admin.posts.revisions', $post->id)->with('success', 'All revisions cleared.');
     }
 
     public function ajaxSaveVariations(Request $request, $id)
@@ -432,6 +584,9 @@ class PostController extends Controller
                 ->toArray();
         }
 
+        // Interpret the publish date in the CMS timezone → store UTC, and decide status on the server.
+        $postData = lazy_normalize_publish($postData);
+
         $post = Post::create($postData);
 
         // Save Product Data
@@ -639,7 +794,66 @@ class PostController extends Controller
             $post->content = BuilderShortcodeConverter::jsonToShortcodes($post->content);
         }
 
-        return view('cms-dashboard::admin.posts.edit', compact('post', 'pages', 'type', 'supports', 'assignedTaxonomies', 'fieldGroups', 'fieldValues', 'postType', 'overriddenTaxonomies'));
+        // Pending autosave (classic editor recovery banner) + revision count for the Revisions button
+        $pendingAutosave = null;
+        $revisionCount = 0;
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('cms_revisions')) {
+                $base = Revision::where('revisionable_type', $post->getMorphClass())
+                    ->where('revisionable_id', $post->getKey());
+                $revisionCount = (clone $base)->where('type', 'revision')->count();
+                $auto = (clone $base)->where('type', 'autosave')->first();
+                if ($auto && $post->updated_at && $auto->updated_at->gt($post->updated_at)) {
+                    $pendingAutosave = ['id' => $auto->id, 'time' => $auto->updated_at->format('M j, Y g:i A')];
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        return view('cms-dashboard::admin.posts.edit', compact('post', 'pages', 'type', 'supports', 'assignedTaxonomies', 'fieldGroups', 'fieldValues', 'postType', 'overriddenTaxonomies', 'pendingAutosave', 'revisionCount'));
+    }
+
+    /** Full revisions comparison page (classic editor) — before/after diff + restore. */
+    public function revisionsPage(Request $request, $id)
+    {
+        $post = Post::findOrFail($id);
+
+        $revs = Revision::where('revisionable_type', $post->getMorphClass())
+            ->where('revisionable_id', $post->getKey())
+            ->orderByDesc('id')
+            ->with('user:id,name')
+            ->limit(80)
+            ->get();
+
+        // Build selectable entries: the live "current" version + every stored revision.
+        $entries = [];
+        $entries['current'] = [
+            'key'     => 'current',
+            'label'   => 'Current Version (live)',
+            'title'   => $post->title,
+            'content' => $post->content,
+            'meta'    => 'Currently published',
+            'type'    => 'current',
+        ];
+        foreach ($revs as $r) {
+            $entries[(string) $r->id] = [
+                'key'     => (string) $r->id,
+                'label'   => ($r->type === 'autosave' ? 'Autosave' : 'Revision') . ' — ' . $r->created_at->format('M j, Y g:i A'),
+                'title'   => $r->title,
+                'content' => $r->content,
+                'meta'    => ($r->user->name ?? 'System') . ' · ' . $r->created_at->diffForHumans(),
+                'type'    => $r->type,
+            ];
+        }
+
+        // Resolve which two versions to compare (defaults: latest revision → current)
+        $to   = (string) $request->get('to', 'current');
+        $from = (string) $request->get('from', $revs->count() ? (string) $revs->first()->id : 'current');
+        if (!isset($entries[$to]))   $to = 'current';
+        if (!isset($entries[$from])) $from = $to;
+
+        $diff = lazy_revision_diff($entries[$from]['content'] ?? '', $entries[$to]['content'] ?? '');
+
+        return view('cms-dashboard::admin.posts.revisions', compact('post', 'entries', 'from', 'to', 'diff'));
     }
 
     public function update(Request $request, Post $post)
@@ -777,7 +991,9 @@ class PostController extends Controller
         $incomingContent = $postData['content'] ?? '';
         $isIncomingBuilder = is_string($incomingContent) && (Str::startsWith($incomingContent, '[') || Str::startsWith($incomingContent, '{'));
 
-        // If we are currently in builder mode, and we're staying in builder mode, protect the content
+        // Protect builder content ONLY when staying in builder mode with non-builder (empty/HTML) content —
+        // this prevents an accidental wipe when saving from the builder placeholder. When the editor is
+        // explicitly in RICH mode, the edit is always saved so rich-editor changes appear on the front-end.
         if ($isCurrentBuilder && $targetEditorType === 'builder' && !$isIncomingBuilder) {
             unset($postData['content']);
         }
@@ -812,7 +1028,14 @@ class PostController extends Controller
             return redirect()->back()->with('success', ucfirst($post->type) . ' translation updated successfully.');
         }
 
+        // Snapshot the PRIOR state BEFORE overwriting (true undo on restore)
+        Revision::snapshot($post, 'revision');
+
+        // Interpret the publish date in the CMS timezone → store UTC, and decide status on the server.
+        $postData = lazy_normalize_publish($postData);
+
         $post->update($postData);
+        Revision::clearAutosave($post);
 
         // Update Product Data
         if ($post->type === 'product') {

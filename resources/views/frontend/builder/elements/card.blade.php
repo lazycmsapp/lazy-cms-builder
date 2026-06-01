@@ -98,13 +98,19 @@
                     : max(1, (int)($s['columns'] ?? 1));
         $rawT   = (int)($s['items_per_slide_tablet'] ?? 0);
         $rawM   = (int)($s['items_per_slide_mobile'] ?? 0);
-        $colsTablet = $rawT > 0 ? $rawT : $cols;
-        $colsMobile = $rawM > 0 ? $rawM : $cols;
+        // 0 = smart auto: tablet shows up to 2, mobile shows 1 (never more than desktop)
+        $colsTablet = $rawT > 0 ? $rawT : min($cols, 2);
+        $colsMobile = $rawM > 0 ? $rawM : 1;
     } else {
         $cols       = max(1, (int)($s['columns']        ?? 3));
         $colsTablet = max(1, (int)($s['columns_tablet'] ?? 2));
         $colsMobile = max(1, (int)($s['columns_mobile'] ?? 1));
     }
+    // Builder canvas preview: the canvas browser is always desktop-width, so media queries can't
+    // reflect the device toggle. Force the chosen device's count for ALL layouts (carousel
+    // items-per-slide AND grid/masonry columns). On the real front-end $previewDevice is null.
+    if (($previewDevice ?? null) === 'tablet')      { $cols = $colsTablet; $colsTablet = $cols; $colsMobile = $cols; }
+    elseif (($previewDevice ?? null) === 'mobile')  { $cols = $colsMobile; $colsTablet = $cols; $colsMobile = $cols; }
     $colSpacing   = max(0, (int)($s['column_spacing'] ?? 24));
     $rowSpacing   = max(0, (int)($s['row_spacing']    ?? 24));
     $cardAlign  = $s['card_alignment'] ?? 'stretch';
@@ -119,6 +125,23 @@
     $carouselAutoplay = $layout === 'carousel' && ($s['carousel_autoplay'] ?? false);
     $autoplaySpeed    = max(500, (int)($s['carousel_autoplay_speed'] ?? 3000));
     $carouselLoop     = $layout === 'carousel' && ($s['carousel_loop'] ?? false);
+    $equalHeight      = $layout === 'carousel' && !empty($s['carousel_equal_height']);
+    // Arrow styling
+    $arrowBg        = $s['carousel_arrow_bg']         ?? '#ffffff';
+    $arrowIconColor = $s['carousel_arrow_icon_color'] ?? '#374151';
+    $arrowSize      = max(20, (int)($s['carousel_arrow_size'] ?? 40));
+    $arrowOffset    = (int)($s['carousel_arrow_offset'] ?? 8);
+    $arrowIconSize  = max(10, (int)round($arrowSize * 0.38));
+    // Dot styling
+    $dotColor       = $s['carousel_dot_color']        ?? '#cbd5e1';
+    $dotActiveColor = $s['carousel_dot_active_color']  ?? '#2271b1';
+    $dotSize        = max(4, (int)($s['carousel_dot_size'] ?? 8));
+    $dotBorder      = max(0, (int)($s['carousel_dot_border'] ?? 0));
+    $dotBorderColor = $s['carousel_dot_border_color'] ?? '#ffffff';
+    $dotGap         = max(0, (int)($s['carousel_dot_gap'] ?? 6));
+    $dotsOffset     = max(0, (int)($s['carousel_dots_offset'] ?? 14));
+    $dotActiveW     = (int)round($dotSize * 2.75);
+    $dotBorderCss   = $dotBorder > 0 ? ($dotBorder . 'px solid ' . $dotBorderColor) : 'none';
 
     // For list layout force single column
     if ($layout === 'list') { $cols = 1; $colsTablet = 1; $colsMobile = 1; }
@@ -177,9 +200,41 @@
         $gCss .= "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px){#{$gridId}{columns:{$colsTablet}}}";
         $gCss .= "@media(max-width:{$bpSm}px){#{$gridId}{columns:{$colsMobile}}}";
     } elseif ($layout === 'carousel') {
-        $gCss  = "#{$gridId}-wrap{position:relative;overflow:hidden}";
-        $gCss .= "#{$gridId}{display:flex;transition:transform .4s cubic-bezier(.25,.46,.45,.94);will-change:transform}";
-        $gCss .= "#{$gridId}>*{flex:0 0 auto;min-width:0;margin-right:{$colSpacing}px;box-sizing:border-box}";
+        // Slide widths are computed in CSS (like the grid layout) so exactly N cards show per view
+        // at every breakpoint — reliable, no flash, no dependence on JS measuring the container.
+        $cwD = "calc((100% - " . max(0, ($cols       - 1) * $colSpacing) . "px) / {$cols})";
+        $cwT = "calc((100% - " . max(0, ($colsTablet - 1) * $colSpacing) . "px) / {$colsTablet})";
+        $cwM = "calc((100% - " . max(0, ($colsMobile - 1) * $colSpacing) . "px) / {$colsMobile})";
+        // min-width:0 everywhere: the carousel is a flex item; without it, flexbox min-content
+        // sizing forces the track wider than its column and it won't shrink on tablet/mobile.
+        // Padding on all sides insets the slides from the wrap edges, so edge cards' shadows show
+        // inside the padding (not cut on left/right/top/bottom). The horizontal clip sits at the
+        // padding box and the gap (> padding) keeps the next off-screen slide hidden — no sliver.
+        // overflow-y:visible lets hover-lift breathe. (overflow:hidden = fallback for old browsers.)
+        $gCss  = "#{$gridId}-wrap{position:relative;overflow:hidden;overflow-x:clip;overflow-y:visible;min-width:0;max-width:100%;padding:16px}";
+        // Equal Height ON → stretch all slides to the tallest; OFF → natural height, top-aligned.
+        $alignC = $equalHeight ? 'stretch' : 'flex-start';
+        $gCss .= "#{$gridId}{display:flex;align-items:{$alignC};min-width:0;transition:transform .5s cubic-bezier(.22,.61,.36,1);will-change:transform;cursor:grab;touch-action:pan-y}";
+        $gCss .= "#{$gridId}.lz-grabbing{cursor:grabbing;user-select:none}";
+        $gCss .= "#{$gridId}>*{flex:0 0 {$cwD};width:{$cwD};min-width:0;margin-right:{$colSpacing}px;box-sizing:border-box}";
+        $gCss .= "#{$gridId}>*:last-child{margin-right:0}";
+        $gCss .= "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px){#{$gridId}>*{flex:0 0 {$cwT};width:{$cwT}}}";
+        $gCss .= "@media(max-width:{$bpSm}px){#{$gridId}>*{flex:0 0 {$cwM};width:{$cwM}}}";
+        $gCss .= "#{$gridId} img{-webkit-user-drag:none}";
+        // The card grid is itself a flex item in its column — let it shrink to the column width.
+        $gCss .= ".lazy-card-grid{min-width:0;max-width:100%}";
+        // Equal Height: make the whole card chain fill the stretched slide height.
+        // The builder card-inner uses flex-wrap + align-content:flex-start (packs to top), so we
+        // override align-content:stretch (high specificity via the #id) to let the column stretch.
+        if ($equalHeight) {
+            $gCss .= "#{$gridId}>*{display:flex;flex-direction:column}";
+            $gCss .= "#{$gridId}>*>.lazy-container{flex:1;display:flex;flex-direction:column}";
+            $gCss .= "#{$gridId}>*>.lazy-container>.lazy-container-inner{flex:1 1 auto!important;align-content:stretch!important;height:auto!important}";
+            $gCss .= "#{$gridId}>*>.lazy-container .lazy-column{align-self:stretch!important;height:auto}";
+            $gCss .= "#{$gridId}>*>.lazy-container .lazy-column-inner{flex:1 1 auto!important}";
+            $gCss .= "#{$gridId}>article.lazy-post-card{flex:1;display:flex;flex-direction:column}";
+            $gCss .= "#{$gridId}>article.lazy-post-card>div:last-child{flex:1}";
+        }
     } else {
         // grid or list (list already forced $cols=1)
         // Compute explicit px/% values in PHP to produce simple, unambiguous CSS calc()
@@ -197,8 +252,13 @@
         $gCss .= "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px){#{$gridId}>*{flex-basis:{$wT}}}";
         $gCss .= "@media(max-width:{$bpSm}px){#{$gridId}>*{flex-basis:{$wM}}}";
         if ($alignItems === 'stretch') {
+            // Same equal-height chain as the carousel: override the card-inner's
+            // align-content:flex-start so the column (and its background) fills the row height.
             $gCss .= "#{$gridId}>div{display:flex;flex-direction:column}";
-            $gCss .= "#{$gridId}>div>.lazy-container{flex:1}";
+            $gCss .= "#{$gridId}>div>.lazy-container{flex:1;display:flex;flex-direction:column}";
+            $gCss .= "#{$gridId}>div>.lazy-container>.lazy-container-inner{flex:1 1 auto!important;align-content:stretch!important;height:auto!important}";
+            $gCss .= "#{$gridId}>div>.lazy-container .lazy-column{align-self:stretch!important;height:auto}";
+            $gCss .= "#{$gridId}>div>.lazy-container .lazy-column-inner{flex:1 1 auto!important}";
             $gCss .= "#{$gridId} article.lazy-post-card{display:flex;flex-direction:column}";
             $gCss .= "#{$gridId} article.lazy-post-card>div{flex:1}";
         }
@@ -215,6 +275,14 @@
 .lazy-card-scale:hover{transform:scale(1.03)}
 .lazy-card-fade img{transition:opacity .3s}
 .lazy-card-fade:hover img{opacity:.75}
+/* Carousel controls */
+.lz-cz-arrow{transition:filter .2s,box-shadow .2s,transform .2s}
+.lz-cz-arrow:hover{filter:brightness(.93);box-shadow:0 5px 16px rgba(0,0,0,.22)!important;transform:translateY(-50%) scale(1.08)!important}
+.lz-cz-arrow:active{transform:translateY(-50%) scale(.96)!important}
+.lz-cz-arrow:focus-visible{outline:2px solid #2271b1;outline-offset:2px}
+#{{ $gridId }}-wrap:focus{outline:none}
+.lz-cz-dot{transition:width .3s,background .3s,opacity .2s}
+.lz-cz-dot:hover{opacity:.7}
 </style>
 
 <div class="lazy-card-grid {{ $visCls }} {{ $cssCls }}"
@@ -224,14 +292,14 @@
     <div id="{{ $gridId }}-wrap">
         @if($showArrows)
         {{-- Prev arrow --}}
-        <button id="{{ $gridId }}-prev" onclick="lzSlider('{{ $gridId }}','prev')"
-                style="position:absolute;left:8px;top:50%;transform:translateY(-50%);z-index:10;width:36px;height:36px;border-radius:50%;background:#fff;border:1.5px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        <button type="button" aria-label="Previous" id="{{ $gridId }}-prev" class="lz-cz-arrow" onclick="lzSlider('{{ $gridId }}','prev')"
+                style="position:absolute;left:{{ $arrowOffset }}px;top:50%;transform:translateY(-50%);z-index:10;width:{{ $arrowSize }}px;height:{{ $arrowSize }}px;border-radius:50%;background:{{ $arrowBg }};border:1.5px solid rgba(0,0,0,.08);box-shadow:0 2px 10px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <svg width="{{ $arrowIconSize }}" height="{{ $arrowIconSize }}" viewBox="0 0 24 24" fill="none" stroke="{{ $arrowIconColor }}" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         {{-- Next arrow --}}
-        <button id="{{ $gridId }}-next" onclick="lzSlider('{{ $gridId }}','next')"
-                style="position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:10;width:36px;height:36px;border-radius:50%;background:#fff;border:1.5px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        <button type="button" aria-label="Next" id="{{ $gridId }}-next" class="lz-cz-arrow" onclick="lzSlider('{{ $gridId }}','next')"
+                style="position:absolute;right:{{ $arrowOffset }}px;top:50%;transform:translateY(-50%);z-index:10;width:{{ $arrowSize }}px;height:{{ $arrowSize }}px;border-radius:50%;background:{{ $arrowBg }};border:1.5px solid rgba(0,0,0,.08);box-shadow:0 2px 10px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <svg width="{{ $arrowIconSize }}" height="{{ $arrowIconSize }}" viewBox="0 0 24 24" fill="none" stroke="{{ $arrowIconColor }}" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
         @endif
     @endif
@@ -350,14 +418,9 @@
     @if($layout === 'carousel')
     @php $carouselTotal = count($posts); $slidesPerView = $cols; @endphp
     </div>{{-- end wrap --}}
-    @if($showDots && $carouselTotal > $slidesPerView)
-    <div id="{{ $gridId }}-dots" style="display:flex;justify-content:center;gap:6px;margin-top:14px">
-        @for($d = 0; $d < ceil($carouselTotal / $slidesPerView); $d++)
-        <button onclick="lzSliderGoTo('{{ $gridId }}',{{ $d }})"
-                id="{{ $gridId }}-dot-{{ $d }}"
-                style="width:{{ $d===0?'22':'8' }}px;height:8px;border-radius:4px;background:{{ $d===0?'#2271b1':'#cbd5e1' }};border:none;cursor:pointer;padding:0;transition:all .3s"></button>
-        @endfor
-    </div>
+    @if($showDots && $carouselTotal > 1)
+    {{-- One round dot per slide position — built dynamically by JS so the count is correct per breakpoint --}}
+    <div id="{{ $gridId }}-dots" style="display:flex;justify-content:center;align-items:center;gap:{{ $dotGap }}px;margin-top:{{ $dotsOffset }}px"></div>
     @endif
     <script>
     (function(){
@@ -370,75 +433,127 @@
         var loop  = {{ $carouselLoop ? 'true' : 'false' }};
         var autoplay      = {{ $carouselAutoplay ? 'true' : 'false' }};
         var autoplaySpeed = {{ $autoplaySpeed }};
+        var dotColor  = '{{ $dotColor }}', dotActive = '{{ $dotActiveColor }}';
+        var dotSize   = {{ $dotSize }}, dotBorder = {{ $dotBorder }}, dotBorderColor = '{{ $dotBorderColor }}';
         var id    = '{{ $gridId }}';
         var track = document.getElementById(id);
-        if (!track) return;
+        if (!track || track.dataset.lzCarousel) return;
+        track.dataset.lzCarousel = '1';
+        var wrap  = track.parentElement;
         var total = track.children.length;
-        var idx   = 0;
+        var idx   = 0, timer = null;
 
-        function getPer() {
-            var w = window.innerWidth;
-            return w <= bpSm ? perViewMobile : (w <= bpMed ? perViewTablet : perView);
+        function per()    { var w = window.innerWidth; return Math.max(1, w <= bpSm ? perViewMobile : (w <= bpMed ? perViewTablet : perView)); }
+        function maxIdx() { return Math.max(0, total - per()); }
+        // Slide width is set by CSS; measure the first slide to get the px step for the transform.
+        function step()   { var c = track.children[0]; return c ? c.getBoundingClientRect().width + gap : 0; }
+
+        // Normal round dots — one per slide position. Count = positions = total - perView + 1
+        // (e.g. 5 slides shown 1-at-a-time → 5 dots). Rebuilt when the breakpoint changes.
+        function dotCss(on) {
+            return 'width:' + dotSize + 'px;height:' + dotSize + 'px;border-radius:50%;padding:0;cursor:pointer;box-sizing:border-box;'
+                + 'border:' + (dotBorder > 0 ? (dotBorder + 'px solid ' + dotBorderColor) : 'none') + ';'
+                + 'background:' + (on ? dotActive : dotColor) + ';'
+                + 'transform:scale(' + (on ? 1.3 : 1) + ');transition:background .25s,transform .25s;';
         }
-        // Each slot = wrapW/per; slot = slide + gap; so slideW = wrapW/per - gap
-        // This ensures exactly `per` slides fill the container with no overflow.
-        function getSlideW() {
-            var per   = getPer();
-            var wrapW = track.parentElement.offsetWidth;
-            return Math.max(10, wrapW / per - gap);
+        function buildDots() {
+            var dotsEl = document.getElementById(id + '-dots');
+            if (!dotsEl) return;
+            var count = maxIdx() + 1;
+            if (count <= 1) { dotsEl.style.display = 'none'; dotsEl.innerHTML = ''; dotsEl.dataset.count = '0'; return; }
+            dotsEl.style.display = 'flex';
+            if (dotsEl.dataset.count === String(count)) return; // already built for this breakpoint
+            dotsEl.innerHTML = '';
+            for (var i = 0; i < count; i++) {
+                var b = document.createElement('button');
+                b.type = 'button'; b.className = 'lz-cz-dot';
+                b.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+                b.style.cssText = dotCss(i === idx);
+                (function (n) { b.addEventListener('click', function () { goTo(n); bump(); }); })(i);
+                dotsEl.appendChild(b);
+            }
+            dotsEl.dataset.count = String(count);
         }
-        function goTo(n) {
-            var per = getPer();
-            var max = Math.max(0, total - per);
-            idx = loop ? (n > max ? 0 : (n < 0 ? max : n)) : Math.max(0, Math.min(n, max));
-            var sw = getSlideW();
-            Array.from(track.children).forEach(function(c) {
-                c.style.flex        = '0 0 ' + sw + 'px';
-                c.style.width       = sw + 'px';
-                c.style.marginRight = gap + 'px';
-            });
-            track.style.transform = 'translateX(-' + (idx * (sw + gap)) + 'px)';
-            var prev = document.getElementById(id + '-prev');
-            var next = document.getElementById(id + '-next');
-            if (prev) prev.style.opacity = (!loop && idx === 0)  ? '0.35' : '1';
-            if (next) next.style.opacity = (!loop && idx >= max) ? '0.35' : '1';
+
+        function render(animate) {
+            var sw = step(), m = maxIdx();
+            if (idx < 0) idx = loop ? m : 0;
+            if (idx > m) idx = loop ? 0 : m;
+            track.style.transition = (animate === false) ? 'none' : '';
+            track.style.transform  = 'translateX(-' + (idx * sw) + 'px)';
+            var prev = document.getElementById(id + '-prev'), next = document.getElementById(id + '-next');
+            if (prev) prev.style.opacity = (!loop && idx === 0) ? '0.35' : '1';
+            if (next) next.style.opacity = (!loop && idx >= m)  ? '0.35' : '1';
             var dotsEl = document.getElementById(id + '-dots');
             if (dotsEl) {
-                var dotBtns   = dotsEl.children;
-                var activeDot = (idx >= max) ? dotBtns.length - 1 : Math.floor(idx / per);
-                for (var i = 0; i < dotBtns.length; i++) {
-                    dotBtns[i].style.width      = (i === activeDot) ? '22px' : '8px';
-                    dotBtns[i].style.background = (i === activeDot) ? '#2271b1' : '#cbd5e1';
+                for (var i = 0; i < dotsEl.children.length; i++) {
+                    var on = (i === idx);
+                    dotsEl.children[i].style.background = on ? dotActive : dotColor;
+                    dotsEl.children[i].style.transform  = 'scale(' + (on ? 1.3 : 1) + ')';
                 }
             }
         }
-        // Arrows move 1 slide at a time
-        window['lzSlider_' + id]     = function(dir) { goTo(dir === 'next' ? idx + 1 : idx - 1); };
-        window['lzSliderGoTo_' + id] = function(n)   { goTo(n * getPer()); };
-        // Global dispatchers (delegate to per-instance functions)
-        window['lzSlider'] = window['lzSlider'] || function(gid, dir) {
-            var f = window['lzSlider_' + gid]; if (f) f(dir);
-        };
-        window['lzSliderGoTo'] = window['lzSliderGoTo'] || function(gid, n) {
-            var f = window['lzSliderGoTo_' + gid]; if (f) f(n);
-        };
-        window.addEventListener('resize', function() { goTo(idx); });
-        // Retry via rAF until the wrap has a non-zero width (handles inline scripts,
-        // AJAX-injected canvas previews, and hidden/deferred containers reliably).
-        (function tryInit() {
-            if (track.parentElement.offsetWidth > 0) {
-                goTo(0);
-                if (autoplay) {
-                    setInterval(function() {
-                        var per = getPer();
-                        var max = Math.max(0, total - per);
-                        if (!loop && idx >= max) { goTo(0); return; }
-                        goTo(idx + 1);
-                    }, autoplaySpeed);
-                }
-            } else {
-                requestAnimationFrame(tryInit);
-            }
+        function goTo(n) { idx = n; render(true); }
+        function next()  { var m = maxIdx(); goTo(idx >= m ? (loop ? 0 : m) : idx + 1); }
+        function prev()  { var m = maxIdx(); goTo(idx <= 0 ? (loop ? m : 0) : idx - 1); }
+
+        // Autoplay: advance one slide and wrap to the start, so each dot lights up in turn.
+        function autoTick() { var m = maxIdx(); goTo(idx >= m ? 0 : idx + 1); }
+        function start() { if (autoplay && !timer && total > per()) timer = setInterval(autoTick, autoplaySpeed); }
+        function stop()  { if (timer) { clearInterval(timer); timer = null; } }
+        function bump()  { stop(); start(); }
+        wrap.addEventListener('mouseenter', stop);
+        wrap.addEventListener('mouseleave', start);
+        wrap.addEventListener('focusin', stop);
+        wrap.addEventListener('focusout', start);
+
+        // Per-instance handlers + global dispatchers (used by the inline arrow/dot onclick)
+        window['lzSlider_' + id]     = function(dir) { dir === 'next' ? next() : prev(); bump(); };
+        window['lzSliderGoTo_' + id] = function(n)   { goTo(n * per()); bump(); };
+        window.lzSlider     = window.lzSlider     || function(g, d) { var f = window['lzSlider_' + g];     if (f) f(d); };
+        window.lzSliderGoTo = window.lzSliderGoTo || function(g, n) { var f = window['lzSliderGoTo_' + g]; if (f) f(n); };
+
+        // Keyboard (when the carousel is focused)
+        wrap.tabIndex = 0;
+        wrap.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft')  { prev(); bump(); e.preventDefault(); }
+            if (e.key === 'ArrowRight') { next(); bump(); e.preventDefault(); }
+        });
+
+        // Drag / swipe (mouse + touch via Pointer Events)
+        var dragging = false, startX = 0, startTf = 0, moved = 0;
+        track.addEventListener('pointerdown', function(e) {
+            if (e.button && e.button !== 0) return;
+            dragging = true; moved = 0; startX = e.clientX;
+            startTf = -(idx * step());
+            track.classList.add('lz-grabbing'); track.style.transition = 'none'; stop();
+            try { track.setPointerCapture(e.pointerId); } catch (_) {}
+        });
+        track.addEventListener('pointermove', function(e) {
+            if (!dragging) return;
+            moved = e.clientX - startX;
+            track.style.transform = 'translateX(' + (startTf + moved) + 'px)';
+        });
+        function endDrag() {
+            if (!dragging) return;
+            dragging = false; track.classList.remove('lz-grabbing');
+            var threshold = Math.max(40, (step() - gap) * 0.18);
+            if (moved <= -threshold) idx++; else if (moved >= threshold) idx--;
+            render(true); start();
+        }
+        track.addEventListener('pointerup', endDrag);
+        track.addEventListener('pointercancel', endDrag);
+        // Swallow the click that follows a real drag so card links don't fire mid-swipe
+        track.addEventListener('click', function(e) {
+            if (Math.abs(moved) > 6) { e.preventDefault(); e.stopPropagation(); }
+        }, true);
+
+        window.addEventListener('resize', function() { buildDots(); render(false); });
+
+        // Init once the wrapper has a real width (handles deferred/hidden containers)
+        (function init() {
+            if (wrap.offsetWidth > 0) { buildDots(); render(false); start(); }
+            else requestAnimationFrame(init);
         })();
     })();
     </script>

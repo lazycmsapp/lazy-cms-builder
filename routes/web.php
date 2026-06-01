@@ -59,6 +59,12 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     Route::post('tags/bulk', [\Acme\CmsDashboard\Http\Controllers\Admin\TagController::class, 'bulk'])->name('tags.bulk');
     Route::post('posts/{post}/restore', [PostController::class, 'restore'])->name('posts.restore')->withTrashed();
     Route::delete('posts/{post}/force-delete', [PostController::class, 'forceDelete'])->name('posts.force-delete')->withTrashed();
+    // Classic editor revisions + autosave (must precede the resource route)
+    Route::post('posts/{id}/autosave', [PostController::class, 'autosaveClassic'])->name('posts.autosave');
+    Route::get('posts/{id}/revisions', [PostController::class, 'revisionsPage'])->name('posts.revisions');
+    Route::post('posts/{id}/revisions/{revision}/restore', [PostController::class, 'restoreRevisionClassic'])->name('posts.revisions.restore');
+    Route::delete('posts/{id}/revisions/{revision}', [PostController::class, 'deleteRevision'])->name('posts.revisions.delete');
+    Route::delete('posts/{id}/revisions', [PostController::class, 'clearRevisions'])->name('posts.revisions.clear');
     Route::resource('posts', PostController::class);
     Route::get('lazy-builder-library', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'page'])->name('lazy-builder.library');
     Route::post('lazy-builder-library/post-cards', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'savePostCard'])->name('lazy-builder.post-cards.save');
@@ -77,7 +83,8 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
         $s = $r->input('settings', []);
         try {
             $html = view('cms-dashboard::frontend.builder.elements.card', [
-                'el' => ['settings' => $s]
+                'el' => ['settings' => $s],
+                'previewDevice' => $r->input('device'),
             ])->render();
             return response()->json(['success' => true, 'html' => $html]);
         } catch (\Exception $e) {
@@ -86,12 +93,23 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     })->name('lazy-builder.card-preview');
     Route::get('lazy-builder/{id}', [PostController::class, 'builder'])->name('lazy-builder');
     Route::post('lazy-builder/{id}/save', [PostController::class, 'saveBuilder'])->name('lazy-builder.save');
+    // Revisions + Autosave
+    Route::post('lazy-builder/{id}/autosave', [PostController::class, 'autosaveBuilder'])->name('lazy-builder.autosave');
+    Route::get('lazy-builder/{id}/revisions', [PostController::class, 'revisions'])->name('lazy-builder.revisions');
+    Route::post('lazy-builder/{id}/revisions/{revision}/restore', [PostController::class, 'restoreRevision'])->name('lazy-builder.revisions.restore');
+    Route::delete('lazy-builder/{id}/revisions/{revision}', [PostController::class, 'deleteRevisionBuilder'])->name('lazy-builder.revisions.delete');
     Route::post('posts/{id}/variations/ajax', [PostController::class, 'ajaxSaveVariations'])->name('posts.variations.ajax-save');
     Route::get('lazy-builder/{id}/preview', [PostController::class, 'previewBuilder'])->name('lazy-builder.preview');
  
     Route::post('pages/bulk', [\Acme\CmsDashboard\Http\Controllers\Admin\PageController::class, 'bulk'])->name('pages.bulk');
     Route::post('pages/{page}/restore', [\Acme\CmsDashboard\Http\Controllers\Admin\PageController::class, 'restore'])->name('pages.restore')->withTrashed();
     Route::delete('pages/{page}/force-delete', [\Acme\CmsDashboard\Http\Controllers\Admin\PageController::class, 'forceDelete'])->name('pages.force-delete')->withTrashed();
+    // Page revisions + autosave (must precede the resource route)
+    Route::post('pages/{id}/autosave', [\Acme\CmsDashboard\Http\Controllers\Admin\PageController::class, 'autosaveClassic'])->name('pages.autosave');
+    Route::get('pages/{id}/revisions', [\Acme\CmsDashboard\Http\Controllers\Admin\PageController::class, 'revisionsPage'])->name('pages.revisions');
+    Route::post('pages/{id}/revisions/{revision}/restore', [\Acme\CmsDashboard\Http\Controllers\Admin\PageController::class, 'restoreRevisionClassic'])->name('pages.revisions.restore');
+    Route::delete('pages/{id}/revisions/{revision}', [\Acme\CmsDashboard\Http\Controllers\Admin\PageController::class, 'deleteRevision'])->name('pages.revisions.delete');
+    Route::delete('pages/{id}/revisions', [\Acme\CmsDashboard\Http\Controllers\Admin\PageController::class, 'clearRevisions'])->name('pages.revisions.clear');
     Route::resource('pages', \Acme\CmsDashboard\Http\Controllers\Admin\PageController::class);
 
     // Categories
@@ -205,7 +223,11 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     Route::post('tools/backup/restore/{filename}', [\Acme\CmsDashboard\Http\Controllers\Admin\BackupController::class, 'restore'])->name('backup.restore');
     Route::get('tools/backup/download/{filename}', [\Acme\CmsDashboard\Http\Controllers\Admin\BackupController::class, 'download'])->name('backup.download');
     Route::delete('tools/backup/{filename}', [\Acme\CmsDashboard\Http\Controllers\Admin\BackupController::class, 'destroy'])->name('backup.destroy');
-    
+
+    // WordPress Importer
+    Route::get('tools/wp-import', [\Acme\CmsDashboard\Http\Controllers\Admin\WordPressImportController::class, 'index'])->name('wp-import.index');
+    Route::post('tools/wp-import', [\Acme\CmsDashboard\Http\Controllers\Admin\WordPressImportController::class, 'import'])->name('wp-import.import');
+
     // Redirection Manager
     Route::get('seo/redirects', [\Acme\CmsDashboard\Http\Controllers\Admin\RedirectController::class, 'index'])->name('redirects.index');
     Route::post('seo/redirects', [\Acme\CmsDashboard\Http\Controllers\Admin\RedirectController::class, 'store'])->name('redirects.store');
