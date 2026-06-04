@@ -3,7 +3,30 @@
 use Illuminate\Support\Facades\DB;
 
 if (!defined('LAZY_CMS_VERSION')) {
-    define('LAZY_CMS_VERSION', '5.12.0');
+    define('LAZY_CMS_VERSION', '5.14.1');
+}
+
+if (!function_exists('lazy_cms_installed_version')) {
+    /**
+     * The version actually installed by Composer (falls back to LAZY_CMS_VERSION).
+     * Reading it live keeps the "update available" check accurate after every
+     * `composer update`, even if the LAZY_CMS_VERSION constant isn't hand-bumped.
+     */
+    function lazy_cms_installed_version(): string
+    {
+        if (class_exists(\Composer\InstalledVersions::class)) {
+            try {
+                $v = \Composer\InstalledVersions::getPrettyVersion('tareqcodex/lazy-cms-rebuild');
+                if ($v) {
+                    $clean = ltrim($v, 'v');
+                    if (preg_match('/^\d+\.\d+\.\d+$/', $clean)) {
+                        return $clean;
+                    }
+                }
+            } catch (\Throwable $e) {}
+        }
+        return LAZY_CMS_VERSION;
+    }
 }
 
 if (!function_exists('lazy_check_update')) {
@@ -14,7 +37,7 @@ if (!function_exists('lazy_check_update')) {
             return cache()->get($cacheKey);
         }
 
-        $current = LAZY_CMS_VERSION;
+        $current = lazy_cms_installed_version();
         $result  = ['current' => $current, 'latest' => null, 'has_update' => false, 'url' => null, 'checked_at' => now()->toDateTimeString()];
 
         try {
