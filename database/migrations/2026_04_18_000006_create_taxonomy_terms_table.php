@@ -10,7 +10,10 @@ return new class extends Migration
     {
         Schema::create('taxonomy_terms', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('taxonomy_id')->constrained('custom_taxonomies')->cascadeOnDelete();
+            // The application identifies a term's taxonomy by slug (see CustomTaxonomy::terms()
+            // and every controller/helper), so store the taxonomy slug directly rather than an FK id.
+            $table->string('taxonomy_slug')->index();
+            $table->string('cpt_slug')->nullable();
             $table->foreignId('parent_id')->nullable()->constrained('taxonomy_terms')->nullOnDelete();
             $table->string('name');
             $table->string('slug');
@@ -20,7 +23,7 @@ return new class extends Migration
             $table->integer('order')->default(0);
             $table->timestamps();
 
-            $table->unique(['slug', 'taxonomy_id', 'lang_code'], 'terms_slug_tax_lang_unique');
+            $table->unique(['slug', 'taxonomy_slug', 'lang_code'], 'terms_slug_taxslug_lang_unique');
         });
     }
 
