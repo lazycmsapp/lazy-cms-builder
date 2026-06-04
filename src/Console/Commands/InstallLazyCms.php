@@ -112,6 +112,10 @@ class InstallLazyCms extends Command
         $this->info('Step 10: Auto-creating E-commerce pages...');
         $this->createEcommercePages();
 
+        // 11. Create sample blog content (a sample post + a Blog page)
+        $this->info('Step 11: Creating sample blog content...');
+        $this->createSampleContent();
+
         $this->info('---------------------------------------');
         $this->info('Lazy CMS installed successfully!');
         $this->info("Login Email: {$email}");
@@ -192,5 +196,43 @@ class InstallLazyCms extends Command
                 ]
             );
         }
+    }
+
+    protected function createSampleContent()
+    {
+        $adminId = User::first()->id ?? 1;
+
+        // Sample blog post so the blog listing has content right after install.
+        \Acme\CmsDashboard\Models\Post::firstOrCreate(
+            ['slug' => 'hello-world', 'type' => 'post'],
+            [
+                'title'       => 'Hello World — Welcome to Lazy CMS',
+                'status'      => 'published',
+                'lang_code'   => 'en',
+                'user_id'     => $adminId,
+                'editor_type' => 'rich',
+                'excerpt'     => 'Welcome to Lazy CMS! This is your first sample blog post — edit or delete it and start publishing your own stories.',
+                'content'     => "<p>Welcome to <strong>Lazy CMS</strong> 🎉</p>"
+                    . "<p>This is a sample blog post that was created automatically when you installed the CMS. "
+                    . "You can edit it, delete it, or use it as a reference for how your posts will look on the front-end.</p>"
+                    . "<h2>Getting started</h2>"
+                    . "<ul><li>Create new posts from <em>Dashboard → Posts</em>.</li>"
+                    . "<li>Customize colours, typography and the blog layout from <em>Appearance → Customize</em>.</li>"
+                    . "<li>Assign a page as your Blog page from <em>Settings → General</em>.</li></ul>"
+                    . "<p>Happy publishing!</p>",
+            ]
+        );
+
+        // A ready-to-use "Blog" page the user can assign as the Blog page (Settings → General).
+        \Acme\CmsDashboard\Models\Post::firstOrCreate(
+            ['slug' => 'blog', 'type' => 'page'],
+            [
+                'title'       => 'Blog',
+                'status'      => 'published',
+                'lang_code'   => 'en',
+                'user_id'     => $adminId,
+                'editor_type' => 'rich',
+            ]
+        );
     }
 }

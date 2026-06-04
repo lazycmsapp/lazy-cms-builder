@@ -1124,6 +1124,8 @@ class BuilderShortcodeConverter
                 self::attrI($a, 'item_border_bottom_h',$s['itemBorderSizeBottomHover'] ?? null);
                 self::attrI($a, 'item_border_left_h', $s['itemBorderSizeLeftHover']   ?? null);
                 self::attrI($a, 'item_border_color_h',$s['itemBorderColorHover']      ?? null);
+                self::attrI($a, 'icon_position',      $s['menuIconPosition'] ?? null, 'left');
+                self::attrI($a, 'icon_gap',           $s['menuIconGap']      ?? null);
                 // Submenu
                 self::attrI($a, 'show_arrows',          $s['showArrows']         ?? null, 'yes');
                 self::attrI($a, 'submenu_direction',    $s['submenuDirection']   ?? null, 'right');
@@ -1676,7 +1678,7 @@ class BuilderShortcodeConverter
                 $t = $f['type'];
                 if ($t === 'repeater') {
                     $settings[$k] = self::parseRepeaterChildren($inner, $k);
-                } elseif ($t === 'checkbox') {
+                } elseif ($t === 'checkbox' || $t === 'multiselect' || $t === 'multi_select') {
                     $settings[$k] = isset($a[$k]) ? array_values(array_filter(explode(',', (string) $a[$k]), fn($x) => $x !== '')) : (is_array($f['value']) ? $f['value'] : []);
                 } elseif ($t === 'toggle') {
                     $settings[$k] = isset($a[$k]) ? in_array($a[$k], ['1', 'yes', 'true'], true) : (bool) $f['value'];
@@ -2228,6 +2230,8 @@ class BuilderShortcodeConverter
                     'itemBorderSizeBottomHover'   => self::num($a['item_border_bottom_h'] ?? null),
                     'itemBorderSizeLeftHover'     => self::num($a['item_border_left_h']   ?? null),
                     'itemBorderColorHover'        => $a['item_border_color_h']   ?? null,
+                    'menuIconPosition'   => $a['icon_position']        ?? 'left',
+                    'menuIconGap'        => isset($a['icon_gap']) ? (int)$a['icon_gap'] : null,
                     'showArrows'         => $a['show_arrows']          ?? 'yes',
                     'submenuDirection'   => $a['submenu_direction']    ?? 'right',
                     'submenuTransition'  => $a['submenu_transition']   ?? 'fade',
@@ -2743,10 +2747,10 @@ class BuilderShortcodeConverter
     private static function columnSettings(array $a): array
     {
         $s = [
-            'paddingTop'        => self::num($a['padding_top']    ?? 10),
-            'paddingBottom'     => self::num($a['padding_bottom'] ?? 10),
-            'paddingLeft'       => self::num($a['padding_left']   ?? 10),
-            'paddingRight'      => self::num($a['padding_right']  ?? 10),
+            'paddingTop'        => self::num($a['padding_top']    ?? 0),
+            'paddingBottom'     => self::num($a['padding_bottom'] ?? 0),
+            'paddingLeft'       => self::num($a['padding_left']   ?? 0),
+            'paddingRight'      => self::num($a['padding_right']  ?? 0),
             'paddingTopUnit'    => $a['padding_top_unit']    ?? 'px',
             'paddingBottomUnit' => $a['padding_bottom_unit'] ?? 'px',
             'paddingLeftUnit'   => $a['padding_left_unit']   ?? 'px',

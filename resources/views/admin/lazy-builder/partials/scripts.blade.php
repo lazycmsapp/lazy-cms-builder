@@ -617,6 +617,123 @@
                 if (!def) return { wrapperStyle: {}, items: [], hoverCss: '' };
                 const s = el.settings || {};
                 const elId = el.id || 'x';
+
+                // Social Icons: fixed per-platform fields → render real icon chips for any filled URL.
+                if (el.type === 'social_icons' && def.fields) {
+                    const box   = Math.max(0, parseInt(s.boxSize)  || 38);
+                    const ic    = Math.max(0, parseInt(s.iconSize) || 18);
+                    const gap   = Math.max(0, parseInt(s.gap)      || 10);
+                    const shape = s.shape || 'circle';
+                    const radius = shape === 'circle' ? '50%' : (shape === 'rounded' ? '8px' : '0');
+                    let align = getResponsiveVal(s, 'align', device.value) || 'center';
+                    if (!['flex-start','center','flex-end'].includes(align)) align = 'center';
+
+                    const boxed = (s.boxedStyle || 'default') !== 'no';
+                    const colorType = s.colorType || 'default';
+                    // Readable fg for a light/dark brand bg.
+                    const contrast = (hex) => {
+                        let h = String(hex || '').replace('#', '');
+                        if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+                        if (h.length < 6) return '#ffffff';
+                        const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+                        return ((0.299*r + 0.587*g + 0.114*b) / 255) > 0.65 ? '#111111' : '#ffffff';
+                    };
+                    const resolve = (brand) => {
+                        if (colorType === 'brand') return boxed ? { fg: contrast(brand), bg: brand } : { fg: brand, bg: 'transparent' };
+                        if (colorType === 'custom') return boxed ? { fg: s.iconColor || '#ffffff', bg: s.bgColor || '#2271b1' } : { fg: s.iconColor || '#ffffff', bg: 'transparent' };
+                        return boxed ? { fg: '#ffffff', bg: '#2271b1' } : { fg: '#2271b1', bg: 'transparent' };
+                    };
+
+                    // Tooltip (platform name on hover). default = top; none = off.
+                    let tipPos = s.tooltipPosition || 'default';
+                    if (tipPos === 'default') tipPos = 'top';
+                    const tipOn = tipPos !== 'none';
+
+                    const baseChip = {
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1',
+                    };
+                    if (boxed) { baseChip.width = box + 'px'; baseChip.height = box + 'px'; baseChip.borderRadius = radius; }
+                    if (tipOn) baseChip.position = 'relative';
+
+                    // Hover rule (shared across this element's chips). Brand keeps its own colour.
+                    const hoverCls = 'lzsoc-' + elId;
+                    let socHoverCss = '';
+                    if (colorType === 'custom') {
+                        const d = [];
+                        if (boxed && s.bgHoverColor) d.push('background:' + s.bgHoverColor + ' !important');
+                        if (s.iconHoverColor)        d.push('color:' + s.iconHoverColor + ' !important');
+                        if (d.length) socHoverCss = '.' + hoverCls + ':hover{' + d.join(';') + '}';
+                    } else if (colorType !== 'brand') {
+                        socHoverCss = boxed ? '.' + hoverCls + ':hover{background:#135e96 !important;color:#fff !important}'
+                                            : '.' + hoverCls + ':hover{color:#135e96 !important}';
+                    }
+                    // Tooltip CSS
+                    if (tipOn) {
+                        const place = {
+                            top:    'bottom:100%;left:50%;transform:translateX(-50%) translateY(-8px)',
+                            bottom: 'top:100%;left:50%;transform:translateX(-50%) translateY(8px)',
+                            left:   'right:100%;top:50%;transform:translateY(-50%) translateX(-8px)',
+                            right:  'left:100%;top:50%;transform:translateY(-50%) translateX(8px)',
+                        }[tipPos] || 'bottom:100%;left:50%;transform:translateX(-50%) translateY(-8px)';
+                        socHoverCss += '.' + hoverCls + '::after{content:attr(data-tip);position:absolute;' + place + ';background:#111;color:#fff;padding:3px 8px;border-radius:4px;font-size:11px;line-height:1.5;white-space:nowrap;opacity:0;visibility:hidden;transition:opacity .18s;pointer-events:none;z-index:30}';
+                        socHoverCss += '.' + hoverCls + ':hover::after{opacity:1;visibility:visible}';
+                    }
+
+                    const socItems = [];
+                    Object.entries(def.fields).forEach(([k, f]) => {
+                        if (!f.social_icon) return;
+                        if (!s[k] || !String(s[k]).trim()) return;
+                        const c = resolve(f.social_color || '#2271b1');
+                        const style = Object.assign({ color: c.fg }, baseChip);
+                        if (boxed) style.background = c.bg;
+                        socItems.push({ kind: 'social', icon: f.social_icon, style, hoverClass: hoverCls,
+                                        iconStyle: { fontSize: ic + 'px' }, tip: tipOn ? (f.social_label || '') : '' });
+                    });
+                    const wrapperStyle = {
+                        display: 'flex', flexWrap: 'wrap', gap: gap + 'px', justifyContent: align,
+                    };
+                    // Responsive margin (dimensions field) for the current device.
+                    ['top','right','bottom','left'].forEach(side => {
+                        const v = getResponsiveVal(s, 'margin_' + side, device.value);
+                        if (v === undefined || v === null || v === '') return;
+                        const u = getResponsiveVal(s, 'margin_' + side + '_unit', device.value) || 'px';
+                        wrapperStyle['margin' + side.charAt(0).toUpperCase() + side.slice(1)] = v + u;
+                    });
+                    return { wrapperStyle, wrapperHoverClass: '', items: socItems, hoverCss: socHoverCss };
+                }
+
+                // Advanced Search: render a live search-bar mockup in the canvas.
+                if (el.type === 'advanced_search') {
+                    const esc = (v) => String(v == null ? '' : v).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const accent = s.accentColor || '#0091ea';
+                    const bg     = s.bgColor || '#ffffff';
+                    const txt    = s.textColor || '#1d2327';
+                    const phc    = s.placeholderColor || '#9ca3af';
+                    const ddTxt  = s.dropdownTextColor || '#1d2327';
+                    const ddBg   = s.dropdownBgColor || '#ffffff';
+                    const bc     = s.borderColor || '#e5e7eb';
+                    const h      = Math.max(28, parseInt(s.height) || 46);
+                    const rad    = Math.max(0, parseInt(s.borderRadius) || 6);
+                    const mw     = Math.max(0, parseInt(s.maxWidth) || 0);
+                    const align  = s.align || 'flex-start';
+                    const ph     = s.placeholder || 'Search...';
+                    const showBtn = (s.showButton !== false);
+                    const btnTxt = s.buttonText || 'Search';
+                    let bar = '<div style="display:flex;align-items:stretch;width:100%;' + (mw > 0 ? 'max-width:' + mw + 'px;' : '') + 'background:' + bg + ';border:1px solid ' + bc + ';border-radius:' + rad + 'px;overflow:hidden;">';
+                    if (s.enableCategoryDropdown) {
+                        bar += '<div style="display:flex;align-items:center;gap:6px;padding:0 12px;height:' + h + 'px;border-right:1px solid ' + bc + ';background:' + ddBg + ';color:' + ddTxt + ';font-size:13px;white-space:nowrap;">All Categories <i class="fa fa-chevron-down" style="font-size:9px;"></i></div>';
+                    }
+                    bar += '<div style="flex:1;display:flex;align-items:center;padding:0 14px;height:' + h + 'px;font-size:14px;"><span style="color:' + txt + ';font-weight:600;margin-right:1px;">|</span><span style="color:' + phc + ';">' + esc(ph) + '</span></div>';
+                    if (showBtn) {
+                        bar += '<div style="display:flex;align-items:center;background:' + accent + ';color:#fff;padding:0 18px;height:' + h + 'px;font-size:14px;font-weight:600;white-space:nowrap;">' + esc(btnTxt) + '</div>';
+                    } else {
+                        bar += '<div style="display:flex;align-items:center;color:' + accent + ';padding:0 14px;height:' + h + 'px;"><i class="fa fa-magnifying-glass"></i></div>';
+                    }
+                    bar += '</div>';
+                    const html = '<div style="display:flex;justify-content:' + align + ';width:100%;">' + bar + '</div>';
+                    return { wrapperStyle: { width: '100%' }, wrapperHoverClass: '', items: [{ kind: 'html', value: html, style: { width: '100%' }, hoverClass: '' }], hoverCss: '' };
+                }
+
                 const fields = _ceFields(def);
                 const contentKeys = fields.filter(_ceIsContent).map(f => f.key);
 
@@ -652,7 +769,9 @@
                     const hover = Object.assign(_ceHover(s, f.key), explicit[f.key] ? explicit[f.key].hover : {});
                     const hoverClass = _hoverClass(hover);
                     if (f.type === 'repeater') {
-                        const subDefs = f.raw.fields || f.raw.params || [];
+                        let subDefs = f.raw.fields || f.raw.params || [];
+                        // Sub-fields may be an array (params style) or an object keyed by name (fields style).
+                        if (!Array.isArray(subDefs)) subDefs = Object.keys(subDefs).map(k => Object.assign({ param_name: k }, subDefs[k]));
                         const subFields = subDefs.map(sp => ({ key: customParamKey(sp), type: sp.type }));
                         items.push({ kind: 'repeater', key: f.key, style, hoverClass, rows: Array.isArray(s[f.key]) ? s[f.key] : [], subFields });
                     } else {
@@ -948,7 +1067,7 @@
             const uid = () => Math.random().toString(36).substr(2, 9);
 
             const makeColumnSettings = (overrides = {}) => ({
-                paddingTop: 10, paddingBottom: 10, paddingLeft: 10, paddingRight: 10,
+                paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
                 marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0,
                 alignment: 'default', contentLayout: '', contentAlignH: 'flex-start', contentAlignV: 'flex-start',
                 gapWidth: '', gapHeight: '', htmlTag: 'div', linkUrl: '', linkTarget: '_self',
@@ -1555,7 +1674,7 @@
                     dragRefWidth.value = containerEl ? containerEl.clientWidth : (colEl ? colEl.clientWidth : 300);
                     if (target.settings[type] === undefined || target.settings[type] === null || target.settings[type] === '') {
                         const rawGap = layout.value[ci]?.settings?.columnGap;
-                        target.settings[type] = (rawGap !== undefined && rawGap !== '' && rawGap !== null) ? Number(rawGap) : 3;
+                        target.settings[type] = (rawGap !== undefined && rawGap !== '' && rawGap !== null) ? Number(rawGap) : 0;
                     }
                 } else if (type === 'paddingLeft' || type === 'paddingRight') {
                     const colEl = e.target.closest('.column-outer');
@@ -2323,7 +2442,7 @@
                 const hasDefinedHeight = containerHeight === 'full' || containerHeight === 'custom';
 
                 const rawGap = getResponsiveVal(container.settings, 'columnGap', device.value);
-                const globalGap = (rawGap !== undefined && rawGap !== '' && rawGap !== null) ? rawGap : 3;
+                const globalGap = (rawGap !== undefined && rawGap !== '' && rawGap !== null) ? rawGap : 0;
 
                 const pLeft = (s.columnSpacingLeft !== undefined && s.columnSpacingLeft !== '' && s.columnSpacingLeft !== null) 
                               ? s.columnSpacingLeft + '%' 

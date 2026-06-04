@@ -70,16 +70,22 @@
                             'id' => $item->id,
                             'title' => $item->title,
                             'url' => $item->url,
+                            'icon' => $item->icon ?? '',
+                            'show_only_icon' => (bool)($item->show_only_icon ?? false),
                             'children' => $grouped->get($item->id, collect([]))->map(function($child) use ($grouped) {
                                 return [
                                     'id' => $child->id,
                                     'title' => $child->title,
                                     'url' => $child->url,
+                                    'icon' => $child->icon ?? '',
+                                    'show_only_icon' => (bool)($child->show_only_icon ?? false),
                                     'children' => $grouped->get($child->id, collect([]))->map(function($gchild) {
                                         return [
                                             'id' => $gchild->id,
                                             'title' => $gchild->title,
-                                            'url' => $gchild->url
+                                            'url' => $gchild->url,
+                                            'icon' => $gchild->icon ?? '',
+                                            'show_only_icon' => (bool)($gchild->show_only_icon ?? false)
                                         ];
                                     })->values()->toArray()
                                 ];

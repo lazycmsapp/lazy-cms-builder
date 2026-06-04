@@ -188,6 +188,8 @@
                     <img v-if="(it.kind === 'image' || it.kind === 'media') && it.value" :src="it.value" :style="it.style" :class="it.hoverClass" class="max-w-full h-auto block">
                     {{-- icon --}}
                     <i v-else-if="it.kind === 'icon' && it.value" :class="[it.value, it.hoverClass]" :style="it.style"></i>
+                    {{-- social icon chip --}}
+                    <span v-else-if="it.kind === 'social'" :style="it.style" :class="it.hoverClass" :data-tip="it.tip || null" style="transition:background .25s,color .25s,filter .2s"><i :class="it.icon" :style="it.iconStyle"></i></span>
                     {{-- button --}}
                     <button v-else-if="it.kind === 'button'" :style="it.style" :class="it.hoverClass" class="inline-block px-4 py-2 rounded bg-[#0091ea] text-white text-[13px] font-semibold" v-text="it.value || 'Button'"></button>
                     {{-- repeater --}}

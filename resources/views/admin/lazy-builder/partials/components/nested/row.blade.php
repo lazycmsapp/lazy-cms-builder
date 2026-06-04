@@ -272,6 +272,7 @@
                                 <template v-for="(it, ci) in getCustomElementRender(el).items" :key="ci">
                                     <img v-if="(it.kind === 'image' || it.kind === 'media') && it.value" :src="it.value" :style="it.style" :class="it.hoverClass" class="max-w-full h-auto block">
                                     <i v-else-if="it.kind === 'icon' && it.value" :class="[it.value, it.hoverClass]" :style="it.style"></i>
+                                    <span v-else-if="it.kind === 'social'" :style="it.style" :class="it.hoverClass" :data-tip="it.tip || null" style="transition:background .25s,color .25s,filter .2s"><i :class="it.icon" :style="it.iconStyle"></i></span>
                                     <button v-else-if="it.kind === 'button'" :style="it.style" :class="it.hoverClass" class="inline-block px-3 py-1.5 rounded bg-[#0091ea] text-white text-[12px] font-semibold" v-text="it.value || 'Button'"></button>
                                     <div v-else-if="it.kind === 'repeater'" :style="it.style" :class="it.hoverClass" class="space-y-1.5">
                                         <div v-for="(row, ri) in it.rows" :key="ri" class="flex items-center gap-2 flex-wrap">

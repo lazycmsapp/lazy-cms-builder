@@ -10,10 +10,10 @@
     nav[role="navigation"] > div:last-child { display: flex; width: auto; }
     nav[role="navigation"] .relative.inline-flex { 
         padding: 0; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
-        font-size: 14px; border-radius: 2px; margin-right: 6px; border: 1px solid #b3d4f0; color: #0070cd; background: white; text-decoration: none;
+        font-size: 14px; border-radius: 2px; margin-right: 6px; border: 1px solid #b3d4f0; color: {{ get_cms_option('theme_primary_color', '#0091ea') }}; background: white; text-decoration: none;
     }
     nav[role="navigation"] span[aria-current="page"] > span {
-        background-color: #0070cd !important; color: white !important; border-color: #0070cd !important; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+        background-color: {{ get_cms_option('theme_primary_color', '#0091ea') }} !important; color: white !important; border-color: {{ get_cms_option('theme_primary_color', '#0091ea') }} !important; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
     }
     nav[role="navigation"] a.relative:hover { background-color: #f0f6fc; }
     nav[role="navigation"] svg { width: 16px; height: 16px; }
@@ -23,10 +23,10 @@
     <div class="container-custom">
         <!-- Breadcrumbs -->
         <nav class="text-[14px] text-gray-400 mb-6" aria-label="Breadcrumb">
-            <a href="{{ url('/') }}" class="hover:text-gray-900">Home</a> / <span>{{ $title }}</span>
+            <a href="{{ url('/') }}" class="hover:text-heading">Home</a> / <span>{{ $title }}</span>
         </nav>
 
-        <h1 class="text-[36px] md:text-[42px] font-normal text-[#2c3338] mb-8">{{ $title }}</h1>
+        <h1 class="text-[36px] md:text-[42px] font-normal text-heading mb-8">{{ $title }}</h1>
 
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 text-[14px] text-[#777]">
             <div class="mb-4 md:mb-0">
@@ -39,7 +39,7 @@
             <div>
                 <form action="" method="GET" id="sorting-form">
                     @if(request('s')) <input type="hidden" name="s" value="{{ request('s') }}"> @endif
-                    <select name="orderby" class="border-0 bg-transparent focus:ring-0 text-[#777] cursor-pointer text-[14px] font-normal p-0 pr-6" onchange="this.form.submit()">
+                    <select name="orderby" class="border border-gray-200 rounded-sm bg-white focus:ring-0 focus:border-gray-300 text-[#777] cursor-pointer text-[14px] font-normal pl-3 pr-8 py-2" onchange="this.form.submit()">
                         <option value="latest" {{ request('orderby') == 'latest' ? 'selected' : '' }}>Default sorting</option>
                         <option value="popularity" {{ request('orderby') == 'popularity' ? 'selected' : '' }}>Sort by popularity</option>
                         <option value="rating" {{ request('orderby') == 'rating' ? 'selected' : '' }}>Sort by average rating</option>
@@ -62,20 +62,20 @@
                             <img src="{{ asset('assets/images/placeholder.jpg') }}" alt="Placeholder" class="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-70">
                         @endif
                         @if($product->shopData && $product->shopData->sale_price)
-                            <span class="absolute top-3 left-3 bg-white text-[#555] text-[11px] font-medium px-2.5 py-0.5 rounded-full shadow-sm z-10">Sale!</span>
+                            <span class="absolute top-3 left-3 bg-sky-100 text-sky-700 text-[13px] font-bold px-3 py-1 rounded-full shadow uppercase tracking-wide z-10">Sale!</span>
                         @endif
                     </a>
                     <div class="flex flex-col flex-grow text-left px-1">
                         <div class="text-[12px] text-[#999] mb-0.5">
-                            @php 
-                                $cat = $product->taxonomyTerms()->whereIn('taxonomy_slug', ['product_category', 'product_cat'])->first(); 
+                            @php
+                                $cat = $product->productCategories->first() ?: $product->taxonomyTerms()->whereIn('taxonomy_slug', ['product_category', 'product_cat'])->first();
                             @endphp
                             {{ $cat->name ?? 'Product' }}
                         </div>
-                        <h2 class="text-[15px] font-bold text-[#2c3338] hover:text-[#0070cd] transition-colors mb-1 leading-tight">
+                        <h2 class="text-[15px] font-bold text-heading hover:text-primary transition-colors mb-1 leading-tight">
                             <a href="{{ get_lazy_permalink($product) }}">{{ $product->title }}</a>
                         </h2>
-                        <div class="text-[#333] font-bold text-[14px] mb-3">
+                        <div class="text-heading font-bold text-[14px] mb-3">
                             @if($product->shopData && $product->shopData->sale_price)
                                 <span class="line-through text-[#a5a5a5] font-normal mr-1.5">{{ lazy_price_format($product->shopData->price) }}</span>
                                 <span>{{ lazy_price_format($product->shopData->sale_price) }}</span>
@@ -84,12 +84,18 @@
                             @endif
                         </div>
                         <div class="mt-auto flex flex-wrap gap-2">
-                            <button onclick="addToCart({{ $product->id }})" class="flex-1 bg-[#0070cd] text-white px-4 py-2.5 rounded-[3px] text-[13px] font-semibold hover:bg-[#005ba6] transition-colors duration-200">
-                                Add to cart
-                            </button>
-                            <a href="{{ get_lazy_permalink($product) }}" class="flex-1 text-center bg-white text-[#0070cd] border border-[#0070cd] px-4 py-2.5 rounded-[3px] text-[13px] font-semibold hover:bg-gray-50 transition-colors duration-200">
-                                See Detail
-                            </a>
+                            @if(lazy_is_variable_product($product))
+                                <a href="{{ get_lazy_permalink($product) }}" class="w-full text-center bg-primary text-white px-4 py-2.5 rounded-[3px] text-[13px] font-semibold hover:bg-primary-hover transition-colors duration-200">
+                                    Select Options
+                                </a>
+                            @else
+                                <button onclick="addToCart({{ $product->id }})" class="flex-1 bg-primary text-white px-4 py-2.5 rounded-[3px] text-[13px] font-semibold hover:bg-primary-hover transition-colors duration-200">
+                                    Add to cart
+                                </button>
+                                <a href="{{ get_lazy_permalink($product) }}" class="flex-1 text-center bg-white text-primary border border-primary px-4 py-2.5 rounded-[3px] text-[13px] font-semibold hover:bg-gray-50 transition-colors duration-200">
+                                    See Detail
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -102,7 +108,7 @@
         @else
         <div class="bg-white p-10 text-center text-[#777]">
             <p class="text-lg mb-4">No results found.</p>
-            <a href="{{ url('/') }}" class="inline-block bg-[#0070cd] text-white px-6 py-2 rounded hover:bg-[#005ba6] transition">Return to Home</a>
+            <a href="{{ url('/') }}" class="inline-block bg-primary text-white px-6 py-2 rounded hover:bg-primary-hover transition">Return to Home</a>
         </div>
         @endif
     </div>
@@ -141,7 +147,7 @@ function addToCart(productId) {
                 text: 'Product added to cart successfully.',
                 icon: 'success',
                 showCancelButton: true,
-                confirmButtonColor: '#0070cd',
+                confirmButtonColor: '{{ get_cms_option('theme_primary_color', '#0091ea') }}',
                 confirmButtonText: 'View Cart',
                 cancelButtonText: 'Continue Shopping',
                 background: '#ffffff'
@@ -156,7 +162,7 @@ function addToCart(productId) {
                 title: 'Error',
                 text: data.message || 'Error adding to cart',
                 icon: 'error',
-                confirmButtonColor: '#0070cd'
+                confirmButtonColor: '{{ get_cms_option('theme_primary_color', '#0091ea') }}'
             });
         }
     })
@@ -166,7 +172,7 @@ function addToCart(productId) {
             title: 'Error',
             text: 'Could not add product to cart. Please try again.',
             icon: 'error',
-            confirmButtonColor: '#0070cd'
+            confirmButtonColor: '{{ get_cms_option('theme_primary_color', '#0091ea') }}'
         });
     });
 }

@@ -64,6 +64,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="{{ $googleFontsUrl }}" rel="stylesheet">
     
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <!-- FontAwesome -->
     <link rel="stylesheet" href="{{ asset('vendor/cms-dashboard/css/font-awesome.all.min.css') }}">
 
@@ -80,6 +82,11 @@
                     colors: {
                         primary: '{{ $primaryColor }}',
                         'primary-hover': '{{ $linkHoverColor }}',
+                        secondary: '{{ $secondaryColor }}',
+                        heading: '{{ $headingColor }}',
+                        body: '{{ $textColor }}',
+                        link: '{{ $linkColor }}',
+                        'link-hover': '{{ $linkHoverColor }}',
                     },
                     fontFamily: {
                         sans: ['{{ $bodyTypo["family"] }}', 'sans-serif'],
@@ -151,14 +158,47 @@
 
         /* Typography Tags */
         @php
+            // Responsive (fluid) typography — driven by the Customizer "Responsive Typography"
+            // controls: Sensitivity (how aggressively headings shrink) + Minimum Font Size Factor
+            // (the floor = body font-size * factor).
+            $typoSensitivity   = (float) get_cms_option('theme_typography_sensitivity', '0.6');
+            $minFontSizeFactor = (float) get_cms_option('theme_font_size_factor', '1.50');
+            $rtSmallBP  = (int) get_cms_option('theme_small_screen_breakpoint', '800');
+            $rtMediumBP = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
+            $rtBodyTypo = json_decode(get_cms_option('theme_typography_body'), true);
+            $rtBodyPx   = (float) preg_replace('/[^0-9.]/', '', (string)($rtBodyTypo['size'] ?? '15'));
+            if ($rtBodyPx <= 0) $rtBodyPx = 15;
+
+            // Turn a fixed desktop px size into a fluid clamp(). Returns the raw size
+            // unchanged when RT is disabled, the unit isn't px, the breakpoints are
+            // misconfigured, or the heading is already at/below the floor — so the
+            // desktop appearance (>= medium breakpoint) never changes.
+            $fluidFontSize = function ($sizeStr) use ($typoSensitivity, $minFontSizeFactor, $rtSmallBP, $rtMediumBP, $rtBodyPx) {
+                $sizeStr = trim((string) $sizeStr);
+                if ($typoSensitivity <= 0 || $rtMediumBP <= $rtSmallBP) return $sizeStr;
+                if (!preg_match('/^([0-9.]+)px$/', $sizeStr, $m)) return $sizeStr;
+                $max   = (float) $m[1];
+                $floor = $rtBodyPx * $minFontSizeFactor;
+                if ($max <= $floor) return $sizeStr;
+                $sens  = min(1, max(0, $typoSensitivity));
+                $min   = round($max - ($max - $floor) * $sens, 2);
+                $delta = round($max - $min, 2);
+                $span  = $rtMediumBP - $rtSmallBP;
+                return "clamp({$min}px, calc({$min}px + {$delta} * (100vw - {$rtSmallBP}px) / {$span}), {$max}px)";
+            };
+
             $tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'nav'];
+            $headingTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
             foreach($tags as $tag) {
                 $optionName = "theme_typography_{$tag}";
                 $typo = json_decode(get_cms_option($optionName), true);
                 if($typo) {
                     echo "{$tag}, .{$tag}-style { ";
                     if(isset($typo['family'])) echo "font-family: '{$typo['family']}', sans-serif; ";
-                    if(isset($typo['size'])) echo "font-size: {$typo['size']}; ";
+                    if(isset($typo['size'])) {
+                        $sizeOut = in_array($tag, $headingTags, true) ? $fluidFontSize($typo['size']) : $typo['size'];
+                        echo "font-size: {$sizeOut}; ";
+                    }
                     if(isset($typo['variant'])) echo "font-weight: {$typo['variant']}; ";
                     if(isset($typo['line_height'])) echo "line-height: {$typo['line_height']}; ";
                     if(isset($typo['letter_spacing'])) echo "letter-spacing: {$typo['letter_spacing']}; ";
@@ -201,10 +241,6 @@
             $sidebarBP = get_cms_option('theme_sidebar_breakpoint', '800');
             $smallBP = get_cms_option('theme_small_screen_breakpoint', '800');
             $mediumBP = get_cms_option('theme_medium_screen_breakpoint', '1100');
-            
-            // Typography Sensitivity
-            $typoSensitivity = (float)get_cms_option('theme_typography_sensitivity', '0.6');
-            $minFontSizeFactor = (float)get_cms_option('theme_font_size_factor', '1.50');
         @endphp
 
         :root {
@@ -221,13 +257,8 @@
             .container-custom, .page-container { width: var(--site-width) !important; max-width: none !important; }
         @endif
 
-        /* Responsive Typography Logic */
-        @if($typoSensitivity > 0)
-            @media (max-width: {{ $mediumBP }}px) {
-                html { font-size: calc(100% - {{ (1 - $typoSensitivity) * 2 }}px); }
-                h1, .h1-style { font-size: calc(var(--body-size) * {{ $minFontSizeFactor }} * 1.5) !important; }
-            }
-        @endif
+        /* Responsive Typography: headings (h1–h6) are emitted as fluid clamp() sizes
+           above, controlled by the Sensitivity + Minimum Font Size Factor settings. */
 
         /* PRIORITY CUSTOM CSS */
         {!! get_cms_option('theme_custom_css') !!}
@@ -252,6 +283,8 @@
     @include('cms-dashboard::themes.lazy-theme.partials.header')
 @endif
 
+@include('cms-dashboard::themes.lazy-theme.partials.title-bar')
+
 <main class="flex-grow">
     @yield('content')
 </main>
@@ -261,6 +294,9 @@
 @else
     @include('cms-dashboard::themes.lazy-theme.partials.footer')
 @endif
+
+    {{-- Off-canvas mini cart --}}
+    @include('cms-dashboard::themes.lazy-theme.partials.mini-cart')
 
     <!-- Scripts -->
     <script src="{{ asset('vendor/cms-dashboard/js/lucide.min.js') }}"></script>

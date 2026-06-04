@@ -25,7 +25,12 @@
                     @endphp
                     <div class="relative group h-full flex items-center">
                         <a href="{{ $item->url }}" class="nav-style {{ $isActive ? 'text-primary' : '' }} hover:text-[{{ $itemHoverColor }}] transition-colors flex items-center gap-1">
-                            {{ $item->title }}
+                            @php
+                                $__ic = $item->icon ?? '';
+                                $__io = !empty($item->show_only_icon) && $__ic !== '';
+                                $__iconHtml = $__ic !== '' ? '<i class="'.e($__ic).'"'.($__io ? ' title="'.e($item->title).'"' : '').'></i>' : '';
+                            @endphp
+                            {!! $__iconHtml !!}@if(!$__io){{ $item->title }}@endif
                             @if($item->children->count() > 0)
                                 <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-hover:text-primary transition-colors {{ $isActive ? 'text-primary' : '' }}"></i>
                             @endif
@@ -39,7 +44,12 @@
                                         <li class="relative group/sub">
                                             <a href="{{ $child->url }}" class="flex items-center justify-between px-5 py-2.5 text-[13px] font-medium hover:bg-slate-50 transition-all"
                                                style="color: {{ get_cms_option('theme_dropdown_text_color', '#1d2327') }};">
-                                                {{ $child->title }}
+                                                @php
+                                                    $__cic = $child->icon ?? '';
+                                                    $__cio = !empty($child->show_only_icon) && $__cic !== '';
+                                                    $__cIconHtml = $__cic !== '' ? '<i class="'.e($__cic).'"'.($__cio ? ' title="'.e($child->title).'"' : '').'></i>' : '';
+                                                @endphp
+                                                <span class="flex items-center gap-1.5">{!! $__cIconHtml !!}@if(!$__cio){{ $child->title }}@endif</span>
                                                 @if($child->children->count() > 0)
                                                     <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
                                                 @endif
@@ -53,7 +63,12 @@
                                                             <li>
                                                                 <a href="{{ $grandChild->url }}" class="block px-5 py-2.5 text-[13px] font-medium hover:bg-slate-50 transition-all"
                                                                    style="color: {{ get_cms_option('theme_dropdown_text_color', '#1d2327') }};">
-                                                                    {{ $grandChild->title }}
+                                                                    @php
+                                                                        $__gic = $grandChild->icon ?? '';
+                                                                        $__gio = !empty($grandChild->show_only_icon) && $__gic !== '';
+                                                                        $__gIconHtml = $__gic !== '' ? '<i class="'.e($__gic).' mr-1.5"'.($__gio ? ' title="'.e($grandChild->title).'"' : '').'></i>' : '';
+                                                                    @endphp
+                                                                    {!! $__gIconHtml !!}@if(!$__gio){{ $grandChild->title }}@endif
                                                                 </a>
                                                             </li>
                                                         @endforeach
@@ -127,14 +142,24 @@
                         $isActive = (url()->current() == $item->url) || (request()->is(ltrim(parse_url($item->url, PHP_URL_PATH), '/')));
                     @endphp
                     <div>
-                        <a href="{{ $item->url }}" class="text-[15px] font-bold {{ $isActive ? 'text-primary' : 'text-slate-800' }} hover:text-primary block mb-2">{{ $item->title }}</a>
+                        @php
+                            $__mic = $item->icon ?? '';
+                            $__mio = !empty($item->show_only_icon) && $__mic !== '';
+                            $__mIconHtml = $__mic !== '' ? '<i class="'.e($__mic).' mr-2"'.($__mio ? ' title="'.e($item->title).'"' : '').'></i>' : '';
+                        @endphp
+                        <a href="{{ $item->url }}" class="text-[15px] font-bold {{ $isActive ? 'text-primary' : 'text-slate-800' }} hover:text-primary block mb-2">{!! $__mIconHtml !!}@if(!$__mio){{ $item->title }}@endif</a>
                         @if($item->children->count() > 0)
                             <div class="pl-4 space-y-2 border-l border-slate-100 ml-1">
                                 @foreach($item->children as $child)
                                     @php 
                                         $childActive = (url()->current() == $child->url) || (request()->is(ltrim(parse_url($child->url, PHP_URL_PATH), '/')));
                                     @endphp
-                                    <a href="{{ $child->url }}" class="text-[14px] font-medium {{ $childActive ? 'text-primary' : 'text-slate-600' }} hover:text-primary block">{{ $child->title }}</a>
+                                    @php
+                                        $__mcic = $child->icon ?? '';
+                                        $__mcio = !empty($child->show_only_icon) && $__mcic !== '';
+                                        $__mcIconHtml = $__mcic !== '' ? '<i class="'.e($__mcic).' mr-2"'.($__mcio ? ' title="'.e($child->title).'"' : '').'></i>' : '';
+                                    @endphp
+                                    <a href="{{ $child->url }}" class="text-[14px] font-medium {{ $childActive ? 'text-primary' : 'text-slate-600' }} hover:text-primary block">{!! $__mcIconHtml !!}@if(!$__mcio){{ $child->title }}@endif</a>
                                 @endforeach
                             </div>
                         @endif

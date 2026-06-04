@@ -315,6 +315,99 @@ class CustomizerController extends \Illuminate\Routing\Controller
                     ],
                 ],
             ],
+            'title_bar' => [
+                'title' => 'Title Bar',
+                'icon'  => 'title',
+                'fields' => [
+                    'theme_title_bar_enabled' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Enable Title Bar',
+                        'desc'    => 'Show a page title bar directly below the header on posts, pages, products and archives.',
+                        'default' => '1',
+                    ],
+                    'theme_title_bar_show_title' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Show Page Title',
+                        'desc'    => 'Display the current page / post / archive title inside the bar.',
+                        'default' => '1',
+                        'depends' => 'theme_title_bar_enabled',
+                    ],
+                    'theme_title_bar_show_breadcrumb' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Show Breadcrumb',
+                        'desc'    => 'Display a Home › Title breadcrumb trail inside the bar.',
+                        'default' => '1',
+                        'depends' => 'theme_title_bar_enabled',
+                    ],
+                    'theme_title_bar_align' => [
+                        'type'    => 'select',
+                        'label'   => 'Alignment',
+                        'desc'    => 'Horizontal alignment of the title and breadcrumb.',
+                        'default' => 'left',
+                        'options' => ['left' => 'Left', 'center' => 'Center', 'right' => 'Right'],
+                        'depends' => 'theme_title_bar_enabled',
+                    ],
+                    'theme_title_bar_bg_color' => [
+                        'type'    => 'color',
+                        'label'   => 'Background Color',
+                        'desc'    => 'Background color of the title bar.',
+                        'default' => '#f7f8fa',
+                        'depends' => 'theme_title_bar_enabled',
+                    ],
+                    'theme_title_bar_text_color' => [
+                        'type'    => 'color',
+                        'label'   => 'Title Color',
+                        'desc'    => 'Color of the page title text.',
+                        'default' => '#1d2327',
+                        'depends' => 'theme_title_bar_enabled',
+                    ],
+                    'theme_title_bar_breadcrumb_color' => [
+                        'type'    => 'color',
+                        'label'   => 'Breadcrumb Color',
+                        'desc'    => 'Color of the breadcrumb text and links.',
+                        'default' => '#6b7280',
+                        'depends' => 'theme_title_bar_enabled',
+                    ],
+                    'theme_title_bar_title_size' => [
+                        'type'        => 'text',
+                        'label'       => 'Title Font Size',
+                        'desc'        => 'Font size of the title. Enter value with CSS unit, ex: 32px.',
+                        'default'     => '32px',
+                        'placeholder' => '32px',
+                        'depends'     => 'theme_title_bar_enabled',
+                    ],
+                    'theme_title_bar_padding_top' => [
+                        'type'        => 'text',
+                        'label'       => 'Padding Top',
+                        'desc'        => 'Top padding inside the title bar.',
+                        'default'     => '40px',
+                        'placeholder' => '40px',
+                        'depends'     => 'theme_title_bar_enabled',
+                    ],
+                    'theme_title_bar_padding_bottom' => [
+                        'type'        => 'text',
+                        'label'       => 'Padding Bottom',
+                        'desc'        => 'Bottom padding inside the title bar.',
+                        'default'     => '40px',
+                        'placeholder' => '40px',
+                        'depends'     => 'theme_title_bar_enabled',
+                    ],
+                    'theme_title_bar_border_bottom' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Border Bottom',
+                        'desc'    => 'Show a border line below the title bar.',
+                        'default' => '1',
+                        'depends' => 'theme_title_bar_enabled',
+                    ],
+                    'theme_title_bar_border_color' => [
+                        'type'    => 'color',
+                        'label'   => 'Border Color',
+                        'desc'    => 'Color of the title bar bottom border.',
+                        'default' => '#e5e7eb',
+                        'depends' => 'theme_title_bar_enabled',
+                    ],
+                ],
+            ],
             'logo' => [
                 'title' => 'Logo & Favicon',
                 'icon'  => 'image',
@@ -441,6 +534,118 @@ class CustomizerController extends \Illuminate\Routing\Controller
                         'label'       => 'Footer Padding Bottom',
                         'default'     => '40px',
                         'placeholder' => '40px',
+                    ],
+                ],
+            ],
+            // ── Blog (grouped: renders as a "Blog" parent with General + Single Blog sub-items) ──
+            'blog_general' => [
+                'title'       => 'General',
+                'icon'        => 'tune',
+                'parent'      => 'Blog',
+                'parent_icon' => 'article',
+                'fields' => [
+                    'theme_blog_layout' => [
+                        'type'    => 'select',
+                        'label'   => 'Blog Layout',
+                        'desc'    => 'How posts are arranged on the blog / archive pages.',
+                        'default' => 'grid',
+                        'options' => ['grid' => 'Grid', 'list' => 'List'],
+                    ],
+                    'theme_blog_columns' => [
+                        'type'    => 'select',
+                        'label'   => 'Columns',
+                        'desc'    => 'Number of columns when using the grid layout.',
+                        'default' => '3',
+                        'options' => ['1' => '1 Column', '2' => '2 Columns', '3' => '3 Columns', '4' => '4 Columns'],
+                    ],
+                    'theme_blog_sidebar' => [
+                        'type'    => 'select',
+                        'label'   => 'Sidebar',
+                        'desc'    => 'Show a sidebar on the blog page and which side it appears.',
+                        'default' => 'right',
+                        'options' => ['left' => 'Left Sidebar', 'right' => 'Right Sidebar', 'none' => 'None'],
+                    ],
+                    'theme_blog_show_featured' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Show Featured Image',
+                        'desc'    => 'Display the featured image on each post card.',
+                        'default' => '1',
+                    ],
+                    'theme_blog_show_excerpt' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Show Excerpt',
+                        'desc'    => 'Display a short excerpt under each post title.',
+                        'default' => '1',
+                    ],
+                    'theme_blog_excerpt_length' => [
+                        'type'        => 'text',
+                        'label'       => 'Excerpt Length',
+                        'desc'        => 'Number of words shown in the excerpt.',
+                        'default'     => '25',
+                        'placeholder' => '25',
+                    ],
+                    'theme_blog_show_meta' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Show Meta (Author / Date)',
+                        'desc'    => 'Display the author name and published date on each post.',
+                        'default' => '1',
+                    ],
+                    'theme_blog_read_more_text' => [
+                        'type'        => 'text',
+                        'label'       => 'Read More Text',
+                        'desc'        => 'Text for the read-more link / button.',
+                        'default'     => 'Read More',
+                        'placeholder' => 'Read More',
+                    ],
+                ],
+            ],
+            'blog_single' => [
+                'title'       => 'Single Blog',
+                'icon'        => 'description',
+                'parent'      => 'Blog',
+                'parent_icon' => 'article',
+                'fields' => [
+                    'theme_single_show_featured' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Show Featured Image',
+                        'desc'    => 'Display the featured image at the top of a single post.',
+                        'default' => '1',
+                    ],
+                    'theme_single_show_author' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Show Author',
+                        'desc'    => 'Display the post author.',
+                        'default' => '1',
+                    ],
+                    'theme_single_show_date' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Show Date',
+                        'desc'    => 'Display the published date.',
+                        'default' => '1',
+                    ],
+                    'theme_single_show_categories' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Show Categories',
+                        'desc'    => 'Display the post categories.',
+                        'default' => '1',
+                    ],
+                    'theme_single_show_share' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Show Share Buttons',
+                        'desc'    => 'Display social share buttons on single posts.',
+                        'default' => '0',
+                    ],
+                    'theme_single_show_related' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Show Related Posts',
+                        'desc'    => 'Display related posts below the content.',
+                        'default' => '1',
+                    ],
+                    'theme_single_show_comments' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Show Comments',
+                        'desc'    => 'Display the comments section on single posts.',
+                        'default' => '1',
                     ],
                 ],
             ],
@@ -622,7 +827,12 @@ class CustomizerController extends \Illuminate\Routing\Controller
             }
         }
 
-        return view('cms-dashboard::admin.customizer.index', compact('section', 'sections', 'settings'));
+        // When a Header/Footer is built with the Lazy Builder, the matching customizer
+        // options become irrelevant — flag them so the view can show a notice instead.
+        $builderHeaderActive = function_exists('get_lazy_header') ? (bool) get_lazy_header() : false;
+        $builderFooterActive = function_exists('get_lazy_footer') ? (bool) get_lazy_footer() : false;
+
+        return view('cms-dashboard::admin.customizer.index', compact('section', 'sections', 'settings', 'builderHeaderActive', 'builderFooterActive'));
     }
 
     public function save(Request $request)

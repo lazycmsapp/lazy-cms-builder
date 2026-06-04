@@ -105,7 +105,7 @@ class DashboardController extends Controller
 
         // Ecommerce stats — only when shop tables exist
         $hasShop  = false;
-        $currency = get_cms_option('shop_currency_symbol', '$');
+        $currency = \Acme\CmsDashboard\Services\EcommerceData::getCurrencySymbol(get_shop_option('shop_currency', 'USD'));
         $ecoStats = [
             'total_orders'    => 0,
             'total_revenue'   => 0,
@@ -115,26 +115,39 @@ class DashboardController extends Controller
             'orders_month'    => 0,
             'status_counts'   => [],
             'monthly_revenue' => array_fill(0, 7, 0),
+            'monthly_labels'  => [],
         ];
         try {
             if (\Illuminate\Support\Facades\Schema::hasTable('shop_orders')) {
                 $hasShop = true;
+                // Statuses that represent earned revenue. Net = total minus any amount refunded.
+                $revenueStatuses = ['completed', 'processing', 'partially-refunded'];
+                $netRevenue = "COALESCE(SUM(total - COALESCE(refunded_amount, 0)), 0)";
+
                 $ecoStats['total_orders']   = \Acme\CmsDashboard\Models\Order::count();
-                $ecoStats['total_revenue']  = \Acme\CmsDashboard\Models\Order::whereIn('status', ['completed', 'processing'])->sum('total');
+                $ecoStats['total_revenue']  = (float) \Acme\CmsDashboard\Models\Order::whereIn('status', $revenueStatuses)
+                    ->selectRaw("{$netRevenue} as net")->value('net');
                 $ecoStats['pending_orders'] = \Acme\CmsDashboard\Models\Order::where('status', 'pending')->count();
                 $ecoStats['total_products'] = Post::where('type', 'product')->count();
                 $ecoStats['orders_today']   = \Acme\CmsDashboard\Models\Order::whereDate('created_at', today())->count();
                 $ecoStats['orders_month']   = \Acme\CmsDashboard\Models\Order::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
                 $ecoStats['status_counts']  = \Acme\CmsDashboard\Models\Order::selectRaw('status, count(*) as total')
                     ->groupBy('status')->pluck('total', 'status')->toArray();
+                // "Partially Refunded" is driven by actual refund data (any order with a partial refund),
+                // not just the status label — so it reflects partial refunds on completed/processing orders too.
+                $ecoStats['status_counts']['partially-refunded'] = (int) \Acme\CmsDashboard\Models\Order::where('refunded_amount', '>', 0)
+                    ->whereColumn('refunded_amount', '<', 'total')->count();
                 $rev = [];
+                $revLabels = [];
                 for ($i = 6; $i >= 0; $i--) {
                     $d    = now()->subMonths($i);
-                    $rev[] = (float) \Acme\CmsDashboard\Models\Order::whereIn('status', ['completed', 'processing'])
+                    $revLabels[] = $d->format('M');
+                    $rev[] = (float) \Acme\CmsDashboard\Models\Order::whereIn('status', $revenueStatuses)
                         ->whereBetween('created_at', [$d->copy()->startOfMonth(), $d->copy()->endOfMonth()])
-                        ->sum('total');
+                        ->selectRaw("{$netRevenue} as net")->value('net');
                 }
                 $ecoStats['monthly_revenue'] = $rev;
+                $ecoStats['monthly_labels']  = $revLabels;
             }
         } catch (\Exception $e) {}
 

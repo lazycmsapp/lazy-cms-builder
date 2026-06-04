@@ -227,7 +227,7 @@
         if (isset($s['padding' . $_ps]) && $s['padding' . $_ps] !== '')
             $dPaddingCss .= "padding-{$_pc}:{$s['padding' . $_ps]}" . ($s['padding' . $_ps . 'Unit'] ?? 'px') . ';';
     }
-    $dColGap = (isset($s['columnGap']) && $s['columnGap'] !== '') ? $s['columnGap'] : '3';
+    $dColGap = (isset($s['columnGap']) && $s['columnGap'] !== '') ? $s['columnGap'] : '0';
 
     // Desktop base: background tab properties (moved out of inline for responsive override support)
     $dBgCss = '';

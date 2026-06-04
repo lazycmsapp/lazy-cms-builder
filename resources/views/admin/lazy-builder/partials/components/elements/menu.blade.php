@@ -192,7 +192,9 @@
                                justifyContent: "space-between",
                                transition: "all " + (el.settings.itemTransition || 0.3) + "s ease-in-out"
                            }'>
-                        <span :style='(device === "mobile" || device === "tablet") ? (
+                        <span :style="{ display: 'inline-flex', alignItems: 'center', gap: ((parseInt(el.settings.menuIconGap) >= 0 ? parseInt(el.settings.menuIconGap) : 6) + 'px'), flexDirection: (el.settings.menuIconPosition === 'right' ? 'row-reverse' : 'row') }">
+                        <i v-if="item.icon" :class="item.icon"></i>
+                        <span v-if="!(item.show_only_icon && item.icon)" :style='(device === "mobile" || device === "tablet") ? (
                             "font-size: " + (el.settings.mobileMenuFontSize ? (isNaN(el.settings.mobileMenuFontSize) ? el.settings.mobileMenuFontSize : el.settings.mobileMenuFontSize + "px") : "16px") + " !important; " +
                             "letter-spacing: " + (el.settings.mobileMenuLetterSpacing ? (isNaN(el.settings.mobileMenuLetterSpacing) ? el.settings.mobileMenuLetterSpacing : el.settings.mobileMenuLetterSpacing + "px") : "0px") + " !important; " +
                             "line-height: " + (el.settings.mobileMenuLineHeight || "inherit") + " !important; " +
@@ -201,6 +203,7 @@
                             "font-weight: " + (el.settings.mobileMenuFontWeight || "400") + " !important; " +
                             "color: inherit !important;"
                         ) : ""'>@{{ item.title }}</span>
+                        </span>
                         <i v-if="item.children && item.children.length > 0 && (device === 'desktop' || el.settings.mobileMenuMode !== 'expanded') && ((device === 'mobile' || device === 'tablet') || (el.settings.arrowScopeObj && el.settings.arrowScopeObj.main) || (!(el.settings.arrowScopeObj && el.settings.arrowScopeObj.main) && !(el.settings.arrowScopeObj && el.settings.arrowScopeObj.submenu) && el.settings.showArrows !== 'no'))"
                            class="fa fa-chevron-down admin-menu-arrow text-[10px]"
                            :style="{
@@ -300,7 +303,9 @@
                                     textDecoration: "none",
                                     borderBottom: (cidx !== item.children.length - 1) ? "1px solid " + (el.settings.submenuSeparatorColor || "rgba(0,0,0,0.05)") : "none"
                                 }'>
-                                 <span :style='(device === "mobile" || device === "tablet") ? (
+                                 <span :style="{ display: 'inline-flex', alignItems: 'center', gap: ((parseInt(el.settings.menuIconGap) >= 0 ? parseInt(el.settings.menuIconGap) : 6) + 'px'), flexDirection: (el.settings.menuIconPosition === 'right' ? 'row-reverse' : 'row') }">
+                                 <i v-if="child.icon" :class="child.icon"></i>
+                                 <span v-if="!(child.show_only_icon && child.icon)" :style='(device === "mobile" || device === "tablet") ? (
                                      "font-size: " + (el.settings.mobileMenuFontSize ? (isNaN(el.settings.mobileMenuFontSize) ? el.settings.mobileMenuFontSize : el.settings.mobileMenuFontSize + "px") : "15px") + " !important; " +
                                      "letter-spacing: " + (el.settings.mobileMenuLetterSpacing ? (isNaN(el.settings.mobileMenuLetterSpacing) ? el.settings.mobileMenuLetterSpacing : el.settings.mobileMenuLetterSpacing + "px") : "0px") + " !important; " +
                                      "line-height: " + (el.settings.mobileMenuLineHeight || "inherit") + " !important; " +
@@ -309,6 +314,7 @@
                                      "font-weight: " + (el.settings.mobileMenuFontWeight || "400") + " !important; " +
                                      "color: inherit !important;"
                                  ) : ""'>@{{ child.title }}</span>
+                                 </span>
                                 <i v-if="child.children && child.children.length > 0 && (device === 'desktop' || el.settings.mobileMenuMode !== 'expanded') && ((device === 'mobile' || device === 'tablet') || (el.settings.arrowScopeObj && el.settings.arrowScopeObj.submenu) || (!(el.settings.arrowScopeObj && el.settings.arrowScopeObj.main) && !(el.settings.arrowScopeObj && el.settings.arrowScopeObj.submenu) && el.settings.showArrows !== 'no'))"
                                    :class="'fa admin-menu-arrow text-[10px] ' + (el.settings.subSubMenuDirection === 'left' ? 'fa-chevron-left' : 'fa-chevron-right')"
                                    :style="{
@@ -409,7 +415,9 @@
                                              textDecoration: "none",
                                              borderBottom: (gidx !== child.children.length - 1) ? "1px solid " + (el.settings.submenuSeparatorColor || "rgba(0,0,0,0.05)") : "none"
                                          }'>
-                                         <span :style='(device === "mobile" || device === "tablet") ? (
+                                         <span :style="{ display: 'inline-flex', alignItems: 'center', gap: ((parseInt(el.settings.menuIconGap) >= 0 ? parseInt(el.settings.menuIconGap) : 6) + 'px'), flexDirection: (el.settings.menuIconPosition === 'right' ? 'row-reverse' : 'row') }">
+                                         <i v-if="gchild.icon" :class="gchild.icon"></i>
+                                         <span v-if="!(gchild.show_only_icon && gchild.icon)" :style='(device === "mobile" || device === "tablet") ? (
                                              "font-size: " + (el.settings.mobileMenuFontSize ? (isNaN(el.settings.mobileMenuFontSize) ? el.settings.mobileMenuFontSize : el.settings.mobileMenuFontSize + "px") : "15px") + " !important; " +
                                              "letter-spacing: " + (el.settings.mobileMenuLetterSpacing ? (isNaN(el.settings.mobileMenuLetterSpacing) ? el.settings.mobileMenuLetterSpacing : el.settings.mobileMenuLetterSpacing + "px") : "0px") + " !important; " +
                                              "line-height: " + (el.settings.mobileMenuLineHeight || "inherit") + " !important; " +
@@ -418,6 +426,7 @@
                                              "font-weight: " + (el.settings.mobileMenuFontWeight || "400") + " !important; " +
                                              "color: inherit !important;"
                                          ) : ""'>@{{ gchild.title }}</span>
+                                         </span>
                                          <i v-if="gchild.children && gchild.children.length > 0 && (device === 'desktop' || el.settings.mobileMenuMode !== 'expanded')"
                                             class="fa fa-chevron-down admin-menu-arrow text-[10px]"
                                             :style="{

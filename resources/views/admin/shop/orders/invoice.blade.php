@@ -19,7 +19,46 @@
         .invoice-container {
             max-width: 800px;
             margin: 0 auto;
+            position: relative;
         }
+
+        /* Status badge (top-right, near invoice number) */
+        .inv-badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .inv-badge.paid      { background: #d1fae5; color: #047857; }
+        .inv-badge.pending   { background: #fef3c7; color: #b45309; }
+        .inv-badge.partial   { background: #f3e8ff; color: #7e22ce; }
+        .inv-badge.refunded  { background: #fee2e2; color: #b91c1c; }
+        .inv-badge.cancelled { background: #fee2e2; color: #b91c1c; }
+        .inv-badge.failed    { background: #fee2e2; color: #b91c1c; }
+
+        /* Diagonal watermark stamp for fully refunded invoices */
+        .inv-stamp {
+            position: absolute;
+            top: 42%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-20deg);
+            font-size: 86px;
+            font-weight: 800;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            color: rgba(185, 28, 28, 0.10);
+            border: 7px solid rgba(185, 28, 28, 0.10);
+            padding: 6px 44px;
+            border-radius: 14px;
+            pointer-events: none;
+            z-index: 0;
+            white-space: nowrap;
+        }
+        .invoice-container > *:not(.inv-stamp) { position: relative; z-index: 1; }
 
         header {
             display: flex;
@@ -164,10 +203,31 @@
         <span>Print Invoice</span>
     </button>
 
+    @php
+        $shopName = get_shop_option('shop_store_name') ?: get_cms_option('site_name', 'Lazy Panda');
+        $refunded = (float) ($order->refunded_amount ?? 0);
+        $isFullRefund    = $order->status === 'refunded' || ($refunded > 0 && $refunded >= (float) $order->total - 0.001);
+        $isPartialRefund = !$isFullRefund && $refunded > 0;
+        $isCancelled     = $order->status === 'cancelled';
+        $isFailed        = $order->status === 'failed';
+        // For a fully-refunded order treat the whole total as refunded, even if no per-refund amount was recorded.
+        $effectiveRefunded = $isFullRefund ? (float) $order->total : $refunded;
+
+        $stampText = null;
+        if ($isFullRefund)        { $badgeClass = 'refunded';  $badgeText = 'Refunded';           $stampText = 'Refunded'; }
+        elseif ($isCancelled)     { $badgeClass = 'cancelled'; $badgeText = 'Cancelled';          $stampText = 'Cancelled'; }
+        elseif ($isFailed)        { $badgeClass = 'failed';    $badgeText = 'Failed';             $stampText = 'Failed'; }
+        elseif ($isPartialRefund) { $badgeClass = 'partial';   $badgeText = 'Partially Refunded'; }
+        elseif ($order->paid_at || $order->status === 'completed') { $badgeClass = 'paid'; $badgeText = 'Paid'; }
+        else                      { $badgeClass = 'pending';   $badgeText = 'Payment Pending'; }
+    @endphp
     <div class="invoice-container">
+        @if($stampText)
+            <div class="inv-stamp">{{ $stampText }}</div>
+        @endif
         <header>
             <div class="logo-section">
-                <h1>{{ get_cms_option('site_name', 'Lazy Panda') }}</h1>
+                <h1>{{ $shopName }}</h1>
                 <p style="font-size: 13px; color: #6b7280; margin-top: 5px;">
                     {{ get_shop_option('shop_address_line_1') }}<br>
                     {{ get_shop_option('shop_city') }}, {{ get_shop_option('shop_postcode') }}
@@ -177,6 +237,7 @@
                 <h2>Invoice</h2>
                 <p>#{{ $order->order_number ?: $order->id }}</p>
                 <p>Date: {{ $order->created_at->format('M d, Y') }}</p>
+                <span class="inv-badge {{ $badgeClass }}">{{ $badgeText }}</span>
             </div>
         </header>
 
@@ -255,6 +316,17 @@
                     <td>Total</td>
                     <td>{{ lazy_price_format($order->total, $order) }}</td>
                 </tr>
+                @if($effectiveRefunded > 0)
+                @php $netTotal = max(0, (float) $order->total - $effectiveRefunded); @endphp
+                <tr style="color: #b91c1c;">
+                    <td>Refunded</td>
+                    <td>-{{ lazy_price_format($effectiveRefunded, $order) }}</td>
+                </tr>
+                <tr style="font-weight: 700;">
+                    <td style="padding-top: 10px;">{{ $isFullRefund ? 'Amount Due' : 'Net Total' }}</td>
+                    <td style="padding-top: 10px;">{{ lazy_price_format($netTotal, $order) }}</td>
+                </tr>
+                @endif
             </table>
         </div>
 
@@ -267,7 +339,7 @@
 
         <div class="footer">
             <p>Thank you for your business!</p>
-            <p>&copy; {{ date('Y') }} {{ get_cms_option('site_name', 'Lazy Panda') }}. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} {{ $shopName }}. All rights reserved.</p>
         </div>
     </div>
 </body>

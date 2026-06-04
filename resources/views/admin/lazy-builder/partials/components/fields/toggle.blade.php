@@ -15,7 +15,7 @@
                 :class="{{ $target }}.{{ $key }} ? 'bg-[#0091ea] text-white shadow-md' : 'text-slate-400'"
                 class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">On</button>
         <button @click="{{ $target }}.{{ $key }} = false"
-                :class="!{{ $target }}.{{ $key }} ? 'bg-white text-slate-600 shadow-sm' : 'text-slate-400'"
+                :class="!{{ $target }}.{{ $key }} ? 'bg-[#0091ea] text-white shadow-md' : 'text-slate-400'"
                 class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">Off</button>
     </div>
 </div>

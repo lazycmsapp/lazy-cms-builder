@@ -14,6 +14,8 @@ class Order extends Model
 
     protected $casts = [
         'paid_at' => 'datetime',
+        'refunded_amount' => 'decimal:2',
+        'refund_log' => 'array',
     ];
 
     public function items()

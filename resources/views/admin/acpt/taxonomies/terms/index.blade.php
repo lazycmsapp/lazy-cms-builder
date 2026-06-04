@@ -83,7 +83,7 @@
                     <p class="text-[12px] text-[#646970] mt-1 italic">The description is not prominent by default; however, some themes may show it.</p>
                 </div>
 
-                <button type="submit" class="wp-btn-secondary h-8 px-4 font-semibold">Add New {{ $taxonomy->singular_name ?? $taxonomy->name }}</button>
+                <button type="submit" class="wp-btn-primary">Add New {{ $taxonomy->singular_name ?? $taxonomy->name }}</button>
             </form>
         </div>
 

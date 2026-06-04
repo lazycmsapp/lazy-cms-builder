@@ -17,13 +17,15 @@ class OrderNotificationMail extends Mailable
     public $notificationType;
     public $customMessage;
     public $recipientType;
+    public $refundAmount;
 
-    public function __construct(Order $order, $notificationType = 'placed', $customMessage = null, $recipientType = 'customer')
+    public function __construct(Order $order, $notificationType = 'placed', $customMessage = null, $recipientType = 'customer', $refundAmount = null)
     {
         $this->order = $order;
         $this->notificationType = $notificationType; // 'placed', 'status_updated'
         $this->customMessage = $customMessage;
         $this->recipientType = $recipientType; // 'customer', 'admin'
+        $this->refundAmount = $refundAmount;      // amount refunded in this action (for refund emails)
     }
 
     public function envelope(): Envelope

@@ -73,12 +73,6 @@
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                     <span>CMS Site</span>
                 </a>
-                @if(auth()->user()->hasPermission('manage_posts') || auth()->user()->hasPermission('manage_pages'))
-                    <div class="hover:text-[#72aee6] transition font-semibold px-2 cursor-pointer relative group flex items-center space-x-1">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span>New</span>
-                    </div>
-                @endif
             @endif
         </div>
         <div class="flex items-center space-x-4 pr-1 text-sm relative group" x-data="{ open: false }">
@@ -145,6 +139,44 @@
                 setTimeout(() => toast.remove(), 300);
             }, duration);
         };
+    </script>
+
+    {{-- Classic-editor metabox cards: make the chevron toggle collapse/expand the card, and remember the state. --}}
+    <style>
+        .wp-metabox-header svg { transition: transform .2s ease; }
+        .wp-metabox.is-collapsed > .wp-metabox-content { display: none !important; }
+        .wp-metabox.is-collapsed > .wp-metabox-header svg { transform: rotate(180deg); }
+    </style>
+    <script>
+    (function () {
+        var STORAGE_KEY = 'lazyMetaboxCollapsed';
+        function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch (e) { return {}; } }
+        function saveState(s) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {} }
+        function keyFor(header) {
+            var span = header.querySelector('span');
+            return (span ? span.textContent.trim() : '') || header.textContent.trim();
+        }
+        function initMetaboxToggles() {
+            var state = loadState();
+            document.querySelectorAll('.wp-metabox-header.cursor-pointer').forEach(function (header) {
+                var box = header.closest('.wp-metabox');
+                if (!box || header.dataset.mbInit) return;
+                header.dataset.mbInit = '1';
+                var key = keyFor(header);
+                if (state[key]) box.classList.add('is-collapsed');
+                header.addEventListener('click', function (e) {
+                    // Don't collapse when interacting with controls placed inside the header.
+                    if (e.target.closest('input, button, a, select, textarea, label')) return;
+                    box.classList.toggle('is-collapsed');
+                    var st = loadState();
+                    if (box.classList.contains('is-collapsed')) st[key] = 1; else delete st[key];
+                    saveState(st);
+                });
+            });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initMetaboxToggles);
+        else initMetaboxToggles();
+    })();
     </script>
 
     @stack('scripts')

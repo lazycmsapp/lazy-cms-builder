@@ -74,8 +74,13 @@ class FrontendController extends Controller
                 }
             }
             if ($post) {
-                $viewName = ($post->type === 'page') ? 'page' : 'single';
                 view()->share('current_post', $post);
+                // If the home page is also the assigned Blog page, show the blog listing.
+                $blogPageId = get_cms_option('blog_page_id');
+                if ($blogPageId && $post->id == $blogPageId) {
+                    return view($this->resolveThemeView('index'), compact('post'));
+                }
+                $viewName = ($post->type === 'page') ? 'page' : 'single';
                 return view($this->resolveThemeView($viewName), compact('post'));
             }
         }
@@ -107,6 +112,16 @@ class FrontendController extends Controller
             $tag = Tag::where('slug', $slug)->firstOrFail();
             $postsQuery = $tag->posts()->where('status', 'published');
             $title = 'Tag: ' . $tag->name;
+        } elseif (in_array($routeName, ['frontend.product_category', 'frontend.product_category.locale'])) {
+            $slugs = explode('/', urldecode($slug));
+            $lastSlug = end($slugs);
+            $category = \Acme\CmsDashboard\Models\ProductCategory::where('slug', $lastSlug)->firstOrFail();
+            $postsQuery = $category->posts()->where('status', 'published');
+            $title = $category->name;
+        } elseif (in_array($routeName, ['frontend.product_tag', 'frontend.product_tag.locale'])) {
+            $tag = \Acme\CmsDashboard\Models\ProductTag::where('slug', $slug)->firstOrFail();
+            $postsQuery = $tag->posts()->where('status', 'published');
+            $title = $tag->name;
         }
 
         if (isset($postsQuery)) {
@@ -221,9 +236,9 @@ class FrontendController extends Controller
             if (!$type) {
                 $postType = PostType::where('slug', $postSlug)->first();
                 if ($postType && $postType->is_active && $postType->is_public) {
-                $postsQuery = Post::where('type', $postType->slug)
-                    ->where('lang_code', app()->getLocale())
-                    ->where('status', 'published');
+                $postsQuery = Post::where('posts.type', $postType->slug)
+                    ->where('posts.lang_code', app()->getLocale())
+                    ->where('posts.status', 'published');
 
                 // Dynamic Sorting Logic
                 $orderby = request('orderby', 'latest');
@@ -326,9 +341,13 @@ class FrontendController extends Controller
         if ($post->type !== 'page' && $post->type !== 'post') {
             $viewName = "single-{$post->type}";
             
-            // Special check for variable products
-            if ($post->type === 'product' && $post->shopData && $post->shopData->type === 'variable') {
-                $viewName = 'single-product-variable';
+            // Special check for variable products — detect the "variable" flag in either column
+            // (shopData stores it under `type` or `product_type` depending on how it was saved).
+            if ($post->type === 'product' && $post->shopData) {
+                $sd = $post->shopData;
+                if (($sd->type ?? null) === 'variable' || ($sd->product_type ?? null) === 'variable') {
+                    $viewName = 'single-product-variable';
+                }
             }
         }
 
@@ -343,6 +362,12 @@ class FrontendController extends Controller
 
         view()->share('current_post', $post);
 
+        // Blog page — the assigned page renders the blog post listing (index template)
+        $blogPageId = get_cms_option('blog_page_id');
+        if ($blogPageId && $post->id == $blogPageId) {
+            return view($this->resolveThemeView('index'), compact('post'));
+        }
+
         // Check if this page is assigned as a special Shop Page
         $shopPageId = get_shop_option('shop_shop_page_id');
         $cartPageId = get_shop_option('shop_cart_page_id');
@@ -350,9 +375,9 @@ class FrontendController extends Controller
         $accountPageId = get_shop_option('shop_account_page_id');
 
         if ($post->id == $shopPageId) {
-            $postsQuery = Post::where('type', 'product')
-                ->where('lang_code', app()->getLocale())
-                ->where('status', 'published');
+            $postsQuery = Post::where('posts.type', 'product')
+                ->where('posts.lang_code', app()->getLocale())
+                ->where('posts.status', 'published');
 
             $orderby = request('orderby', 'latest');
             switch ($orderby) {
@@ -401,7 +426,15 @@ class FrontendController extends Controller
                 session()->put('url.intended', url()->current());
                 return redirect()->route('admin.login')->with('error', 'Please login to view your account details.');
             }
-            $orders = \Acme\CmsDashboard\Models\Order::with(['items.product'])->where('user_id', auth()->id())->latest()->get();
+            $ordersQuery = \Acme\CmsDashboard\Models\Order::with(['items.product'])->where('user_id', auth()->id());
+            if (request()->filled('s')) {
+                $s = request('s');
+                $ordersQuery->where(function ($q) use ($s) {
+                    $q->where('order_number', 'like', "%{$s}%")
+                      ->orWhere('status', 'like', "%{$s}%");
+                });
+            }
+            $orders = $ordersQuery->latest()->paginate(8)->withQueryString();
             return view($this->resolveThemeView('ecommerce.account'), compact('orders', 'post'));
         }
 
@@ -420,9 +453,24 @@ class FrontendController extends Controller
         
         $query = $request->input('s');
         $title = 'Search results for: ' . ($query ?: 'All');
-        
+
         $postsQuery = Post::where('status', 'published')->where('lang_code', app()->getLocale());
-        
+
+        // Optional scoping from the Advanced Search element (post types + category).
+        $postTypeRaw = (string) $request->input('post_type', '');
+        $types = $postTypeRaw !== '' ? array_values(array_filter(array_map('trim', explode(',', $postTypeRaw)))) : [];
+        $cat = $request->input('cat');
+        if (!empty($types)) {
+            $postsQuery->whereIn('type', $types);
+        }
+        if ($cat) {
+            if (in_array('product', $types, true)) {
+                $postsQuery->whereHas('productCategories', fn($c) => $c->where('product_categories.id', $cat));
+            } else {
+                $postsQuery->whereHas('categories', fn($c) => $c->where('categories.id', $cat));
+            }
+        }
+
         if ($query) {
             $postsQuery->where(function($q) use ($query) {
                 $q->where('title', 'like', "%{$query}%")
@@ -431,10 +479,53 @@ class FrontendController extends Controller
             });
         }
 
-        $posts = $postsQuery->latest()->paginate(12);
+        $posts = $postsQuery->latest()->paginate(12)->withQueryString();
             
         $type = 'Search';
         return view($this->resolveThemeView('archive'), compact('posts', 'title', 'type'));
+    }
+
+    /**
+     * Live (AJAX) search for the Advanced Search builder element.
+     * Returns up to 8 matching published posts as JSON, optionally scoped to a
+     * post type and a category.
+     */
+    public function liveSearch(Request $request)
+    {
+        $q = trim((string) $request->input('q', ''));
+        if (mb_strlen($q) < 2) {
+            return response()->json(['results' => []]);
+        }
+
+        $postTypeRaw = (string) $request->input('post_type', '');
+        $types = $postTypeRaw !== '' ? array_values(array_filter(array_map('trim', explode(',', $postTypeRaw)))) : [];
+        $cat   = $request->input('cat');
+
+        $query = Post::where('status', 'published')
+            ->where('title', 'like', '%' . $q . '%');
+
+        if (!empty($types)) {
+            $query->whereIn('type', $types);
+        }
+
+        if ($cat) {
+            if (in_array('product', $types, true)) {
+                $query->whereHas('productCategories', fn($c) => $c->where('product_categories.id', $cat));
+            } else {
+                $query->whereHas('categories', fn($c) => $c->where('categories.id', $cat));
+            }
+        }
+
+        $results = $query->latest()->limit(8)->get()->map(function ($p) {
+            return [
+                'title' => $p->title,
+                'url'   => get_lazy_permalink($p),
+                'type'  => $p->type,
+                'image' => $p->featured_image ? get_lazy_image_url($p->featured_image) : null,
+            ];
+        });
+
+        return response()->json(['results' => $results]);
     }
 
     public function storeComment(Request $request)

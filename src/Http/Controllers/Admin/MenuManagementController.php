@@ -137,6 +137,8 @@ class MenuManagementController extends Controller
                     'url'       => $item->url ?? '#',
                     'type'      => $type,
                     'object_id' => $objectId,
+                    'icon'      => $item->icon ?? '',
+                    'show_only_icon' => (bool)($item->show_only_icon ?? false),
                     'depth'     => $depth,
                     'orphaned'  => $orphaned || $isTrashed || $isInactiveTax,
                     'is_draft'  => $isDraft,
@@ -159,7 +161,9 @@ class MenuManagementController extends Controller
             $menuItemsJson = json_encode($flat, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT);
         }
 
-        return view('cms-dashboard::admin.menus.index', compact('menus', 'menu', 'pages', 'posts', 'categories', 'menuItemsJson', 'cptData', 'taxonomyData'));
+        $productCategories = \Acme\CmsDashboard\Models\ProductCategory::orderBy('name')->get();
+
+        return view('cms-dashboard::admin.menus.index', compact('menus', 'menu', 'pages', 'posts', 'categories', 'menuItemsJson', 'cptData', 'taxonomyData', 'productCategories'));
     }
 
     public function store(Request $request)
@@ -237,6 +241,8 @@ class MenuManagementController extends Controller
                 'url' => $item['url'] ?? '#',
                 'type' => $item['type'] ?? 'custom',
                 'object_id' => $item['object_id'] ?? null,
+                'icon' => $item['icon'] ?? null,
+                'show_only_icon' => !empty($item['show_only_icon']),
                 'order' => $index,
             ]);
 

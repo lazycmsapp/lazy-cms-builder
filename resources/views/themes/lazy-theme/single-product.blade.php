@@ -9,10 +9,10 @@
         <nav class="text-[14px] text-gray-400 mb-8" aria-label="Breadcrumb">
             <ol class="list-none p-0 inline-flex flex-wrap items-center">
                 <li class="flex items-center">
-                    <a href="{{ url('/') }}" class="hover:text-gray-900">Home</a>
+                    <a href="{{ url('/') }}" class="hover:text-heading">Home</a>
                 </li>
-                @php 
-                    $primaryCat = $post->taxonomyTerms()->whereIn('taxonomy_slug', ['product_category', 'product_cat'])->first();
+                @php
+                    $primaryCat = $post->productCategories->first();
                     $cat = $primaryCat; // For use in other sections
                     $breadcrumb = [];
                     if ($primaryCat) {
@@ -20,7 +20,7 @@
                         while ($term) {
                             $breadcrumb[] = [
                                 'name' => $term->name,
-                                'url' => url($term->taxonomy_slug . '/' . $term->slug)
+                                'url' => url('product-category/' . $term->getFullSlugPath())
                             ];
                             $term = $term->parent;
                         }
@@ -30,12 +30,12 @@
                 @foreach($breadcrumb as $crumb)
                     <li class="flex items-center">
                         <span class="mx-2">/</span>
-                        <a href="{{ $crumb['url'] }}" class="hover:text-gray-900">{{ $crumb['name'] }}</a>
+                        <a href="{{ $crumb['url'] }}" class="hover:text-heading">{{ $crumb['name'] }}</a>
                     </li>
                 @endforeach
                 <li class="flex items-center">
                     <span class="mx-2">/</span>
-                    <span class="text-gray-900 font-medium">{{ $post->title }}</span>
+                    <span class="text-heading font-medium">{{ $post->title }}</span>
                 </li>
             </ol>
         </nav>
@@ -53,17 +53,17 @@
                         <span class="absolute top-4 right-4 bg-red-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-sm uppercase tracking-wider shadow-lg z-10">Out of Stock</span>
                     @endif
                     @if($post->shopData && $post->shopData->sale_price)
-                        <span class="absolute top-4 left-4 bg-white text-gray-700 text-[11px] font-bold px-3 py-1 rounded-full shadow-sm uppercase z-10">Sale!</span>
+                        <span class="absolute top-4 left-4 bg-sky-100 text-sky-700 text-[13px] font-bold px-3.5 py-1.5 rounded-full shadow uppercase tracking-wide z-10">Sale!</span>
                     @endif
                 </div>
                 
                 @if($post->gallery && count($post->gallery) > 0)
                 <div class="grid grid-cols-4 gap-4">
-                    <div class="aspect-square cursor-pointer border border-transparent hover:border-blue-500 rounded-sm overflow-hidden bg-[#f8f8f8]" onclick="changeProductImage('{{ str_starts_with($post->featured_image, 'http') ? $post->featured_image : asset('storage/'.$post->featured_image) }}')">
+                    <div class="aspect-square cursor-pointer border border-transparent hover:border-primary rounded-sm overflow-hidden bg-[#f8f8f8]" onclick="changeProductImage('{{ str_starts_with($post->featured_image, 'http') ? $post->featured_image : asset('storage/'.$post->featured_image) }}')">
                         <img src="{{ str_starts_with($post->featured_image, 'http') ? $post->featured_image : asset('storage/'.$post->featured_image) }}" class="w-full h-full object-cover">
                     </div>
                     @foreach($post->gallery as $img)
-                    <div class="aspect-square cursor-pointer border border-transparent hover:border-blue-500 rounded-sm overflow-hidden bg-[#f8f8f8]" onclick="changeProductImage('{{ str_starts_with($img, 'http') ? $img : asset('storage/'.$img) }}')">
+                    <div class="aspect-square cursor-pointer border border-transparent hover:border-primary rounded-sm overflow-hidden bg-[#f8f8f8]" onclick="changeProductImage('{{ str_starts_with($img, 'http') ? $img : asset('storage/'.$img) }}')">
                         <img src="{{ str_starts_with($img, 'http') ? $img : asset('storage/'.$img) }}" class="w-full h-full object-cover">
                     </div>
                     @endforeach
@@ -74,14 +74,14 @@
             <!-- Right: Product Info -->
             <div class="w-full lg:w-1/2 flex flex-col">
 
-                <h1 class="text-[36px] font-bold text-[#2c3338] mb-4 leading-tight">{{ $post->title }}</h1>
+                <h1 class="text-[36px] font-bold text-heading mb-4 leading-tight">{{ $post->title }}</h1>
                 
-                <div class="text-[24px] font-medium text-gray-900 mb-6 flex items-center gap-3">
+                <div class="text-[24px] font-medium text-heading mb-6 flex items-center gap-3">
                     @if($post->shopData && $post->shopData->sale_price)
                         <span class="line-through text-gray-300 font-normal">{{ lazy_price_format($post->shopData->price) }}</span>
-                        <span class="text-gray-900 font-bold">{{ lazy_price_format($post->shopData->sale_price) }}</span>
+                        <span class="text-heading font-bold">{{ lazy_price_format($post->shopData->sale_price) }}</span>
                     @else
-                        <span class="text-gray-900 font-bold">{{ lazy_price_format($post->shopData->price ?? 0) }}</span>
+                        <span class="text-heading font-bold">{{ lazy_price_format($post->shopData->price ?? 0) }}</span>
                     @endif
                 </div>
 
@@ -122,22 +122,30 @@
                         <input type="number" id="qty" name="quantity" value="1" min="1" class="w-full h-full text-center border-none focus:ring-0 text-[15px] font-medium">
                     </div>
                     
-                    <button type="submit" id="add-to-cart-btn" class="bg-[#1363df] text-white px-8 h-11 rounded-sm font-bold text-[14px] hover:bg-[#005ba6] transition-colors uppercase flex items-center gap-2">
+                    <button type="submit" id="add-to-cart-btn" class="bg-primary text-white px-8 h-11 rounded-sm font-bold text-[14px] hover:bg-primary-hover transition-colors uppercase flex items-center gap-2">
                         <span>Add to cart</span>
                     </button>
+                    @include('cms-dashboard::themes.lazy-theme.partials.wishlist-button', ['product' => $post])
                 </form>
                 @endif
+
+                <div class="flex items-center gap-2 mb-8 -mt-4">
+                    @unless($post->is_in_stock ?? true)
+                        @include('cms-dashboard::themes.lazy-theme.partials.wishlist-button', ['product' => $post])
+                    @endunless
+                    <span class="text-[13px] text-gray-500">{{ lazy_in_wishlist($post->id) ? 'Saved to your wishlist' : 'Add to your wishlist to buy later' }}</span>
+                </div>
 
                 <div class="text-[13px] text-gray-500 space-y-2">
                     @if($post->shopData && $post->shopData->sku)
                     <p><span class="uppercase font-bold text-gray-800">SKU:</span> {{ $post->shopData->sku }}</p>
                     @endif
                     <p><span class="uppercase font-bold text-gray-800">Category:</span> 
-                        @php 
-                            $categories = $post->taxonomyTerms()->whereIn('taxonomy_slug', ['product_category', 'product_cat'])->get();
+                        @php
+                            $categories = $post->productCategories;
                         @endphp
                         @foreach($categories as $cat)
-                            <a href="{{ url('/' . $cat->taxonomy_slug . '/' . $cat->slug) }}" class="text-blue-600 hover:underline">{{ $cat->name }}</a>{{ $loop->last ? '' : ', ' }}
+                            <a href="{{ url('product-category/' . $cat->getFullSlugPath()) }}" class="text-primary hover:underline">{{ $cat->name }}</a>{{ $loop->last ? '' : ', ' }}
                         @endforeach
                         @if($categories->isEmpty())
                             <span class="text-gray-400">Uncategorized</span>
@@ -150,9 +158,9 @@
         <!-- Tabs Section -->
         <div class="mt-16 border-t border-gray-100 pt-10">
             <div class="flex gap-8 mb-8 border-b border-gray-100 tab-headers">
-                <button onclick="switchTab('description')" id="tab-btn-description" class="pb-4 text-[14px] font-bold text-gray-900 border-b-2 border-gray-900 uppercase transition-all">Description</button>
-                <button onclick="switchTab('info')" id="tab-btn-info" class="pb-4 text-[14px] font-bold text-gray-400 hover:text-gray-900 uppercase border-b-2 border-transparent transition-all">Additional information</button>
-                <button onclick="switchTab('reviews')" id="tab-btn-reviews" class="pb-4 text-[14px] font-bold text-gray-400 hover:text-gray-900 uppercase border-b-2 border-transparent transition-all">Reviews ({{ $post->reviews()->count() }})</button>
+                <button onclick="switchTab('description')" id="tab-btn-description" class="pb-4 text-[14px] font-bold text-heading border-b-2 border-gray-900 uppercase transition-all">Description</button>
+                <button onclick="switchTab('info')" id="tab-btn-info" class="pb-4 text-[14px] font-bold text-gray-400 hover:text-heading uppercase border-b-2 border-transparent transition-all">Additional information</button>
+                <button onclick="switchTab('reviews')" id="tab-btn-reviews" class="pb-4 text-[14px] font-bold text-gray-400 hover:text-heading uppercase border-b-2 border-transparent transition-all">Reviews ({{ $post->reviews()->count() }})</button>
             </div>
             
             <div id="tab-content-description" class="tab-pane prose max-w-none text-gray-600 text-[15px] leading-relaxed">
@@ -177,7 +185,7 @@
                         <tr class="border-b border-gray-100">
                             <th class="text-left py-3 w-1/4 text-gray-800 font-bold uppercase text-[12px]">Category</th>
                             <td class="py-3 text-gray-600">
-                                @foreach($post->taxonomyTerms()->where('taxonomy_slug', 'product_category')->get() as $cat)
+                                @foreach($post->productCategories as $cat)
                                     {{ $cat->name }}{{ $loop->last ? '' : ', ' }}
                                 @endforeach
                             </td>
@@ -196,7 +204,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     <!-- Left: Reviews List -->
                     <div class="space-y-8">
-                        <h3 class="text-[18px] font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <h3 class="text-[18px] font-bold text-heading mb-6 flex items-center gap-3">
                             Reviews ({{ $post->reviews->count() }})
                             @if($post->reviews->count() > 0)
                                 @php $avgRating = round($post->reviews->avg('rating'), 1); @endphp
@@ -206,7 +214,7 @@
                                             <svg class="w-3.5 h-3.5 {{ $i <= $avgRating ? 'text-yellow-400' : 'text-gray-200' }} fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                                         @endfor
                                     </div>
-                                    <span class="text-[14px] font-bold text-gray-900">{{ $avgRating }}</span>
+                                    <span class="text-[14px] font-bold text-heading">{{ $avgRating }}</span>
                                 </div>
                             @endif
                         </h3>
@@ -219,10 +227,10 @@
                                     <div class="flex-grow">
                                         <div class="flex items-center justify-between mb-1">
                                             <div class="flex items-center gap-2">
-                                                <span class="font-bold text-gray-900">{{ $review->name }}</span>
+                                                <span class="font-bold text-heading">{{ $review->name }}</span>
                                                 <span class="text-gray-400 text-xs">{{ $review->created_at->format('M d, Y') }}</span>
                                             </div>
-                                            <button onclick="setReplyTo({{ $review->id }}, '{{ $review->name }}')" class="text-[12px] text-blue-600 font-bold hover:underline">Reply</button>
+                                            <button onclick="setReplyTo({{ $review->id }}, '{{ $review->name }}')" class="text-[12px] text-primary font-bold hover:underline">Reply</button>
                                         </div>
                                         <div class="flex items-center gap-1 mb-2">
                                             @for($i=1; $i<=5; $i++)
@@ -238,7 +246,7 @@
                                     <div class="ml-16 mt-4 space-y-6 border-l-2 border-gray-50 pl-6">
                                         @foreach($review->replies as $reply)
                                             <div class="flex gap-4">
-                                                <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center font-bold text-blue-300 shrink-0 text-sm">
+                                                <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center font-bold text-primary shrink-0 text-sm">
                                                     {{ substr($reply->name, 0, 1) }}
                                                 </div>
                                                 <div>
@@ -260,12 +268,12 @@
 
                     <!-- Right: Review Form -->
                     <div class="bg-[#fcfcfc] p-8 rounded-sm border border-gray-100 h-fit sticky top-24">
-                        <div id="reply-to-alert" class="hidden bg-blue-50 text-blue-700 px-4 py-2 rounded-sm mb-4 text-[13px] flex justify-between items-center">
+                        <div id="reply-to-alert" class="hidden bg-blue-50 text-primary px-4 py-2 rounded-sm mb-4 text-[13px] flex justify-between items-center">
                             <span>Replying to <span id="reply-to-name" class="font-bold"></span></span>
-                            <button onclick="cancelReply()" class="text-blue-400 hover:text-blue-700 font-bold">×</button>
+                            <button onclick="cancelReply()" class="text-primary hover:text-primary font-bold">×</button>
                         </div>
 
-                        <h3 id="form-title" class="text-[18px] font-bold text-gray-900 mb-2">Add a review</h3>
+                        <h3 id="form-title" class="text-[18px] font-bold text-heading mb-2">Add a review</h3>
                         <p class="text-[13px] text-gray-500 mb-6">Your email address will not be published. Required fields are marked *</p>
                         
                         <form id="review-form" action="{{ route('shop.review.store') }}" method="POST" class="space-y-4">
@@ -303,7 +311,7 @@
                             </div>
                             @endguest
 
-                            <button type="submit" id="review-submit-btn" class="bg-[#1363df] text-white px-8 py-3 rounded-sm font-bold text-[13px] hover:bg-[#005ba6] transition-colors uppercase mt-4">
+                            <button type="submit" id="review-submit-btn" class="bg-primary text-white px-8 py-3 rounded-sm font-bold text-[13px] hover:bg-primary-hover transition-colors uppercase mt-4">
                                 Submit
                             </button>
                         </form>
@@ -344,16 +352,18 @@
                 
                 // Update button styles
                 document.querySelectorAll('.tab-headers button').forEach(b => {
-                    b.classList.remove('text-gray-900', 'border-gray-900');
+                    b.classList.remove('text-heading', 'border-gray-900');
                     b.classList.add('text-gray-400', 'border-transparent');
                 });
                 
                 const activeBtn = document.getElementById('tab-btn-' + tab);
                 activeBtn.classList.remove('text-gray-400', 'border-transparent');
-                activeBtn.classList.add('text-gray-900', 'border-gray-900');
+                activeBtn.classList.add('text-heading', 'border-gray-900');
             }
 
-            // AJAX Add to Cart
+            // Related-product cards use the global addToCart() from the mini-cart drawer.
+
+            // AJAX Add to Cart (main product)
             document.getElementById('add-to-cart-form').addEventListener('submit', function(e) {
                 e.preventDefault();
                 const form = this;
@@ -380,23 +390,12 @@
                     btnText.innerText = originalText;
 
                     if (data.success) {
-                        // Show Success Message
-                        Swal.fire({
-                            title: 'Success!',
-                            text: data.message,
-                            icon: 'success',
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3000,
-                            timerProgressBar: true
-                        });
-
-                        // Update Cart Count
-                        const badge = document.querySelector('.cart-count-badge');
-                        if (badge) {
-                            badge.innerText = data.cart_count;
-                            badge.classList.remove('hidden');
+                        // Refresh and slide out the mini-cart drawer
+                        if (window.LazyCart) {
+                            LazyCart.refresh().then(() => LazyCart.open());
+                        } else {
+                            const badge = document.querySelector('.cart-count-badge');
+                            if (badge) { badge.innerText = data.cart_count; badge.classList.remove('hidden'); }
                         }
                     } else {
                         Swal.fire({
@@ -511,59 +510,22 @@
         </script>
 
         <!-- Related Products Section -->
-        @php 
-            $related = \Acme\CmsDashboard\Models\Post::where('type', 'product')
-                ->where('id', '!=', $post->id)
+        @php
+            $related = \Acme\CmsDashboard\Models\Post::where('posts.type', 'product')
+                ->where('posts.status', 'published')
+                ->where('posts.id', '!=', $post->id)
+                ->with('shopData')
+                ->latest('posts.id')
                 ->limit(4)
                 ->get();
         @endphp
         @if($related->count() > 0)
         <div class="mt-24">
-            <h2 class="text-[32px] font-bold text-[#2c3338] mb-10">Related products</h2>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+            <h2 class="text-[32px] font-bold text-heading mb-10">Related products</h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
                 @foreach($related as $item)
-                <div class="group">
-                    <div class="aspect-square relative bg-[#f8f8f8] rounded-sm overflow-hidden mb-4">
-                        <a href="{{ get_lazy_permalink($item) }}">
-                            <img src="{{ str_starts_with($item->featured_image, 'http') ? $item->featured_image : asset('storage/'.$item->featured_image) }}" class="w-full h-full object-cover">
-                        </a>
-                        @if(!$item->is_in_stock)
-                            <span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm shadow-md uppercase z-10">Out of Stock</span>
-                        @endif
-                        @if($item->shopData && $item->shopData->sale_price)
-                            <span class="absolute top-3 left-3 bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase z-10">Sale!</span>
-                        @endif
-                    </div>
-                    <div class="text-[12px] text-gray-400 mb-1">
-                        @php $itemCat = $item->taxonomyTerms()->where('taxonomy_slug', 'product_category')->first(); @endphp
-                        {{ $itemCat->name ?? 'Accessories' }}
-                    </div>
-                    <h3 class="text-[15px] font-bold text-gray-900 mb-1 hover:text-blue-600">
-                        <a href="{{ get_lazy_permalink($item) }}">{{ $item->title }}</a>
-                    </h3>
-                    <div class="text-[14px] font-medium text-gray-900 mb-4">
-                        @if($item->shopData && $item->shopData->sale_price)
-                            <span class="line-through text-gray-300 font-normal mr-1">{{ lazy_price_format($item->shopData->price) }}</span>
-                            <span>{{ lazy_price_format($item->shopData->sale_price) }}</span>
-                        @else
-                            <span>{{ lazy_price_format($item->shopData->price ?? 0) }}</span>
-                        @endif
-                    </div>
-                    @if(!$item->is_in_stock)
-                        <button disabled class="w-full bg-gray-400 text-white py-2.5 rounded-sm text-[12px] font-bold uppercase cursor-not-allowed">
-                            Out of stock
-                        </button>
-                    @elseif($item->shopData && $item->shopData->product_type === 'variable')
-                        <a href="{{ get_lazy_permalink($item) }}" class="block w-full text-center bg-[#1363df] text-white py-2.5 rounded-sm text-[12px] font-bold uppercase hover:bg-[#005ba6] transition-colors">
-                            Select Options
-                        </a>
-                    @else
-                        <button class="w-full bg-[#1363df] text-white py-2.5 rounded-sm text-[12px] font-bold uppercase hover:bg-[#005ba6] transition-colors">
-                            Add to cart
-                        </button>
-                    @endif
-                </div>
+                    @include('cms-dashboard::themes.lazy-theme.partials.product-card', ['product' => $item])
                 @endforeach
             </div>
         </div>

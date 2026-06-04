@@ -409,4 +409,35 @@
             </div>
         </div>
     </div>
+
+    <!-- Menu Icon (position + gap between icon and label) -->
+    <div class="space-y-6">
+        <div class="flex items-center gap-2 pb-2 border-b border-slate-50">
+            <div class="w-1.5 h-4 bg-[#0091ea] rounded-full"></div>
+            <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-700">Menu Icon</h4>
+        </div>
+        <div class="space-y-6">
+            <!-- Icon Position -->
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">ICON POSITION</label>
+                <div class="flex bg-slate-100 rounded-lg p-1">
+                    <button type="button" @click="editingElement.settings.menuIconPosition = 'left'"
+                            :class="(editingElement.settings.menuIconPosition || 'left') === 'left' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-500'"
+                            class="flex-1 py-2 text-[11px] font-bold rounded transition-all">Left</button>
+                    <button type="button" @click="editingElement.settings.menuIconPosition = 'right'"
+                            :class="editingElement.settings.menuIconPosition === 'right' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-500'"
+                            class="flex-1 py-2 text-[11px] font-bold rounded transition-all">Right</button>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1.5">Show the icon before (Left) or after (Right) the menu label.</p>
+            </div>
+            <!-- Icon Gap -->
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">ICON GAP (PX)</label>
+                <input type="number" min="0" max="60" v-model="editingElement.settings.menuIconGap"
+                       placeholder="6"
+                       class="w-full border border-slate-200 rounded px-3 py-2 text-[13px] focus:outline-none focus:border-[#0091ea]">
+                <p class="text-[10px] text-slate-400 mt-1.5">Space between the icon and the menu label.</p>
+            </div>
+        </div>
+    </div>
 </div>

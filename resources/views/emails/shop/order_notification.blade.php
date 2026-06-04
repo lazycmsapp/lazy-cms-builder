@@ -243,9 +243,28 @@
                     if ($order->status === 'pending') $badgeClass = 'status-pending';
                     elseif ($order->status === 'processing') $badgeClass = 'status-processing';
                     elseif ($order->status === 'completed') $badgeClass = 'status-completed';
-                    elseif (in_array($order->status, ['cancelled', 'refunded', 'failed'])) $badgeClass = 'status-cancelled';
+                    elseif (in_array($order->status, ['cancelled', 'refunded', 'partially-refunded', 'failed'])) $badgeClass = 'status-cancelled';
                 @endphp
-                <div class="status-badge {{ $badgeClass }}">{{ ucfirst($order->status) }}</div>
+                <div class="status-badge {{ $badgeClass }}">{{ ucwords(str_replace('-', ' ', $order->status)) }}</div>
+
+                @if(!empty($refundAmount))
+                    @php
+                        $rSym = $order->currency_symbol ?? '$';
+                        $rDec = $order->decimals ?? 2; $rDs = $order->decimal_separator ?? '.'; $rTs = $order->thousand_separator ?? ',';
+                        $rPos = $order->currency_position ?? 'left';
+                        $fmtMoney = function ($v) use ($rSym, $rDec, $rDs, $rTs, $rPos) {
+                            $n = number_format((float) $v, $rDec, $rDs, $rTs);
+                            return $rPos === 'right' ? $n . $rSym : $rSym . $n;
+                        };
+                        $totalRefunded = (float) ($order->refunded_amount ?? 0);
+                    @endphp
+                    <div style="margin: 18px 0 25px; padding: 14px 16px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#b91c1c;">
+                        A refund of <strong>{{ $fmtMoney($refundAmount) }}</strong> has been issued to your original payment method.
+                        @if($totalRefunded > 0 && $totalRefunded < (float) $order->total)
+                            <br><span style="font-size:13px; color:#7f1d1d;">Total refunded so far: {{ $fmtMoney($totalRefunded) }} of {{ $fmtMoney($order->total) }}.</span>
+                        @endif
+                    </div>
+                @endif
 
                 @if($order->status === 'completed')
                     <p style="margin-bottom: 25px; color: #059669; font-weight: 600;">{!! $msgCompleted !!}</p>
@@ -372,6 +391,18 @@
                         {{ ($order->currency_position === 'right') ? $totalVal . $symbol : $symbol . $totalVal }}
                     </td>
                 </tr>
+
+                @if(($order->refunded_amount ?? 0) > 0)
+                <tr>
+                    <td style="color:#dc2626;">Refunded</td>
+                    <td class="text-right" style="color:#dc2626;">
+                        @php
+                            $refundedVal = number_format($order->refunded_amount, $order->decimals ?? 2, $order->decimal_separator ?? '.', $order->thousand_separator ?? ',');
+                        @endphp
+                        -{{ ($order->currency_position === 'right') ? $refundedVal . $symbol : $symbol . $refundedVal }}
+                    </td>
+                </tr>
+                @endif
             </table>
 
             <!-- Addresses side-by-side -->

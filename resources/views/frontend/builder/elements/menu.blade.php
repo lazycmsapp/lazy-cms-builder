@@ -15,6 +15,12 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
         $isSubmenu = !empty($item->parent_id);
         $style = ($isMobile || $isSubmenu) ? $subStyle : $mainStyle;
 
+        // Lazy Special Menu widgets (Cart / Search / Wishlist) — dynamic, render & skip the normal item.
+        if (function_exists('lazy_is_special_menu_item') && lazy_is_special_menu_item($item->type ?? '')) {
+            echo lazy_render_special_menu_item($item, $style, $isMobile, $elId);
+            continue;
+        }
+
         $isActive = false;
         if ($item->url) {
             $isActive = (rtrim($currentUrl, '/') == rtrim($item->url, '/'));
@@ -22,7 +28,22 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
 
         echo '<li class="lazy-menu-item ' . ($hasChildren ? 'has-children' : '') . ($isActive ? ' active' : '') . '">';
         echo '<a href="' . ($item->url ?? '#') . '" class="lazy-menu-link" style="' . $style . '">';
-        echo '<span>' . $item->title . '</span>';
+        // Optional icon + "show only icon" support (set via menu builder → Options).
+        // Icon position (left/right) and gap come from the Menu element settings.
+        $itemIcon = $item->icon ?? '';
+        $iconOnly = !empty($item->show_only_icon) && $itemIcon !== '';
+        $iconPos  = ($s['menuIconPosition'] ?? 'left') === 'right' ? 'row-reverse' : 'row';
+        $iconGap  = (isset($s['menuIconGap']) && $s['menuIconGap'] !== '') ? (int) $s['menuIconGap'] : 6;
+        if ($iconOnly) {
+            echo '<i class="' . e($itemIcon) . ' lazy-menu-icon" title="' . e($item->title) . '"></i>';
+        } elseif ($itemIcon !== '') {
+            echo '<span style="display:inline-flex;align-items:center;gap:' . $iconGap . 'px;flex-direction:' . $iconPos . ';">';
+            echo '<i class="' . e($itemIcon) . ' lazy-menu-icon"></i>';
+            echo '<span>' . $item->title . '</span>';
+            echo '</span>';
+        } else {
+            echo '<span>' . $item->title . '</span>';
+        }
 
         if($hasChildren) {
             $showArrow = false;

@@ -65,7 +65,7 @@
     $shouldStretch = ($colAlignment === 'stretch') 
                      || (in_array($colAlignment, ['', 'default', null], true) && $containerAlign === 'stretch');
 
-    $globalGap = $container['settings']['columnGap'] ?? 3;
+    $globalGap = $container['settings']['columnGap'] ?? 0;
     // Use CSS custom property --lc-col-gap (set responsively by container) for default column spacing
     $pLeft  = (isset($s['columnSpacingLeft'])  && $s['columnSpacingLeft']  !== '') ? $s['columnSpacingLeft']  . '%' : 'calc(var(--lc-col-gap, ' . $globalGap . ') * 1%)';
     $pRight = (isset($s['columnSpacingRight']) && $s['columnSpacingRight'] !== '') ? $s['columnSpacingRight'] . '%' : 'calc(var(--lc-col-gap, ' . $globalGap . ') * 1%)';
@@ -94,10 +94,10 @@
         'width: 100%',
         'flex-grow: 1',
         'margin: 0',
-        'padding-top: '    . ($s['paddingTop']    ?? 10) . ($s['paddingTopUnit']    ?? 'px'),
-        'padding-right: '  . ($s['paddingRight']  ?? 10) . ($s['paddingRightUnit']  ?? 'px'),
-        'padding-bottom: ' . ($s['paddingBottom'] ?? 10) . ($s['paddingBottomUnit'] ?? 'px'),
-        'padding-left: '   . ($s['paddingLeft']   ?? 10) . ($s['paddingLeftUnit']   ?? 'px'),
+        'padding-top: '    . ($s['paddingTop']    ?? 0) . ($s['paddingTopUnit']    ?? 'px'),
+        'padding-right: '  . ($s['paddingRight']  ?? 0) . ($s['paddingRightUnit']  ?? 'px'),
+        'padding-bottom: ' . ($s['paddingBottom'] ?? 0) . ($s['paddingBottomUnit'] ?? 'px'),
+        'padding-left: '   . ($s['paddingLeft']   ?? 0) . ($s['paddingLeftUnit']   ?? 'px'),
         'align-items: stretch',
     ];
 
@@ -105,10 +105,10 @@
     if (isset($s['marginBottom']) && $s['marginBottom'] !== '') $outerStyles[] = 'margin-bottom: ' . $s['marginBottom'] . ($s['marginBottomUnit'] ?? 'px');
 
     $innerStyles = [
-        'padding-top: '    . ($s['paddingTop']    ?? 10) . ($s['paddingTopUnit'] ?? 'px'),
-        'padding-bottom: ' . ($s['paddingBottom'] ?? 10) . ($s['paddingBottomUnit'] ?? 'px'),
-        'padding-left: '   . ($s['paddingLeft']   ?? 10) . ($s['paddingLeftUnit'] ?? 'px'),
-        'padding-right: '  . ($s['paddingRight']  ?? 10) . ($s['paddingRightUnit'] ?? 'px'),
+        'padding-top: '    . ($s['paddingTop']    ?? 0) . ($s['paddingTopUnit'] ?? 'px'),
+        'padding-bottom: ' . ($s['paddingBottom'] ?? 0) . ($s['paddingBottomUnit'] ?? 'px'),
+        'padding-left: '   . ($s['paddingLeft']   ?? 0) . ($s['paddingLeftUnit'] ?? 'px'),
+        'padding-right: '  . ($s['paddingRight']  ?? 0) . ($s['paddingRightUnit'] ?? 'px'),
         'box-sizing: border-box',
     ];
     if (!$isDefaultAlign) {

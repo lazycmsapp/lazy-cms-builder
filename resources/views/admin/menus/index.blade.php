@@ -1,4 +1,5 @@
 <x-cms-dashboard::layouts.admin title="Menus">
+    <link rel="stylesheet" href="{{ asset('vendor/cms-dashboard/css/font-awesome.all.min.css') }}">
     <x-cms-dashboard::admin.delete-modal />
     <div class="mb-4">
         <h1 class="text-[23px] font-normal text-[#1d2327]">Menus</h1>
@@ -64,7 +65,7 @@
 
             @foreach($accordions as $i => $acc)
             <div class="wp-metabox mb-0">
-                <div class="wp-metabox-header flex justify-between items-center cursor-pointer"
+                <div class="wp-metabox-header flex justify-between items-center lazy-acc-header"
                      onclick="toggleAcc('{{ $acc['key'] }}')">
                     <span>{{ $acc['label'] }}</span>
                     <svg id="acc-icon-{{ $acc['key'] }}" class="w-4 h-4 {{ $i===0 ? 'rotate-180' : '' }} transition-transform"
@@ -72,7 +73,7 @@
                         <path d="M19 9l-7 7-7-7"/>
                     </svg>
                 </div>
-                <div id="acc-{{ $acc['key'] }}" class="{{ $i===0 ? '' : 'hidden' }} wp-metabox-content p-3">
+                <div id="acc-{{ $acc['key'] }}" class="{{ $i===0 ? '' : 'hidden' }} wp-metabox-content p-3" data-acc="{{ $acc['key'] }}">
                     <div class="max-h-44 overflow-y-auto border border-[#dfdfdf] p-2 mb-3 bg-[#fcfcfc] space-y-1 text-[13px]">
                         @forelse($acc['items'] as $it)
                         @php
@@ -97,7 +98,7 @@
                         <label class="text-[12px] text-[#2271b1] cursor-pointer">
                             <input type="checkbox" onchange="selectAll(this,'{{ $acc['key'] }}')" class="mr-1">Select All
                         </label>
-                        <button onclick="addChecked()" class="wp-btn-secondary h-7 py-0 px-3 text-[12px]">Add to Menu</button>
+                        <button onclick="addChecked(this)" class="wp-btn-secondary h-7 py-0 px-3 text-[12px]">Add to Menu</button>
                     </div>
                 </div>
             </div>
@@ -106,7 +107,7 @@
             {{-- Dynamic CPTs --}}
             @foreach($cptData as $cpt)
             <div class="wp-metabox mb-0">
-                <div class="wp-metabox-header flex justify-between items-center cursor-pointer"
+                <div class="wp-metabox-header flex justify-between items-center lazy-acc-header"
                      onclick="toggleAcc('{{ $cpt['key'] }}')">
                     <span>{{ $cpt['label'] }}</span>
                     <svg id="acc-icon-{{ $cpt['key'] }}" class="w-4 h-4 transition-transform"
@@ -114,7 +115,7 @@
                         <path d="M19 9l-7 7-7-7"/>
                     </svg>
                 </div>
-                <div id="acc-{{ $cpt['key'] }}" class="hidden wp-metabox-content p-3">
+                <div id="acc-{{ $cpt['key'] }}" class="hidden wp-metabox-content p-3" data-acc="{{ $cpt['key'] }}">
                     <div class="max-h-44 overflow-y-auto border border-[#dfdfdf] p-2 mb-3 bg-[#fcfcfc] space-y-1 text-[13px]">
                         @forelse($cpt['items'] as $it)
                         <label class="flex items-center gap-2 cursor-pointer hover:text-[#2271b1]">
@@ -133,7 +134,7 @@
                         <label class="text-[12px] text-[#2271b1] cursor-pointer">
                             <input type="checkbox" onchange="selectAll(this,'{{ $cpt['key'] }}')" class="mr-1">Select All
                         </label>
-                        <button onclick="addChecked()" class="wp-btn-secondary h-7 py-0 px-3 text-[12px]">Add to Menu</button>
+                        <button onclick="addChecked(this)" class="wp-btn-secondary h-7 py-0 px-3 text-[12px]">Add to Menu</button>
                     </div>
                 </div>
             </div>
@@ -142,7 +143,7 @@
             {{-- Dynamic Custom Taxonomies --}}
             @foreach($taxonomyData as $tax)
             <div class="wp-metabox mb-0">
-                <div class="wp-metabox-header flex justify-between items-center cursor-pointer"
+                <div class="wp-metabox-header flex justify-between items-center lazy-acc-header"
                      onclick="toggleAcc('{{ $tax['key'] }}')">
                     <span>{{ $tax['label'] }}</span>
                     <svg id="acc-icon-{{ $tax['key'] }}" class="w-4 h-4 transition-transform"
@@ -150,7 +151,7 @@
                         <path d="M19 9l-7 7-7-7"/>
                     </svg>
                 </div>
-                <div id="acc-{{ $tax['key'] }}" class="hidden wp-metabox-content p-3">
+                <div id="acc-{{ $tax['key'] }}" class="hidden wp-metabox-content p-3" data-acc="{{ $tax['key'] }}">
                     <div class="max-h-44 overflow-y-auto border border-[#dfdfdf] p-2 mb-3 bg-[#fcfcfc] space-y-1 text-[13px]">
                         @forelse($tax['items'] as $it)
                         <label class="flex items-center gap-2 cursor-pointer hover:text-[#2271b1]">
@@ -170,19 +171,78 @@
                         <label class="text-[12px] text-[#2271b1] cursor-pointer">
                             <input type="checkbox" onchange="selectAll(this,'{{ $tax['key'] }}')" class="mr-1">Select All
                         </label>
-                        <button onclick="addChecked()" class="wp-btn-secondary h-7 py-0 px-3 text-[12px]">Add to Menu</button>
+                        <button onclick="addChecked(this)" class="wp-btn-secondary h-7 py-0 px-3 text-[12px]">Add to Menu</button>
                     </div>
                 </div>
             </div>
             @endforeach
 
+            <!-- Product Categories -->
+            <div class="wp-metabox mb-0">
+                <div class="wp-metabox-header flex justify-between items-center lazy-acc-header" onclick="toggleAcc('product_categories')">
+                    <span>Product Categories</span>
+                    <svg id="acc-icon-product_categories" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                </div>
+                <div id="acc-product_categories" class="hidden wp-metabox-content p-3" data-acc="product_categories">
+                    <div class="max-h-44 overflow-y-auto border border-[#dfdfdf] p-2 mb-3 bg-[#fcfcfc] space-y-1 text-[13px]">
+                        @forelse($productCategories as $pc)
+                        <label class="flex items-center gap-2 cursor-pointer hover:text-[#2271b1]">
+                            <input type="checkbox" class="item-cb rounded-sm border-[#8c8f94]"
+                                data-title="{{ $pc->name }}"
+                                data-url="{{ url('product-category/' . $pc->getFullSlugPath()) }}"
+                                data-type="custom">
+                            {{ $pc->name }}
+                        </label>
+                        @empty
+                        <p class="text-[#646970] italic text-[12px]">None found.</p>
+                        @endforelse
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <label class="text-[12px] text-[#2271b1] cursor-pointer">
+                            <input type="checkbox" onchange="selectAll(this,'product_categories')" class="mr-1">Select All
+                        </label>
+                        <button onclick="addChecked(this)" class="wp-btn-secondary h-7 py-0 px-3 text-[12px]">Add to Menu</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lazy Special Menu (dynamic ecommerce widgets) -->
+            <div class="wp-metabox mb-0">
+                <div class="wp-metabox-header flex justify-between items-center lazy-acc-header" onclick="toggleAcc('special')">
+                    <span>Lazy Special Menu</span>
+                    <svg id="acc-icon-special" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                </div>
+                <div id="acc-special" class="hidden wp-metabox-content p-3" data-acc="special">
+                    <div class="max-h-44 overflow-y-auto border border-[#dfdfdf] p-2 mb-3 bg-[#fcfcfc] space-y-1 text-[13px]">
+                        <label class="flex items-center gap-2 cursor-pointer hover:text-[#2271b1]">
+                            <input type="checkbox" class="item-cb rounded-sm border-[#8c8f94]" data-title="Cart" data-url="#" data-type="special_cart">
+                            Cart
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer hover:text-[#2271b1]">
+                            <input type="checkbox" class="item-cb rounded-sm border-[#8c8f94]" data-title="Search" data-url="#" data-type="special_search">
+                            Search
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer hover:text-[#2271b1]">
+                            <input type="checkbox" class="item-cb rounded-sm border-[#8c8f94]" data-title="Wishlist" data-url="#" data-type="special_wishlist">
+                            Wishlist
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <label class="text-[12px] text-[#2271b1] cursor-pointer">
+                            <input type="checkbox" onchange="selectAll(this,'special')" class="mr-1">Select All
+                        </label>
+                        <button onclick="addChecked(this)" class="wp-btn-secondary h-7 py-0 px-3 text-[12px]">Add to Menu</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Custom Link -->
             <div class="wp-metabox mb-0">
-                <div class="wp-metabox-header flex justify-between items-center cursor-pointer" onclick="toggleAcc('custom')">
+                <div class="wp-metabox-header flex justify-between items-center lazy-acc-header" onclick="toggleAcc('custom')">
                     <span>Custom Links</span>
                     <svg id="acc-icon-custom" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
                 </div>
-                <div id="acc-custom" class="hidden wp-metabox-content p-3 space-y-3 text-[13px]">
+                <div id="acc-custom" class="hidden wp-metabox-content p-3 space-y-3 text-[13px]" data-acc="custom">
                     <div>
                         <label class="block text-[12px] text-[#646970] mb-1">URL</label>
                         <input id="cl-url" class="wp-input w-full h-7" placeholder="https:// or #" value="#">
@@ -197,6 +257,43 @@
                 </div>
             </div>
         </div>
+
+        {{-- Accordion toggle — self-contained & placed right after the cards so it works
+             reliably even if the larger script at the bottom of the page is interrupted. --}}
+        <script>
+        (function(){
+            var ACC_STORE = 'lazyMenuAccordions';
+            function getAccState(){ try { return JSON.parse(localStorage.getItem(ACC_STORE) || '{}') || {}; } catch(e){ return {}; } }
+            function saveAccState(key, isOpen){ var s = getAccState(); s[key] = isOpen; try { localStorage.setItem(ACC_STORE, JSON.stringify(s)); } catch(e){} }
+
+            window.toggleAcc = function(key){
+                var body = document.getElementById('acc-' + key), icon = document.getElementById('acc-icon-' + key);
+                if (!body) return;
+                body.classList.toggle('hidden');
+                var isOpen = !body.classList.contains('hidden');
+                if (icon) icon.style.transform = isOpen ? 'rotate(180deg)' : '';
+                saveAccState(key, isOpen);
+            };
+
+            window.selectAll = function(cb, key){
+                document.querySelectorAll('#acc-' + key + ' .item-cb').forEach(function(c){ c.checked = cb.checked; });
+            };
+
+            function restoreAccordions(){
+                var s = getAccState();
+                document.querySelectorAll('.wp-metabox-content[data-acc]').forEach(function(body){
+                    var key = body.getAttribute('data-acc');
+                    if (!(key in s)) return;
+                    var open = !!s[key];
+                    body.classList.toggle('hidden', !open);
+                    var icon = document.getElementById('acc-icon-' + key);
+                    if (icon) icon.style.transform = open ? 'rotate(180deg)' : '';
+                });
+            }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restoreAccordions);
+            else restoreAccordions();
+        })();
+        </script>
 
         <!-- RIGHT: Menu Structure -->
         <div class="w-full lg:w-1/2">
@@ -266,7 +363,37 @@
     </div>
     @endif
 
+    {{-- Menu item Options modal: icon picker + show-only-icon toggle --}}
+    <div id="mi-options-modal" style="display:none;position:fixed;inset:0;z-index:100000;align-items:center;justify-content:center;padding:20px;">
+        <div onclick="closeItemOptions()" style="position:absolute;inset:0;background:rgba(0,0,0,.5);"></div>
+        <div style="position:relative;background:#fff;width:100%;max-width:560px;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;max-height:85vh;">
+            <div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                <h3 style="font-size:15px;font-weight:700;color:#1d2327;margin:0;">Menu Item Options</h3>
+                <button type="button" onclick="closeItemOptions()" style="border:none;background:none;font-size:20px;line-height:1;cursor:pointer;color:#646970;">&times;</button>
+            </div>
+            <div style="padding:16px 18px;overflow-y:auto;">
+                <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;font-size:13px;color:#1d2327;">
+                    <span><strong>Show only Icon?</strong><br><span style="font-size:11px;color:#646970;">Yes = show only the icon in the menu; No = show both icon and title</span></span>
+                    <input type="checkbox" id="mi-show-only-icon" onchange="setItemShowOnlyIcon(this.checked)" style="width:18px;height:18px;flex-shrink:0;">
+                </label>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;">
+                    <span style="font-weight:700;text-transform:uppercase;font-size:11px;color:#1d2327;">Selected:</span>
+                    <span id="mi-selected-icon-preview" style="font-size:18px;color:#2271b1;min-width:22px;text-align:center;"></span>
+                    <button type="button" onclick="setItemIcon('')" style="font-size:11px;color:#b32d2e;border:none;background:none;cursor:pointer;text-decoration:underline;">Clear</button>
+                </div>
+                <input type="text" id="mi-icon-search" oninput="renderIconGrid(this.value)" placeholder="Search icons (cart, home, user, search...)" class="wp-input" style="width:100%;height:34px;font-size:13px;margin-bottom:12px;">
+                <div id="mi-icon-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;max-height:300px;overflow-y:auto;"></div>
+            </div>
+            <div style="padding:12px 18px;border-top:1px solid #e5e7eb;text-align:right;">
+                <button type="button" onclick="closeItemOptions()" class="wp-btn-primary" style="height:32px;">Done</button>
+            </div>
+        </div>
+    </div>
+
     <style>
+        /* Accordion headers use their own toggle (toggleAcc); the class is intentionally NOT
+           "cursor-pointer" so the global metabox-collapse script does not also bind to them. */
+        .lazy-acc-header          { cursor: pointer; }
         #menu-list li             { list-style: none; }
         .mi-wrap                  { margin-bottom: 4px; }
         .mi-bar                   { display:flex; align-items:center; justify-content:space-between;
@@ -310,22 +437,19 @@
     /* ──────────────────────────────────
        Accordion
     ────────────────────────────────── */
-    function toggleAcc(key) {
-        const body = document.getElementById('acc-' + key);
-        const icon = document.getElementById('acc-icon-' + key);
-        body.classList.toggle('hidden');
-        icon.style.transform = body.classList.contains('hidden') ? '' : 'rotate(180deg)';
-    }
-    function selectAll(cb, key) {
-        document.querySelectorAll('#acc-' + key + ' .item-cb').forEach(c => c.checked = cb.checked);
-    }
+    /* toggleAcc / selectAll / accordion-state persistence are defined in the small
+       self-contained script placed right after the cards (above), so they keep working
+       even if this larger script is interrupted on a slow/dev server. */
 
     /* ──────────────────────────────────
        Add items
     ────────────────────────────────── */
-    function addChecked() {
-        const cbs = document.querySelectorAll('.item-cb:checked');
-        if (!cbs.length) { window.showToast('Please select at least one item.', 'warning'); return; }
+    function addChecked(btn) {
+        // Scope to the card the button belongs to, so each "Add to Menu" only adds
+        // the items selected within THAT card (not across all cards).
+        const scope = (btn && btn.closest('.wp-metabox-content')) || document;
+        const cbs = scope.querySelectorAll('.item-cb:checked');
+        if (!cbs.length) { window.showToast('Please select at least one item from this section.', 'warning'); return; }
         cbs.forEach(cb => {
             items.push({
                 id: newId(),
@@ -388,6 +512,80 @@
         if (item) item[field] = val;
     }
 
+    /* ──────────────────────────────────
+       Menu item Options (icon picker + show-only-icon)
+    ────────────────────────────────── */
+    const MI_ICONS = [
+        'fa fa-house','fa fa-home','fa fa-bars','fa fa-grip','fa fa-table-cells','fa fa-list','fa fa-bars-staggered',
+        'fa fa-magnifying-glass','fa fa-search','fa fa-cart-shopping','fa fa-bag-shopping','fa fa-basket-shopping','fa fa-store',
+        'fa fa-heart','fa fa-star','fa fa-user','fa fa-users','fa fa-circle-user','fa fa-right-to-bracket','fa fa-right-from-bracket',
+        'fa fa-gear','fa fa-sliders','fa fa-bell','fa fa-envelope','fa fa-phone','fa fa-location-dot','fa fa-map',
+        'fa fa-tag','fa fa-tags','fa fa-folder','fa fa-folder-open','fa fa-file','fa fa-file-lines','fa fa-newspaper','fa fa-book',
+        'fa fa-image','fa fa-images','fa fa-camera','fa fa-video','fa fa-music','fa fa-play','fa fa-podcast',
+        'fa fa-info','fa fa-circle-info','fa fa-circle-question','fa fa-headset','fa fa-comment','fa fa-comments',
+        'fa fa-gift','fa fa-truck','fa fa-box','fa fa-credit-card','fa fa-wallet','fa fa-percent','fa fa-fire','fa fa-bolt',
+        'fa fa-globe','fa fa-language','fa fa-calendar','fa fa-clock','fa fa-bookmark','fa fa-thumbs-up','fa fa-share-nodes',
+        'fa fa-arrow-right','fa fa-arrow-left','fa fa-chevron-right','fa fa-chevron-down','fa fa-angles-right','fa fa-link','fa fa-paperclip',
+        'fa fa-laptop','fa fa-mobile','fa fa-desktop','fa fa-headphones','fa fa-keyboard','fa fa-plug','fa fa-wifi','fa fa-camera-retro',
+        'fa fa-shirt','fa fa-gem','fa fa-crown','fa fa-utensils','fa fa-mug-hot','fa fa-cake-candles','fa fa-leaf','fa fa-seedling',
+        'fa fa-dumbbell','fa fa-heart-pulse','fa fa-pills','fa fa-stethoscope','fa fa-graduation-cap','fa fa-briefcase','fa fa-building',
+        'fab fa-facebook-f','fab fa-instagram','fab fa-x-twitter','fab fa-whatsapp','fab fa-youtube','fab fa-linkedin-in','fab fa-tiktok','fab fa-telegram','fab fa-pinterest-p'
+    ];
+    let miOptionsItemId = null;
+
+    function openItemOptions(id) {
+        miOptionsItemId = id;
+        const item = items.find(i => i.id === id);
+        if (!item) return;
+        document.getElementById('mi-show-only-icon').checked = !!item.show_only_icon;
+        document.getElementById('mi-icon-search').value = '';
+        miUpdateSelectedPreview();
+        renderIconGrid('');
+        document.getElementById('mi-options-modal').style.display = 'flex';
+    }
+
+    function closeItemOptions() {
+        document.getElementById('mi-options-modal').style.display = 'none';
+        const reopen = miOptionsItemId;
+        miOptionsItemId = null;
+        render(); // refresh the Options button preview in the list
+        if (reopen) toggleSettings(reopen); // keep that item's panel expanded
+    }
+
+    function miUpdateSelectedPreview() {
+        const item = items.find(i => i.id === miOptionsItemId);
+        const prev = document.getElementById('mi-selected-icon-preview');
+        if (!prev) return;
+        prev.innerHTML = (item && item.icon) ? `<i class="${esc(item.icon)}"></i>` : '<span style="font-size:12px;color:#646970;">none</span>';
+    }
+
+    function setItemIcon(icon) {
+        if (!miOptionsItemId) return;
+        updateField(miOptionsItemId, 'icon', icon);
+        miUpdateSelectedPreview();
+        renderIconGrid(document.getElementById('mi-icon-search').value || '');
+    }
+
+    function setItemShowOnlyIcon(checked) {
+        if (!miOptionsItemId) return;
+        updateField(miOptionsItemId, 'show_only_icon', !!checked);
+    }
+
+    function renderIconGrid(query) {
+        const grid = document.getElementById('mi-icon-grid');
+        if (!grid) return;
+        const item = items.find(i => i.id === miOptionsItemId);
+        const cur = item ? item.icon : '';
+        const q = (query || '').toLowerCase().trim();
+        const list = q ? MI_ICONS.filter(ic => ic.toLowerCase().includes(q)) : MI_ICONS;
+        grid.innerHTML = list.map(ic => {
+            const active = (ic === cur);
+            return `<button type="button" onclick="setItemIcon('${ic}')" title="${ic}"
+                style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border:1px solid ${active ? '#2271b1' : '#e5e7eb'};background:${active ? '#eaf3fb' : '#fff'};border-radius:6px;cursor:pointer;font-size:16px;color:${active ? '#2271b1' : '#555'};">
+                <i class="${ic}"></i></button>`;
+        }).join('') || '<p style="grid-column:1/-1;text-align:center;color:#646970;font-size:12px;padding:20px;">No icons found.</p>';
+    }
+
     function toggleSettings(id) {
         const panel = document.getElementById('s-' + id);
         if (!panel) return;
@@ -400,7 +598,7 @@
        Render
     ────────────────────────────────── */
     const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-    const typeLabel = t => ({ custom:'Custom Link', page:'Page', post:'Post', category:'Category' }[t] || t);
+    const typeLabel = t => ({ custom:'Custom Link', page:'Page', post:'Post', category:'Category', special_cart:'Cart Widget', special_search:'Search Widget', special_wishlist:'Wishlist Widget' }[t] || t);
 
     function render() {
         const list    = document.getElementById('menu-list');
@@ -428,7 +626,7 @@
             const canIndent  = idx > 0 && item.depth < 2 && item.depth <= items[idx-1].depth;
             const canOutdent = item.depth > 0;
 
-            const typeMap = { custom:'Custom Link', page:'Page', post:'Post', category:'Category' };
+            const typeMap = { custom:'Custom Link', page:'Page', post:'Post', category:'Category', special_cart:'Cart Widget', special_search:'Search Widget', special_wishlist:'Wishlist Widget' };
             
             let statusNotice = '';
             if (isInactiveTax) {
@@ -485,6 +683,13 @@
                         <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:#1d2327;margin-bottom:4px;">URL</label>
                         <a href="${esc(item.url)}" style="font-size:13px;color:#2271b1;">${esc(item.url)}</a>
                     </div>`}
+                    <div style="margin-bottom:12px;">
+                        <button type="button" onclick="openItemOptions('${esc(item.id)}')" class="wp-btn-secondary" style="height:30px;font-size:12px;display:inline-flex;align-items:center;gap:6px;">
+                            <i class="fa fa-sliders-h"></i> Options
+                            ${item.icon ? `<i class="${esc(item.icon)}" style="color:#2271b1;"></i>` : ''}
+                            ${item.show_only_icon ? `<span style="font-size:10px;color:#646970;">(icon only)</span>` : ''}
+                        </button>
+                    </div>
                     <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #dfdfdf;">
                         <button type="button" onclick="removeItem('${esc(item.id)}')" style="color:#b32d2e;font-size:12px;text-decoration:underline;border:none;background:none;cursor:pointer;">Remove</button>
                         <button type="button" onclick="toggleSettings('${esc(item.id)}')" style="color:#2271b1;font-size:12px;border:none;background:none;cursor:pointer;">Cancel</button>
@@ -525,7 +730,7 @@
         const stack = []; // stack of {depth, children}
 
         flat.forEach(item => {
-            const node = { id: item.id, title: item.title, url: item.url, type: item.type, object_id: item.object_id || null, children: [] };
+            const node = { id: item.id, title: item.title, url: item.url, type: item.type, object_id: item.object_id || null, icon: item.icon || '', show_only_icon: !!item.show_only_icon, children: [] };
             const depth = item.depth || 0;
 
             if (depth === 0) {

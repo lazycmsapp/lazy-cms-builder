@@ -38,7 +38,7 @@
 
                     <select class="wp-input h-8 py-0 text-[13px]" onchange="window.location.href='?status=' + this.value">
                         <option value="">All Statuses</option>
-                        @foreach(['pending', 'processing', 'on-hold', 'completed', 'cancelled', 'refunded', 'failed'] as $st)
+                        @foreach(['pending', 'processing', 'on-hold', 'completed', 'cancelled', 'partially-refunded', 'refunded', 'failed'] as $st)
                             <option value="{{ $st }}" {{ request('status') === $st ? 'selected' : '' }}>{{ ucfirst(str_replace('-', ' ', $st)) }}</option>
                         @endforeach
                     </select>
@@ -59,6 +59,7 @@
                         <th class="wp-table-header">Date</th>
                         <th class="wp-table-header">Status</th>
                         <th class="wp-table-header">Total</th>
+                        <th class="wp-table-header">Refunded</th>
                         <th class="wp-table-header text-right">Actions</th>
                     </tr>
                 </thead>
@@ -85,6 +86,7 @@
                                         'completed' => 'bg-[#46b450] text-white',
                                         'cancelled' => 'bg-[#d63638] text-white',
                                         'on-hold' => 'bg-[#ffb900] text-black',
+                                        'partially-refunded' => 'bg-[#8c8f94] text-white',
                                         'refunded' => 'bg-[#646970] text-white',
                                         'failed' => 'bg-[#d63638] text-white',
                                     ];
@@ -97,20 +99,31 @@
                             <td class="wp-table-cell font-bold">
                                 {{ lazy_price_format($order->total, $order) }}
                             </td>
+                            <td class="wp-table-cell">
+                                @if(($order->refunded_amount ?? 0) > 0)
+                                    @php $fullyRef = (float) $order->refunded_amount >= (float) $order->total - 0.001; @endphp
+                                    <span class="font-bold {{ $fullyRef ? 'text-[#646970]' : 'text-[#8c44db]' }}">{{ lazy_price_format($order->refunded_amount, $order) }}</span>
+                                    <div class="text-[10px] {{ $fullyRef ? 'text-[#646970]' : 'text-[#8c44db]' }}">{{ $fullyRef ? 'Full amount' : 'Partial' }}</div>
+                                @else
+                                    <span class="text-[#c3c4c7]">—</span>
+                                @endif
+                            </td>
                             <td class="wp-table-cell text-right">
                                 <div class="flex justify-end space-x-3">
                                     <a href="{{ route('admin.shop.orders.show', $order->id) }}" class="text-[#2271b1] hover:text-[#135e96]" title="View Order">
                                         <span class="material-symbols-outlined text-[20px]">visibility</span>
                                     </a>
-                                    <a href="{{ route('admin.shop.orders.invoice', $order->id) }}" target="_blank" class="text-[#2271b1] hover:text-[#135e96]" title="Print Invoice">
-                                        <span class="material-symbols-outlined text-[20px]">print</span>
-                                    </a>
+                                    @if(in_array($order->status, ['completed', 'partially-refunded']))
+                                        <a href="{{ route('admin.shop.orders.invoice', $order->id) }}" target="_blank" class="text-[#2271b1] hover:text-[#135e96]" title="Print Invoice">
+                                            <span class="material-symbols-outlined text-[20px]">print</span>
+                                        </a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="wp-table-cell text-center py-10 text-[#646970] italic">
+                            <td colspan="7" class="wp-table-cell text-center py-10 text-[#646970] italic">
                                 No orders found.
                             </td>
                         </tr>

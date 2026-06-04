@@ -19,6 +19,21 @@
             @csrf
             
             <div x-show="tab === 'general'" x-transition>
+                <!-- Shop Identity Section -->
+                <h3 class="text-[16px] font-semibold text-[#1d2327] mb-2">Shop</h3>
+                <p class="text-[12px] text-[#646970] mb-4">Your store name. Used on invoices, order emails and the storefront.</p>
+                <table class="w-full border-separate border-spacing-y-6 mb-8">
+                    <tr>
+                        <th scope="row" class="w-[200px] text-left align-top pt-2">
+                            <label class="text-[14px] font-semibold text-[#1d2327]">Shop Name</label>
+                        </th>
+                        <td>
+                            <input type="text" name="store_name" value="{{ get_shop_option('shop_store_name') }}" placeholder="{{ get_cms_option('site_name', 'My Shop') }}" class="wp-input w-[400px] h-8 shadow-sm">
+                            <p class="text-[12px] text-[#646970] mt-1">Leave empty to use your site name.</p>
+                        </td>
+                    </tr>
+                </table>
+
                 <!-- Store Address Section -->
                 <h3 class="text-[16px] font-semibold text-[#1d2327] mb-2">Store Address</h3>
                 <p class="text-[12px] text-[#646970] mb-6">This is where your business is located. Tax rates and shipping rates will use this address.</p>
@@ -535,6 +550,49 @@
                                 </td>
                             </tr>
                         </table>
+                    </div>
+
+                    <!-- SSLCommerz -->
+                    <div class="border border-[#c3c4c7] rounded p-4 bg-[#f6f7f7]">
+                        <div class="flex items-center justify-between mb-4 pb-2 border-b border-[#c3c4c7]">
+                            <h3 class="text-[16px] font-semibold text-[#1d2327]">SSLCommerz <span class="text-[12px] font-normal text-[#646970]">(Bangladesh)</span></h3>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="hidden" name="payment_sslcommerz_enable" value="0">
+                                <input type="checkbox" name="payment_sslcommerz_enable" value="1" {{ get_shop_option('shop_payment_sslcommerz_enable') === '1' ? 'checked' : '' }} class="w-4 h-4 mr-2">
+                                <span class="text-[14px] font-medium">Enable</span>
+                            </label>
+                        </div>
+                        <table class="w-full border-separate border-spacing-y-4">
+                            <tr>
+                                <th scope="row" class="w-[200px] text-left align-top pt-2">
+                                    <label class="text-[14px] font-semibold text-[#1d2327]">Store ID</label>
+                                </th>
+                                <td>
+                                    <input type="text" name="payment_sslcommerz_store_id" value="{{ get_shop_option('shop_payment_sslcommerz_store_id') }}" class="wp-input w-full h-8 shadow-sm">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row" class="w-[200px] text-left align-top pt-2">
+                                    <label class="text-[14px] font-semibold text-[#1d2327]">Store Password</label>
+                                </th>
+                                <td>
+                                    <input type="password" name="payment_sslcommerz_store_pass" value="{{ get_shop_option('shop_payment_sslcommerz_store_pass') }}" class="wp-input w-full h-8 shadow-sm">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row" class="w-[200px] text-left align-top pt-2">
+                                    <label class="text-[14px] font-semibold text-[#1d2327]">Sandbox Mode</label>
+                                </th>
+                                <td>
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        <input type="hidden" name="payment_sslcommerz_sandbox" value="0">
+                                        <input type="checkbox" name="payment_sslcommerz_sandbox" value="1" {{ get_shop_option('shop_payment_sslcommerz_sandbox') === '1' ? 'checked' : '' }} class="w-4 h-4 mr-2">
+                                        <span class="text-[14px]">Use test (sandbox) credentials</span>
+                                    </label>
+                                </td>
+                            </tr>
+                        </table>
+                        <p class="text-[12px] text-[#646970] mt-3 italic">Get your Store ID &amp; Password from the SSLCommerz merchant panel. Supported for BDT.</p>
                     </div>
                 </div>
             </div>

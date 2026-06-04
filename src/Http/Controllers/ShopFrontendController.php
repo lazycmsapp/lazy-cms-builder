@@ -32,6 +32,25 @@ class ShopFrontendController extends Controller
         return view($this->resolveThemeView('cart'), compact('cart'));
     }
 
+    /**
+     * Off-canvas mini-cart fragment (AJAX). Returns the rendered item list,
+     * live subtotal and item count so the drawer can refresh dynamically.
+     */
+    public function miniCart()
+    {
+        $this->validateCartItems();
+        $cart = Session::get('lazy_cart', []);
+
+        $html = view($this->resolveThemeView('mini-cart-items'), compact('cart'))->render();
+
+        return response()->json([
+            'success'  => true,
+            'count'    => get_lazy_cart_count(),
+            'subtotal' => lazy_price_format(get_lazy_cart_subtotal()),
+            'html'     => $html,
+        ]);
+    }
+
     public function addToCart(Request $request)
     {
         $productId = $request->input('product_id');
@@ -623,6 +642,69 @@ class ShopFrontendController extends Controller
             }
         }
 
+        // Online gateways: send the customer to the gateway to pay before finalizing.
+        $gateways = lazy_enabled_payment_gateways();
+        $gateway  = $gateways[$order->payment_method] ?? null;
+
+        if ($gateway && $gateway['type'] === 'online') {
+            // Stripe → inline card (Stripe Elements). Create a PaymentIntent; the card is confirmed on-page.
+            if ($order->payment_method === 'stripe') {
+                $intent = $this->createStripePaymentIntent($order);
+                if ($intent) {
+                    $order->update(['transaction_id' => $intent['id']]);
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success'        => true,
+                            'stripe_payment' => true,
+                            'client_secret'  => $intent['client_secret'],
+                            'return_url'     => route('shop.payment.return', $order->id) . '?gateway=stripe&payment_intent=' . $intent['id'],
+                            'order_id'       => $order->id,
+                        ]);
+                    }
+                    return redirect()->route('shop.confirmation', $order->id)->with('error', 'JavaScript is required to pay by card.');
+                }
+            } else {
+                // Redirect-based gateways (e.g. PayPal).
+                try {
+                    $payUrl = $this->initiatePayment($order, $order->payment_method);
+                    if ($payUrl) {
+                        if ($request->ajax() || $request->wantsJson()) {
+                            return response()->json(['success' => true, 'redirect' => $payUrl, 'order_id' => $order->id]);
+                        }
+                        return redirect()->away($payUrl);
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Payment init failed for order #{$order->order_number}: " . $e->getMessage());
+                }
+            }
+            // Gateway init failed → leave the order pending and inform the customer.
+            $msg = 'We could not start the online payment. Your order was saved as pending — please contact us or try again.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => true, 'redirect' => route('shop.confirmation', $order->id), 'order_id' => $order->id, 'message' => $msg]);
+            }
+            return redirect()->route('shop.confirmation', $order->id)->with('error', $msg);
+        }
+
+        // Offline gateways (COD / Bank Transfer) → finalize immediately.
+        $this->finalizeOrder($order);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Order placed successfully!',
+                'redirect' => route('shop.confirmation', $order->id),
+                'order_id' => $order->id
+            ]);
+        }
+
+        return redirect()->route('shop.confirmation', $order->id)->with('success', 'Order placed successfully!');
+    }
+
+    /**
+     * Send notification emails and clear the cart/coupons for a completed checkout.
+     */
+    private function finalizeOrder(Order $order): void
+    {
         try {
             \Illuminate\Support\Facades\Mail::to($order->customer_email)->send(new \Acme\CmsDashboard\Mail\OrderNotificationMail($order, 'placed'));
         } catch (\Exception $e) {
@@ -640,17 +722,221 @@ class ShopFrontendController extends Controller
 
         Session::forget('lazy_cart');
         Session::forget('lazy_coupon');
+        Session::forget('lazy_coupons');
+    }
 
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Order placed successfully!',
-                'redirect' => route('shop.confirmation', $order->id),
-                'order_id' => $order->id
+    /**
+     * Start an online payment and return the URL to redirect the customer to.
+     * Returns null if the gateway is unsupported / misconfigured.
+     */
+    /**
+     * Smallest-unit amount for the order total in the shop currency (handles zero-decimal currencies).
+     */
+    private function stripeAmount(Order $order): int
+    {
+        $currency = strtolower(get_shop_option('shop_currency', 'usd'));
+        $zeroDecimal = ['bif','clp','djf','gnf','jpy','kmf','krw','mga','pyg','rwf','ugx','vnd','vuv','xaf','xof','xpf'];
+        return in_array($currency, $zeroDecimal, true) ? (int) round($order->total) : (int) round($order->total * 100);
+    }
+
+    /**
+     * Create a Stripe PaymentIntent for inline (Stripe Elements) card payment.
+     * Returns ['id','client_secret'] or null on failure.
+     */
+    private function createStripePaymentIntent(Order $order): ?array
+    {
+        $secret = get_shop_option('shop_payment_stripe_secret');
+        if (!$secret) return null;
+
+        $resp = \Illuminate\Support\Facades\Http::asForm()->withToken($secret)->post('https://api.stripe.com/v1/payment_intents', [
+            'amount'                 => $this->stripeAmount($order),
+            'currency'               => strtolower(get_shop_option('shop_currency', 'usd')),
+            'description'            => 'Order ' . $order->order_number,
+            'receipt_email'          => $order->customer_email,
+            'payment_method_types[0]'=> 'card',
+            'metadata[order_id]'     => (string) $order->id,
+            'metadata[order_number]' => $order->order_number,
+        ]);
+
+        if ($resp->successful() && !empty($resp->json('client_secret'))) {
+            return ['id' => $resp->json('id'), 'client_secret' => $resp->json('client_secret')];
+        }
+        \Illuminate\Support\Facades\Log::error('Stripe PaymentIntent error: ' . $resp->body());
+        return null;
+    }
+
+    private function initiatePayment(Order $order, string $method): ?string
+    {
+        if ($method === 'paypal') {
+            // PayPal Standard (email based) — redirect with a hosted button form via query string.
+            $email   = get_shop_option('shop_payment_paypal_email');
+            if (!$email) return null;
+            $sandbox = get_shop_option('shop_payment_paypal_sandbox') === '1';
+            $base    = $sandbox ? 'https://www.sandbox.paypal.com/cgi-bin/webscr' : 'https://www.paypal.com/cgi-bin/webscr';
+            $params  = http_build_query([
+                'cmd'           => '_xclick',
+                'business'      => $email,
+                'item_name'     => 'Order ' . $order->order_number,
+                'amount'        => number_format((float) $order->total, 2, '.', ''),
+                'currency_code' => strtoupper(get_shop_option('shop_currency', 'USD')),
+                'custom'        => $order->id,
+                'return'        => route('shop.payment.return', $order->id) . '?gateway=paypal',
+                'cancel_return' => route('shop.payment.cancel', $order->id) . '?gateway=paypal',
+                'notify_url'    => route('shop.payment.return', $order->id) . '?gateway=paypal&ipn=1',
+                'no_shipping'   => 1,
             ]);
+            return $base . '?' . $params;
         }
 
-        return redirect()->route('shop.confirmation', $order->id)->with('success', 'Order placed successfully!');
+        if ($method === 'sslcommerz') {
+            $storeId   = get_shop_option('shop_payment_sslcommerz_store_id');
+            $storePass = get_shop_option('shop_payment_sslcommerz_store_pass');
+            if (!$storeId || !$storePass) return null;
+            $sandbox = get_shop_option('shop_payment_sslcommerz_sandbox') === '1';
+            $apiUrl  = $sandbox
+                ? 'https://sandbox.sslcommerz.com/gwprocess/v4/api.php'
+                : 'https://securepay.sslcommerz.com/gwprocess/v4/api.php';
+
+            $resp = \Illuminate\Support\Facades\Http::asForm()->post($apiUrl, [
+                'store_id'         => $storeId,
+                'store_passwd'     => $storePass,
+                'total_amount'     => number_format((float) $order->total, 2, '.', ''),
+                'currency'         => strtoupper(get_shop_option('shop_currency', 'BDT')),
+                'tran_id'          => $order->order_number,
+                'success_url'      => route('shop.payment.return', $order->id) . '?gateway=sslcommerz',
+                'fail_url'         => route('shop.payment.cancel', $order->id) . '?gateway=sslcommerz',
+                'cancel_url'       => route('shop.payment.cancel', $order->id) . '?gateway=sslcommerz',
+                'ipn_url'          => route('shop.payment.return', $order->id) . '?gateway=sslcommerz&ipn=1',
+                'shipping_method'  => 'NO',
+                'product_name'     => 'Order ' . $order->order_number,
+                'product_category' => 'General',
+                'product_profile'  => 'general',
+                'cus_name'         => trim($order->first_name . ' ' . $order->last_name),
+                'cus_email'        => $order->customer_email,
+                'cus_phone'        => $order->customer_phone,
+                'cus_add1'         => $order->address_line_1,
+                'cus_city'         => $order->city,
+                'cus_country'      => $order->country,
+            ]);
+
+            if ($resp->successful() && $resp->json('status') === 'SUCCESS' && !empty($resp->json('GatewayPageURL'))) {
+                $order->update(['transaction_id' => $resp->json('sessionkey')]);
+                return $resp->json('GatewayPageURL');
+            }
+            \Illuminate\Support\Facades\Log::error('SSLCommerz session error: ' . $resp->body());
+            return null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Customer returns from an online gateway. Verify and finalize the order.
+     */
+    public function paymentReturn(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+        $gateway = $request->get('gateway');
+
+        // Already finalized
+        if ($order->paid_at) {
+            return redirect()->route('shop.confirmation', $order->id);
+        }
+
+        $paid = false;
+
+        if ($gateway === 'stripe') {
+            $secret       = get_shop_option('shop_payment_stripe_secret');
+            $paymentIntent = $request->get('payment_intent');
+            $sessionId     = $request->get('session_id');
+            if ($secret && $paymentIntent) {
+                // Inline (Stripe Elements) — verify the PaymentIntent.
+                $resp = \Illuminate\Support\Facades\Http::withToken($secret)->get('https://api.stripe.com/v1/payment_intents/' . $paymentIntent);
+                if ($resp->successful() && $resp->json('status') === 'succeeded') {
+                    $paid = true;
+                    $order->update(['transaction_id' => $paymentIntent]);
+                }
+            } elseif ($secret && $sessionId) {
+                // Hosted Stripe Checkout (fallback) — verify the session.
+                $resp = \Illuminate\Support\Facades\Http::withToken($secret)->get('https://api.stripe.com/v1/checkout/sessions/' . $sessionId);
+                if ($resp->successful() && $resp->json('payment_status') === 'paid') {
+                    $paid = true;
+                    $order->update(['transaction_id' => $resp->json('payment_intent') ?: $sessionId]);
+                }
+            }
+        } elseif ($gateway === 'sslcommerz') {
+            $storeId   = get_shop_option('shop_payment_sslcommerz_store_id');
+            $storePass = get_shop_option('shop_payment_sslcommerz_store_pass');
+            $valId     = $request->input('val_id');
+            $postedStatus = $request->input('status');
+            if ($storeId && $storePass && $valId && in_array($postedStatus, ['VALID', 'VALIDATED'], true)) {
+                $sandbox = get_shop_option('shop_payment_sslcommerz_sandbox') === '1';
+                $valApi  = $sandbox
+                    ? 'https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php'
+                    : 'https://securepay.sslcommerz.com/validator/api/validationserverAPI.php';
+                $resp = \Illuminate\Support\Facades\Http::get($valApi, [
+                    'val_id'       => $valId,
+                    'store_id'     => $storeId,
+                    'store_passwd' => $storePass,
+                    'format'       => 'json',
+                ]);
+                if ($resp->successful()) {
+                    $st  = $resp->json('status');
+                    $amt = (float) $resp->json('amount');
+                    // Confirm the gateway validated it AND the amount matches the order total.
+                    if (in_array($st, ['VALID', 'VALIDATED'], true) && $amt >= (float) $order->total - 0.5) {
+                        $paid = true;
+                        $order->update(['transaction_id' => $resp->json('bank_tran_id') ?: $valId]);
+                    }
+                }
+            }
+        } elseif ($gateway === 'paypal') {
+            // PayPal Standard cannot be verified server-side without IPN; mark as awaiting confirmation.
+            return redirect()->route('shop.confirmation', $order->id)
+                ->with('success', 'Thank you! Your PayPal payment is being confirmed and your order will update shortly.');
+        }
+
+        if ($paid) {
+            $order->update(['status' => 'processing', 'paid_at' => now()]);
+            $this->finalizeOrder($order);
+            return redirect()->route('shop.confirmation', $order->id)->with('success', 'Payment successful! Your order is confirmed.');
+        }
+
+        return redirect()->route('shop.confirmation', $order->id)
+            ->with('error', 'We could not confirm your payment yet. If you were charged, please contact us.');
+    }
+
+    /**
+     * Public order tracking — look up an order by number + email.
+     */
+    public function trackOrder(Request $request)
+    {
+        $order = null;
+        $notFound = false;
+
+        if ($request->isMethod('post') || ($request->filled('order_number') && $request->filled('email'))) {
+            $request->validate([
+                'order_number' => 'required|string',
+                'email'        => 'required|email',
+            ], [], ['order_number' => 'Order Number', 'email' => 'Email']);
+
+            $order = Order::with('items')
+                ->where('order_number', trim($request->order_number))
+                ->where('customer_email', trim($request->email))
+                ->first();
+
+            $notFound = !$order;
+        }
+
+        return view($this->resolveThemeView('track-order'), compact('order', 'notFound'));
+    }
+
+    /**
+     * Customer cancelled / abandoned the online payment.
+     */
+    public function paymentCancel(Request $request, $id)
+    {
+        return redirect()->route('shop.checkout')->with('error', 'Payment was cancelled. Your order is saved as pending — you can try again.');
     }
 
     public function confirmation($id)

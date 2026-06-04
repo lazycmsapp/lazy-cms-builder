@@ -36,7 +36,7 @@ class Sidebar extends Component
         }
 
         // 2. Base path check
-        $indexPaths = ['admin/posts', 'admin/pages', 'admin/users', 'admin/settings', 'admin/roles', 'admin/categories', 'admin/tags', 'admin/comments', 'admin/profile'];
+        $indexPaths = ['admin/posts', 'admin/pages', 'admin/users', 'admin/settings', 'admin/roles', 'admin/categories', 'admin/tags', 'admin/product-categories', 'admin/product-tags', 'admin/comments', 'admin/profile'];
         
         // Special case: Your Profile belongs to Users group
         if ($targetPath === 'admin/users' && ($currentPath === 'admin/profile' || str_starts_with($currentPath, 'admin/users/') && str_ends_with($currentPath, '/edit'))) {

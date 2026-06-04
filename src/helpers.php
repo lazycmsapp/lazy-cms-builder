@@ -1798,6 +1798,135 @@ if (!function_exists('get_lazy_cart_total')) {
     }
 }
 
+if (!function_exists('lazy_is_variable_product')) {
+    /**
+     * Whether a product is a variable product (flag may live in shopData->type or ->product_type).
+     */
+    function lazy_is_variable_product($product): bool {
+        $sd = $product->shopData ?? null;
+        if (!$sd) return false;
+        return ($sd->type ?? null) === 'variable' || ($sd->product_type ?? null) === 'variable';
+    }
+}
+
+if (!function_exists('lazy_shipping_carriers')) {
+    /**
+     * Shipping carriers for order tracking, grouped (Local / International).
+     * Each value is a tracking-URL template with a {tracking} placeholder ('' = use universal fallback).
+     */
+    function lazy_shipping_carriers(): array {
+        return [
+            'Local (Bangladesh)' => [
+                'Pathao'            => 'https://merchant.pathao.com/tracking?consignment_id={tracking}',
+                'Steadfast'         => 'https://steadfast.com.bd/track/{tracking}',
+                'RedX'              => 'https://redx.com.bd/track-parcel/?trackingId={tracking}',
+                'Paperfly'          => '',
+                'eCourier'          => 'https://ecourier.com.bd/track?tracking_id={tracking}',
+                'Sundarban Courier' => '',
+                'SA Paribahan'      => '',
+                'Pickaboo'          => '',
+                'Delivery Tiger'    => '',
+            ],
+            'International' => [
+                'DHL'        => 'https://www.dhl.com/track?tracking-id={tracking}',
+                'FedEx'      => 'https://www.fedex.com/fedextrack/?trknbr={tracking}',
+                'UPS'        => 'https://www.ups.com/track?tracknum={tracking}',
+                'USPS'       => 'https://tools.usps.com/go/TrackConfirmAction?tLabels={tracking}',
+                'Aramex'     => 'https://www.aramex.com/track/results?ShipmentNumber={tracking}',
+                'DPD'        => 'https://www.dpd.com/tracking/{tracking}',
+                'TNT'        => 'https://www.tnt.com/express/en_us/site/tracking.html?searchType=con&cons={tracking}',
+                'China Post' => 'https://www.17track.net/en/track?nums={tracking}',
+                'India Post' => 'https://www.17track.net/en/track?nums={tracking}',
+                'Other'      => 'https://www.17track.net/en/track?nums={tracking}',
+            ],
+        ];
+    }
+}
+
+if (!function_exists('lazy_wishlist_product_ids')) {
+    /**
+     * Product IDs in the current user's wishlist (cached per request). Empty for guests.
+     */
+    function lazy_wishlist_product_ids(): array {
+        static $cache = null;
+        if ($cache !== null) return $cache;
+        if (!auth()->check()) return $cache = [];
+        try {
+            $cache = \Acme\CmsDashboard\Models\Wishlist::where('user_id', auth()->id())->pluck('product_id')->map(fn($v) => (int) $v)->all();
+        } catch (\Throwable $e) {
+            $cache = [];
+        }
+        return $cache;
+    }
+}
+
+if (!function_exists('lazy_in_wishlist')) {
+    function lazy_in_wishlist($productId): bool {
+        return in_array((int) $productId, lazy_wishlist_product_ids(), true);
+    }
+}
+
+if (!function_exists('lazy_wishlist_count')) {
+    function lazy_wishlist_count(): int {
+        return count(lazy_wishlist_product_ids());
+    }
+}
+
+if (!function_exists('lazy_enabled_payment_gateways')) {
+    /**
+     * Enabled storefront payment gateways (single source of truth for checkout + order processing).
+     * Returns: [ id => ['id','title','desc','type' => offline|online] ]
+     */
+    function lazy_enabled_payment_gateways(): array {
+        $gateways = [];
+
+        if (get_shop_option('shop_payment_cod_enable') === '1') {
+            $gateways['cod'] = [
+                'id'    => 'cod',
+                'title' => get_shop_option('shop_payment_cod_title', 'Cash on Delivery'),
+                'desc'  => get_shop_option('shop_payment_cod_desc', 'Pay with cash upon delivery.'),
+                'type'  => 'offline',
+            ];
+        }
+        if (get_shop_option('shop_payment_bank_enable') === '1') {
+            $gateways['bank'] = [
+                'id'    => 'bank',
+                'title' => get_shop_option('shop_payment_bank_title', 'Direct Bank Transfer'),
+                'desc'  => get_shop_option('shop_payment_bank_details', 'Make your payment directly into our bank account.'),
+                'type'  => 'offline',
+            ];
+        }
+        if (get_shop_option('shop_payment_stripe_enable') === '1' && get_shop_option('shop_payment_stripe_secret')) {
+            $gateways['stripe'] = [
+                'id'    => 'stripe',
+                'title' => get_shop_option('shop_payment_stripe_title', 'Credit / Debit Card'),
+                'desc'  => get_shop_option('shop_payment_stripe_desc', 'Pay securely with your card via Stripe.'),
+                'type'  => 'online',
+            ];
+        }
+        if (get_shop_option('shop_payment_paypal_enable') === '1' && get_shop_option('shop_payment_paypal_email')) {
+            $gateways['paypal'] = [
+                'id'    => 'paypal',
+                'title' => get_shop_option('shop_payment_paypal_title', 'PayPal'),
+                'desc'  => get_shop_option('shop_payment_paypal_desc', 'Pay via PayPal; you can pay with your card if you don’t have an account.'),
+                'type'  => 'online',
+            ];
+        }
+        if (get_shop_option('shop_payment_sslcommerz_enable') === '1'
+            && get_shop_option('shop_payment_sslcommerz_store_id')
+            && get_shop_option('shop_payment_sslcommerz_store_pass')) {
+            $gateways['sslcommerz'] = [
+                'id'    => 'sslcommerz',
+                'title' => get_shop_option('shop_payment_sslcommerz_title', 'SSLCommerz'),
+                'desc'  => get_shop_option('shop_payment_sslcommerz_desc', 'Pay with cards, mobile banking (bKash, Nagad) and net banking via SSLCommerz.'),
+                'type'  => 'online',
+            ];
+        }
+
+        return $gateways;
+    }
+}
+
 if (!function_exists('get_lazy_coupon_discount_amount')) {
     function get_lazy_coupon_discount_amount($coupon, $cart, $calcBaseSubtotal = null) {
         $amount = (float) ($coupon['amount'] ?? ($coupon['discount'] ?? 0));
@@ -1854,11 +1983,10 @@ if (!function_exists('get_lazy_coupon_discount_amount')) {
             // Check Category Eligibility
             $matchCategory = false;
             if (!empty($restrictedCategoryOriginIds)) {
-                $itemCategoryIdentities = \Illuminate\Support\Facades\DB::table('post_taxonomy_term')
-                    ->join('taxonomy_terms', 'post_taxonomy_term.taxonomy_term_id', '=', 'taxonomy_terms.id')
-                    ->where('post_taxonomy_term.post_id', $productId)
-                    ->where('taxonomy_terms.taxonomy_slug', 'product_cat')
-                    ->selectRaw('COALESCE(taxonomy_terms.origin_id, taxonomy_terms.id) as identity')
+                $itemCategoryIdentities = \Illuminate\Support\Facades\DB::table('product_category_post')
+                    ->join('product_categories', 'product_category_post.product_category_id', '=', 'product_categories.id')
+                    ->where('product_category_post.post_id', $productId)
+                    ->selectRaw('COALESCE(product_categories.origin_id, product_categories.id) as identity')
                     ->pluck('identity')
                     ->toArray();
                 $matchCategory = !empty(array_intersect($itemCategoryIdentities, $restrictedCategoryOriginIds));
@@ -1903,10 +2031,87 @@ if (!function_exists('get_lazy_image_url')) {
         // Check common paths
         if (file_exists(public_path($path))) return asset($path);
         if (file_exists(public_path('storage/' . $path))) return asset('storage/' . $path);
-        
+
         return asset('storage/' . $path); // Fallback to storage
     }
 
+}
+
+if (!function_exists('lazy_is_special_menu_item')) {
+    /** True when a menu item is one of the Lazy Special Menu widgets. */
+    function lazy_is_special_menu_item($type): bool
+    {
+        return in_array($type, ['special_cart', 'special_search', 'special_wishlist'], true);
+    }
+}
+
+if (!function_exists('lazy_render_special_menu_item')) {
+    /**
+     * Render a Lazy Special Menu widget (Cart / Search / Wishlist) inside a navigation menu.
+     * Returns a full <li>…</li> string. Reuses existing helpers + the global mini-cart drawer.
+     *
+     * @param object $item   navigation_menu_items row (stdClass)
+     * @param string $style  inline link style inherited from the menu element
+     */
+    function lazy_render_special_menu_item($item, string $style = '', bool $isMobile = false, $elId = ''): string
+    {
+        $type  = $item->type ?? '';
+        $label = $item->title ?? '';
+
+        $icons = [
+            'special_cart'     => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>',
+            'special_search'   => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+            'special_wishlist' => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
+        ];
+        $icon = $icons[$type] ?? '';
+
+        // Count-badge appearance (NO display property here — Tailwind classes control show/hide,
+        // matching the header badge so LazyCart's `hidden`-class toggle keeps working).
+        $badgeStyle = 'min-width:18px;height:18px;padding:0 5px;margin-left:6px;font-size:11px;font-weight:700;line-height:1;color:#fff;background:#0091ea;border-radius:9999px;';
+        $badgeCls   = 'inline-flex items-center justify-center';
+        $iconWrap   = 'display:inline-flex;align-items:center;gap:2px;';
+
+        if ($type === 'special_cart') {
+            $count   = function_exists('get_lazy_cart_count') ? (int) get_lazy_cart_count() : 0;
+            $cartUrl = \Illuminate\Support\Facades\Route::has('shop.cart') ? route('shop.cart') : url('/cart');
+            $badge   = '<span class="cart-count-badge ' . $badgeCls . ($count > 0 ? '' : ' hidden') . '" style="' . $badgeStyle . '">' . $count . '</span>';
+            return '<li class="lazy-menu-item lazy-special-item lazy-special-cart">'
+                 . '<a href="' . e($cartUrl) . '" class="lazy-menu-link lazy-special-link" style="' . $style . $iconWrap . '" '
+                 . 'onclick="if(window.LazyCart){LazyCart.open();return false;}" aria-label="' . e($label ?: 'Cart') . '">'
+                 . $icon . $badge
+                 . '</a></li>';
+        }
+
+        if ($type === 'special_wishlist') {
+            $count   = function_exists('lazy_wishlist_count') ? (int) lazy_wishlist_count() : 0;
+            $wishUrl = \Illuminate\Support\Facades\Route::has('shop.wishlist') ? route('shop.wishlist') : url('/wishlist');
+            $badge   = '<span class="wishlist-count-badge ' . $badgeCls . ($count > 0 ? '' : ' hidden') . '" style="' . $badgeStyle . '">' . $count . '</span>';
+            return '<li class="lazy-menu-item lazy-special-item lazy-special-wishlist">'
+                 . '<a href="' . e($wishUrl) . '" class="lazy-menu-link lazy-special-link" style="' . $style . $iconWrap . '" aria-label="' . e($label ?: 'Wishlist') . '">'
+                 . $icon . $badge
+                 . '</a></li>';
+        }
+
+        // special_search — icon toggles a simple search box that drops below the menu.
+        $searchUrl = \Illuminate\Support\Facades\Route::has('frontend.search') ? route('frontend.search') : url('/search');
+        $toggle = "var p=this.parentNode.querySelector('.lazy-search-panel');"
+                . "var open=p.style.display!=='block';p.style.display=open?'block':'none';"
+                . "if(open){var i=p.querySelector('input');if(i){i.focus();}}return false;";
+        $panelStyle = 'display:none;position:absolute;top:100%;right:0;margin-top:8px;z-index:9999;'
+                    . 'background:#fff;border:1px solid #e5e7eb;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:10px;min-width:240px;';
+        return '<li class="lazy-menu-item lazy-special-item lazy-special-search" style="position:relative;">'
+             . '<a href="#" class="lazy-menu-link lazy-special-link" style="' . $style . $iconWrap . '" '
+             . 'onclick="' . e($toggle) . '" aria-label="' . e($label ?: 'Search') . '">'
+             . $icon
+             . '</a>'
+             . '<div class="lazy-search-panel" style="' . $panelStyle . '">'
+             . '<form action="' . e($searchUrl) . '" method="GET" style="display:flex;align-items:center;gap:6px;">'
+             . '<input type="text" name="s" placeholder="Search…" autocomplete="off" '
+             . 'style="flex:1;height:36px;padding:0 10px;border:1px solid #e5e7eb;border-radius:4px;font-size:14px;outline:none;color:#111;">'
+             . '<button type="submit" style="height:36px;padding:0 12px;background:#0091ea;color:#fff;border:none;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer;">Go</button>'
+             . '</form>'
+             . '</div></li>';
+    }
 }
 
 /**
@@ -2301,7 +2506,7 @@ add_lazy_filter('lazy_builder_elements', function($elements) {
             'borderSizeLeft' => ['type' => 'number', 'default' => 0, 'tab' => 'design'],
             'borderColor' => ['type' => 'color', 'default' => 'transparent', 'tab' => 'design'],
             'hoverType' => ['type' => 'select', 'label' => 'Hover Effect', 'default' => 'none', 'tab' => 'design'],
-            
+
             // Visibility & Extras
             'visibility' => [
                 'type' => 'object',
@@ -2311,6 +2516,156 @@ add_lazy_filter('lazy_builder_elements', function($elements) {
             'cssClass' => ['type' => 'text', 'default' => '', 'tab' => 'design'],
             'cssId' => ['type' => 'text', 'default' => '', 'tab' => 'design'],
         ]
+    ];
+    return $elements;
+});
+
+// Supported social platforms: slug => [label, FontAwesome icon]. Used by the Social Icons
+// element to generate one URL field per platform (no icon picking) and to render the icons.
+if (!function_exists('lazy_social_platforms')) {
+    function lazy_social_platforms(): array {
+        return [
+            'behance'    => ['label' => 'Behance',     'icon' => 'fa-brands fa-behance',      'color' => '#1769FF'],
+            'blogger'    => ['label' => 'Blogger',     'icon' => 'fa-brands fa-blogger-b',    'color' => '#FF5722'],
+            'bluesky'    => ['label' => 'Bluesky',     'icon' => 'fa-brands fa-bluesky',      'color' => '#0085FF'],
+            'deviantart' => ['label' => 'Deviantart',  'icon' => 'fa-brands fa-deviantart',   'color' => '#05CC47'],
+            'digg'       => ['label' => 'Digg',        'icon' => 'fa-brands fa-digg',         'color' => '#1C1C1C'],
+            'discord'    => ['label' => 'Discord',     'icon' => 'fa-brands fa-discord',      'color' => '#5865F2'],
+            'dribbble'   => ['label' => 'Dribbble',    'icon' => 'fa-brands fa-dribbble',     'color' => '#EA4C89'],
+            'dropbox'    => ['label' => 'Dropbox',     'icon' => 'fa-brands fa-dropbox',      'color' => '#0061FF'],
+            'email'      => ['label' => 'Email',       'icon' => 'fa fa-envelope',            'color' => '#EA4335'],
+            'facebook'   => ['label' => 'Facebook',    'icon' => 'fa-brands fa-facebook-f',   'color' => '#1877F2'],
+            'flickr'     => ['label' => 'Flickr',      'icon' => 'fa-brands fa-flickr',       'color' => '#0063DC'],
+            'github'     => ['label' => 'GitHub',      'icon' => 'fa-brands fa-github',       'color' => '#181717'],
+            'instagram'  => ['label' => 'Instagram',   'icon' => 'fa-brands fa-instagram',    'color' => '#E4405F'],
+            'linkedin'   => ['label' => 'LinkedIn',    'icon' => 'fa-brands fa-linkedin-in',  'color' => '#0A66C2'],
+            'medium'     => ['label' => 'Medium',      'icon' => 'fa-brands fa-medium',       'color' => '#000000'],
+            'phone'      => ['label' => 'Phone',       'icon' => 'fa fa-phone',               'color' => '#34A853'],
+            'pinterest'  => ['label' => 'Pinterest',   'icon' => 'fa-brands fa-pinterest-p',  'color' => '#BD081C'],
+            'reddit'     => ['label' => 'Reddit',      'icon' => 'fa-brands fa-reddit-alien', 'color' => '#FF4500'],
+            'snapchat'   => ['label' => 'Snapchat',    'icon' => 'fa-brands fa-snapchat',     'color' => '#FFFC00'],
+            'soundcloud' => ['label' => 'SoundCloud',  'icon' => 'fa-brands fa-soundcloud',   'color' => '#FF5500'],
+            'spotify'    => ['label' => 'Spotify',     'icon' => 'fa-brands fa-spotify',      'color' => '#1DB954'],
+            'telegram'   => ['label' => 'Telegram',    'icon' => 'fa-brands fa-telegram',     'color' => '#26A5E4'],
+            'tiktok'     => ['label' => 'TikTok',      'icon' => 'fa-brands fa-tiktok',       'color' => '#000000'],
+            'tumblr'     => ['label' => 'Tumblr',      'icon' => 'fa-brands fa-tumblr',       'color' => '#36465D'],
+            'twitch'     => ['label' => 'Twitch',      'icon' => 'fa-brands fa-twitch',       'color' => '#9146FF'],
+            'vimeo'      => ['label' => 'Vimeo',       'icon' => 'fa-brands fa-vimeo-v',      'color' => '#1AB7EA'],
+            'website'    => ['label' => 'Website',     'icon' => 'fa fa-globe',               'color' => '#2271b1'],
+            'whatsapp'   => ['label' => 'WhatsApp',    'icon' => 'fa-brands fa-whatsapp',     'color' => '#25D366'],
+            'wordpress'  => ['label' => 'WordPress',   'icon' => 'fa-brands fa-wordpress',    'color' => '#21759B'],
+            'x_twitter'  => ['label' => 'X (Twitter)', 'icon' => 'fa-brands fa-x-twitter',    'color' => '#000000'],
+            'youtube'    => ['label' => 'YouTube',     'icon' => 'fa-brands fa-youtube',      'color' => '#FF0000'],
+        ];
+    }
+}
+
+// Returns a readable foreground (#111111 / #ffffff) for a given background hex — used so
+// brand-coloured boxes keep their icon legible (e.g. white icon on Snapchat yellow → dark).
+if (!function_exists('lazy_contrast_color')) {
+    function lazy_contrast_color($hex): string {
+        $hex = ltrim((string)$hex, '#');
+        if (strlen($hex) === 3) $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        if (strlen($hex) < 6) return '#ffffff';
+        $r = hexdec(substr($hex, 0, 2)); $g = hexdec(substr($hex, 2, 2)); $b = hexdec(substr($hex, 4, 2));
+        $lum = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
+        return $lum > 0.65 ? '#111111' : '#ffffff';
+    }
+}
+
+// Social Icons — one URL field per platform (General tab). Fill a field and that platform's
+// icon shows on the front-end. No icon picking; the icon is fixed per platform.
+add_lazy_filter('lazy_builder_elements', function($elements) {
+    $fields = [];
+    foreach (lazy_social_platforms() as $key => $p) {
+        // social_icon / social_color / social_label: tell the live canvas the fixed icon, brand colour and name.
+        $fields[$key] = ['type' => 'text', 'label' => $p['label'] . ' Link', 'tab' => 'general', 'default' => '',
+                         'social_icon' => $p['icon'], 'social_color' => $p['color'] ?? '#2271b1', 'social_label' => $p['label']];
+    }
+    // Design + behaviour
+    $fields['target']         = ['type' => 'select', 'label' => 'Open Links In', 'tab' => 'design',
+                                 'options' => ['_blank' => 'New Window', '_self' => 'Same Window'], 'default' => '_blank'];
+    $fields['shape']          = ['type' => 'select', 'label' => 'Shape', 'tab' => 'design',
+                                 'options' => ['circle' => 'Circle', 'rounded' => 'Rounded', 'square' => 'Square'], 'default' => 'circle'];
+    // Boxed Style: Default/Yes = icons sit in a coloured box; No = plain coloured icons (no box).
+    $fields['boxedStyle']     = ['type' => 'radio', 'label' => 'Boxed Style', 'tab' => 'design',
+                                 'options' => ['default' => 'Default', 'yes' => 'Yes', 'no' => 'No'], 'default' => 'default'];
+    // Color Type: Default = theme colours; Custom = pick your own; Brand = each platform's official colour.
+    $fields['colorType']      = ['type' => 'select', 'label' => 'Color Type', 'tab' => 'design',
+                                 'options' => ['default' => 'Default', 'custom' => 'Custom Colors', 'brand' => 'Brand Colors'], 'default' => 'default'];
+    $fields['boxSize']        = ['type' => 'number', 'label' => 'Box Size',  'default' => 38, 'min' => 0, 'tab' => 'design',
+                                 'condition' => ['field' => 'boxedStyle', 'value' => 'no', 'operator' => '!=']];
+    $fields['iconSize']       = ['type' => 'number', 'label' => 'Icon Size', 'default' => 18, 'min' => 0, 'tab' => 'design'];
+    $fields['gap']            = ['type' => 'number', 'label' => 'Gap',       'default' => 10, 'min' => 0, 'tab' => 'design'];
+    $fields['align']          = ['type' => 'select', 'label' => 'Alignment', 'tab' => 'design', 'responsive' => true,
+                                 'options' => ['flex-start' => 'Left', 'center' => 'Center', 'flex-end' => 'Right'], 'default' => 'center'];
+    // Tooltip showing the platform name on hover. Default = Top; None = no tooltip.
+    $fields['tooltipPosition'] = ['type' => 'select', 'label' => 'Tooltip Position', 'tab' => 'design',
+                                  'options' => ['default' => 'Default', 'top' => 'Top', 'bottom' => 'Bottom', 'left' => 'Left', 'right' => 'Right', 'none' => 'None'], 'default' => 'default'];
+    // Colour pickers only matter for "Custom Colors".
+    $fields['iconColor']      = ['type' => 'color', 'label' => 'Icon Color',       'default' => '#ffffff', 'tab' => 'design', 'condition' => ['field' => 'colorType', 'value' => 'custom']];
+    $fields['bgColor']        = ['type' => 'color', 'label' => 'Background',        'default' => '#2271b1', 'tab' => 'design', 'condition' => ['field' => 'colorType', 'value' => 'custom']];
+    $fields['iconHoverColor'] = ['type' => 'color', 'label' => 'Icon Hover Color', 'default' => '#ffffff', 'tab' => 'design', 'condition' => ['field' => 'colorType', 'value' => 'custom']];
+    $fields['bgHoverColor']   = ['type' => 'color', 'label' => 'Hover Background',  'default' => '#135e96', 'tab' => 'design', 'condition' => ['field' => 'colorType', 'value' => 'custom']];
+    $fields['margin']         = ['type' => 'dimensions', 'label' => 'Margin', 'unit' => 'px', 'tab' => 'design'];
+    $fields['visibility']     = ['type' => 'object', 'default' => ['mobile' => true, 'tablet' => true, 'desktop' => true], 'tab' => 'design'];
+
+    $elements['social_icons'] = [
+        'type' => 'social_icons',
+        'name' => 'Social Icons',
+        'icon' => 'fa fa-share-alt',
+        'template' => 'cms-dashboard::frontend.builder.elements.social-icons',
+        'fields' => $fields,
+    ];
+    return $elements;
+});
+
+/**
+ * Register the Advanced Search element for Lazy Builder.
+ * A smart search bar: choose which post type to search, optional live (AJAX)
+ * results dropdown, and an optional category dropdown inside the bar.
+ */
+add_lazy_filter('lazy_builder_elements', function($elements) {
+    // Dynamic post-type options (active types). Multi-select; none selected = all content.
+    $ptOptions = [];
+    try {
+        foreach (\Acme\CmsDashboard\Models\PostType::where('is_active', true)->orderBy('name')->get() as $pt) {
+            $ptOptions[$pt->slug] = $pt->name;
+        }
+    } catch (\Throwable $e) {
+        $ptOptions = ['post' => 'Posts', 'page' => 'Pages'];
+    }
+
+    $elements['advanced_search'] = [
+        'type' => 'advanced_search',
+        'name' => 'Advanced Search',
+        'icon' => 'fa fa-magnifying-glass',
+        'template' => 'cms-dashboard::frontend.builder.elements.advanced-search',
+        'fields' => [
+            // ── General ──
+            'searchPostType'         => ['type' => 'multiselect', 'label' => 'Search In (none = all content)', 'tab' => 'general', 'options' => $ptOptions, 'default' => [], 'placeholder' => 'All content (select post types)'],
+            'placeholder'            => ['type' => 'text', 'label' => 'Placeholder Text', 'tab' => 'general', 'default' => 'Search...'],
+            'enableLiveSearch'       => ['type' => 'toggle', 'label' => 'Live Search (AJAX results)', 'tab' => 'general', 'default' => true],
+            'enableCategoryDropdown' => ['type' => 'toggle', 'label' => 'Show Category Dropdown', 'tab' => 'general', 'default' => false],
+            'showButton'             => ['type' => 'toggle', 'label' => 'Show Search Button', 'tab' => 'general', 'default' => true],
+            'buttonText'             => ['type' => 'text', 'label' => 'Button Text', 'tab' => 'general', 'default' => 'Search', 'condition' => ['field' => 'showButton', 'value' => true]],
+
+            // ── Design ──
+            'accentColor'      => ['type' => 'color', 'label' => 'Accent Color', 'tab' => 'design', 'default' => '#0091ea'],
+            'bgColor'          => ['type' => 'color', 'label' => 'Background', 'tab' => 'design', 'default' => '#ffffff'],
+            'textColor'         => ['type' => 'color', 'label' => 'Field Text Color', 'tab' => 'design', 'default' => '#1d2327'],
+            'placeholderColor'  => ['type' => 'color', 'label' => 'Placeholder Color', 'tab' => 'design', 'default' => '#9ca3af'],
+            'dropdownTextColor' => ['type' => 'color', 'label' => 'Dropdown Text Color', 'tab' => 'design', 'default' => '#1d2327'],
+            'dropdownBgColor'   => ['type' => 'color', 'label' => 'Dropdown Background', 'tab' => 'design', 'default' => '#ffffff'],
+            'borderColor'       => ['type' => 'color', 'label' => 'Border Color', 'tab' => 'design', 'default' => '#e5e7eb'],
+            'height'       => ['type' => 'number', 'label' => 'Height (px)', 'tab' => 'design', 'default' => 46, 'min' => 28],
+            'borderRadius' => ['type' => 'number', 'label' => 'Border Radius (px)', 'tab' => 'design', 'default' => 6, 'min' => 0],
+            'maxWidth'     => ['type' => 'number', 'label' => 'Max Width (px, 0 = full)', 'tab' => 'design', 'default' => 0, 'min' => 0],
+            'align'        => ['type' => 'select', 'label' => 'Alignment', 'tab' => 'design', 'options' => ['flex-start' => 'Left', 'center' => 'Center', 'flex-end' => 'Right'], 'default' => 'flex-start'],
+
+            // ── Extras ──
+            'visibility' => ['type' => 'object', 'default' => ['mobile' => true, 'tablet' => true, 'desktop' => true], 'tab' => 'design'],
+        ],
     ];
     return $elements;
 });

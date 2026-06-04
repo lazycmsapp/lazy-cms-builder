@@ -8,10 +8,14 @@
             <span class="text-[#646970] text-[13px] mt-1">{{ $order->created_at->format('M d, Y \a\t H:i') }}</span>
         </div>
         <div class="flex items-center space-x-2">
-            <a href="{{ route('admin.shop.orders.invoice', $order->id) }}" target="_blank" class="wp-btn-secondary h-8 flex items-center space-x-2">
-                <span class="material-symbols-outlined text-[18px]">print</span>
-                <span>Print Invoice</span>
-            </a>
+            @if(in_array($order->status, ['completed', 'partially-refunded']))
+                <a href="{{ route('admin.shop.orders.invoice', $order->id) }}" target="_blank" class="wp-btn-secondary h-8 flex items-center space-x-2">
+                    <span class="material-symbols-outlined text-[18px]">print</span>
+                    <span>Print Invoice</span>
+                </a>
+            @else
+                <span class="text-[12px] text-[#646970] italic">Invoice available after the order is completed.</span>
+            @endif
         </div>
     </div>
 
@@ -137,14 +141,158 @@
                                 <option value="on-hold" {{ $order->status === 'on-hold' ? 'selected' : '' }}>On Hold</option>
                                 <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>Completed</option>
                                 <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                <option value="partially-refunded" {{ $order->status === 'partially-refunded' ? 'selected' : '' }}>Partially Refunded</option>
                                 <option value="refunded" {{ $order->status === 'refunded' ? 'selected' : '' }}>Refunded</option>
                                 <option value="failed" {{ $order->status === 'failed' ? 'selected' : '' }}>Failed</option>
                             </select>
+                            @if($order->payment_method === 'stripe' && $order->paid_at)
+                                <p class="text-[11px] text-[#646970] mt-1.5 leading-relaxed">
+                                    <span class="material-symbols-outlined align-middle" style="font-size:13px !important;">info</span>
+                                    Setting this to <strong>Refunded</strong> will automatically refund the payment via Stripe.
+                                </p>
+                            @endif
                         </div>
-                        <button type="submit" class="wp-btn-primary w-full justify-center">Update Status</button>
+
+                        <div class="mb-4 pt-4 border-t border-[#f0f0f1]">
+                            <label class="block text-[13px] font-semibold mb-2">Shipment Tracking</label>
+
+                            <label class="block text-[11px] text-[#646970] mb-1">Carrier</label>
+                            <select name="tracking_carrier" id="trk-carrier" class="wp-input w-full mb-3 text-[13px]">
+                                <option value="">— Select carrier —</option>
+                                @foreach(lazy_shipping_carriers() as $group => $carriers)
+                                    <optgroup label="{{ $group }}">
+                                        @foreach($carriers as $name => $tpl)
+                                            <option value="{{ $name }}" data-url="{{ $tpl }}" {{ $order->tracking_carrier === $name ? 'selected' : '' }}>{{ $name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+
+                            <label class="block text-[11px] text-[#646970] mb-1">Tracking Number</label>
+                            <div class="flex gap-2 mb-3">
+                                <input type="text" name="tracking_number" id="trk-number" value="{{ $order->tracking_number }}" placeholder="Tracking number" class="wp-input flex-1 text-[13px]">
+                                <button type="button" id="trk-generate" class="wp-btn-secondary text-[12px] whitespace-nowrap px-2" title="Auto-generate a tracking number">Generate</button>
+                            </div>
+
+                            <label class="block text-[11px] text-[#646970] mb-1">Tracking URL</label>
+                            <input type="url" name="tracking_url" id="trk-url" value="{{ $order->tracking_url }}" placeholder="Auto-filled from carrier (editable)" class="wp-input w-full text-[13px]">
+                            <p class="text-[11px] text-[#646970] mt-1.5">Shown to the customer on the order tracking page.</p>
+                        </div>
+
+                        <button type="submit" class="wp-btn-primary w-full justify-center">Update Order</button>
+
+                        @push('scripts')
+                        <script>
+                        (function () {
+                            var orderNo = @json($order->order_number ?: ('ORD' . $order->id));
+                            var carrier = document.getElementById('trk-carrier');
+                            var number  = document.getElementById('trk-number');
+                            var urlIn   = document.getElementById('trk-url');
+                            var genBtn  = document.getElementById('trk-generate');
+                            if (!carrier || !number || !urlIn) return;
+
+                            var fallbackTpl = 'https://www.17track.net/en/track?nums={tracking}';
+
+                            function carrierTpl() {
+                                var opt = carrier.options[carrier.selectedIndex];
+                                var t = opt ? (opt.getAttribute('data-url') || '') : '';
+                                return t || fallbackTpl;
+                            }
+                            function buildUrl() {
+                                if (!number.value.trim()) return '';
+                                return carrierTpl().replace('{tracking}', encodeURIComponent(number.value.trim()));
+                            }
+                            function genNumber() {
+                                var base = (orderNo || 'ORD').replace(/[^A-Za-z0-9]/g, '').slice(-6).toUpperCase();
+                                var rand = Math.random().toString(36).slice(2, 7).toUpperCase();
+                                return 'TRK-' + base + '-' + rand;
+                            }
+
+                            genBtn && genBtn.addEventListener('click', function () {
+                                number.value = genNumber();
+                                if (carrier.value) urlIn.value = buildUrl();
+                            });
+                            // When carrier changes, refresh the URL from its template if a number exists.
+                            carrier.addEventListener('change', function () {
+                                if (number.value.trim()) urlIn.value = buildUrl();
+                            });
+                        })();
+                        </script>
+                        @endpush
                     </form>
                 </div>
             </div>
+
+            {{-- Refund (Stripe paid orders only) --}}
+            @if($order->payment_method === 'stripe' && $order->paid_at)
+                @php
+                    $refunded  = (float) ($order->refunded_amount ?? 0);
+                    $remaining = max(0, (float) $order->total - $refunded);
+                @endphp
+                <div class="wp-metabox">
+                    <div class="wp-metabox-header">Refund (Stripe)</div>
+                    <div class="wp-metabox-content">
+                        <div class="text-[12px] text-[#3c434a] space-y-1 mb-3">
+                            <div class="flex justify-between"><span>Order total</span><strong>{{ lazy_price_format($order->total, $order) }}</strong></div>
+                            <div class="flex justify-between"><span>Refunded</span><strong class="text-[#646970]">{{ lazy_price_format($refunded, $order) }}</strong></div>
+                            <div class="flex justify-between"><span>Remaining</span><strong class="text-[#2271b1]">{{ lazy_price_format($remaining, $order) }}</strong></div>
+                        </div>
+                        @if($remaining > 0)
+                            <form action="{{ route('admin.shop.orders.refund', $order->id) }}" method="POST"
+                                  onsubmit="return confirm('Refund this amount via Stripe? This cannot be undone.');">
+                                @csrf
+                                <label class="block text-[12px] font-semibold mb-1">Amount to refund</label>
+                                <input type="number" name="refund_amount" step="0.01" min="0.01" max="{{ $remaining }}"
+                                       value="{{ number_format($remaining, 2, '.', '') }}"
+                                       class="wp-input w-full mb-1">
+                                <p class="text-[11px] text-[#646970] mb-3">Max {{ lazy_price_format($remaining, $order) }}. Leave full amount for a complete refund.</p>
+                                <button type="submit" class="wp-btn-secondary w-full justify-center border-[#d63638] text-[#d63638] hover:bg-[#d63638] hover:text-white">Refund via Stripe</button>
+                            </form>
+                        @else
+                            <p class="text-[12px] text-emerald-600 font-semibold">Fully refunded.</p>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+            {{-- Refund History --}}
+            @if(($order->refunded_amount ?? 0) > 0)
+                <div class="wp-metabox">
+                    <div class="wp-metabox-header">Refund History</div>
+                    <div class="wp-metabox-content">
+                        @php $refundLog = is_array($order->refund_log) ? $order->refund_log : []; @endphp
+                        @if(!empty($refundLog))
+                            <div class="space-y-3">
+                                @foreach(array_reverse($refundLog) as $entry)
+                                    <div class="flex items-start justify-between gap-3 pb-3 border-b border-[#f0f0f1] last:border-0 last:pb-0">
+                                        <div>
+                                            <div class="text-[13px] font-bold text-[#8c44db]">{{ lazy_price_format($entry['amount'] ?? 0, $order) }}</div>
+                                            <div class="text-[11px] text-[#646970]">
+                                                {{ \Carbon\Carbon::parse($entry['at'] ?? now())->format('M d, Y · h:i A') }}
+                                            </div>
+                                            <div class="text-[10px] text-[#a7aaad]">
+                                                via {{ ucfirst($entry['gateway'] ?? 'manual') }} · by {{ $entry['by'] ?? 'Admin' }}
+                                            </div>
+                                        </div>
+                                        <span class="material-symbols-outlined text-[18px] text-[#8c44db]">currency_exchange</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="mt-3 pt-3 border-t border-[#dcdcde] flex justify-between text-[13px]">
+                                <span class="font-semibold text-[#3c434a]">Total refunded</span>
+                                <strong class="text-[#8c44db]">{{ lazy_price_format($order->refunded_amount, $order) }}</strong>
+                            </div>
+                        @else
+                            {{-- Legacy refunds with no per-entry log --}}
+                            <div class="flex justify-between text-[13px]">
+                                <span class="font-semibold text-[#3c434a]">Total refunded</span>
+                                <strong class="text-[#8c44db]">{{ lazy_price_format($order->refunded_amount, $order) }}</strong>
+                            </div>
+                            <p class="text-[11px] text-[#a7aaad] mt-1">Detailed refund log not available for this order.</p>
+                        @endif
+                    </div>
+                </div>
+            @endif
 
             <!-- Customer Details -->
             <div class="wp-metabox">

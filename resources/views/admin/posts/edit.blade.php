@@ -581,10 +581,14 @@
                         
                         <div id="tags-container" class="mt-3 flex flex-wrap gap-2"></div>
                         <input type="hidden" name="tags" id="tags-hidden-input" value="{{ old('tags', implode(',', $post->tags->pluck('name')->toArray())) }}">
-                        
+
                         {{-- Removed: Choose from most used tags --}}
                     </div>
                 </div>
+                @endif
+
+                @if($post->type === 'product')
+                    @include('cms-dashboard::admin.posts.partials.product-taxonomies')
                 @endif
 
                 @if(in_array('featured_image', $supports) || in_array('thumbnail', $supports))

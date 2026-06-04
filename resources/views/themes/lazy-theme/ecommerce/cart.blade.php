@@ -19,7 +19,7 @@
                 <div class="mb-6 opacity-20">
                     <i data-lucide="shopping-cart" class="w-20 h-20 mx-auto"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Your cart is currently empty.</h2>
+                <h2 class="text-2xl font-bold text-heading mb-2">Your cart is currently empty.</h2>
                 <p class="text-gray-500 mb-8">Before you proceed to checkout you must add some products to your shopping cart.</p>
                 <a href="{{ get_lazy_shop_url() }}" class="inline-block bg-primary text-white px-8 py-3 rounded-sm font-bold hover:opacity-90 transition-all uppercase text-sm">Return to shop</a>
             </div>
@@ -62,7 +62,7 @@
                                             <button type="button" onclick="const input = this.previousElementSibling; input.value = parseInt(input.value) + 1;" class="w-8 h-full flex items-center justify-center text-gray-500 hover:bg-gray-50 border-l border-gray-100 font-bold select-none">+</button>
                                         </div>
                                     </td>
-                                    <td class="p-4 border border-gray-100 font-bold text-gray-900">
+                                    <td class="p-4 border border-gray-100 font-bold text-heading">
                                         {{ lazy_price_format(($item['sale_price'] ?: $item['price']) * $item['quantity']) }}
                                     </td>
                                 </tr>
@@ -95,7 +95,7 @@
                         <tbody id="cart-totals-body">
                             <tr class="border-b border-gray-100">
                                 <th class="p-4 bg-gray-50 text-left font-bold text-gray-700 w-1/3">Subtotal</th>
-                                <td class="p-4 font-bold text-gray-900" id="cart-subtotal">{{ lazy_price_format(get_lazy_cart_subtotal()) }}</td>
+                                <td class="p-4 font-bold text-heading" id="cart-subtotal">{{ lazy_price_format(get_lazy_cart_subtotal()) }}</td>
                             </tr>
                             <tr class="border-b border-gray-100">
                                 <th class="p-4 bg-gray-50 text-left font-bold text-gray-700">Shipping</th>
@@ -103,9 +103,9 @@
                                     <div id="cart-shipping">
                                         @php $shipDetails = get_lazy_cart_shipping_details(session()->get('lazy_shipping_country')); @endphp
                                         @if($shipDetails['cost'] > 0)
-                                            {{ $shipDetails['label'] }}: <span class="font-bold text-gray-900">{{ lazy_price_format($shipDetails['cost']) }}</span>
+                                            {{ $shipDetails['label'] }}: <span class="font-bold text-heading">{{ lazy_price_format($shipDetails['cost']) }}</span>
                                         @else
-                                            <span class="font-bold text-gray-900">{{ $shipDetails['label'] }}</span>
+                                            <span class="font-bold text-heading">{{ $shipDetails['label'] }}</span>
                                         @endif
                                     </div>
                                     
@@ -131,7 +131,7 @@
                             @if(get_cms_option('shop_enable_tax') === '1')
                             <tr class="border-b border-gray-100" id="cart-tax-row">
                                 <th class="p-4 bg-gray-50 text-left font-bold text-gray-700">Tax</th>
-                                <td class="p-4 font-bold text-gray-900" id="cart-tax">{{ lazy_price_format(get_lazy_cart_tax()) }}</td>
+                                <td class="p-4 font-bold text-heading" id="cart-tax">{{ lazy_price_format(get_lazy_cart_tax()) }}</td>
                             </tr>
                             @endif
                             
@@ -160,7 +160,7 @@
                             @endforeach
 
                             <tr class="bg-gray-50">
-                                <th class="p-4 text-left font-extrabold text-gray-900">Total</th>
+                                <th class="p-4 text-left font-extrabold text-heading">Total</th>
                                 <td class="p-4 text-xl font-black text-primary" id="cart-total">{{ lazy_price_format(get_lazy_cart_total()) }}</td>
                             </tr>
                         </tbody>

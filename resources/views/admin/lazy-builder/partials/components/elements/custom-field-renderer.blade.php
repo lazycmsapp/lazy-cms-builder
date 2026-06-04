@@ -95,9 +95,39 @@
 <div>
     <div class="flex justify-between items-center mb-3">
         <label class="text-[12px] font-bold text-[#333]">{{ $fieldLabel }}</label>
+        @if(!empty($field['responsive']))
+            @include('cms-dashboard::admin.lazy-builder.partials.components.fields.responsive-mode', ['menu' => 'cfsel_' . $fieldKey])
+        @endif
     </div>
+    @if(!empty($field['responsive']))
+    {{-- Responsive: per-device value via getResponsiveVal/setResponsiveVal --}}
+    <select :value="getResponsiveVal(editingElement.settings, '{{ $fieldKey }}', device)"
+            @change="setResponsiveVal(editingElement.settings, '{{ $fieldKey }}', device, $event.target.value)"
+            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+        @foreach($field['options'] ?? [] as $optVal => $optLabel)
+            <option value="{{ $optVal }}">{{ $optLabel }}</option>
+        @endforeach
+    </select>
+    @else
     <select v-model="editingElement.settings.{{ $fieldKey }}"
             class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+        @foreach($field['options'] ?? [] as $optVal => $optLabel)
+            <option value="{{ $optVal }}">{{ $optLabel }}</option>
+        @endforeach
+    </select>
+    @endif
+    @if($fieldDesc)<p class="text-[10px] text-slate-400 mt-1">{{ $fieldDesc }}</p>@endif
+</div>
+
+{{-- ── MULTISELECT (token dropdown via TomSelect) ───────────────────────────── --}}
+@elseif(in_array($ft, ['multiselect', 'multi_select']))
+<div>
+    <div class="flex justify-between items-center mb-3">
+        <label class="text-[12px] font-bold text-[#333]">{{ $fieldLabel }}</label>
+    </div>
+    <select multiple
+            v-tomselect="{ value: Array.isArray(editingElement.settings.{{ $fieldKey }}) ? editingElement.settings.{{ $fieldKey }} : [], placeholder: '{{ e($field['placeholder'] ?? 'Select…') }}', onChange: (v) => { editingElement.settings.{{ $fieldKey }} = Array.isArray(v) ? v : (v ? [v] : []) } }"
+            class="w-full text-[13px]">
         @foreach($field['options'] ?? [] as $optVal => $optLabel)
             <option value="{{ $optVal }}">{{ $optLabel }}</option>
         @endforeach

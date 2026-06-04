@@ -362,6 +362,19 @@ class PostController extends Controller
             });
         }
 
+        // Dedicated Product Category / Tag filters (products)
+        if ($request->filled('product_cat')) {
+            $query->whereHas('productCategories', function($q) use ($request) {
+                $q->where('product_categories.id', $request->product_cat);
+            });
+        }
+
+        if ($request->filled('product_tag')) {
+            $query->whereHas('productTags', function($q) use ($request) {
+                $q->where('product_tags.id', $request->product_tag);
+            });
+        }
+
         if ($request->filled('m') && $request->m != '-1') {
             $year = substr($request->m, 0, 4);
             $month = substr($request->m, 4, 2);
@@ -406,6 +419,27 @@ class PostController extends Controller
         $overriddenTaxonomies = $assignedTaxonomies->whereIn('slug', ['categories', 'tags'])->pluck('slug')->toArray();
 
         return view('cms-dashboard::admin.posts.index', compact('posts', 'type', 'categories', 'dates', 'allCount', 'publishedCount', 'draftCount', 'scheduledCount', 'trashCount', 'postType', 'assignedTaxonomies', 'overriddenTaxonomies'));
+    }
+
+    /**
+     * Sync the dedicated Product Categories (checkbox ids) and Product Tags
+     * (comma-separated names) onto a product post. Used by store/update/clone.
+     */
+    private function syncProductTaxonomies(Post $post, Request $request): void
+    {
+        $catIds = array_filter((array) $request->input('product_categories', []));
+        $post->productCategories()->sync($catIds);
+
+        $tagIds = [];
+        foreach (array_map('trim', explode(',', (string) $request->input('product_tags', ''))) as $name) {
+            if ($name === '') continue;
+            $tag = \Acme\CmsDashboard\Models\ProductTag::firstOrCreate(
+                ['slug' => Str::slug($name)],
+                ['name' => $name]
+            );
+            $tagIds[] = $tag->id;
+        }
+        $post->productTags()->sync($tagIds);
     }
 
     public function create(Request $request)
@@ -634,6 +668,11 @@ class PostController extends Controller
             $post->tags()->sync($tagIds);
         }
 
+        // Sync dedicated Product Categories & Tags (products only)
+        if ($type === 'product') {
+            $this->syncProductTaxonomies($post, $request);
+        }
+
         // Save Custom Fields
         if ($request->has('custom_fields')) {
             foreach ($request->custom_fields as $fieldId => $value) {
@@ -681,7 +720,10 @@ class PostController extends Controller
                 if ($request->tags && !in_array('tags', $overriddenTaxonomies)) {
                     $clone->tags()->sync($tagIds ?? []);
                 }
-                
+                if ($type === 'product') {
+                    $this->syncProductTaxonomies($clone, $request);
+                }
+
                 // Copy custom fields
                 if ($request->has('custom_fields')) {
                     foreach ($request->custom_fields as $fieldId => $value) {
@@ -1107,6 +1149,7 @@ class PostController extends Controller
                 // Sync relationships
                 if ($request->has('categories')) $clone->categories()->sync($request->categories);
                 if ($request->has('tax_terms')) $clone->taxonomyTerms()->sync($request->tax_terms);
+                if ($post->type === 'product') $this->syncProductTaxonomies($clone, $request);
                 
                 // Copy custom fields
                 $originalFields = DB::table('post_custom_field_values')->where('post_id', $post->id)->get();
@@ -1160,6 +1203,11 @@ class PostController extends Controller
                 $tagIds[] = $tag->id;
             }
             $post->tags()->sync($tagIds);
+        }
+
+        // Sync dedicated Product Categories & Tags (products only)
+        if ($type === 'product') {
+            $this->syncProductTaxonomies($post, $request);
         }
 
         // Update Custom Fields

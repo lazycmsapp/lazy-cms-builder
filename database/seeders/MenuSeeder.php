@@ -212,8 +212,8 @@ class MenuSeeder extends Seeder
         $productMenu->children()->createMany([
             ['title' => 'All Products',  'route' => 'admin.posts.index', 'params' => json_encode(['type' => 'product']), 'order' => 1],
             ['title' => 'Add New',    'route' => 'admin.posts.create', 'params' => json_encode(['type' => 'product']), 'order' => 2],
-            ['title' => 'Categories', 'route' => 'admin.categories.index', 'params' => json_encode(['type' => 'product']), 'order' => 3],
-            ['title' => 'Tags',       'route' => 'admin.tags.index', 'params' => json_encode(['type' => 'product']), 'order' => 4],
+            ['title' => 'Categories', 'route' => 'admin.product-categories.index', 'params' => null, 'order' => 3],
+            ['title' => 'Tags',       'route' => 'admin.product-tags.index', 'params' => null, 'order' => 4],
         ]);
 
         // 15. eCommerce Menu
@@ -226,6 +226,7 @@ class MenuSeeder extends Seeder
             'order' => 60,
         ]);
         $ecommerceMenu->children()->createMany([
+            ['title' => 'Overview',         'route' => 'admin.shop.overview',      'order' => 0],
             ['title' => 'Orders',          'route' => 'admin.shop.orders.index', 'order' => 1],
             ['title' => 'Product Reviews',  'route' => 'admin.shop.reviews.index', 'order' => 2],
             ['title' => 'Customers',        'route' => 'admin.users.index',        'order' => 3],

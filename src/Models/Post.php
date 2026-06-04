@@ -110,6 +110,16 @@ class Post extends Model
         return $this->belongsToMany(TaxonomyTerm::class, 'post_taxonomy_term', 'post_id', 'taxonomy_term_id');
     }
 
+    public function productCategories(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductCategory::class, 'product_category_post', 'post_id', 'product_category_id');
+    }
+
+    public function productTags(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductTag::class, 'product_tag_post', 'post_id', 'product_tag_id');
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class);

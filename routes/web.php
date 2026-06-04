@@ -145,7 +145,25 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
         
         return response()->json($category);
     })->name('categories.ajax');
- 
+
+    // Product Categories (dedicated, first-class — mirrors Categories)
+    Route::get('product-categories', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductCategoryController::class, 'index'])->name('product-categories.index');
+    Route::post('product-categories', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductCategoryController::class, 'store'])->name('product-categories.store');
+    Route::post('product-categories/bulk', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductCategoryController::class, 'bulk'])->name('product-categories.bulk');
+    Route::post('product-categories/ajax', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductCategoryController::class, 'ajax'])->name('product-categories.ajax');
+    Route::get('product-categories/edit/{product_category}', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductCategoryController::class, 'edit'])->name('product-categories.edit');
+    Route::put('product-categories/{product_category}', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductCategoryController::class, 'update'])->name('product-categories.update');
+    Route::delete('product-categories/{product_category}', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductCategoryController::class, 'destroy'])->name('product-categories.destroy');
+
+    // Product Tags (dedicated, first-class — mirrors Tags)
+    Route::get('product-tags', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductTagController::class, 'index'])->name('product-tags.index');
+    Route::post('product-tags', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductTagController::class, 'store'])->name('product-tags.store');
+    Route::post('product-tags/bulk', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductTagController::class, 'bulk'])->name('product-tags.bulk');
+    Route::post('product-tags/ajax', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductTagController::class, 'ajax'])->name('product-tags.ajax');
+    Route::get('product-tags/edit/{product_tag}', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductTagController::class, 'edit'])->name('product-tags.edit');
+    Route::put('product-tags/{product_tag}', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductTagController::class, 'update'])->name('product-tags.update');
+    Route::delete('product-tags/{product_tag}', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductTagController::class, 'destroy'])->name('product-tags.destroy');
+
     // Navigation Menus
     Route::resource('menus', \Acme\CmsDashboard\Http\Controllers\Admin\MenuManagementController::class);
     
@@ -291,11 +309,13 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
 
     // Shop Management
     Route::prefix('shop')->name('shop.')->group(function() {
+        Route::get('overview', [ShopController::class, 'overview'])->name('overview');
         Route::get('orders', [ShopController::class, 'orders'])->name('orders.index');
         Route::post('orders/bulk', [ShopController::class, 'ordersBulk'])->name('orders.bulk');
         Route::get('orders/{id}', [ShopController::class, 'orderShow'])->name('orders.show');
         Route::get('orders/{id}/invoice', [ShopController::class, 'orderInvoice'])->name('orders.invoice');
         Route::post('orders/{id}/status', [ShopController::class, 'orderUpdateStatus'])->name('orders.status');
+        Route::post('orders/{id}/refund', [ShopController::class, 'orderRefund'])->name('orders.refund');
         Route::get('settings', [ShopController::class, 'settings'])->name('settings');
         Route::post('settings', [ShopController::class, 'saveSettings'])->name('settings.save');
 
@@ -339,20 +359,29 @@ Route::middleware(['web', \Acme\CmsDashboard\Http\Middleware\PageCacheMiddleware
             
         Route::get('/{locale}/tag/{slug}', [FrontendController::class, 'archive'])
             ->where('locale', $localePattern)->where('slug', '.*');
-            
+
+        Route::get('/{locale}/product-category/{slug}', [FrontendController::class, 'archive'])
+            ->where('locale', $localePattern)->where('slug', '.*')->name('frontend.product_category.locale');
+        Route::get('/{locale}/product-tag/{slug}', [FrontendController::class, 'archive'])
+            ->where('locale', $localePattern)->where('slug', '.*')->name('frontend.product_tag.locale');
+
         Route::get('/{locale}/search', [FrontendController::class, 'search'])
             ->where('locale', $localePattern);
     }
 
     Route::get('/category/{slug}', [FrontendController::class, 'archive'])->name('frontend.category')->where('slug', '.*');
     Route::get('/tag/{slug}', [FrontendController::class, 'archive'])->name('frontend.tag')->where('slug', '.*');
+    Route::get('/product-category/{slug}', [FrontendController::class, 'archive'])->name('frontend.product_category')->where('slug', '.*');
+    Route::get('/product-tag/{slug}', [FrontendController::class, 'archive'])->name('frontend.product_tag')->where('slug', '.*');
     Route::get('/search', [FrontendController::class, 'search'])->name('frontend.search');
+    Route::get('/search/live', [FrontendController::class, 'liveSearch'])->name('frontend.search.live');
     Route::post('/comment', [FrontendController::class, 'storeComment'])->name('frontend.comment.store');
     Route::post('/form-submit', [FrontendController::class, 'submitForm'])->name('frontend.form.submit');
 
     // Shop Frontend
     Route::prefix('cart')->name('shop.')->group(function() {
         Route::get('/', [ShopFrontendController::class, 'cart'])->name('cart');
+        Route::get('/fragment', [ShopFrontendController::class, 'miniCart'])->name('cart.fragment');
         Route::post('/add', [ShopFrontendController::class, 'addToCart'])->name('cart.add');
         Route::post('/update', [ShopFrontendController::class, 'updateCart'])->name('cart.update');
         Route::get('/remove/{key}', [ShopFrontendController::class, 'removeFromCart'])->name('cart.remove');
@@ -364,6 +393,22 @@ Route::middleware(['web', \Acme\CmsDashboard\Http\Middleware\PageCacheMiddleware
     Route::get('/checkout', [ShopFrontendController::class, 'checkout'])->name('shop.checkout');
     Route::post('/checkout', [ShopFrontendController::class, 'placeOrder'])->name('shop.place-order');
     Route::get('/order-confirmation/{id}', [ShopFrontendController::class, 'confirmation'])->name('shop.confirmation');
+
+    // Order tracking
+    Route::match(['get', 'post'], '/track-order', [ShopFrontendController::class, 'trackOrder'])->name('shop.track');
+
+    // Wishlist
+    Route::get('/wishlist', [\Acme\CmsDashboard\Http\Controllers\WishlistController::class, 'index'])->name('shop.wishlist');
+    Route::post('/wishlist/toggle', [\Acme\CmsDashboard\Http\Controllers\WishlistController::class, 'toggle'])->name('shop.wishlist.toggle');
+    Route::post('/wishlist/remove', [\Acme\CmsDashboard\Http\Controllers\WishlistController::class, 'remove'])->name('shop.wishlist.remove');
+
+    // Online payment gateway return / cancel — gateways (e.g. SSLCommerz) POST here without a CSRF token.
+    Route::match(['get', 'post'], '/payment/return/{id}', [ShopFrontendController::class, 'paymentReturn'])
+        ->name('shop.payment.return')
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+    Route::match(['get', 'post'], '/payment/cancel/{id}', [ShopFrontendController::class, 'paymentCancel'])
+        ->name('shop.payment.cancel')
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
     Route::get('/robots.txt', [FrontendController::class, 'robots'])->name('frontend.robots');
     Route::get('/sitemap.xml', [\Acme\CmsDashboard\Http\Controllers\SitemapController::class, 'index'])->name('frontend.sitemap');

@@ -97,6 +97,24 @@
                     </td>
                 </tr>
 
+                <!-- Blog Page Selection -->
+                <tr>
+                    <th scope="row" class="w-[200px] text-left align-top pt-2">
+                        <label for="blog_page_id" class="text-[14px] font-semibold text-[#1d2327]">Select your Blog page</label>
+                    </th>
+                    <td>
+                        <select name="blog_page_id" id="blog_page_id" class="wp-input w-[400px] h-8 py-0 shadow-sm mb-1">
+                            <option value="">— None —</option>
+                            @foreach($pages as $page)
+                                <option value="{{ $page->id }}" {{ ($settings['blog_page_id'] ?? '') == $page->id ? 'selected' : '' }}>
+                                    {{ $page->title }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-[12px] text-[#646970]">The page assigned here will display your blog posts (rendered by the theme's <code>index</code> template) instead of its own content.</p>
+                    </td>
+                </tr>
+
                 <!-- Membership -->
                 <tr>
                     <th scope="row" class="w-[200px] text-left align-top pt-2">

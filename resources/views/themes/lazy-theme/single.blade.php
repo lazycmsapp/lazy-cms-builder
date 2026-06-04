@@ -9,14 +9,34 @@
                 str_starts_with($post->content, '[')
                 || str_starts_with($post->content, '{')
             ));
+
+        // Single Blog options (Customizer → Blog → Single Blog)
+        $sFeatured = get_cms_option('theme_single_show_featured', '1') === '1';
+        $sAuthor   = get_cms_option('theme_single_show_author', '1') === '1';
+        $sDate     = get_cms_option('theme_single_show_date', '1') === '1';
+        $sCats     = get_cms_option('theme_single_show_categories', '1') === '1';
+        $sShare    = get_cms_option('theme_single_show_share', '0') === '1';
+        $sRelated  = get_cms_option('theme_single_show_related', '1') === '1';
+        $sComments = get_cms_option('theme_single_show_comments', '1') === '1';
+        $permalink = get_lazy_permalink($post);
     @endphp
 
     @if($isBuilder)
+        {{-- Featured image (Single Blog → Show Featured Image) above the builder content --}}
+        @if($sFeatured && $post->featured_image)
+            <div class="container-custom pt-12">
+                <div class="rounded-2xl overflow-hidden shadow-2xl shadow-slate-200/50">
+                    <img src="{{ str_starts_with($post->featured_image, 'http') ? $post->featured_image : asset('storage/'.$post->featured_image) }}"
+                         class="w-full h-auto object-cover" alt="{{ $post->title }}">
+                </div>
+            </div>
+        @endif
+
         <div class="lazy-content-wrapper">
             {!! get_lazy_content($post->content) !!}
         </div>
-        
-        {{-- For builder pages, we might still want comments and tags at the bottom, but outside the 70/30 layout --}}
+
+        {{-- Tags, share, related and comments at the bottom (outside the builder layout) --}}
         <div class="container-custom py-16">
             @if($post->tags->isNotEmpty())
                 <div class="mt-8 pt-8 border-t border-slate-100 flex items-center gap-3 flex-wrap">
@@ -29,9 +49,14 @@
                 </div>
             @endif
 
+            @include('cms-dashboard::themes.lazy-theme.partials.single-share', ['post' => $post, 'permalink' => $permalink])
+            @include('cms-dashboard::themes.lazy-theme.partials.single-related', ['post' => $post])
+
+            @if($sComments)
             <div class="mt-16">
                 @include('cms-dashboard::themes.lazy-theme.partials.comments')
             </div>
+            @endif
         </div>
     @else
         <!-- Main Content Area -->
@@ -41,32 +66,35 @@
                     
                     <!-- Content Column -->
                     <article class="w-full lg:w-[70%]">
+                        {{-- Post meta — each item toggled from Customizer → Blog → Single Blog --}}
+                        @if($sAuthor || $sDate || $sCats)
                         <header class="mb-10">
-                            <div class="mb-6">
-                                @include('cms-dashboard::components.frontend.breadcrumbs', ['post' => $post])
-                            </div>
-                            <h1 class="text-4xl lg:text-5xl font-bold mb-6 text-slate-900 leading-tight">
-                                {{ $post->title }}
-                            </h1>
                             <div class="flex items-center gap-6 text-sm text-slate-400 border-b border-slate-100 pb-8">
+                                @if($sAuthor)
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="user" class="w-4 h-4 text-primary"></i>
                                     <span class="font-bold text-slate-600">{{ $post->user->name ?? 'Admin' }}</span>
                                 </span>
+                                @endif
+                                @if($sDate)
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="calendar" class="w-4 h-4 text-primary"></i>
                                     <span class="font-bold text-slate-600">{{ $post->created_at->format('M d, Y') }}</span>
                                 </span>
+                                @endif
+                                @if($sCats)
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="folder" class="w-4 h-4 text-primary"></i>
                                     <span class="font-bold text-slate-600">{{ $post->categories->first()->name ?? 'Uncategorized' }}</span>
                                 </span>
+                                @endif
                             </div>
                         </header>
+                        @endif
 
-                        @if($post->featured_image)
+                        @if($sFeatured && $post->featured_image)
                             <div class="mb-12 rounded-2xl overflow-hidden shadow-2xl shadow-slate-200/50">
-                                <img src="{{ str_starts_with($post->featured_image, 'http') ? $post->featured_image : asset('storage/'.$post->featured_image) }}" 
+                                <img src="{{ str_starts_with($post->featured_image, 'http') ? $post->featured_image : asset('storage/'.$post->featured_image) }}"
                                      class="w-full h-auto object-cover" alt="{{ $post->title }}">
                             </div>
                         @endif
@@ -96,10 +124,18 @@
                             </div>
                         @endif
 
+                        <!-- Share Buttons -->
+                        @include('cms-dashboard::themes.lazy-theme.partials.single-share', ['post' => $post, 'permalink' => $permalink])
+
+                        <!-- Related Posts -->
+                        @include('cms-dashboard::themes.lazy-theme.partials.single-related', ['post' => $post])
+
                         <!-- Comments Section -->
+                        @if($sComments)
                         <div class="mt-24">
                             @include('cms-dashboard::themes.lazy-theme.partials.comments')
                         </div>
+                        @endif
                     </article>
 
                     <!-- Sidebar -->

@@ -25,21 +25,62 @@
         {{-- ===== LEFT SIDEBAR — dark like dashboard ===== --}}
         <div class="flex-shrink-0 bg-[#1d2327] overflow-y-auto overflow-x-hidden" style="width:210px; border-right:1px solid #2c3338;">
             <p class="px-3 pt-3 pb-1 text-[10px] font-semibold text-[#8c8f94] uppercase tracking-wider">Theme Options</p>
+            @php $renderedGroups = []; @endphp
             @foreach($sections as $key => $sec)
-                <button type="button"
-                        @click="switchSection('{{ $key }}')"
-                        :class="activeSection === '{{ $key }}'
-                            ? 'bg-[#2271b1] text-white'
-                            : 'text-[#c3c4c7] hover:bg-[#2c3338] hover:text-[#72aee6]'"
-                        class="relative w-full flex items-center gap-2 px-3 py-[9px] text-[13px] transition-colors duration-150 cursor-pointer text-left">
-                    <span class="material-symbols-outlined flex-shrink-0 w-[18px] text-center"
-                          style="font-size:16px !important; font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20; max-width:18px; max-height:18px;">{{ $sec['icon'] }}</span>
-                    <span class="leading-none" style="flex:1; min-width:0; white-space:nowrap;">{{ $sec['title'] }}</span>
-                    {{-- Active right-arrow — x-cloak prevents flash before Alpine initializes --}}
-                    <span x-cloak x-show="activeSection === '{{ $key }}'"
-                          class="absolute -right-px top-1/2 -translate-y-1/2 w-0 h-0 z-10"
-                          style="border-top:7px solid transparent; border-bottom:7px solid transparent; border-right:7px solid white;"></span>
-                </button>
+                @if(empty($sec['parent']))
+                    {{-- Standalone (flat) section --}}
+                    <button type="button"
+                            @click="switchSection('{{ $key }}')"
+                            :class="activeSection === '{{ $key }}'
+                                ? 'bg-[#2271b1] text-white'
+                                : 'text-[#c3c4c7] hover:bg-[#2c3338] hover:text-[#72aee6]'"
+                            class="relative w-full flex items-center gap-2 px-3 py-[9px] text-[13px] transition-colors duration-150 cursor-pointer text-left">
+                        <span class="material-symbols-outlined flex-shrink-0 w-[18px] text-center"
+                              style="font-size:16px !important; font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20; max-width:18px; max-height:18px;">{{ $sec['icon'] }}</span>
+                        <span class="leading-none" style="flex:1; min-width:0; white-space:nowrap;">{{ $sec['title'] }}</span>
+                        <span x-cloak x-show="activeSection === '{{ $key }}'"
+                              class="absolute -right-px top-1/2 -translate-y-1/2 w-0 h-0 z-10"
+                              style="border-top:7px solid transparent; border-bottom:7px solid transparent; border-right:7px solid white;"></span>
+                    </button>
+                @elseif(!in_array($sec['parent'], $renderedGroups))
+                    {{-- Grouped sections → collapsible parent (dashboard-style) rendered once --}}
+                    @php
+                        $grp = $sec['parent'];
+                        $renderedGroups[] = $grp;
+                        $childKeys = [];
+                        foreach ($sections as $ck => $cs) { if (($cs['parent'] ?? null) === $grp) $childKeys[$ck] = $cs; }
+                        $childJs   = "['" . implode("','", array_keys($childKeys)) . "']";
+                        $grpIcon   = $sec['parent_icon'] ?? 'folder';
+                    @endphp
+                    <div x-data="{ open: {!! $childJs !!}.includes(activeSection) }">
+                        <button type="button" @click="open = !open"
+                                :class="{!! $childJs !!}.includes(activeSection)
+                                    ? 'text-white bg-[#2c3338]'
+                                    : 'text-[#c3c4c7] hover:bg-[#2c3338] hover:text-[#72aee6]'"
+                                class="w-full flex items-center gap-2 px-3 py-[9px] text-[13px] transition-colors duration-150 cursor-pointer text-left">
+                            <span class="material-symbols-outlined flex-shrink-0 w-[18px] text-center"
+                                  style="font-size:16px !important; font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20; max-width:18px; max-height:18px;">{{ $grpIcon }}</span>
+                            <span class="leading-none" style="flex:1; min-width:0; white-space:nowrap;">{{ $grp }}</span>
+                            <span class="material-symbols-outlined transition-transform duration-200 flex-shrink-0"
+                                  :class="open ? 'rotate-180' : ''"
+                                  style="font-size:16px !important;">expand_more</span>
+                        </button>
+                        <div x-show="open" x-cloak class="bg-[#2c3338]">
+                            @foreach($childKeys as $ckey => $cs)
+                                <button type="button" @click="switchSection('{{ $ckey }}')"
+                                        :class="activeSection === '{{ $ckey }}'
+                                            ? 'text-white font-semibold'
+                                            : 'text-[#c3c4c7] hover:text-[#72aee6]'"
+                                        class="relative w-full flex items-center gap-2 pl-9 pr-3 py-[7px] text-[12.5px] transition-colors duration-150 cursor-pointer text-left">
+                                    <span class="leading-none" style="flex:1; min-width:0; white-space:nowrap;">{{ $cs['title'] }}</span>
+                                    <span x-cloak x-show="activeSection === '{{ $ckey }}'"
+                                          class="absolute -right-px top-1/2 -translate-y-1/2 w-0 h-0 z-10"
+                                          style="border-top:7px solid transparent; border-bottom:7px solid transparent; border-right:7px solid white;"></span>
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             @endforeach
         </div>
 
@@ -49,7 +90,7 @@
             {{-- Section title bar --}}
             <div class="flex-shrink-0 border-b border-[#c3c4c7] bg-[#f6f7f7] px-5 py-2.5 flex items-center gap-2 min-h-[40px]">
                 @foreach($sections as $key => $sec)
-                    <span x-show="activeSection === '{{ $key }}'" class="text-[14px] font-semibold text-[#1d2327]">{{ $sec['title'] }}</span>
+                    <span x-show="activeSection === '{{ $key }}'" class="text-[14px] font-semibold text-[#1d2327]">{{ !empty($sec['parent']) ? $sec['parent'] . ' — ' . $sec['title'] : $sec['title'] }}</span>
                 @endforeach
                 <span x-show="search.length > 0" class="ml-auto text-[11px] text-[#646970]">
                     <span x-text="visibleCount" class="font-semibold"></span> result(s) found
@@ -109,6 +150,23 @@
 
                         @else
                             <div x-show="activeSection === '{{ $sectionKey }}' && search.length === 0">
+                                @php
+                                    $isHeaderSection = in_array($sectionKey, ['header', 'menu']);
+                                    $sectionLocked = ($isHeaderSection && ($builderHeaderActive ?? false)) || ($sectionKey === 'footer' && ($builderFooterActive ?? false));
+                                    $lockedPart = $isHeaderSection ? 'Header' : 'Footer';
+                                @endphp
+                                @if($sectionLocked)
+                                    <div class="m-5 p-5 rounded-lg border border-blue-200 bg-blue-50 flex items-start gap-3">
+                                        <span class="material-symbols-outlined text-blue-600 mt-0.5" style="font-size:20px !important;">extension</span>
+                                        <div>
+                                            <p class="text-[13px] font-semibold text-blue-900 m-0 mb-1">{{ $lockedPart }} is being built with the Page Builder</p>
+                                            <p class="text-[12px] text-blue-800 leading-relaxed m-0">
+                                                You have an active {{ strtolower($lockedPart) }} created with the <strong>Lazy Builder</strong>, so these Customizer options don't apply. Edit your {{ strtolower($lockedPart) }} from <strong>Appearance → Lazy Builder</strong>.
+                                                To use these Customizer settings instead, unpublish or delete the builder {{ strtolower($lockedPart) }}.
+                                            </p>
+                                        </div>
+                                    </div>
+                                @else
                                 <table class="w-full border-collapse">
                                     <tbody>
                                         @foreach($sec['fields'] as $key => $field)
@@ -140,6 +198,7 @@
                                                  @endif
 
                                                  <tr class="field-row border-b border-[#f0f0f1] hover:bg-[#f6f7f7]/60 transition-colors"
+                                                @if(!empty($field['depends'])) data-depends="{{ $field['depends'] }}" @endif
                                                 data-label="{{ strtolower($label . ' ' . $desc . ' ' . $sectionKey . ' ' . $sections[$sectionKey]['title']) }}">
                                                 <th scope="row" class="w-[260px] text-left align-top px-5 py-3.5">
                                                     <label for="field_{{ $key }}" class="text-[13px] font-semibold text-[#2271b1] block mb-0.5 cursor-pointer">{{ $label }}</label>
@@ -297,13 +356,16 @@
                                                         </div>
 
                                                     @elseif($type === 'color')
-                                                        {{-- Coloris picker — attaches to the text input --}}
+                                                        {{-- Pickr picker (same as the Lazy Builder) — swatch button opens the picker, hex syncs to the input --}}
                                                         <div class="flex items-center gap-2.5">
+                                                            <button type="button" id="swatch_{{ $key }}"
+                                                                    class="cstz-color-swatch"
+                                                                    data-color-input="field_{{ $key }}"
+                                                                    style="background: {{ $val ?: '#ffffff' }};"
+                                                                    aria-label="Choose color"></button>
                                                             <input type="text" name="{{ $key }}" id="field_{{ $key }}"
                                                                    value="{{ $val ?: '' }}"
                                                                    placeholder="#000000"
-                                                                   data-coloris
-                                                                   data-ckey="{{ $key }}"
                                                                    class="wp-input w-[130px] text-[12px] font-mono tracking-wide">
                                                         </div>
 
@@ -460,6 +522,7 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+                                @endif
                             </div>
                         @endif
 
@@ -520,10 +583,31 @@
 </div>
 
 @push('scripts')
-<link rel="stylesheet" href="{{ asset('vendor/cms-dashboard/css/coloris.min.css') }}">
-<script src="{{ asset('vendor/cms-dashboard/js/coloris.min.js') }}"></script>
+<link rel="stylesheet" href="{{ asset('vendor/cms-dashboard/css/pickr.classic.min.css') }}">
+<script src="{{ asset('vendor/cms-dashboard/js/pickr.min.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
 <script>
+// Field dependency: rows with data-depends="<masterKey>" are only active when the
+// master toggle (#toggle_<masterKey>) is ON. When OFF they grey out and stop responding.
+function initCustomizerDeps() {
+    document.querySelectorAll('[data-depends]').forEach(function (row) {
+        var masterKey = row.getAttribute('data-depends');
+        var master = document.getElementById('toggle_' + masterKey);
+        if (!master || row.dataset.depInit) return;
+        row.dataset.depInit = '1';
+        var apply = function () {
+            var on = master.checked;
+            row.style.opacity = on ? '' : '0.45';
+            row.style.pointerEvents = on ? '' : 'none';
+            row.setAttribute('aria-disabled', on ? 'false' : 'true');
+        };
+        master.addEventListener('change', apply);
+        apply();
+    });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCustomizerDeps);
+else initCustomizerDeps();
+
 // Monaco Configuration
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
 window.monacoEditors = {};
@@ -610,23 +694,58 @@ function openCmsMediaModal(fieldId) {
     }
 }
 
-// Coloris — called directly (scripts are at end of body, DOM is ready)
-Coloris({
-    theme: 'default',
-    themeMode: 'light',
-    alpha: true,
-    format: 'auto',
-    formatToggle: true,
-    closeButton: true,
-    closeLabel: 'Done',
-    clearButton: false,
-    onChange(color, input) {
-        const key = input.dataset.ckey;
-        if (!key) return;
-        const sw = document.getElementById('swatch_' + key);
-        if (sw) sw.style.background = color;
-    }
-});
+// Color picker — uses Pickr (the same picker as the Lazy Builder).
+function cstzHexFromPickr(color) {
+    var s = color.toHEXA().toString();           // #RRGGBB or #RRGGBBAA
+    if (/^#([0-9a-fA-F]{6})ff$/i.test(s)) s = s.slice(0, 7); // drop alpha when fully opaque
+    return s.toLowerCase();
+}
+function initCustomizerColorPickers() {
+    if (typeof Pickr === 'undefined') return;
+    document.querySelectorAll('.cstz-color-swatch').forEach(function (btn) {
+        if (btn.dataset.pickrInit) return;
+        btn.dataset.pickrInit = '1';
+        var input = document.getElementById(btn.getAttribute('data-color-input'));
+        if (!input) return;
+
+        var pickr = Pickr.create({
+            el: btn,
+            useAsButton: true,
+            theme: 'classic',
+            default: input.value || '#ffffff',
+            defaultRepresentation: 'HEXA',
+            components: {
+                preview: true, opacity: true, hue: true,
+                interaction: { hex: true, rgba: false, input: true, clear: false, save: true }
+            },
+            swatches: [
+                '#000000', '#ffffff', '#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5',
+                '#2196f3', '#03a6f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39'
+            ]
+        });
+
+        var applyColor = function (color) {
+            var hex = cstzHexFromPickr(color);
+            input.value = hex;
+            btn.style.background = hex;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        };
+
+        pickr.on('change', function (color) { applyColor(color); })
+             .on('save', function (color, instance) { if (color) applyColor(color); instance.hide(); });
+
+        // Typing a hex in the input updates the swatch + picker.
+        input.addEventListener('input', function () {
+            var v = input.value.trim();
+            btn.style.background = v || '#ffffff';
+            if (/^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(v)) {
+                try { pickr.setColor(v, true); } catch (e) {}
+            }
+        });
+    });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCustomizerColorPickers);
+else initCustomizerColorPickers();
 
 // Segmented button group: update visual state on radio change
 function customizerBtnGroup(radio) {
@@ -1042,10 +1161,38 @@ function typographyComponent(key, initialData) {
     padding: 20px;
 }
 
-/* Coloris picker z-index */
-#clr-picker { z-index: 99999 !important; }
-/* Coloris swatch button */
-.clr-field button { width: 30px; height: 30px; border-radius: 3px; border: 1px solid #c3c4c7; }
+/* Pickr color picker */
+.pcr-app { z-index: 99999 !important; }
+
+/* Compact Pickr popup — scaled down proportionally so hex/save/clear buttons stay intact */
+.pcr-app[data-theme="classic"] {
+    font-size: 11px;            /* em-based theme → shrinks the whole widget uniformly */
+    width: 20em !important;
+    padding: 0.55em !important;
+    border-radius: 6px;
+}
+.pcr-app[data-theme="classic"] .pcr-selection { height: 7.5em; }
+.pcr-app[data-theme="classic"] .pcr-selection .pcr-color-preview { width: 1.4em; margin-right: 0.6em; }
+.pcr-app[data-theme="classic"] .pcr-selection .pcr-color-chooser,
+.pcr-app[data-theme="classic"] .pcr-selection .pcr-color-opacity { width: 1.4em; margin-left: 0.6em; }
+.pcr-app[data-theme="classic"] .pcr-swatches { margin-top: 0.5em; }
+.pcr-app[data-theme="classic"] .pcr-swatches button { width: 1.35em; height: 1.35em; }
+.pcr-app[data-theme="classic"] .pcr-interaction { margin-top: 0.5em; }
+.pcr-app[data-theme="classic"] .pcr-interaction .pcr-result { min-height: 1.8em; font-size: 0.95em; padding: 0.2em 0.45em; }
+.pcr-app[data-theme="classic"] .pcr-interaction .pcr-type,
+.pcr-app[data-theme="classic"] .pcr-interaction .pcr-save,
+.pcr-app[data-theme="classic"] .pcr-interaction .pcr-clear,
+.pcr-app[data-theme="classic"] .pcr-interaction .pcr-cancel { padding: 0.3em 0.5em; font-size: 0.9em; }
+
+/* Color swatch button (opens the Pickr picker) */
+.cstz-color-swatch {
+    width: 28px; height: 28px; border-radius: 4px; border: 1px solid #c3c4c7;
+    cursor: pointer; flex-shrink: 0; padding: 0;
+    box-shadow: inset 0 0 0 2px #fff;
+    transition: border-color .15s, transform .1s;
+}
+.cstz-color-swatch:hover { border-color: #2271b1; }
+.cstz-color-swatch:active { transform: scale(0.95); }
 /* Segmented btn hover (non-active) */
 .cstz-btn-opt:hover { filter: brightness(0.97); }
 </style>

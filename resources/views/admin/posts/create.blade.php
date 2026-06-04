@@ -491,10 +491,14 @@
                         
                         <div id="tags-container" class="mt-3 flex flex-wrap gap-2"></div>
                         <input type="hidden" name="tags" id="tags-hidden-input" value="{{ old('tags') }}">
-                        
+
                         {{-- Removed: Choose from most used tags --}}
                     </div>
                 </div>
+                @endif
+
+                @if($type === 'product')
+                    @include('cms-dashboard::admin.posts.partials.product-taxonomies')
                 @endif
 
 

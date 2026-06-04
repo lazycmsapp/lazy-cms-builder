@@ -22,6 +22,7 @@ class CmsDashboardServiceProvider extends ServiceProvider
         $this->app['router']->pushMiddlewareToGroup('web', \Acme\CmsDashboard\Http\Middleware\TrackVisits::class);
         $this->app['router']->pushMiddlewareToGroup('web', \Acme\CmsDashboard\Http\Middleware\LocalizationMiddleware::class);
         $this->app['router']->pushMiddlewareToGroup('web', \Acme\CmsDashboard\Http\Middleware\BuilderShortcodeMiddleware::class);
+        $this->app['router']->pushMiddlewareToGroup('web', \Acme\CmsDashboard\Http\Middleware\PersistCart::class);
 
         $this->app->booted(function () {
             $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
