@@ -304,20 +304,39 @@ class PostController extends Controller
         return $slug;
     }
 
+    /**
+     * Whether the current user may manage the given post type. Permission slugs are
+     * derived from the (often pluralised) type/title — e.g. the "product" CPT uses
+     * access_products / access_all_products — so we accept both the type slug and its
+     * plural form to avoid singular/plural mismatches. $extra adds gate-specific perms
+     * (e.g. add-new permissions for create/store).
+     */
+    private function userCanManageType(string $type, array $extra = []): bool
+    {
+        $user = auth()->user();
+        if (!$user) return false;
+
+        $perms = [];
+        foreach (array_unique([$type, Str::plural($type)]) as $t) {
+            $perms[] = 'manage_' . $t;
+            $perms[] = 'access_' . $t;
+            $perms[] = 'access_all_' . $t;
+        }
+        if ($type === 'page') $perms[] = 'manage_pages';
+        if ($type === 'post') $perms[] = 'manage_posts';
+
+        foreach (array_merge($perms, $extra) as $p) {
+            if ($user->hasPermission($p)) return true;
+        }
+        return false;
+    }
+
     public function index(Request $request)
     {
         $type = $request->query('type', 'post');
         $this->checkTypeActive($type);
-        
-        // Dynamic permission check
-        $p = 'manage_' . $type;
-        $a = 'access_' . $type;
-        $all = 'access_all_' . $type;
-        
-        if ($type === 'page') { $p = 'manage_pages'; }
-        elseif ($type === 'post') { $p = 'manage_posts'; }
 
-        if (!auth()->user()->hasPermission($p) && !auth()->user()->hasPermission($a) && !auth()->user()->hasPermission($all)) {
+        if (!$this->userCanManageType($type)) {
             $label = Str::plural($type);
             abort(403, "You do not have permission to manage {$label}.");
         }
@@ -448,15 +467,7 @@ class PostController extends Controller
         $this->checkTypeActive($type);
 
         // Dynamic permission check
-        $p = 'manage_' . $type;
-        $a = 'access_' . $type;
-        $all = 'access_all_' . $type;
-        $add = 'access_add_new_' . Str::slug($type, '_');
-        
-        if ($type === 'page') { $p = 'manage_pages'; }
-        elseif ($type === 'post') { $p = 'manage_posts'; }
-
-        if (!auth()->user()->hasPermission($p) && !auth()->user()->hasPermission($a) && !auth()->user()->hasPermission($all) && !auth()->user()->hasPermission($add) && !auth()->user()->hasPermission('access_add_new')) {
+        if (!$this->userCanManageType($type, ['access_add_new_' . Str::slug($type, '_'), 'access_add_new_' . Str::plural($type), 'access_add_new'])) {
             $label = Str::plural($type);
             abort(403, "You do not have permission to create {$label}.");
         }
@@ -507,15 +518,7 @@ class PostController extends Controller
         $this->checkTypeActive($type);
         
         // Dynamic permission check
-        $p = 'manage_' . $type;
-        $a = 'access_' . $type;
-        $all = 'access_all_' . $type;
-        $add = 'access_add_new_' . Str::slug($type, '_');
-        
-        if ($type === 'page') { $p = 'manage_pages'; }
-        elseif ($type === 'post') { $p = 'manage_posts'; }
-
-        if (!auth()->user()->hasPermission($p) && !auth()->user()->hasPermission($a) && !auth()->user()->hasPermission($all) && !auth()->user()->hasPermission($add) && !auth()->user()->hasPermission('access_add_new')) {
+        if (!$this->userCanManageType($type, ['access_add_new_' . Str::slug($type, '_'), 'access_add_new_' . Str::plural($type), 'access_add_new'])) {
             $label = Str::plural($type);
             abort(403, "You do not have permission to store {$label}.");
         }
@@ -752,15 +755,7 @@ class PostController extends Controller
         $type = $post->type;
         $this->checkTypeActive($post->type);
 
-        // Dynamic permission check
-        $p = 'manage_' . $type;
-        $a = 'access_' . $type;
-        $all = 'access_all_' . $type;
-        
-        if ($type === 'page') { $p = 'manage_pages'; }
-        elseif ($type === 'post') { $p = 'manage_posts'; }
-
-        if (!auth()->user()->hasPermission($p) && !auth()->user()->hasPermission($a) && !auth()->user()->hasPermission($all)) {
+        if (!$this->userCanManageType($type)) {
             $label = Str::plural($type);
             abort(403, "You do not have permission to edit {$label}.");
         }
@@ -903,15 +898,7 @@ class PostController extends Controller
         $type = $post->type;
         $this->checkTypeActive($post->type);
 
-        // Dynamic permission check
-        $p = 'manage_' . $type;
-        $a = 'access_' . $type;
-        $all = 'access_all_' . $type;
-        
-        if ($type === 'page') { $p = 'manage_pages'; }
-        elseif ($type === 'post') { $p = 'manage_posts'; }
-
-        if (!auth()->user()->hasPermission($p) && !auth()->user()->hasPermission($a) && !auth()->user()->hasPermission($all)) {
+        if (!$this->userCanManageType($type)) {
             $label = Str::plural($type);
             abort(403, "You do not have permission to update {$label}.");
         }
@@ -1235,15 +1222,7 @@ class PostController extends Controller
         $type = $post->type;
         $this->checkTypeActive($post->type);
 
-        // Dynamic permission check
-        $p = 'manage_' . $type;
-        $a = 'access_' . $type;
-        $all = 'access_all_' . $type;
-        
-        if ($type === 'page') { $p = 'manage_pages'; }
-        elseif ($type === 'post') { $p = 'manage_posts'; }
-
-        if (!auth()->user()->hasPermission($p) && !auth()->user()->hasPermission($a) && !auth()->user()->hasPermission($all)) {
+        if (!$this->userCanManageType($type)) {
             $label = Str::plural($type);
             abort(403, "You do not have permission to delete {$label}.");
         }

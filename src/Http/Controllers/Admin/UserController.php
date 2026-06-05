@@ -46,7 +46,13 @@ class UserController extends Controller
         
         $allCount = User::count();
         $roles = Role::all()->map(function($role) {
-            $role->count = User::where('role_id', $role->id)->count();
+            // Count users who hold this role (via the role_user pivot — multiple roles aware),
+            // falling back to the primary role_id if the pivot isn't present yet.
+            try {
+                $role->count = \Illuminate\Support\Facades\DB::table('role_user')->where('role_id', $role->id)->distinct()->count('user_id');
+            } catch (\Throwable $e) {
+                $role->count = User::where('role_id', $role->id)->count();
+            }
             return $role;
         });
 
@@ -82,11 +88,25 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role_id' => 'required|exists:roles,id'
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'exists:roles,id',
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
-        $user = User::create($validated);
+        $roles = array_values(array_unique(array_map('intval', $request->input('roles', []))));
+
+        // Only a super-admin can assign the Super Admin role.
+        if (Role::whereIn('id', $roles)->where('slug', 'super-admin')->exists() && !auth()->user()->hasRole('super-admin')) {
+            return redirect()->back()->with('error', 'Only a Super Admin can assign the Super Admin role.')->withInput();
+        }
+
+        $user = User::create([
+            'username' => $validated['username'],
+            'name'     => $validated['name'],
+            'email'    => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role_id'  => $roles[0] ?? null,
+        ]);
+        $user->assignRoles($roles);
         lazy_log_activity('created', "Created a new user: {$user->name} ({$user->username})", $user);
 
         return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
@@ -94,6 +114,11 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
+        // Without user-management permission a user may only edit their OWN profile.
+        if (!auth()->user()->hasPermission('manage_users') && auth()->id() !== $user->id) {
+            abort(403);
+        }
+
         // Only super-admin can edit other super-admins
         if ($user->hasRole('super-admin') && !auth()->user()->hasRole('super-admin')) {
             return redirect()->route('admin.users.index')->with('error', 'You do not have permission to edit a Super Admin.');
@@ -108,13 +133,19 @@ class UserController extends Controller
             abort(403);
         }
 
-        $validated = $request->validate([
+        $canManageRoles = auth()->user()->hasPermission('manage_users');
+
+        $rules = [
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'required|string|min:8|confirmed',
-            'role_id' => 'required|exists:roles,id'
-        ]);
+        ];
+        if ($canManageRoles) {
+            $rules['roles'] = 'required|array|min:1';
+            $rules['roles.*'] = 'exists:roles,id';
+        }
+        $validated = $request->validate($rules);
 
         $validated['password'] = Hash::make($validated['password']);
 
@@ -123,13 +154,23 @@ class UserController extends Controller
             return redirect()->route('admin.users.index')->with('error', 'You do not have permission to edit a Super Admin.');
         }
 
-        // Protection: Only super-admin can assign super-admin role
-        $targetRole = Role::find($validated['role_id']);
-        if ($targetRole && $targetRole->slug === 'super-admin' && !auth()->user()->hasRole('super-admin')) {
-            return redirect()->back()->with('error', 'Only a Super Admin can assign the Super Admin role.')->withInput();
+        // Resolve the role set. Only user-managers may change roles; a self-editor
+        // (editing their own profile without manage_users) keeps their existing roles,
+        // which also prevents self-escalation via the profile page.
+        if ($canManageRoles) {
+            $roles = array_values(array_unique(array_map('intval', $request->input('roles', []))));
+            if (\Acme\CmsDashboard\Models\Role::whereIn('id', $roles)->where('slug', 'super-admin')->exists()
+                && !auth()->user()->hasRole('super-admin')) {
+                return redirect()->back()->with('error', 'Only a Super Admin can assign the Super Admin role.')->withInput();
+            }
+        } else {
+            $roles = $user->cmsRoleIds();
         }
+        if (empty($roles)) $roles = array_values(array_filter([$user->role_id]));
 
+        unset($validated['roles']);
         $user->update($validated);
+        $user->assignRoles($roles);
         lazy_log_activity('updated', "Updated user profile: {$user->name}", $user);
 
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');

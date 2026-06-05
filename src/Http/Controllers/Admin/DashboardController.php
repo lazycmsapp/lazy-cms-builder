@@ -400,7 +400,31 @@ class DashboardController extends Controller
         }
 
         $settings = DB::table('cms_settings')->pluck('value', 'key')->toArray();
-        return view('cms-dashboard::admin.settings.api', compact('settings'));
+        $tokens = auth()->user()->apiTokens()->latest()->get();
+        return view('cms-dashboard::admin.settings.api', compact('settings', 'tokens'));
+    }
+
+    public function generateApiToken(Request $request)
+    {
+        if (!auth()->user()->hasPermission('manage_settings')) {
+            abort(403);
+        }
+        $request->validate(['token_name' => 'required|string|max:255']);
+        $plain = auth()->user()->createApiToken($request->input('token_name'));
+
+        return redirect()->route('admin.settings.api')
+            ->with('new_api_token', $plain)
+            ->with('success', 'API token created. Copy it now — it will not be shown again.');
+    }
+
+    public function revokeApiToken($id)
+    {
+        if (!auth()->user()->hasPermission('manage_settings')) {
+            abort(403);
+        }
+        auth()->user()->apiTokens()->where('id', $id)->delete();
+
+        return redirect()->route('admin.settings.api')->with('success', 'API token revoked.');
     }
 
     public function integrationsSettings()
@@ -559,41 +583,69 @@ class DashboardController extends Controller
 
     public function analytics()
     {
-        if (!auth()->user()->hasPermission('manage_settings')) {
+        // Align with the Analytics menu permission (Sidebar::getPermission) so that
+        // checking "Analytics" in the role editor is exactly what grants this page.
+        if (!auth()->user()->hasPermission('manage_analytics')) {
             abort(403);
         }
 
-        $days = 30;
-        $startDate = now()->subDays($days);
+        // ── Date range (dynamic) ──────────────────────────────────────────────
+        $range = (int) request()->query('range', 30);
+        if (!in_array($range, [7, 30, 90, 365], true)) $range = 30;
+        $start     = now()->subDays($range - 1)->startOfDay();
+        $prevStart = (clone $start)->subDays($range);
+        $prevEnd   = (clone $start)->subSecond();
 
-        // Daily Visits
-        $dailyVisits = Analytics::where('created_at', '>=', $startDate)
-            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        // ── KPIs (with % change vs the previous equal period) ─────────────────
+        $totalVisits    = Analytics::where('created_at', '>=', $start)->count();
+        $uniqueVisitors = Analytics::where('created_at', '>=', $start)->distinct()->count('ip_address');
+        $prevVisits     = Analytics::whereBetween('created_at', [$prevStart, $prevEnd])->count();
+        $visitsChange   = $prevVisits > 0 ? round((($totalVisits - $prevVisits) / $prevVisits) * 100, 1) : ($totalVisits > 0 ? 100 : 0);
+        $today          = Analytics::whereDate('created_at', now()->toDateString())->count();
+        $thisMonth      = Analytics::where('created_at', '>=', now()->startOfMonth())->count();
 
-        // Top Pages
+        // ── Daily series (visits + unique), zero-filled across the range ──────
+        $daily = Analytics::where('created_at', '>=', $start)
+            ->select(DB::raw('DATE(created_at) as d'), DB::raw('COUNT(*) as visits'), DB::raw('COUNT(DISTINCT ip_address) as uniques'))
+            ->groupBy('d')->orderBy('d')->get()->keyBy('d');
+
+        $labels = $visitsSeries = $uniqueSeries = [];
+        for ($i = $range - 1; $i >= 0; $i--) {
+            $day = now()->subDays($i);
+            $key = $day->toDateString();
+            $labels[]       = $day->format('M j');
+            $visitsSeries[] = (int) ($daily[$key]->visits ?? 0);
+            $uniqueSeries[] = (int) ($daily[$key]->uniques ?? 0);
+        }
+
+        // ── Distributions (browser / device / os) ────────────────────────────
+        $dist = function (string $col) use ($start) {
+            return Analytics::select($col, DB::raw('count(*) as count'))
+                ->where('created_at', '>=', $start)
+                ->groupBy($col)->orderByDesc('count')->get()
+                ->map(fn($r) => ['label' => $r->{$col} ?: 'Unknown', 'count' => (int) $r->count])->values();
+        };
+        $browsers = $dist('browser');
+        $devices  = $dist('device_type');
+        $osDist   = $dist('os');
+
+        // ── Top pages & referrers (empty referrer = Direct) ──────────────────
         $topPages = Analytics::select('url', DB::raw('count(*) as count'))
-            ->where('created_at', '>=', $startDate)
-            ->groupBy('url')
-            ->orderByDesc('count')
-            ->limit(10)
-            ->get();
+            ->where('created_at', '>=', $start)
+            ->groupBy('url')->orderByDesc('count')->limit(8)->get();
 
-        // Browser Distribution
-        $browsers = Analytics::select('browser', DB::raw('count(*) as count'))
-            ->where('created_at', '>=', $startDate)
-            ->groupBy('browser')
-            ->get();
+        $topReferrers = Analytics::select(DB::raw("COALESCE(NULLIF(referrer, ''), 'Direct') as ref"), DB::raw('count(*) as count'))
+            ->where('created_at', '>=', $start)
+            ->groupBy('ref')->orderByDesc('count')->limit(8)->get();
 
-        // Device Distribution
-        $devices = Analytics::select('device_type', DB::raw('count(*) as count'))
-            ->where('created_at', '>=', $startDate)
-            ->groupBy('device_type')
-            ->get();
+        // ── Recent visits ─────────────────────────────────────────────────────
+        $recent = Analytics::latest()->limit(12)->get();
 
-        return view('cms-dashboard::admin.analytics.index', compact('dailyVisits', 'topPages', 'browsers', 'devices'));
+        return view('cms-dashboard::admin.analytics.index', compact(
+            'range', 'totalVisits', 'uniqueVisitors', 'visitsChange', 'today', 'thisMonth',
+            'labels', 'visitsSeries', 'uniqueSeries',
+            'browsers', 'devices', 'osDist', 'topPages', 'topReferrers', 'recent'
+        ));
     }
 
     public function documentation()

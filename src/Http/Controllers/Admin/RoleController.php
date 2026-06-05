@@ -76,7 +76,7 @@ class RoleController extends Controller
             $role->permissions()->detach();
         }
 
-        return redirect()->route('admin.roles.index')->with('success', 'Role updated successfully.');
+        return redirect()->route('admin.roles.edit', $role)->with('success', 'Role updated successfully.');
     }
 
     protected function syncPermissions(Role $role, array $permissionSlugs)
@@ -149,25 +149,10 @@ class RoleController extends Controller
 
     protected function generatePermissionSlug($menu, $parent = null)
     {
-        if ($menu->permission) return $menu->permission;
-        
-        // Custom generation logic
-        $title = strtolower($menu->title);
-        if ($title === 'dashboard') return 'access_dashboard';
-        if ($title === 'posts') return 'manage_posts';
-        if ($title === 'pages') return 'manage_pages';
-        if ($title === 'media') return 'manage_media';
-        if ($title === 'users') return 'manage_users';
-        if ($title === 'settings') return 'manage_settings';
-        
-        $slug = Str::slug($menu->title, '_');
-        
-        // Make child slugs unique by appending parent slug if it's a common title
-        if ($parent && in_array($title, ['add new', 'categories', 'tags', 'all posts', 'all pages'])) {
-            $slug .= '_' . Str::slug($parent->title, '_');
-        }
-        
-        return 'access_' . $slug;
+        // Single source of truth: the same resolver the access middleware uses
+        // (Sidebar::getPermission), so a checked menu item grants exactly the
+        // permission its page requires. Keeps assignment and enforcement in sync.
+        return (new \Acme\CmsDashboard\View\Components\Admin\Sidebar)->getPermission($menu);
     }
 
     public function destroy(Role $role)

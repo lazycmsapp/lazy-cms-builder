@@ -54,14 +54,21 @@
 
                 <tr>
                     <th scope="row" class="w-[200px] text-left align-top pt-2">
-                        <label for="role" class="text-[14px] font-semibold text-[#1d2327]">Role</label>
+                        <label class="text-[14px] font-semibold text-[#1d2327]">Roles</label>
                     </th>
                     <td>
-                        <select name="role_id" id="role_id" class="wp-input w-[200px] h-8 shadow-sm">
+                        <div class="space-y-1.5">
                             @foreach($roles as $role)
-                                <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="roles[]" value="{{ $role->id }}"
+                                           {{ collect(old('roles', []))->contains($role->id) ? 'checked' : '' }}
+                                           class="w-4 h-4 rounded border-[#8c8f94] text-[#2271b1]">
+                                    <span class="text-[13px] text-[#2c3338]">{{ $role->name }}</span>
+                                </label>
                             @endforeach
-                        </select>
+                        </div>
+                        <p class="text-[11px] text-[#646970] mt-1">Select one or more roles — the user gets the combined permissions of all selected roles.</p>
+                        @error('roles')<p class="text-[11px] text-[#d63638] mt-1">{{ $message }}</p>@enderror
                     </td>
                 </tr>
             </table>

@@ -229,6 +229,8 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     Route::get('settings/activity-logs', [DashboardController::class, 'activityLogs'])->name('settings.activity-logs');
     Route::post('settings/activity-logs/bulk', [DashboardController::class, 'bulkDeleteLogs'])->name('settings.activity-logs.bulk');
     Route::get('settings/api', [DashboardController::class, 'apiSettings'])->name('settings.api');
+    Route::post('settings/api/tokens', [DashboardController::class, 'generateApiToken'])->name('settings.api.tokens.store');
+    Route::delete('settings/api/tokens/{id}', [DashboardController::class, 'revokeApiToken'])->name('settings.api.tokens.destroy');
     Route::get('settings/integrations', [DashboardController::class, 'integrationsSettings'])->name('settings.integrations');
     Route::post('settings/integrations', [DashboardController::class, 'updateIntegrationsSettings'])->name('settings.integrations.update');
     Route::get('settings/email-templates', [DashboardController::class, 'emailTemplates'])->name('settings.email-templates');

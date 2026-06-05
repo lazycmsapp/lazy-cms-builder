@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 
 if (!defined('LAZY_CMS_VERSION')) {
-    define('LAZY_CMS_VERSION', '5.14.3');
+    define('LAZY_CMS_VERSION', '5.15.0');
 }
 
 if (!function_exists('lazy_cms_installed_version')) {
@@ -197,6 +197,52 @@ if (!function_exists('get_custom_field')) {
             return $value !== null ? $value : $default;
         } catch (\Exception $e) {
             return $default;
+        }
+    }
+}
+
+if (!function_exists('get_post_custom_fields')) {
+    /**
+     * Resolve ALL custom fields that apply to a post (by its type's field groups) as a
+     * keyed array [field_name => value]. Data-driven: it reads the field DEFINITIONS and
+     * VALUES from the database at call time, so adding/removing a field in a field group
+     * is reflected automatically everywhere — including the REST API — with no code change.
+     *
+     * JSON-encoded values (repeaters, galleries, checkboxes, etc.) are decoded to arrays.
+     * Fields with no value yet are returned as null so consumers always see the schema.
+     */
+    function get_post_custom_fields($post): array
+    {
+        try {
+            $post = is_object($post) ? $post : \Acme\CmsDashboard\Models\Post::find($post);
+            if (!$post) return [];
+            $type = $post->type;
+
+            $groupIds = DB::table('custom_field_groups')
+                ->where('is_active', 1)->get()
+                ->filter(function ($g) use ($type) {
+                    $rules = json_decode($g->rules ?? '', true);
+                    $pt = is_array($rules) ? ($rules['post_type'] ?? null) : null;
+                    return is_array($pt) ? in_array($type, $pt, true) : $pt === $type;
+                })->pluck('id');
+
+            if ($groupIds->isEmpty()) return [];
+
+            $fields = DB::table('custom_fields')->whereIn('field_group_id', $groupIds)->orderBy('order')->get();
+            $values = DB::table('post_custom_field_values')->where('post_id', $post->id)->pluck('value', 'field_id');
+
+            $out = [];
+            foreach ($fields as $f) {
+                $raw = $values[$f->id] ?? null;
+                if (is_string($raw) && strlen($raw) && in_array($raw[0], ['[', '{'], true)) {
+                    $decoded = json_decode($raw, true);
+                    if (json_last_error() === JSON_ERROR_NONE) $raw = $decoded;
+                }
+                $out[$f->name] = $raw;
+            }
+            return $out;
+        } catch (\Throwable $e) {
+            return [];
         }
     }
 }

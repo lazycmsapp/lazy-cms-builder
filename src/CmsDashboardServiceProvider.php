@@ -10,7 +10,7 @@ class CmsDashboardServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
-            return $user->role && $user->role->slug === 'super-admin' ? true : null;
+            return ($user && method_exists($user, 'hasRole') && $user->hasRole('super-admin')) ? true : null;
         });
 
         // Share activeTheme globally with all views
@@ -23,6 +23,7 @@ class CmsDashboardServiceProvider extends ServiceProvider
         $this->app['router']->pushMiddlewareToGroup('web', \Acme\CmsDashboard\Http\Middleware\LocalizationMiddleware::class);
         $this->app['router']->pushMiddlewareToGroup('web', \Acme\CmsDashboard\Http\Middleware\BuilderShortcodeMiddleware::class);
         $this->app['router']->pushMiddlewareToGroup('web', \Acme\CmsDashboard\Http\Middleware\PersistCart::class);
+        $this->app['router']->aliasMiddleware('api.token', \Acme\CmsDashboard\Http\Middleware\AuthenticateApiToken::class);
 
         $this->app->booted(function () {
             $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');

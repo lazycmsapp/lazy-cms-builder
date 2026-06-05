@@ -155,10 +155,18 @@ class Sidebar extends Component
             if ($pType === 'page') return $user->hasPermission('manage_pages');
             if ($pType === 'post') return $user->hasPermission('manage_posts');
             
-            // For CPTs, check multiple potential permission prefixes
-            return $user->hasPermission('manage_' . $pType) || 
-                   $user->hasPermission('access_' . $pType) ||
-                   $user->hasPermission('access_all_' . $pType);
+            // For CPTs, check multiple potential permission prefixes. Permission slugs are
+            // derived from the (often pluralised) menu title — e.g. the "Products" CPT yields
+            // access_products / access_all_products — so accept both the type slug and its
+            // plural form to avoid singular/plural mismatches.
+            foreach (array_unique([$pType, $pType . 's']) as $v) {
+                if ($user->hasPermission('manage_' . $v)
+                    || $user->hasPermission('access_' . $v)
+                    || $user->hasPermission('access_all_' . $v)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         // Users
@@ -173,16 +181,47 @@ class Sidebar extends Component
         // Media
         if (str_contains($targetPath, 'admin/media')) return $user->hasPermission('manage_media');
         
+        // Each section below requires its OWN permission. Broad permissions
+        // (manage_posts / manage_settings) are intentionally NOT accepted as a
+        // cross-module master key, so granting one section does not unlock unrelated
+        // pages by typing the URL.
+
         // Comments
-        if (str_contains($targetPath, 'admin/comments')) return $user->hasPermission('manage_posts');
+        if (str_contains($targetPath, 'admin/comments')) return $user->hasPermission('access_comments');
 
         // Appearance (Themes, Menus, Widgets)
-        if (str_contains($targetPath, 'admin/themes')) return $user->hasPermission('access_themes') || $user->hasPermission('manage_settings');
-        if (str_contains($targetPath, 'admin/menus')) return $user->hasPermission('access_menus') || $user->hasPermission('manage_settings');
-        if (str_contains($targetPath, 'admin/widgets')) return $user->hasPermission('access_widgets') || $user->hasPermission('manage_settings');
+        if (str_contains($targetPath, 'admin/themes')) return $user->hasPermission('access_themes');
+        if (str_contains($targetPath, 'admin/menus')) return $user->hasPermission('access_menus');
+        if (str_contains($targetPath, 'admin/widgets')) return $user->hasPermission('access_widgets');
 
-        // Shop / eCommerce
-        if (str_contains($targetPath, 'admin/shop')) return $user->hasPermission('manage_settings') || $user->hasPermission('manage_posts');
+        // Product taxonomy (dedicated Product Categories / Tags pages).
+        if (str_contains($targetPath, 'admin/product-categories')) {
+            return $user->hasPermission('access_categories_products')
+                || $user->hasPermission('access_product_category');
+        }
+        if (str_contains($targetPath, 'admin/product-tags')) {
+            return $user->hasPermission('access_tags_products')
+                || $user->hasPermission('access_product_tags');
+        }
+
+        // Post taxonomy (Categories / Tags pages).
+        if (str_contains($targetPath, 'admin/categories')) {
+            return $user->hasPermission('access_categories_posts')
+                || $user->hasPermission('access_categories');
+        }
+        if (str_contains($targetPath, 'admin/tags')) {
+            return $user->hasPermission('access_tags_posts')
+                || $user->hasPermission('access_tags');
+        }
+
+        // Shop / eCommerce — requires a Shop permission (or one of its sub-permissions).
+        if (str_contains($targetPath, 'admin/shop')) {
+            return $user->hasPermission('access_shop')
+                || $user->hasPermission('access_orders_shop')
+                || $user->hasPermission('access_customers_shop')
+                || $user->hasPermission('access_settings_shop')
+                || $user->hasPermission('access_product_reviews');
+        }
 
         // ACPT
         if (str_contains($targetPath, 'admin/acpt')) return $user->hasPermission('manage_settings');
@@ -246,24 +285,32 @@ class Sidebar extends Component
             $parentId = $menu->parent_id ?? null;
         }
         
-        if ($title === 'dashboard') return 'access_dashboard';
-        if ($title === 'posts') return 'manage_posts';
-        if ($title === 'pages') return 'manage_pages';
-        if ($title === 'media') return 'manage_media';
-        if ($title === 'users') return 'manage_users';
-        if ($title === 'settings') return 'manage_settings';
-        
+        // Canonical (legacy) slugs apply only to TOP-LEVEL core menus. A child with the
+        // same title (e.g. Shop → Settings) must NOT collapse onto manage_settings.
+        if (!$parentId) {
+            if ($title === 'dashboard') return 'access_dashboard';
+            if ($title === 'posts') return 'manage_posts';
+            if ($title === 'pages') return 'manage_pages';
+            if ($title === 'media') return 'manage_media';
+            if ($title === 'users') return 'manage_users';
+            if ($title === 'settings') return 'manage_settings';
+            if ($title === 'roles') return 'manage_roles';
+            if ($title === 'analytics') return 'manage_analytics';
+        }
+
         $titleStr = is_array($menu) ? ($menu['title'] ?? '') : ($menu->title ?? '');
         $slug = \Illuminate\Support\Str::slug($titleStr, '_');
 
-        // Match RoleController unique slug logic for children
-        if ($parentId && in_array($title, ['add new', 'categories', 'tags', 'all posts', 'all pages'])) {
+        // Children are ALWAYS namespaced by their parent, so two items sharing a title
+        // under different parents never collide (Shop → Settings vs top-level Settings,
+        // Shop → Overview vs Dashboard → Overview, Shop → Orders, etc.).
+        if ($parentId) {
             $parent = \Acme\CmsDashboard\Models\Menu::find($parentId);
             if ($parent) {
                 $slug .= '_' . \Illuminate\Support\Str::slug($parent->title, '_');
             }
         }
-        
+
         return 'access_' . $slug;
     }
 

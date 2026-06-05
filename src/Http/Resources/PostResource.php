@@ -37,7 +37,10 @@ class PostResource extends JsonResource
                 ];
             }),
             'published_at' => $this->created_at->format('Y-m-d H:i:s'),
-            'seo' => $this->seo_meta
+            'seo' => $this->seo_meta,
+            // Dynamic: all custom fields assigned to this post's type (auto-detected from
+            // the field groups, so adding/removing a field updates the API automatically).
+            'custom_fields' => get_post_custom_fields($this->resource),
         ];
 
         return apply_lazy_filters('lazy_api_post_data', $data, $this->resource);

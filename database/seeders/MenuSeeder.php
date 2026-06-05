@@ -182,10 +182,13 @@ class MenuSeeder extends Seeder
             'order' => 90,
         ]);
         $settingsMenu->children()->createMany([
-            ['title' => 'General',       'route' => 'admin.settings.index',         'order' => 1],
-            ['title' => 'SEO',           'route' => 'admin.settings.seo',           'order' => 2],
-            ['title' => 'Redirects',     'route' => 'admin.redirects.index',        'order' => 3],
-            ['title' => 'Activity Logs', 'route' => 'admin.settings.activity-logs', 'order' => 4],
+            ['title' => 'General',         'route' => 'admin.settings.index',           'order' => 1],
+            ['title' => 'SEO',             'route' => 'admin.settings.seo',             'order' => 2],
+            ['title' => 'Redirects',       'route' => 'admin.redirects.index',          'order' => 3],
+            ['title' => 'Activity Logs',   'route' => 'admin.settings.activity-logs',   'order' => 4],
+            ['title' => 'REST API',        'route' => 'admin.settings.api',             'order' => 5],
+            ['title' => 'Integrations',    'route' => 'admin.settings.integrations',    'order' => 6],
+            ['title' => 'Email Templates', 'route' => 'admin.settings.email-templates', 'order' => 7],
         ]);
 
         // 13. Help
@@ -229,7 +232,6 @@ class MenuSeeder extends Seeder
             ['title' => 'Overview',         'route' => 'admin.shop.overview',      'order' => 0],
             ['title' => 'Orders',          'route' => 'admin.shop.orders.index', 'order' => 1],
             ['title' => 'Product Reviews',  'route' => 'admin.shop.reviews.index', 'order' => 2],
-            ['title' => 'Customers',        'route' => 'admin.users.index',        'order' => 3],
             ['title' => 'Settings',         'route' => 'admin.shop.settings',      'order' => 4],
         ]);
 

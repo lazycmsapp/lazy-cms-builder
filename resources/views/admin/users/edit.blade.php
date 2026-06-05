@@ -30,16 +30,26 @@
                     <th scope="row" class="w-[200px] text-left align-top pt-2"><label for="password_confirmation" class="text-[14px] font-semibold text-[#1d2327]">Confirm New Password</label></th>
                     <td><input type="password" name="password_confirmation" id="password_confirmation" class="wp-input w-[400px] h-8 shadow-sm" required></td>
                 </tr>
+                @if(auth()->user()->hasPermission('manage_users'))
+                @php $userRoleIds = $user->cmsRoleIds(); @endphp
                 <tr>
-                    <th scope="row" class="w-[200px] text-left align-top pt-2"><label for="role_id" class="text-[14px] font-semibold text-[#1d2327]">Role</label></th>
+                    <th scope="row" class="w-[200px] text-left align-top pt-2"><label class="text-[14px] font-semibold text-[#1d2327]">Roles</label></th>
                     <td>
-                        <select name="role_id" id="role_id" class="wp-input w-[200px] h-8 shadow-sm">
+                        <div class="space-y-1.5">
                             @foreach($roles as $role)
-                                <option value="{{ $role->id }}" {{ $user->role_id == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="roles[]" value="{{ $role->id }}"
+                                           {{ in_array($role->id, old('roles', $userRoleIds)) ? 'checked' : '' }}
+                                           class="w-4 h-4 rounded border-[#8c8f94] text-[#2271b1]">
+                                    <span class="text-[13px] text-[#2c3338]">{{ $role->name }}</span>
+                                </label>
                             @endforeach
-                        </select>
+                        </div>
+                        <p class="text-[11px] text-[#646970] mt-1">Select one or more roles — permissions are the combined set of all selected roles.</p>
+                        @error('roles')<p class="text-[11px] text-[#d63638] mt-1">{{ $message }}</p>@enderror
                     </td>
                 </tr>
+                @endif
             </table>
 
             @include('cms-dashboard::components.admin.dynamic-fields')

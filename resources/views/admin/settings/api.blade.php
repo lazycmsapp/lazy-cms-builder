@@ -64,6 +64,55 @@
                     <button type="submit" class="wp-btn-primary px-4 h-8 font-semibold">Save Changes</button>
                 </div>
             </form>
+
+            <!-- ── API Tokens (for write endpoints) ───────────────────────────── -->
+            <div class="mt-10 pt-8 border-t border-gray-200">
+                <h3 class="text-[15px] font-semibold text-[#1d2327] mb-1">API Tokens</h3>
+                <p class="text-[12px] text-[#646970] mb-4">Personal access tokens for authenticated requests (create / update / delete). Send as <code class="bg-gray-100 px-1 rounded">Authorization: Bearer &lt;token&gt;</code>. A token acts as you and inherits your permissions.</p>
+
+                @if(session('new_api_token'))
+                    <div class="bg-[#edfaef] border border-[#46b450] rounded p-3 mb-4">
+                        <p class="text-[12px] text-[#1d2327] mb-1 font-semibold">New token — copy it now, it won't be shown again:</p>
+                        <code class="block bg-white border border-[#c3c4c7] rounded px-3 py-2 text-[12px] break-all select-all">{{ session('new_api_token') }}</code>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('admin.settings.api.tokens.store') }}" class="flex gap-2 mb-5 max-w-md">
+                    @csrf
+                    <input type="text" name="token_name" required maxlength="255" placeholder="Token name (e.g. Mobile App)" class="wp-input flex-1 h-8 shadow-sm">
+                    <button type="submit" class="wp-btn-primary px-4 h-8 font-semibold whitespace-nowrap">Generate Token</button>
+                </form>
+
+                <div class="border border-[#c3c4c7] rounded overflow-hidden">
+                    <table class="w-full text-[12px] text-left">
+                        <thead class="bg-[#f6f7f7] text-[#646970] border-b border-[#c3c4c7]">
+                            <tr>
+                                <th class="px-3 py-2 font-semibold">Name</th>
+                                <th class="px-3 py-2 font-semibold">Last used</th>
+                                <th class="px-3 py-2 font-semibold">Created</th>
+                                <th class="px-3 py-2 font-semibold text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($tokens as $t)
+                                <tr class="border-b border-[#f0f0f1]">
+                                    <td class="px-3 py-2 text-[#1d2327] font-medium">{{ $t->name }}</td>
+                                    <td class="px-3 py-2 text-[#646970]">{{ $t->last_used_at ? $t->last_used_at->diffForHumans() : 'Never' }}</td>
+                                    <td class="px-3 py-2 text-[#646970]">{{ $t->created_at->format('M j, Y') }}</td>
+                                    <td class="px-3 py-2 text-right">
+                                        <form method="POST" action="{{ route('admin.settings.api.tokens.destroy', $t->id) }}" onsubmit="return confirm('Revoke this token? Apps using it will stop working.')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-[#d63638] font-semibold hover:underline">Revoke</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="4" class="px-3 py-4 text-center text-[#646970]">No API tokens yet.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </x-cms-dashboard::layouts.admin>

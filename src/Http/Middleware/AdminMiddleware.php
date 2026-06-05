@@ -77,66 +77,53 @@ class AdminMiddleware
             return $user->hasPermission('manage_options_' . $slug);
         }
 
-        // Try to match current URL with Menu items
-        // We look for a menu item whose route/URL matches or is a parent of the current path
-        // We sort by descending length to match more specific routes first (e.g. admin/pages/create before admin/pages)
-        $sidebar = new Sidebar(); 
-        $menus = Menu::all()->sort(function($a, $b) use ($sidebar) {
-            $urlA = $sidebar->resolveRoute($a->route, $a->title);
-            $urlB = $sidebar->resolveRoute($b->route, $b->title);
-            $pathA = trim(parse_url($urlA, PHP_URL_PATH), '/');
-            $pathB = trim(parse_url($urlB, PHP_URL_PATH), '/');
-            
-            $lenA = strlen($pathA);
-            $lenB = strlen($pathB);
-            
-            if ($lenA !== $lenB) {
-                return $lenB <=> $lenA; // Longest path first
-            }
+        // ── Dynamic, menu-driven access control ──────────────────────────────────
+        // The required permission for any admin page is derived from the menu item that
+        // "owns" the path (its getPermission slug — the SAME slug the Roles editor assigns).
+        // So whatever a role has checked is exactly what it can reach; nothing else.
+        $sidebar = new Sidebar();
 
-            // If lengths equal, prioritize those with query strings (more specific)
-            $hasQA = str_contains($urlA, '?');
-            $hasQB = str_contains($urlB, '?');
-            if ($hasQA && !$hasQB) return -1;
-            if (!$hasQA && $hasQB) return 1;
-            
-            // If still equal, prioritize children (those with parent_id)
-            if ($a->parent_id && !$b->parent_id) return -1;
-            if (!$a->parent_id && $b->parent_id) return 1;
-            
-            return 0;
-        });
+        // "Your Profile" redirects to the current user's OWN account edit page
+        // (/admin/users/{id}/edit). Editing one's own account is governed by the
+        // Your Profile permission, NOT user-management — so it works without "All Users".
+        if (preg_match('#^admin/users/(\d+)(/edit)?$#', $path, $m) && (int) $m[1] === (int) $user->id) {
+            if ($user->hasPermission('manage_users') || $user->hasPermission('access_all_users_users')) {
+                return true;
+            }
+            $profileMenu = Menu::where('route', 'admin.profile')->first();
+            $profilePerm = $profileMenu ? $sidebar->getPermission($profileMenu) : 'access_your_profile_users';
+            return $user->hasPermission($profilePerm);
+        }
+
+        // The shared posts/pages list paths are normally linked with ?type=…; default it
+        // so the bare index path still maps to its menu.
+        $currentType = $request->query('type') ?? $request->query('cpt_slug');
+        if (!$currentType) {
+            if ($path === 'admin/posts') $currentType = 'post';
+            elseif ($path === 'admin/pages') $currentType = 'page';
+        }
 
         $bestMatch = null;
         $bestMatchLen = -1;
 
-        foreach ($menus as $menu) {
-            // Skip parents that have children, because their URLs are handled by the children
+        foreach (Menu::all() as $menu) {
+            // Parents with children are reached through their children's URLs.
             if ($menu->children()->count() > 0) continue;
 
-            $menuUrl = $sidebar->resolveRoute($menu->route, $menu->title);
-            $menuPath = trim(parse_url($menuUrl, PHP_URL_PATH), '/');
-
+            $menuUrl  = $sidebar->resolveRoute($menu);           // pass the menu object (not strings)
+            $menuPath = trim(parse_url($menuUrl, PHP_URL_PATH) ?? '', '/');
             if (!$menuPath || $menuPath === 'admin') continue;
 
-            // If current path starts with this menu's path
             if (Str::startsWith($path, $menuPath)) {
-                parse_str(parse_url($menuUrl, PHP_URL_QUERY), $menuQuery);
+                parse_str(parse_url($menuUrl, PHP_URL_QUERY) ?? '', $menuQuery);
                 $menuType = $menuQuery['type'] ?? $menuQuery['cpt_slug'] ?? null;
-                $currentType = $request->query('type') ?? $request->query('cpt_slug');
 
-                // If menu has a type, it MUST match exactly
-                if ($menuType && $currentType !== $menuType) {
-                    continue;
-                }
+                // A type-specific menu must match the request's type.
+                if ($menuType && $currentType !== $menuType) continue;
 
                 $matchLen = strlen($menuPath);
-                
-                // If it's a type-specific match, give it a weight boost to prioritize it over general ones of same length
-                if ($menuType) $matchLen += 1000; 
-                
-                // If this is an exact path match, give it a boost
-                if ($path === $menuPath) $matchLen += 500;
+                if ($menuType) $matchLen += 1000;          // prefer type-specific
+                if ($path === $menuPath) $matchLen += 500; // prefer exact path
 
                 if ($matchLen > $bestMatchLen) {
                     $bestMatchLen = $matchLen;
@@ -146,22 +133,18 @@ class AdminMiddleware
         }
 
         if ($bestMatch) {
-            $perm = $sidebar->getPermission($bestMatch);
-            $hasPerm = $user->hasPermission($perm);
-            // \Illuminate\Support\Facades\Log::info("AdminMiddleware Match", [
-            //     'path' => $path,
-            //     'best_match' => $bestMatch->title,
-            //     'required_perm' => $perm,
-            //     'has_perm' => $hasPerm
-            // ]);
-            return $hasPerm;
+            return $user->hasPermission($sidebar->getPermission($bestMatch));
         }
 
+        // Row-level actions under the shared posts/pages paths (e.g. /admin/posts/5/edit)
+        // carry no ?type=, so their required permission depends on the row's own type —
+        // PostController enforces those per-type. Allow them through to the controller.
+        if (preg_match('#^admin/(posts|pages)/.+#', $path)) {
+            return true;
+        }
 
-
-
-        // Fallback to the Sidebar's canAccess static logic for routes not in Menu table
-        return Sidebar::canAccess($request->fullUrl());
+        // Strict default: any page not owned by a permitted menu is denied.
+        return false;
     }
 }
 

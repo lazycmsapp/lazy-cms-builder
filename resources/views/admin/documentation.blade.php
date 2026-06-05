@@ -923,42 +923,221 @@ $elements['my_card'] = [
                 <!-- REST API Section -->
                 <section id="rest-api" class="doc-section mb-12">
                     <h2 class="text-2xl font-bold text-gray-900 mb-4">REST API & Headless</h2>
-                    <p class="text-gray-700 mb-6">Build modern frontends with React, Vue, or Mobile apps using the built-in API.</p>
+                    <p class="text-gray-700 mb-6">A built-in JSON REST API lets you power a React / Vue / Next.js front-end, a mobile app, or any external integration. <b>Read</b> endpoints are public; <b>write</b> endpoints require a personal API token. All responses are JSON and CORS is enabled, so you can call the API from any domain.</p>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-4">
-                            <h3 class="text-lg font-bold text-gray-800">Available Endpoints</h3>
-                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                                <ul class="text-xs space-y-3 text-gray-700">
-                                    <li class="flex items-center justify-between border-b border-gray-100 pb-2">
-                                        <code class="text-blue-600">GET /api/v1/posts</code>
-                                        <span class="text-[10px] font-bold text-gray-400">List all posts</span>
-                                    </li>
-                                    <li class="flex items-center justify-between border-b border-gray-100 pb-2">
-                                        <code class="text-blue-600">GET /api/v1/settings</code>
-                                        <span class="text-[10px] font-bold text-gray-400">Site settings</span>
-                                    </li>
-                                    <li class="flex items-center justify-between border-b border-gray-100 pb-2">
-                                        <code class="text-blue-600">GET /api/v1/menus</code>
-                                        <span class="text-[10px] font-bold text-gray-400">Navigation</span>
-                                    </li>
-                                </ul>
+                    {{-- Basics --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-6">
+                        <h3 class="font-bold text-gray-800 mb-3">1. Basics</h3>
+                        <ul class="text-sm text-gray-700 space-y-2">
+                            <li><b>Base URL:</b> <code class="bg-gray-100 px-1.5 py-0.5 rounded text-blue-600">{{ url('/api/v1') }}</code></li>
+                            <li><b>Format:</b> every response is <code class="bg-gray-100 px-1 rounded">application/json</code> wrapped in a consistent envelope:</li>
+                        </ul>
+                        <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] mt-3">
+<pre>@verbatim{
+  "success": true,
+  "data": [ ... ],          // object or array
+  "meta": {                 // present on paginated lists
+    "current_page": 1,
+    "per_page": 10,
+    "total": 42,
+    "last_page": 5
+  }
+}@endverbatim</pre>
+                        </div>
+                        <ul class="text-xs text-gray-500 space-y-1 mt-3">
+                            <li>• <b>Rate limit:</b> 60 requests / minute per IP (see the <code>X-RateLimit-*</code> response headers).</li>
+                            <li>• <b>Enable / disable:</b> the whole API can be toggled from <b>Settings → API</b> (<code>enable_rest_api</code>).</li>
+                            <li>• <b>Pagination:</b> add <code>?limit=20</code> (max 100) and <code>?page=2</code> to any list endpoint.</li>
+                        </ul>
+                    </div>
+
+                    {{-- Authentication --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-6">
+                        <h3 class="font-bold text-gray-800 mb-3">2. Authentication (for write access)</h3>
+                        <p class="text-sm text-gray-700 mb-3">Reading is public and needs no key. To <b>create / update / delete</b>, generate a personal token:</p>
+                        <ol class="text-sm text-gray-700 list-decimal list-inside space-y-1 mb-3">
+                            <li>Go to <b>Settings → API → API Tokens</b>.</li>
+                            <li>Type a name (e.g. "Mobile App") and click <b>Generate Token</b>.</li>
+                            <li>Copy the token <b>immediately</b> — it is shown only once (only its hash is stored).</li>
+                        </ol>
+                        <p class="text-sm text-gray-700 mb-2">Send it on every write request in the <code class="bg-gray-100 px-1 rounded">Authorization</code> header:</p>
+                        <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px]">
+<pre>@verbatim Authorization: Bearer YOUR_API_TOKEN @endverbatim</pre>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-3">A token <b>acts as the user who created it</b> and inherits that user's role permissions. So a token from an "Editor" can manage posts, but a token from a limited role gets <code>403 Forbidden</code> on actions it isn't allowed to perform.</p>
+                    </div>
+
+                    {{-- Endpoints table --}}
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">3. Endpoints</h3>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden mb-3">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-gray-100 text-gray-600">
+                                <tr><th class="px-3 py-2">Method</th><th class="px-3 py-2">Endpoint</th><th class="px-3 py-2">Auth</th><th class="px-3 py-2">Description</th></tr>
+                            </thead>
+                            <tbody class="text-gray-700">
+                                @php
+                                    $rows = [
+                                        ['GET','/posts','—','List published posts. Params: limit, page, type'],
+                                        ['GET','/posts/{slug}','—','Single post by slug'],
+                                        ['GET','/pages','—','List published pages'],
+                                        ['GET','/posts?type={cpt}','—','Any custom post type (e.g. type=portfolio)'],
+                                        ['GET','/products','—','List products. Params: limit, page, category'],
+                                        ['GET','/products/{slug}','—','Single product (price, stock, SKU…)'],
+                                        ['GET','/categories','—','Post categories'],
+                                        ['GET','/tags','—','Post tags'],
+                                        ['GET','/menus','—','Front-end navigation menus (nested)'],
+                                        ['GET','/settings','—','Public site settings'],
+                                        ['GET','/search?q={term}','—','Search posts, pages & products (min 2 chars)'],
+                                        ['POST','/posts','Token','Create a post/page/CPT'],
+                                        ['PUT','/posts/{id}','Token','Update a post'],
+                                        ['DELETE','/posts/{id}','Token','Delete a post'],
+                                    ];
+                                @endphp
+                                @foreach($rows as $r)
+                                    <tr class="border-t border-gray-100">
+                                        <td class="px-3 py-2"><span class="font-bold {{ $r[0]==='GET' ? 'text-green-600' : ($r[0]==='DELETE' ? 'text-red-600' : 'text-orange-600') }}">{{ $r[0] }}</span></td>
+                                        <td class="px-3 py-2"><code class="text-blue-600">/api/v1{{ $r[1] }}</code></td>
+                                        <td class="px-3 py-2">{{ $r[2] }}</td>
+                                        <td class="px-3 py-2 text-gray-500">{{ $r[3] }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Examples: reading --}}
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 mt-8">4. Examples — Reading (public)</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 mb-1">cURL — latest 5 posts</p>
+                            <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px]">
+<pre>@verbatim curl "{{ url('/api/v1/posts?limit=5') }}" @endverbatim</pre>
                             </div>
                         </div>
-
-                        <div class="space-y-4">
-                            <h3 class="text-lg font-bold text-gray-800">Filtering API Data</h3>
-                            <p class="text-xs text-gray-600">Modify JSON responses using theme hooks:</p>
-                            <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[10px]">
-                                <pre><code>@verbatim
-add_lazy_filter('lazy_api_post_data', function($data, $post) {
-    $data['reading_time'] = '5 min read';
-    return $data;
-});
-@endverbatim</code></pre>
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 mb-1">JavaScript (fetch) — products</p>
+                            <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px]">
+<pre>@verbatim const res = await fetch(
+  '{{ url('/api/v1/products?limit=12') }}'
+);
+const { data, meta } = await res.json();
+console.log(data, meta.total);@endverbatim</pre>
                             </div>
                         </div>
                     </div>
+                    <p class="text-xs font-bold text-gray-600 mb-1">Sample response — <code>GET /api/v1/products/{slug}</code></p>
+                    <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px] mb-2">
+<pre>@verbatim{
+  "success": true,
+  "data": {
+    "id": 45,
+    "title": "Samsung Galaxy A57",
+    "slug": "samsung-galaxy-a57",
+    "excerpt": "...",
+    "price": 50000,
+    "sale_price": 47000,
+    "sku": "SM-A57",
+    "in_stock": true,
+    "stock_quantity": 8,
+    "product_type": "simple",
+    "featured_image": "https://your-site.com/storage/media/a57.webp",
+    "categories": [ { "name": "Phones", "slug": "phones" } ],
+    "url": "https://your-site.com/product/samsung-galaxy-a57"
+  }
+}@endverbatim</pre>
+                    </div>
+
+                    {{-- Examples: writing --}}
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 mt-8">5. Examples — Writing (token required)</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 mb-1">Create a post (cURL)</p>
+                            <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px]">
+<pre>@verbatim curl -X POST "{{ url('/api/v1/posts') }}" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Accept: application/json" \
+  -d "title=Hello World" \
+  -d "content=My first API post" \
+  -d "status=published" \
+  -d "type=post"@endverbatim</pre>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 mb-1">Update / Delete</p>
+                            <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px]">
+<pre>@verbatim# Update
+curl -X PUT "{{ url('/api/v1/posts/123') }}" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Accept: application/json" \
+  -d "title=Updated title"
+
+# Delete
+curl -X DELETE "{{ url('/api/v1/posts/123') }}" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Accept: application/json"@endverbatim</pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 mt-4">
+                        <p class="text-xs text-blue-800"><b>Accepted fields on create/update:</b> <code>title</code> (required on create), <code>content</code>, <code>excerpt</code>, <code>status</code> (<code>draft</code> | <code>published</code> | <code>pending</code>), <code>type</code> (default <code>post</code>), <code>slug</code> (auto-generated if omitted).</p>
+                    </div>
+
+                    {{-- Errors --}}
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 mt-8">6. Error responses</h3>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden mb-2">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-gray-100 text-gray-600"><tr><th class="px-3 py-2">Status</th><th class="px-3 py-2">Meaning</th></tr></thead>
+                            <tbody class="text-gray-700">
+                                <tr class="border-t border-gray-100"><td class="px-3 py-2 font-bold">401</td><td class="px-3 py-2">Missing or invalid API token (write endpoints).</td></tr>
+                                <tr class="border-t border-gray-100"><td class="px-3 py-2 font-bold">403</td><td class="px-3 py-2">Token user lacks the required permission, or the API is disabled.</td></tr>
+                                <tr class="border-t border-gray-100"><td class="px-3 py-2 font-bold">404</td><td class="px-3 py-2">Resource (slug / id) not found.</td></tr>
+                                <tr class="border-t border-gray-100"><td class="px-3 py-2 font-bold">422</td><td class="px-3 py-2">Validation failed — check the <code>errors</code> object in the response.</td></tr>
+                                <tr class="border-t border-gray-100"><td class="px-3 py-2 font-bold">429</td><td class="px-3 py-2">Too many requests (rate limit exceeded).</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Extending --}}
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 mt-8">7. Extending API output</h3>
+                    <p class="text-xs text-gray-600 mb-2">Add custom fields to the post JSON via a theme hook (in your child theme's <code>functions.php</code>):</p>
+                    <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px]">
+<pre>@verbatim add_lazy_filter('lazy_api_post_data', function ($data, $post) {
+    $data['reading_time'] = ceil(str_word_count(strip_tags($post->content)) / 200) . ' min read';
+    return $data;
+}); @endverbatim</pre>
+                    </div>
+
+                    {{-- Custom fields (dynamic) --}}
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 mt-8">8. Custom fields (auto-detected)</h3>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <p class="text-sm text-green-900"><b>The API is schema-driven.</b> Every post / page / product / CPT response includes a <code class="bg-white px-1 rounded">custom_fields</code> object built <b>live from the database</b>. When you add or remove a field in <b>ACPT → Field Groups</b>, the API output updates <b>automatically</b> — no code change, no redeploy.</p>
+                    </div>
+                    <ul class="text-sm text-gray-700 space-y-1 mb-3">
+                        <li>• Only the fields assigned to that item's <b>post type</b> are returned (per the field group's rules).</li>
+                        <li>• Fields with no value yet appear as <code>null</code>, so consumers always see the full schema.</li>
+                        <li>• Complex values (repeater, gallery, checkbox group) are returned as decoded <b>arrays</b>.</li>
+                    </ul>
+                    <p class="text-xs font-bold text-gray-600 mb-1">Example — a "book" post with custom fields:</p>
+                    <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-[11px]">
+<pre>@verbatim{
+  "success": true,
+  "data": {
+    "id": 12,
+    "title": "The Pragmatic Programmer",
+    "slug": "the-pragmatic-programmer",
+    "type": "books",
+    "custom_fields": {
+      "writer_name": "Andrew Hunt",
+      "publisher": "Addison-Wesley",
+      "rating": null,                       // defined but not filled yet
+      "chapters": [                          // repeater -> array
+        { "title": "Intro", "pages": "12" }
+      ]
+    }
+  }
+}@endverbatim</pre>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Read a single field server-side with <code class="bg-gray-100 px-1 rounded">get_custom_field($post, 'writer_name')</code>, or the whole set with <code class="bg-gray-100 px-1 rounded">get_post_custom_fields($post)</code>.</p>
                 </section>
 
                 {{-- Section: RBAC --}}

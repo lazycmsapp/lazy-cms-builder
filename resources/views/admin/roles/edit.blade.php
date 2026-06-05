@@ -7,6 +7,17 @@
             <a href="{{ route('admin.roles.index') }}" class="wp-btn-secondary h-8 px-3">Back to Roles</a>
         </div>
 
+        @if(session('success'))
+            <div class="bg-[#edfaef] border-l-4 border-[#46b450] p-3 mb-4 text-[13px] text-[#1d2327] max-w-[1000px]">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="bg-[#fbeaea] border-l-4 border-[#d63638] p-3 mb-4 text-[13px] text-[#1d2327] max-w-[1000px]">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <form action="{{ route('admin.roles.update', $role->id) }}" method="POST" class="max-w-[1000px]">
             @csrf
             @method('PUT')

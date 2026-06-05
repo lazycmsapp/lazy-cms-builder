@@ -3,14 +3,8 @@
         @foreach($menuGroups as $groupName => $menus)
             @php
                 $user = auth()->user();
-                $userRoleSlug = $user->role ? $user->role->slug : null;
-                if (!$userRoleSlug && $user->role_id) {
-                    $userRoleSlug = \Illuminate\Support\Facades\DB::table('roles')->where('id', $user->role_id)->value('slug');
-                }
-                // Ultra-aggressive check: ID, Slug, or Email
-                $isAdmin = in_array($userRoleSlug, ['super-admin', 'administrator', 'admin']) 
-                        || in_array($user->role_id, [1, 6])
-                        || in_array($user->email, ['admin@admin.com', 'tareq@poronto.com']);
+                // Multiple-roles aware: admin if ANY of the user's roles is admin/super-admin.
+                $isAdmin = $user->isAdmin();
                 
                 $visibleMenus = $menus->filter(function($menu) use ($getPermission, $isAdmin, $user) {
                     if ($isAdmin) return true;
