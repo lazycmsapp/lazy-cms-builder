@@ -117,9 +117,6 @@ class WordPressImportController extends Controller
         ]);
 
         try {
-            $uploadDir = storage_path('app/public/uploads');
-            if (!file_exists($uploadDir)) mkdir($uploadDir, 0755, true);
-
             $zip = new \ZipArchive();
             if ($zip->open($request->file('wp_media_file')->getRealPath()) !== true) {
                 throw new \Exception('Could not open the zip file.');
@@ -139,31 +136,6 @@ class WordPressImportController extends Controller
             $skipped   = 0;
             $userId    = auth()->id();
 
-            // Find the common directory prefix in the zip so we can strip it.
-            // e.g. zip root may be "wp-content/uploads/" or "uploads/" or empty.
-            $allEntries = [];
-            for ($i = 0; $i < $zip->numFiles; $i++) {
-                $n = $zip->getNameIndex($i);
-                if (substr($n, -1) !== '/') $allEntries[] = $n;
-            }
-            $commonPrefix = '';
-            if (count($allEntries) > 0) {
-                $parts = explode('/', dirname($allEntries[0]));
-                foreach ($allEntries as $entry) {
-                    $ep = explode('/', dirname($entry));
-                    $new = [];
-                    foreach ($parts as $j => $seg) {
-                        if (isset($ep[$j]) && $ep[$j] === $seg) $new[] = $seg;
-                        else break;
-                    }
-                    $parts = $new;
-                    if (empty($parts)) break;
-                }
-                $commonPrefix = implode('/', $parts);
-                if ($commonPrefix !== '' && $commonPrefix !== '.') $commonPrefix .= '/';
-                else $commonPrefix = '';
-            }
-
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $name = $zip->getNameIndex($i);
                 if (substr($name, -1) === '/' || basename($name)[0] === '.') continue;
@@ -171,27 +143,22 @@ class WordPressImportController extends Controller
                 $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
                 if (!in_array($ext, $allowed)) { $skipped++; continue; }
 
-                // Strip common prefix then detect year/month from remaining path.
-                $relPath = $commonPrefix !== '' ? substr($name, strlen($commonPrefix)) : $name;
-                $relParts = explode('/', $relPath);
-
-                // Use year/month from zip path if present (e.g. 2023/03/file.jpg), else current month.
-                if (count($relParts) >= 3
-                    && preg_match('/^\d{4}$/', $relParts[0])
-                    && preg_match('/^\d{1,2}$/', $relParts[1])) {
-                    $yearMonth = $relParts[0] . '/' . str_pad($relParts[1], 2, '0', STR_PAD_LEFT);
+                // Detect YYYY/MM from anywhere in the zip path.
+                // Handles: "2023/03/img.jpg", "uploads/2023/03/img.jpg", "wp-content/uploads/2023/03/img.jpg"
+                if (preg_match('#(\d{4})/(\d{1,2})/#', $name, $m)) {
+                    $yearMonth = $m[1] . '/' . str_pad($m[2], 2, '0', STR_PAD_LEFT);
                 } else {
                     $yearMonth = now()->format('Y/m');
                 }
 
-                $basename = basename($relPath);
+                $basename = basename($name);
                 $destDir  = storage_path('app/public/media/' . $yearMonth);
                 if (!file_exists($destDir)) mkdir($destDir, 0755, true);
 
                 $dest = $destDir . '/' . $basename;
                 $path = 'media/' . $yearMonth . '/' . $basename;
 
-                // Unique filename — numeric suffix like slug uniqueness.
+                // Unique filename — numeric suffix (-1, -2, …) only when needed.
                 if (file_exists($dest)) {
                     $stem = pathinfo($basename, PATHINFO_FILENAME);
                     $n    = 1;
