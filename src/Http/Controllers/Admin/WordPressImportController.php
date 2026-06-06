@@ -125,9 +125,19 @@ class WordPressImportController extends Controller
                 throw new \Exception('Could not open the zip file.');
             }
 
-            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'pdf', 'mp4', 'mp3', 'mov', 'avi', 'ico', 'bmp', 'tif', 'tiff', 'woff', 'woff2'];
-            $count   = 0;
-            $skipped = 0;
+            $mimeMap = [
+                'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png',
+                'gif' => 'image/gif',  'webp' => 'image/webp', 'svg' => 'image/svg+xml',
+                'bmp' => 'image/bmp',  'ico'  => 'image/x-icon', 'tif' => 'image/tiff',
+                'tiff'=> 'image/tiff', 'pdf'  => 'application/pdf',
+                'mp4' => 'video/mp4',  'mov'  => 'video/quicktime', 'avi' => 'video/x-msvideo',
+                'mp3' => 'audio/mpeg', 'woff' => 'font/woff', 'woff2' => 'font/woff2',
+            ];
+            $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tif', 'tiff'];
+            $allowed   = array_keys($mimeMap);
+            $count     = 0;
+            $skipped   = 0;
+            $userId    = auth()->id();
 
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $name = $zip->getNameIndex($i);
@@ -138,23 +148,47 @@ class WordPressImportController extends Controller
 
                 $basename = basename($name);
                 $dest     = $uploadDir . '/' . $basename;
+                $path     = 'uploads/' . $basename;
 
                 if (file_exists($dest)) {
-                    $basename = pathinfo($basename, PATHINFO_FILENAME) . '_wp' . $i . '.' . $ext;
-                    $dest     = $uploadDir . '/' . $basename;
+                    $newBasename = pathinfo($basename, PATHINFO_FILENAME) . '_wp' . $i . '.' . $ext;
+                    $dest  = $uploadDir . '/' . $newBasename;
+                    $path  = 'uploads/' . $newBasename;
+                    $basename = $newBasename;
                 }
 
                 $data = $zip->getFromIndex($i);
-                if ($data !== false) {
-                    file_put_contents($dest, $data);
-                    $count++;
+                if ($data === false) continue;
+
+                file_put_contents($dest, $data);
+                $fileSize = strlen($data);
+                $mime     = $mimeMap[$ext] ?? 'application/octet-stream';
+                $width = $height = null;
+
+                if (in_array($ext, $imageExts) && function_exists('getimagesize')) {
+                    $info = @getimagesize($dest);
+                    if ($info) { $width = $info[0]; $height = $info[1]; }
                 }
+
+                \Acme\CmsDashboard\Models\Media::create([
+                    'filename'        => $basename,
+                    'title'           => pathinfo($basename, PATHINFO_FILENAME),
+                    'path'            => $path,
+                    'mime_type'       => $mime,
+                    'width'           => $width,
+                    'height'          => $height,
+                    'original_size'   => $fileSize,
+                    'compressed_size' => $fileSize,
+                    'user_id'         => $userId,
+                ]);
+
+                $count++;
             }
 
             $zip->close();
 
-            $msg = "Media import complete: {$count} files imported to the uploads folder.";
-            if ($skipped > 0) $msg .= " {$skipped} non-media files skipped.";
+            $msg = "Media import complete: {$count} file(s) imported and added to the media library.";
+            if ($skipped > 0) $msg .= " {$skipped} non-media file(s) skipped.";
 
             if (function_exists('lazy_log_activity')) lazy_log_activity('imported', $msg);
 
