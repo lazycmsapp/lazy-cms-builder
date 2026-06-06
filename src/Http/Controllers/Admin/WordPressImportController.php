@@ -139,6 +139,31 @@ class WordPressImportController extends Controller
             $skipped   = 0;
             $userId    = auth()->id();
 
+            // Find the common directory prefix in the zip so we can strip it.
+            // e.g. zip root may be "wp-content/uploads/" or "uploads/" or empty.
+            $allEntries = [];
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $n = $zip->getNameIndex($i);
+                if (substr($n, -1) !== '/') $allEntries[] = $n;
+            }
+            $commonPrefix = '';
+            if (count($allEntries) > 0) {
+                $parts = explode('/', dirname($allEntries[0]));
+                foreach ($allEntries as $entry) {
+                    $ep = explode('/', dirname($entry));
+                    $new = [];
+                    foreach ($parts as $j => $seg) {
+                        if (isset($ep[$j]) && $ep[$j] === $seg) $new[] = $seg;
+                        else break;
+                    }
+                    $parts = $new;
+                    if (empty($parts)) break;
+                }
+                $commonPrefix = implode('/', $parts);
+                if ($commonPrefix !== '' && $commonPrefix !== '.') $commonPrefix .= '/';
+                else $commonPrefix = '';
+            }
+
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $name = $zip->getNameIndex($i);
                 if (substr($name, -1) === '/' || basename($name)[0] === '.') continue;
@@ -146,14 +171,21 @@ class WordPressImportController extends Controller
                 $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
                 if (!in_array($ext, $allowed)) { $skipped++; continue; }
 
-                $basename = basename($name);
-                $dest     = $uploadDir . '/' . $basename;
-                $path     = 'uploads/' . $basename;
+                // Strip common prefix → preserve year/month subfolders
+                $relPath  = $commonPrefix !== '' ? substr($name, strlen($commonPrefix)) : $name;
+                $relDir   = dirname($relPath);
+                $basename = basename($relPath);
+                $destDir  = $relDir && $relDir !== '.' ? $uploadDir . '/' . $relDir : $uploadDir;
+
+                if (!file_exists($destDir)) mkdir($destDir, 0755, true);
+
+                $dest = $destDir . '/' . $basename;
+                $path = 'uploads/' . ($relDir && $relDir !== '.' ? $relDir . '/' : '') . $basename;
 
                 if (file_exists($dest)) {
                     $newBasename = pathinfo($basename, PATHINFO_FILENAME) . '_wp' . $i . '.' . $ext;
-                    $dest  = $uploadDir . '/' . $newBasename;
-                    $path  = 'uploads/' . $newBasename;
+                    $dest     = $destDir . '/' . $newBasename;
+                    $path     = 'uploads/' . ($relDir && $relDir !== '.' ? $relDir . '/' : '') . $newBasename;
                     $basename = $newBasename;
                 }
 
