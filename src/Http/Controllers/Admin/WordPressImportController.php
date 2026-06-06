@@ -171,22 +171,36 @@ class WordPressImportController extends Controller
                 $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
                 if (!in_array($ext, $allowed)) { $skipped++; continue; }
 
-                // Strip common prefix → preserve year/month subfolders
-                $relPath  = $commonPrefix !== '' ? substr($name, strlen($commonPrefix)) : $name;
-                $relDir   = dirname($relPath);
-                $basename = basename($relPath);
-                $destDir  = $relDir && $relDir !== '.' ? $uploadDir . '/' . $relDir : $uploadDir;
+                // Strip common prefix then detect year/month from remaining path.
+                $relPath = $commonPrefix !== '' ? substr($name, strlen($commonPrefix)) : $name;
+                $relParts = explode('/', $relPath);
 
+                // Use year/month from zip path if present (e.g. 2023/03/file.jpg), else current month.
+                if (count($relParts) >= 3
+                    && preg_match('/^\d{4}$/', $relParts[0])
+                    && preg_match('/^\d{1,2}$/', $relParts[1])) {
+                    $yearMonth = $relParts[0] . '/' . str_pad($relParts[1], 2, '0', STR_PAD_LEFT);
+                } else {
+                    $yearMonth = now()->format('Y/m');
+                }
+
+                $basename = basename($relPath);
+                $destDir  = storage_path('app/public/media/' . $yearMonth);
                 if (!file_exists($destDir)) mkdir($destDir, 0755, true);
 
                 $dest = $destDir . '/' . $basename;
-                $path = 'uploads/' . ($relDir && $relDir !== '.' ? $relDir . '/' : '') . $basename;
+                $path = 'media/' . $yearMonth . '/' . $basename;
 
+                // Unique filename — numeric suffix like slug uniqueness.
                 if (file_exists($dest)) {
-                    $newBasename = pathinfo($basename, PATHINFO_FILENAME) . '_wp' . $i . '.' . $ext;
-                    $dest     = $destDir . '/' . $newBasename;
-                    $path     = 'uploads/' . ($relDir && $relDir !== '.' ? $relDir . '/' : '') . $newBasename;
-                    $basename = $newBasename;
+                    $stem = pathinfo($basename, PATHINFO_FILENAME);
+                    $n    = 1;
+                    do {
+                        $basename = $stem . '-' . $n . '.' . $ext;
+                        $dest     = $destDir . '/' . $basename;
+                        $path     = 'media/' . $yearMonth . '/' . $basename;
+                        $n++;
+                    } while (file_exists($dest));
                 }
 
                 $data = $zip->getFromIndex($i);

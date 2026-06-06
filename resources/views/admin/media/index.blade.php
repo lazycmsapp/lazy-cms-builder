@@ -552,6 +552,25 @@
                 if (action === 'delete' && ids.length > 0) executeBulkDelete(ids);
             });
 
+            // Select-all checkbox in list view header
+            const selectAllEl = document.getElementById('select-all-media');
+            if (selectAllEl) {
+                selectAllEl.addEventListener('change', function () {
+                    document.querySelectorAll('#media-list-container .media-checkbox').forEach(cb => {
+                        cb.checked = this.checked;
+                    });
+                });
+                // Keep select-all in sync when individual checkboxes change
+                document.getElementById('media-list-container').addEventListener('change', function (e) {
+                    if (e.target.classList.contains('media-checkbox')) {
+                        const all  = document.querySelectorAll('#media-list-container .media-checkbox');
+                        const checked = document.querySelectorAll('#media-list-container .media-checkbox:checked');
+                        selectAllEl.indeterminate = checked.length > 0 && checked.length < all.length;
+                        selectAllEl.checked = checked.length === all.length;
+                    }
+                });
+            }
+
             window.confirmDelete = (id) => executeBulkDelete([id]);
 
             // Update Manual Save
