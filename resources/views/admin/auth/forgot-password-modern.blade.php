@@ -3,57 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password - Lazy CMS Modern</title>
+    <title>Forgot Password — {{ get_cms_option('site_title', 'Lazy CMS') }}</title>
     <script src="{{ asset('vendor/cms-dashboard/js/tailwind.min.js') }}"></script>
     <link href="{{ asset('vendor/cms-dashboard/css/inter.css') }}" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin: 0; }
-        .flex-fallback { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; box-sizing: border-box; }
-        .modern-card { background: #ffffff; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; padding: 2.5rem; box-sizing: border-box; }
-        .wp-input { border: 1px solid #d1d5db; border-radius: 8px; padding: 12px 14px; width: 100%; transition: all 0.2s; background: #f9fafb; box-sizing: border-box; }
-        .wp-input:focus { border-color: #6366f1; outline: none; background: #fff; ring: 4px rgba(99, 102, 241, 0.1); }
-        .btn-modern { background: #4f46e5; color: white; padding: 14px; border: none; border-radius: 8px; font-weight: 600; transition: all 0.2s; width: 100%; cursor: pointer; }
-        .btn-modern:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); }
+        .page-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; box-sizing: border-box; }
+        .auth-card { background: #fff; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,.1), 0 8px 10px -6px rgba(0,0,0,.08); width: 100%; max-width: 400px; padding: 2.25rem; box-sizing: border-box; }
+
+        .lf-field-wrap { position: relative; }
+        .lf-input {
+            border: 1px solid #d1d5db; border-radius: 8px;
+            padding: 1.3rem 14px .45rem; width: 100%;
+            font-size: .9rem; color: #111827; background: #fff;
+            transition: border-color .15s, box-shadow .15s;
+            box-sizing: border-box; display: block;
+        }
+        .lf-input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+        .lf-float-label {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            transition: top .15s ease, transform .15s ease, color .15s ease, background-color .15s ease;
+            pointer-events: none; color: #9ca3af; font-size: .875rem; font-weight: 500; line-height: 1;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 28px); z-index: 1;
+        }
+        .lf-field-wrap.lf-focused .lf-float-label,
+        .lf-field-wrap.lf-filled  .lf-float-label {
+            top: 0; transform: translateY(-50%) scale(.78); transform-origin: left center;
+            padding: 0 3px; background-color: #fff; color: #374151; max-width: none; overflow: visible;
+        }
+        .lf-field-wrap.lf-focused .lf-float-label { color: #6366f1; }
+
+        .btn-submit {
+            background: #4f46e5; color: #fff; padding: 13px; border: none; border-radius: 8px;
+            font-weight: 600; font-size: .9rem; width: 100%; cursor: pointer;
+            transition: background .2s, transform .1s, box-shadow .2s;
+        }
+        .btn-submit:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,70,229,.25); }
     </style>
 </head>
-<body class="flex-fallback">
-    <div class="modern-card">
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full mb-4">
-                <svg style="width:32px;height:32px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+<body class="page-wrap">
+    <div class="auth-card">
+        <div style="text-align:center;margin-bottom:1.75rem">
+            @if(get_cms_option('theme_site_logo'))
+                <img src="{{ get_cms_option('theme_site_logo') }}" alt="{{ get_cms_option('site_title') ?: 'Lazy CMS Builder' }}" style="height:44px;width:160px;object-fit:contain;display:inline-block">
+            @else
+                <span style="font-size:1.25rem;font-weight:800;color:#111827;letter-spacing:-.02em">{{ get_cms_option('site_title') ?: 'Lazy CMS Builder' }}</span>
+            @endif
+        </div>
+
+        <div class="text-center mb-7">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;background:#eef2ff;border-radius:50%;margin-bottom:.9rem">
+                <svg width="26" height="26" fill="none" stroke="#6366f1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
             </div>
-            <h1 class="text-2xl font-bold text-gray-900 mb-2">Forgot Password?</h1>
-            <p class="text-gray-500 text-sm">No worries, we'll send you reset instructions.</p>
+            <h1 style="font-size:1.5rem;font-weight:700;color:#111827;margin:0 0 .4rem">Forgot password?</h1>
+            <p style="color:#6b7280;font-size:.875rem;margin:0">Enter your email and we'll send reset instructions.</p>
         </div>
 
         @if(session('status'))
-            <div class="bg-green-50 border-l-4 border-green-400 p-3 mb-6 text-sm text-green-700">
+            <div style="background:#f0fdf4;border-left:3px solid #4ade80;padding:.75rem 1rem;border-radius:6px;margin-bottom:1.25rem;font-size:.85rem;color:#166534">
                 {{ session('status') }}
             </div>
         @endif
 
         @if($errors->any())
-            <div class="bg-red-50 border-l-4 border-red-400 p-3 mb-6 text-sm text-red-700">
+            <div style="background:#fef2f2;border-left:3px solid #f87171;padding:.75rem 1rem;border-radius:6px;margin-bottom:1.25rem;font-size:.85rem;color:#b91c1c">
                 {{ $errors->first() }}
             </div>
         @endif
 
-        <form action="{{ route('admin.password.email') }}" method="POST" class="space-y-6">
+        <form action="{{ route('admin.password.email') }}" method="POST" style="display:flex;flex-direction:column;gap:1.25rem">
             @csrf
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
-                <input type="email" name="email" class="wp-input" placeholder="Enter your email" required autofocus>
+            <div class="lf-field-wrap">
+                <input type="email" name="email" id="a_email" placeholder=" " class="lf-input" required autofocus value="{{ old('email') }}">
+                <label class="lf-float-label" for="a_email">Email address</label>
             </div>
 
-            <button type="submit" class="btn-modern">Reset Password</button>
+            <button type="submit" class="btn-submit">Send Reset Link</button>
         </form>
 
-        <p class="text-center mt-8 text-sm text-gray-500">
-            <a href="{{ route('admin.login') }}" class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-500 font-semibold transition-colors">
-                <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                Back to log in
+        <p style="text-align:center;margin-top:1.5rem;font-size:.875rem">
+            <a href="{{ route('admin.login') }}" style="color:#6366f1;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:.35rem">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                Back to sign in
             </a>
         </p>
     </div>
+
+    <script>
+    (function () {
+        document.querySelectorAll('.lf-field-wrap').forEach(function (wrap) {
+            var inp = wrap.querySelector('.lf-input');
+            if (!inp) return;
+            function update() { wrap.classList.toggle('lf-filled', inp.value.trim() !== ''); }
+            inp.addEventListener('focus',  function () { wrap.classList.add('lf-focused'); });
+            inp.addEventListener('blur',   function () { wrap.classList.remove('lf-focused'); update(); });
+            inp.addEventListener('input',  update);
+            update();
+        });
+    })();
+    </script>
 </body>
 </html>

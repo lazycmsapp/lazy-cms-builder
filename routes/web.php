@@ -240,6 +240,7 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     // Backups
     Route::get('tools/backup', [\Acme\CmsDashboard\Http\Controllers\Admin\BackupController::class, 'index'])->name('backup.index');
     Route::post('tools/backup', [\Acme\CmsDashboard\Http\Controllers\Admin\BackupController::class, 'create'])->name('backup.create');
+    Route::post('tools/backup/upload', [\Acme\CmsDashboard\Http\Controllers\Admin\BackupController::class, 'upload'])->name('backup.upload');
     Route::post('tools/backup/restore/{filename}', [\Acme\CmsDashboard\Http\Controllers\Admin\BackupController::class, 'restore'])->name('backup.restore');
     Route::get('tools/backup/download/{filename}', [\Acme\CmsDashboard\Http\Controllers\Admin\BackupController::class, 'download'])->name('backup.download');
     Route::delete('tools/backup/{filename}', [\Acme\CmsDashboard\Http\Controllers\Admin\BackupController::class, 'destroy'])->name('backup.destroy');
@@ -247,6 +248,7 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     // WordPress Importer
     Route::get('tools/wp-import', [\Acme\CmsDashboard\Http\Controllers\Admin\WordPressImportController::class, 'index'])->name('wp-import.index');
     Route::post('tools/wp-import', [\Acme\CmsDashboard\Http\Controllers\Admin\WordPressImportController::class, 'import'])->name('wp-import.import');
+    Route::post('tools/wp-import/media', [\Acme\CmsDashboard\Http\Controllers\Admin\WordPressImportController::class, 'importMedia'])->name('wp-import.media');
 
     // Redirection Manager
     Route::get('seo/redirects', [\Acme\CmsDashboard\Http\Controllers\Admin\RedirectController::class, 'index'])->name('redirects.index');
@@ -398,6 +400,10 @@ Route::middleware(['web', \Acme\CmsDashboard\Http\Middleware\PageCacheMiddleware
 
     // Order tracking
     Route::match(['get', 'post'], '/track-order', [ShopFrontendController::class, 'trackOrder'])->name('shop.track');
+
+    // Account page login / logout (shown inline on the account page for guests)
+    Route::post('/account-login', [ShopFrontendController::class, 'accountLogin'])->name('shop.account.login');
+    Route::post('/account-logout', [ShopFrontendController::class, 'accountLogout'])->name('shop.account.logout');
 
     // Wishlist
     Route::get('/wishlist', [\Acme\CmsDashboard\Http\Controllers\WishlistController::class, 'index'])->name('shop.wishlist');

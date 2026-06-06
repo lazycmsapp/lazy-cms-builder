@@ -908,6 +908,50 @@ class ShopFrontendController extends Controller
     }
 
     /**
+     * Log out from the customer account page and redirect back to it (not admin login).
+     */
+    public function accountLogout(Request $request)
+    {
+        \Illuminate\Support\Facades\Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        $redirect = $request->input('redirect_to') ?: url()->previous();
+        return redirect($redirect);
+    }
+
+    /**
+     * Handle login form submitted from the customer account page.
+     * On success redirects back to the same page (now authenticated).
+     */
+    public function accountLogin(Request $request)
+    {
+        $request->validate([
+            'account_email'    => 'required|email',
+            'account_password' => 'required',
+        ], [
+            'account_email.required'    => 'Please enter your email address.',
+            'account_email.email'       => 'Please enter a valid email address.',
+            'account_password.required' => 'Please enter your password.',
+        ]);
+
+        $credentials = [
+            'email'    => $request->input('account_email'),
+            'password' => $request->input('account_password'),
+        ];
+
+        if (\Illuminate\Support\Facades\Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+            $redirect = $request->input('redirect_to') ?: url()->previous();
+            return redirect($redirect);
+        }
+
+        return back()
+            ->withErrors(['account_email' => 'Invalid email or password. Please try again.'])
+            ->onlyInput('account_email');
+    }
+
+    /**
      * Public order tracking — look up an order by number + email.
      */
     public function trackOrder(Request $request)
@@ -921,7 +965,7 @@ class ShopFrontendController extends Controller
                 'email'        => 'required|email',
             ], [], ['order_number' => 'Order Number', 'email' => 'Email']);
 
-            $order = Order::with('items')
+            $order = Order::with(['items.product.shopData', 'statusHistory'])
                 ->where('order_number', trim($request->order_number))
                 ->where('customer_email', trim($request->email))
                 ->first();

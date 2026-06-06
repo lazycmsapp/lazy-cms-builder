@@ -20,21 +20,13 @@ class RegisterController extends Controller
             return redirect()->route('admin.login')->with('error', 'Registration is currently disabled.');
         }
 
-        $theme = get_cms_option('registration_theme', 'breeze');
+        $theme = get_cms_option('registration_theme', 'modern');
 
         if ($theme === 'funny') {
             return view('cms-dashboard::admin.auth.register-funny');
         }
 
-        if ($theme === 'breeze') {
-            return view('cms-dashboard::admin.auth.register-modern');
-        }
-
-        if ($theme === 'wp') {
-            return view('cms-dashboard::admin.auth.register-wp');
-        }
-
-        return view('cms-dashboard::admin.login'); // Fallback
+        return view('cms-dashboard::admin.auth.register-modern');
     }
 
     public function checkEmail(Request $request)

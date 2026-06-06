@@ -170,6 +170,67 @@
                     </div>
                 </div>
             </div>
+
+            {{-- ── Order Timeline ────────────────────────────────────────────── --}}
+            @php $timeline = $order->statusHistory; @endphp
+            @if($timeline->isNotEmpty())
+            <div class="bg-white rounded-sm shadow-sm border border-gray-100 mt-6 p-8">
+                <h2 class="text-xl font-bold text-heading mb-8 border-b border-gray-100 pb-4">Timeline</h2>
+
+                <div class="space-y-0">
+                @foreach($timeline as $entry)
+                    @php
+                        $isLast  = $loop->last;
+                        $isBad   = in_array($entry->status, ['cancelled', 'failed']);
+                        $label   = \Acme\CmsDashboard\Models\OrderStatusHistory::label($entry->status);
+                        $note    = $entry->note ?: \Acme\CmsDashboard\Models\OrderStatusHistory::defaultNote($entry->status);
+                        $showTrack = in_array($entry->status, ['delivering', 'shipped'])
+                                   && ($order->tracking_number || $order->tracking_url);
+                        $trackUrl  = $order->tracking_url
+                                   ?: route('shop.track', ['order_number' => $order->order_number, 'email' => $order->customer_email]);
+                    @endphp
+                    <div class="flex items-start gap-0 {{ $isLast ? '' : 'mb-0' }}">
+
+                        {{-- Date column --}}
+                        <div class="hidden sm:flex flex-col items-end justify-start w-36 flex-shrink-0 pt-0.5 pr-4">
+                            <span class="text-[13px] text-gray-500 font-medium leading-tight">{{ $entry->created_at->format('d M Y') }}</span>
+                            <span class="text-[12px] text-gray-400 mt-0.5">{{ $entry->created_at->format('h:i a') }}</span>
+                        </div>
+
+                        {{-- Icon + connecting line --}}
+                        <div class="flex flex-col items-center flex-shrink-0">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10"
+                                 style="background-color: {{ $isBad ? '#ef4444' : get_cms_option('theme_primary_color','#0d9488') }}">
+                                @if($isBad)
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+                                @else
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                @endif
+                            </div>
+                            @if(!$isLast)
+                                <div class="w-0.5 flex-1 min-h-[48px]" style="background-color: {{ get_cms_option('theme_primary_color','#0d9488') }}; opacity:.35"></div>
+                            @endif
+                        </div>
+
+                        {{-- Content --}}
+                        <div class="flex-1 pl-4 {{ $isLast ? 'pb-0' : 'pb-8' }} pt-0.5">
+                            <span class="sm:hidden text-[11px] text-gray-400 block mb-0.5">{{ $entry->created_at->format('d M Y, h:i a') }}</span>
+                            <p class="font-bold text-heading text-[15px] leading-snug">{{ $label }}</p>
+                            <p class="text-[14px] text-body mt-1 leading-relaxed">{{ $note }}</p>
+                            @if($showTrack)
+                                <a href="{{ $trackUrl }}" target="_blank"
+                                   class="inline-block mt-1.5 text-[14px] font-semibold underline underline-offset-2 hover:opacity-75"
+                                   style="color: {{ get_cms_option('theme_primary_color','#0d9488') }}">
+                                    Track Order
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+                </div>
+            </div>
+            @endif
+
         </div>
     </div>
 @stop

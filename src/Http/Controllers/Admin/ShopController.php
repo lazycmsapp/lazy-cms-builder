@@ -103,11 +103,14 @@ class ShopController extends Controller
                 if ($o->status !== $status) {
                     $oldStatus = $o->status;
                     $o->update(['status' => $status]);
+                    $o->logStatus($status);
                     $this->handleInventoryStatusChange($o, $oldStatus, $status);
-                    try {
-                        \Illuminate\Support\Facades\Mail::to($o->customer_email)->send(new \Acme\CmsDashboard\Mail\OrderNotificationMail($o, 'status_updated'));
-                    } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error("Order #{$o->order_number} bulk status email failed: " . $e->getMessage());
+                    if ($status === 'delivered') {
+                        try {
+                            \Illuminate\Support\Facades\Mail::to($o->customer_email)->send(new \Acme\CmsDashboard\Mail\OrderNotificationMail($o, 'status_updated'));
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Log::error("Order #{$o->order_number} delivery email failed: " . $e->getMessage());
+                        }
                     }
                 }
             }
@@ -169,12 +172,16 @@ class ShopController extends Controller
             }
 
             $order->update(['status' => $newStatus]);
+            $order->logStatus($newStatus, $request->input('timeline_note') ?: null);
             $this->handleInventoryStatusChange($order, $oldStatus, $newStatus);
 
-            try {
-                \Illuminate\Support\Facades\Mail::to($order->customer_email)->send(new \Acme\CmsDashboard\Mail\OrderNotificationMail($order, 'status_updated', null, 'customer', $emailRefundAmount));
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Order #{$order->order_number} status email failed: " . $e->getMessage());
+            // Only email customer when order is delivered
+            if ($newStatus === 'delivered') {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($order->customer_email)->send(new \Acme\CmsDashboard\Mail\OrderNotificationMail($order, 'status_updated', null, 'customer', $emailRefundAmount));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Order #{$order->order_number} delivery email failed: " . $e->getMessage());
+                }
             }
         }
 

@@ -136,14 +136,19 @@
                         <div class="mb-4">
                             <label class="block text-[13px] font-semibold mb-1">Status</label>
                             <select name="status" class="wp-input w-full">
-                                <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="processing" {{ $order->status === 'processing' ? 'selected' : '' }}>Processing</option>
-                                <option value="on-hold" {{ $order->status === 'on-hold' ? 'selected' : '' }}>On Hold</option>
-                                <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>Completed</option>
-                                <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                <option value="pending"            {{ $order->status === 'pending'            ? 'selected' : '' }}>Pending</option>
+                                <option value="processing"         {{ $order->status === 'processing'         ? 'selected' : '' }}>Processing</option>
+                                <option value="confirmed"          {{ $order->status === 'confirmed'          ? 'selected' : '' }}>Confirmed</option>
+                                <option value="packing"            {{ $order->status === 'packing'            ? 'selected' : '' }}>Packing</option>
+                                <option value="packed"             {{ $order->status === 'packed'             ? 'selected' : '' }}>Packed</option>
+                                <option value="delivering"         {{ $order->status === 'delivering'         ? 'selected' : '' }}>Delivering</option>
+                                <option value="delivered"          {{ $order->status === 'delivered'          ? 'selected' : '' }}>Delivered</option>
+                                <option value="completed"          {{ $order->status === 'completed'          ? 'selected' : '' }}>Completed</option>
+                                <option value="on-hold"            {{ $order->status === 'on-hold'            ? 'selected' : '' }}>On Hold</option>
+                                <option value="cancelled"          {{ $order->status === 'cancelled'          ? 'selected' : '' }}>Cancelled</option>
                                 <option value="partially-refunded" {{ $order->status === 'partially-refunded' ? 'selected' : '' }}>Partially Refunded</option>
-                                <option value="refunded" {{ $order->status === 'refunded' ? 'selected' : '' }}>Refunded</option>
-                                <option value="failed" {{ $order->status === 'failed' ? 'selected' : '' }}>Failed</option>
+                                <option value="refunded"           {{ $order->status === 'refunded'           ? 'selected' : '' }}>Refunded</option>
+                                <option value="failed"             {{ $order->status === 'failed'             ? 'selected' : '' }}>Failed</option>
                             </select>
                             @if($order->payment_method === 'stripe' && $order->paid_at)
                                 <p class="text-[11px] text-[#646970] mt-1.5 leading-relaxed">
@@ -177,6 +182,12 @@
                             <label class="block text-[11px] text-[#646970] mb-1">Tracking URL</label>
                             <input type="url" name="tracking_url" id="trk-url" value="{{ $order->tracking_url }}" placeholder="Auto-filled from carrier (editable)" class="wp-input w-full text-[13px]">
                             <p class="text-[11px] text-[#646970] mt-1.5">Shown to the customer on the order tracking page.</p>
+                        </div>
+
+                        <div class="mb-4 pt-4 border-t border-[#f0f0f1]">
+                            <label class="block text-[13px] font-semibold mb-1">Timeline Note <span class="font-normal text-[#646970]">(optional)</span></label>
+                            <textarea name="timeline_note" rows="2" placeholder="Add a message shown on the customer's order timeline…" class="wp-input w-full text-[13px] resize-none"></textarea>
+                            <p class="text-[11px] text-[#646970] mt-1">Visible to the customer on their order page.</p>
                         </div>
 
                         <button type="submit" class="wp-btn-primary w-full justify-center">Update Order</button>

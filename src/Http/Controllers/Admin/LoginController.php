@@ -5,9 +5,11 @@ namespace Acme\CmsDashboard\Http\Controllers\Admin;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use App\Models\User;
 
 use Acme\CmsDashboard\Models\BlockedIp;
+use Acme\CmsDashboard\Mail\PasswordResetMail;
 
 class LoginController extends Controller
 {
@@ -22,21 +24,13 @@ class LoginController extends Controller
             return redirect()->route('admin.dashboard.index');
         }
 
-        $theme = get_cms_option('login_theme', 'classic');
+        $theme = get_cms_option('login_theme', 'modern');
 
         if ($theme === 'funny') {
             return view('cms-dashboard::admin.auth.login-funny');
         }
 
-        if ($theme === 'breeze') {
-            return view('cms-dashboard::admin.auth.login-modern');
-        }
-
-        if ($theme === 'wp') {
-            return view('cms-dashboard::admin.auth.login-wp');
-        }
-
-        return view('cms-dashboard::admin.login');
+        return view('cms-dashboard::admin.auth.login-modern');
     }
 
     public function checkCredentials(Request $request)
@@ -201,21 +195,13 @@ class LoginController extends Controller
 
     public function showForgotPasswordForm()
     {
-        $theme = get_cms_option('login_theme', 'classic');
+        $theme = get_cms_option('login_theme', 'modern');
 
         if ($theme === 'funny') {
             return view('cms-dashboard::admin.auth.forgot-password-funny');
         }
 
-        if ($theme === 'breeze') {
-            return view('cms-dashboard::admin.auth.forgot-password-modern');
-        }
-
-        if ($theme === 'wp') {
-            return view('cms-dashboard::admin.auth.forgot-password-wp');
-        }
-
-        return view('cms-dashboard::admin.auth.forgot-password');
+        return view('cms-dashboard::admin.auth.forgot-password-modern');
     }
 
     public function sendResetLinkEmail(Request $request)
@@ -228,27 +214,32 @@ class LoginController extends Controller
             return back()->withErrors(['email' => 'We could not find a user with that email address.']);
         }
 
-        // Create token
+        // Generate token and store (expires in 5 minutes — checked on reset)
         $token = \Illuminate\Support\Str::random(60);
         \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
             ['email' => $request->email],
             [
-                'email' => $request->email,
-                'token' => \Illuminate\Support\Facades\Hash::make($token),
-                'created_at' => now()
+                'email'      => $request->email,
+                'token'      => \Illuminate\Support\Facades\Hash::make($token),
+                'created_at' => now(),
             ]
         );
 
-        // For now, since we might not have mail configured, we'll log it and show a success message
-        // In a real app, you'd send an email here.
-        \Illuminate\Support\Facades\Log::info("Password reset link for {$request->email}: " . route('admin.password.reset', ['token' => $token, 'email' => $request->email]));
+        $resetUrl = route('admin.password.reset', ['token' => $token, 'email' => $request->email]);
 
-        return back()->with('status', 'We have emailed your password reset link! (Check Laravel logs for the link if mail is not set up)');
+        try {
+            Mail::to($request->email)->send(new PasswordResetMail($resetUrl, $user->name ?? ''));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Password reset mail failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::info("Password reset link (mail failed) for {$request->email}: {$resetUrl}");
+        }
+
+        return back()->with('status', 'We have emailed your password reset link. Please check your inbox (and spam folder).');
     }
 
     public function showResetForm(Request $request, $token)
     {
-        $theme = get_cms_option('login_theme', 'classic');
+        $theme = get_cms_option('login_theme', 'modern');
         $email = $request->email;
 
         $viewData = ['token' => $token, 'email' => $email];
@@ -257,15 +248,7 @@ class LoginController extends Controller
             return view('cms-dashboard::admin.auth.reset-password-funny', $viewData);
         }
 
-        if ($theme === 'breeze') {
-            return view('cms-dashboard::admin.auth.reset-password-modern', $viewData);
-        }
-
-        if ($theme === 'wp') {
-            return view('cms-dashboard::admin.auth.reset-password-wp', $viewData);
-        }
-
-        return view('cms-dashboard::admin.auth.reset-password', $viewData);
+        return view('cms-dashboard::admin.auth.reset-password-modern', $viewData);
     }
 
     public function resetPassword(Request $request)
@@ -284,9 +267,10 @@ class LoginController extends Controller
             return back()->withErrors(['email' => 'This password reset token is invalid.']);
         }
 
-        // Check if token expired (1 hour)
-        if (now()->parse($record->created_at)->addHours(1)->isPast()) {
-             return back()->withErrors(['email' => 'This password reset token has expired.']);
+        // Token expires after 5 minutes
+        if (\Illuminate\Support\Carbon::parse($record->created_at)->addMinutes(5)->isPast()) {
+            \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            return back()->withErrors(['email' => 'This password reset link has expired. Please request a new one.']);
         }
 
         $user = \App\Models\User::where('email', $request->email)->first();

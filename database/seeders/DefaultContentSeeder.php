@@ -17,6 +17,11 @@ class DefaultContentSeeder extends Seeder
     {
         $adminId = optional(\App\Models\User::first())->id ?? 1;
 
+        // ── Auth theme defaults (always modern) ──────────────────────────────
+        foreach (['login_theme' => 'modern', 'registration_theme' => 'modern'] as $key => $value) {
+            DB::table('cms_settings')->updateOrInsert(['key' => $key], ['value' => $value, 'updated_at' => now()]);
+        }
+
         // ── Storefront pages (+ link them in shop settings) ──────────────────
         $pages = [
             ['title' => 'Shop',     'slug' => 'product',  'setting' => 'shop_shop_page_id'],

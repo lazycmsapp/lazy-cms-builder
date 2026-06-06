@@ -423,8 +423,10 @@ class FrontendController extends Controller
 
         if ($post->id == $accountPageId) {
             if (!auth()->check()) {
-                session()->put('url.intended', url()->current());
-                return redirect()->route('admin.login')->with('error', 'Please login to view your account details.');
+                return view($this->resolveThemeView('ecommerce.account'), [
+                    'orders' => null,
+                    'post'   => $post,
+                ]);
             }
             $ordersQuery = \Acme\CmsDashboard\Models\Order::with(['items.product'])->where('user_id', auth()->id());
             if (request()->filled('s')) {

@@ -154,15 +154,10 @@
                     </th>
                     <td>
                         <select name="registration_theme" id="registration_theme" class="wp-input w-[200px] h-8 py-0">
-                            <option value="breeze"
-                                {{ ($settings['registration_theme'] ?? 'breeze') == 'breeze' ? 'selected' : '' }}>Breeze
-                                Style</option>
+                            <option value="modern"
+                                {{ ($settings['registration_theme'] ?? 'modern') == 'modern' ? 'selected' : '' }}>Modern</option>
                             <option value="funny"
-                                {{ ($settings['registration_theme'] ?? 'breeze') == 'funny' ? 'selected' : '' }}>Funny
-                                Theme</option>
-                            <option value="wp"
-                                {{ ($settings['registration_theme'] ?? 'breeze') == 'wp' ? 'selected' : '' }}>WP Classic
-                            </option>
+                                {{ ($settings['registration_theme'] ?? 'breeze') == 'funny' ? 'selected' : '' }}>Funny Theme</option>
                         </select>
                     </td>
                 </tr>
@@ -174,15 +169,10 @@
                     </th>
                     <td>
                         <select name="login_theme" id="login_theme" class="wp-input w-[200px] h-8 py-0">
+                            <option value="modern"
+                                {{ ($settings['login_theme'] ?? 'modern') == 'modern' ? 'selected' : '' }}>Modern</option>
                             <option value="funny"
-                                {{ ($settings['login_theme'] ?? 'breeze') == 'funny' ? 'selected' : '' }}>Funny Theme
-                            </option>
-                            <option value="breeze"
-                                {{ ($settings['login_theme'] ?? 'breeze') == 'breeze' ? 'selected' : '' }}>Breeze Style
-                            </option>
-                            <option value="wp"
-                                {{ ($settings['login_theme'] ?? 'breeze') == 'wp' ? 'selected' : '' }}>WP Classic
-                            </option>
+                                {{ ($settings['login_theme'] ?? 'breeze') == 'funny' ? 'selected' : '' }}>Funny Theme</option>
                         </select>
                     </td>
                 </tr>

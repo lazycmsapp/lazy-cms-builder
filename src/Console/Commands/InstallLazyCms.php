@@ -52,8 +52,8 @@ class InstallLazyCms extends Command
         $options = [
             'login_url' => 'lazy-admin',
             'register_url' => 'lazy-registration',
-            'login_theme' => 'breeze',
-            'register_theme' => 'breeze',
+            'login_theme' => 'modern',
+            'registration_theme' => 'modern',
             'active_theme' => 'lazy-theme',
         ];
 
