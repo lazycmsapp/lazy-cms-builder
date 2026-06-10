@@ -225,7 +225,7 @@
                                 <a href="{{ route('frontend.category', $cat->slug) }}"
                                    class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-white hover:text-primary transition group/cat">
                                     <span>{{ $cat->name }}</span>
-                                    <span class="text-[11px] font-bold text-slate-400 bg-white group-hover/cat:bg-slate-50 rounded-full px-2 py-0.5 border border-slate-100">{{ $cat->posts()->where('status', 'published')->count() }}</span>
+                                    <span class="text-[11px] font-bold text-slate-400 bg-white group-hover/cat:bg-slate-50 rounded-full px-2 py-0.5 border border-slate-100">{{ $cat->posts_count ?? 0 }}</span>
                                 </a>
                             </li>
                         @endforeach

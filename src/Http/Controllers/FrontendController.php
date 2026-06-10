@@ -506,6 +506,8 @@ class FrontendController extends Controller
             return view($this->resolveThemeView('ecommerce.account'), compact('orders', 'post'));
         }
 
+        $post->load('comments.replies');
+
         return view($view, compact('post'));
     }
 

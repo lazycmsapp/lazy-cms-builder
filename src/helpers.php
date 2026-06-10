@@ -678,8 +678,8 @@ if (!function_exists('get_lazy_post')) {
 
 if (!function_exists('get_lazy_categories')) {
     function get_lazy_categories($taxonomy = 'category') {
-        if ($taxonomy === 'category') return \Acme\CmsDashboard\Models\Category::orderBy('name')->get();
-        return \Acme\CmsDashboard\Models\TaxonomyTerm::where('taxonomy_slug', $taxonomy)->get();
+        if ($taxonomy === 'category') return \Acme\CmsDashboard\Models\Category::withCount(['posts' => fn($q) => $q->where('status', 'published')])->orderBy('name')->get();
+        return \Acme\CmsDashboard\Models\TaxonomyTerm::where('taxonomy_slug', $taxonomy)->withCount(['posts' => fn($q) => $q->where('status', 'published')])->get();
     }
 }
 
