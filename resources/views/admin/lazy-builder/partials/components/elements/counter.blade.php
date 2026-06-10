@@ -1,4 +1,4 @@
-<div v-if="el.type === 'counter'" class="element-counter w-full" :class="getVisibilityClasses(el.settings)"
+﻿<div v-if="el.type === 'counter'" class="element-counter w-full" :class="getVisibilityClasses(el.settings)"
      :style="{
          textAlign: el.settings.textAlign || 'center',
          padding: '8px 0',
@@ -6,7 +6,7 @@
          marginBottom: (el.settings.marginBottom || 0) + (el.settings.marginBottomUnit || 'px')
      }">
     <div v-if="el.settings.icon"
-         :style="{ color: el.settings.iconColor || '#0091ea', fontSize: (el.settings.iconSize || 40) + 'px', marginBottom: '8px' }">
+         :style="{ color: el.settings.iconColor || '#2271b1', fontSize: (el.settings.iconSize || 40) + 'px', marginBottom: '8px' }">
         <i :class="el.settings.icon"></i>
     </div>
     <div :style="{

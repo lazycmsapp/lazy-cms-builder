@@ -1,4 +1,4 @@
-<div v-if="el.type === 'title'"
+﻿<div v-if="el.type === 'title'"
      class="element-title-wrapper"
      :class="[el.settings.cssClass || '']"
      :id="el.settings.cssId || undefined"
@@ -47,7 +47,7 @@
                     backgroundImage: !el.settings.useLink && el.settings.useGradient
                         ? 'linear-gradient(' + (el.settings.gradientAngle || 90) + 'deg, '
                             + (el.settings.gradientStartColor || el.settings.titleColor || '#222') + ', '
-                            + (el.settings.gradientEndColor || '#0091ea') + ')'
+                            + (el.settings.gradientEndColor || '#2271b1') + ')'
                         : 'none',
                     webkitBackgroundClip: !el.settings.useLink && el.settings.useGradient ? 'text' : 'unset',
                     backgroundClip: !el.settings.useLink && el.settings.useGradient ? 'text' : 'unset',
@@ -85,9 +85,9 @@
                  height: el.settings.separator === 'default'
                      ? getUnitVal(el.settings.dividerHeight || 3, 'px') : '0',
                  backgroundColor: el.settings.separator === 'default'
-                     ? (el.settings.separatorColor || '#0091ea') : 'transparent',
+                     ? (el.settings.separatorColor || '#2271b1') : 'transparent',
                  borderTop: el.settings.separator !== 'default'
-                     ? getUnitVal(el.settings.dividerHeight || 3, 'px') + ' ' + el.settings.separator + ' ' + (el.settings.separatorColor || '#0091ea')
+                     ? getUnitVal(el.settings.dividerHeight || 3, 'px') + ' ' + el.settings.separator + ' ' + (el.settings.separatorColor || '#2271b1')
                      : 'none',
                  marginTop: getUnitVal(el.settings.separatorSpacing ?? 20, 'px'),
                  marginBottom: '0',

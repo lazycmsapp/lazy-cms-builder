@@ -1,14 +1,14 @@
-<template v-if="ctxMenu.show">
+﻿<template v-if="ctxMenu.show">
     <!-- Backdrop to close on outside click -->
     <div class="fixed inset-0 z-[99998]" @click="closeCtxMenu()" @contextmenu.prevent="closeCtxMenu()"></div>
 
     <!-- Menu -->
-    <div class="fixed z-[99999] bg-[#222] text-white shadow-2xl rounded overflow-hidden min-w-[190px] select-none"
+    <div class="fixed z-[99999] bg-[#2271b1] text-white shadow-2xl rounded overflow-hidden min-w-[190px] select-none"
          :style="{ top: ctxMenu.y + 'px', left: ctxMenu.x + 'px' }"
          @click.stop>
 
         <!-- Title -->
-        <div class="px-4 py-2.5 bg-[#111] text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/10">
+        <div class="px-4 py-2.5 bg-[#2271b1] text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/10">
             @{{ ctxMenuTitle }}
         </div>
 

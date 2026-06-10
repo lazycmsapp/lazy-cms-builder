@@ -1,12 +1,12 @@
-<div v-if="showElementModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" @click.self="showElementModal = false">
+﻿<div v-if="showElementModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" @click.self="showElementModal = false">
     <div class="bg-white w-[95vw] max-w-[1200px] h-[90vh] flex flex-col shadow-2xl rounded overflow-hidden">
 
         <!-- Header -->
-        <div class="bg-[#222] text-white h-14 flex items-center justify-between px-6 shrink-0">
+        <div class="bg-[#2271b1] text-white h-14 flex items-center justify-between px-6 shrink-0">
             <h3 class="text-sm font-bold uppercase tracking-wider text-white">Select Element</h3>
             <div class="flex items-center gap-4">
                 <div class="relative" v-show="elementModalTab === 'elements' || elementModalTab === 'nested'">
-                    <input type="text" v-model="searchElementQuery" :placeholder="elementModalTab === 'nested' ? 'Search Columns' : 'Search Elements'" class="bg-[#333] border-none text-xs text-white px-10 py-2 rounded focus:ring-1 focus:ring-[#0091ea] w-64 outline-none">
+                    <input type="text" v-model="searchElementQuery" :placeholder="elementModalTab === 'nested' ? 'Search Columns' : 'Search Elements'" class="bg-[#2271b1] border-none text-xs text-white px-10 py-2 rounded focus:ring-1 focus:ring-[#0091ea] w-64 outline-none">
                     <i class="fa fa-search absolute left-3 top-2.5 text-slate-500 text-xs"></i>
                 </div>
                 <button @click="showElementModal = false" class="text-slate-500 hover:text-white transition-colors"><i class="fa fa-times text-lg"></i></button>
@@ -14,7 +14,7 @@
         </div>
 
         <!-- Tabs -->
-        <div class="bg-[#0091ea] h-10 flex items-center px-4 shrink-0">
+        <div class="bg-[#2271b1] h-10 flex items-center px-4 shrink-0">
             <button v-if="elementModalAllowedTabs.includes('elements')"
                     @click="elementModalTab = 'elements'"
                     class="px-5 h-full text-[11px] font-bold uppercase transition-all"
@@ -80,7 +80,7 @@
                             <p class="text-[10px] text-slate-400 mb-3">@{{ item.created_at }}</p>
                             <div class="flex gap-2">
                                 <button @click="addElementFromElementModal(item)"
-                                        class="flex-1 py-1.5 bg-[#0091ea]/10 text-[#0091ea] rounded-lg text-[11px] font-semibold hover:bg-[#0091ea] hover:text-white transition-colors flex items-center justify-center gap-1">
+                                        class="flex-1 py-1.5 bg-[#2271b1]/10 text-[#0091ea] rounded-lg text-[11px] font-semibold hover:bg-[#1a5a96] hover:text-white transition-colors flex items-center justify-center gap-1">
                                     <i class="fa fa-plus text-[10px]"></i> Add Element
                                 </button>
                                 <button @click.stop="deleteFromLibrary(item.id)"
@@ -127,7 +127,7 @@
                             <p class="text-[10px] text-slate-400 mb-3">@{{ item.created_at }}</p>
                             <div class="flex gap-2">
                                 <button @click="addNestedColumnFromElementModal(item)"
-                                        class="flex-1 py-1.5 bg-[#0091ea]/10 text-[#0091ea] rounded-lg text-[11px] font-semibold hover:bg-[#0091ea] hover:text-white transition-colors flex items-center justify-center gap-1">
+                                        class="flex-1 py-1.5 bg-[#2271b1]/10 text-[#0091ea] rounded-lg text-[11px] font-semibold hover:bg-[#1a5a96] hover:text-white transition-colors flex items-center justify-center gap-1">
                                     <i class="fa fa-plus text-[10px]"></i> Add Nested Column
                                 </button>
                                 <button @click.stop="deleteFromLibrary(item.id)"

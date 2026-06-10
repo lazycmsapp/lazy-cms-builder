@@ -1,4 +1,4 @@
-{{-- Reusable Typography control — identical design to the Title element.
+﻿{{-- Reusable Typography control — identical design to the Title element.
      Variable: $prefix (settings key prefix). Binds to:
        {prefix}_family, {prefix}_weight, {prefix}_size, {prefix}_line_height,
        {prefix}_letter_spacing, {prefix}_transform
@@ -64,16 +64,16 @@
         <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Text Transform</label>
         <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
             <button @click="editingElement.settings.{{ $prefix }}_transform = 'none'"
-                    :class="(editingElement.settings.{{ $prefix }}_transform || 'none') === 'none' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                    :class="(editingElement.settings.{{ $prefix }}_transform || 'none') === 'none' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                     class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">Normal</button>
             <button @click="editingElement.settings.{{ $prefix }}_transform = 'uppercase'"
-                    :class="editingElement.settings.{{ $prefix }}_transform === 'uppercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                    :class="editingElement.settings.{{ $prefix }}_transform === 'uppercase' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                     class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">AB</button>
             <button @click="editingElement.settings.{{ $prefix }}_transform = 'lowercase'"
-                    :class="editingElement.settings.{{ $prefix }}_transform === 'lowercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                    :class="editingElement.settings.{{ $prefix }}_transform === 'lowercase' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                     class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">ab</button>
             <button @click="editingElement.settings.{{ $prefix }}_transform = 'capitalize'"
-                    :class="editingElement.settings.{{ $prefix }}_transform === 'capitalize' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                    :class="editingElement.settings.{{ $prefix }}_transform === 'capitalize' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                     class="flex-1 py-2 text-[10px] font-bold transition-all">Ab</button>
         </div>
     </div>

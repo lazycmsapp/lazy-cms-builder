@@ -1,4 +1,4 @@
-{{-- Builder Library Modal --}}
+﻿{{-- Builder Library Modal --}}
 <transition name="modal-fade">
 <div v-if="showLibraryModal"
      class="fixed inset-0 bg-black/50 z-[9998] flex items-center justify-center p-4"
@@ -8,7 +8,7 @@
         {{-- Header --}}
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-[#0091ea]/10 rounded-lg flex items-center justify-center">
+                <div class="w-8 h-8 bg-[#2271b1]/10 rounded-lg flex items-center justify-center">
                     <i class="fa fa-archive text-[#0091ea] text-sm"></i>
                 </div>
                 <h2 class="text-base font-bold text-slate-700">Builder Library</h2>
@@ -32,7 +32,7 @@
                 <span v-if="tab.key === 'global_sections' ? globalSections.length : libraryItems[tab.key]?.length"
                       class="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
                       :class="libraryActiveTab === tab.key
-                          ? (tab.key === 'global_sections' ? 'bg-[#7c3aed]/10 text-[#7c3aed]' : 'bg-[#0091ea]/10 text-[#0091ea]')
+                          ? (tab.key === 'global_sections' ? 'bg-[#7c3aed]/10 text-[#7c3aed]' : 'bg-[#2271b1]/10 text-[#0091ea]')
                           : 'bg-slate-100 text-slate-400'">
                     @{{ tab.key === 'global_sections' ? globalSections.length : libraryItems[tab.key].length }}
                 </span>
@@ -45,7 +45,7 @@
             {{-- Save current item to library --}}
             <div v-if="libraryCanSave"
                  class="mb-6 p-4 rounded-xl border"
-                 :class="saveAsGlobalChecked ? 'bg-[#7c3aed]/5 border-[#7c3aed]/20' : 'bg-[#0091ea]/5 border-[#0091ea]/20'">
+                 :class="saveAsGlobalChecked ? 'bg-[#7c3aed]/5 border-[#7c3aed]/20' : 'bg-[#2271b1]/5 border-[#0091ea]/20'">
                 <p class="text-xs font-semibold text-slate-600 mb-3 flex items-center gap-2">
                     <i class="fa fa-download" :class="saveAsGlobalChecked ? 'text-[#7c3aed]' : 'text-[#0091ea]'"></i>
                     Save current <span :class="saveAsGlobalChecked ? 'text-[#7c3aed]' : 'text-[#0091ea]'">@{{ libraryActiveTabLabel }}</span> to library
@@ -60,7 +60,7 @@
                     <button @click="saveToLibrary"
                             :disabled="!libraryNewName.trim() || isSavingToLibrary"
                             class="px-4 py-2 text-white text-sm font-semibold rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2 whitespace-nowrap"
-                            :class="saveAsGlobalChecked ? 'bg-[#7c3aed] hover:bg-[#6d28d9]' : 'bg-[#0091ea] hover:bg-[#0082d3]'">
+                            :class="saveAsGlobalChecked ? 'bg-[#7c3aed] hover:bg-[#6d28d9]' : 'bg-[#2271b1] hover:bg-[#1a5a96]'">
                         <i :class="isSavingToLibrary ? 'fa fa-spinner fa-spin' : 'fa fa-save'"></i>
                         Save to Library
                     </button>
@@ -112,7 +112,7 @@
                             </button>
                             <button v-else
                                     @click="insertFromLibrary(item)"
-                                    class="flex-1 text-[11px] py-1.5 bg-[#0091ea] text-white rounded-lg hover:bg-[#0082d3] transition-colors font-semibold flex items-center justify-center gap-1">
+                                    class="flex-1 text-[11px] py-1.5 bg-[#2271b1] text-white rounded-lg hover:bg-[#1a5a96] transition-colors font-semibold flex items-center justify-center gap-1">
                                 <i class="fa fa-plus text-[10px]"></i> Add @{{ {containers:'Container',columns:'Column',nested_columns:'Nested Column',elements:'Element'}[libraryActiveTab] || '' }}
                             </button>
                             <button @click="libraryActiveTab === 'global_sections' ? deleteGlobalSection(item.id) : deleteFromLibrary(item.id)"

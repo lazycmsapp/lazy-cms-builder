@@ -1,4 +1,4 @@
-<div v-if="el.type === 'icon_box'"
+﻿<div v-if="el.type === 'icon_box'"
      class="w-full"
      :class="[el.settings.cssClass || '']"
      :id="el.settings.cssId || undefined"
@@ -30,7 +30,7 @@
             <i :class="el.settings.icon || 'fas fa-star'"
                :style="{
                    fontSize: (el.settings.iconSize || 40) + (el.settings.iconSizeUnit || 'px'),
-                   color: el.settings.iconColor || '#0091ea',
+                   color: el.settings.iconColor || '#2271b1',
                }"></i>
         </div>
 
@@ -85,7 +85,7 @@
             <i :class="el.settings.icon || 'fas fa-star'"
                :style="{
                    fontSize: (el.settings.iconSize || 40) + (el.settings.iconSizeUnit || 'px'),
-                   color: el.settings.iconColor || '#0091ea',
+                   color: el.settings.iconColor || '#2271b1',
                }"></i>
         </div>
 

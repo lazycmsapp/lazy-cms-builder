@@ -1,4 +1,4 @@
-<div v-if="el.type === 'image'"
+﻿<div v-if="el.type === 'image'"
      class="element-image-wrapper w-full relative group/img-preview"
      :class="[el.settings.cssClass || '', 'image-container-' + el.id, el.settings.hoverType ? 'hover-' + el.settings.hoverType : '']"
      :id="el.settings.cssId || undefined"
@@ -37,7 +37,7 @@
                  : { height: 'auto' }">
 
         <div v-else-if="el.settings.dynamic_source === 'feature_image'"
-             class="bg-[#0091ea]/6 border-2 border-dashed border-[#0091ea]/30 rounded flex flex-col items-center justify-center p-8 text-[#0091ea]">
+             class="bg-[#2271b1]/6 border-2 border-dashed border-[#0091ea]/30 rounded flex flex-col items-center justify-center p-8 text-[#0091ea]">
             <i class="fa fa-image text-4xl mb-2 opacity-60"></i>
             <span class="text-xs font-bold uppercase tracking-widest">Feature Image</span>
         </div>

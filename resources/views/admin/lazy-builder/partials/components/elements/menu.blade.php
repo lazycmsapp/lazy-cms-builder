@@ -1,4 +1,4 @@
-<div v-if="el.type === 'menu'"
+﻿<div v-if="el.type === 'menu'"
      class="element-menu-wrapper w-full relative group/menu-preview"
      :class="[el.settings.cssClass || '', 'menu-container-' + el.id]"
      :id="el.settings.cssId || undefined"
@@ -28,7 +28,7 @@
 
     <!-- CSS hover for desktop submenu visibility (supplements JS events for builder canvas compatibility) -->
     <component :is="'style'" v-if="device === 'desktop'"
-        :key="'menu-style-' + el.id + '-' + (el.settings.justification || 'flex-start') + '-' + (el.settings.submenuDirection || 'left') + '-' + (el.settings.submenuSpace || 10) + '-' + (el.settings.subSubMenuDirection || 'right') + '-' + (el.settings.subSubMenuOffset ?? 5) + '-' + (el.settings.submenuTextColorHover || '#0091ea')"
+        :key="'menu-style-' + el.id + '-' + (el.settings.justification || 'flex-start') + '-' + (el.settings.submenuDirection || 'left') + '-' + (el.settings.submenuSpace || 10) + '-' + (el.settings.subSubMenuDirection || 'right') + '-' + (el.settings.subSubMenuOffset ?? 5) + '-' + (el.settings.submenuTextColorHover || '#2271b1')"
         :innerHTML="
             '.menu-container-' + el.id + ' .lazy-menu-nav { justify-content: ' + (el.settings.justification || 'flex-start') + '!important; }' +
             '.menu-container-' + el.id + ' .lazy-menu-list { justify-content: ' + (el.settings.justification || 'flex-start') + '!important; }' +
@@ -38,7 +38,7 @@
             '.menu-container-' + el.id + ' .admin-submenu > .admin-menu-item:hover > .admin-submenu {' +
             'opacity:1!important;visibility:visible!important;' +
             'transform:translateX(' + (el.settings.subSubMenuDirection === 'left' ? '-' : '') + (el.settings.subSubMenuOffset !== undefined ? el.settings.subSubMenuOffset : 5) + 'px)!important;}' +
-            '.menu-container-' + el.id + ' .admin-submenu .admin-menu-item:hover>.admin-menu-link{color:' + (el.settings.submenuTextColorHover || '#0091ea') + '!important;}'
+            '.menu-container-' + el.id + ' .admin-submenu .admin-menu-item:hover>.admin-menu-link{color:' + (el.settings.submenuTextColorHover || '#2271b1') + '!important;}'
         ">
     </component>
 
@@ -149,7 +149,7 @@
                        class="admin-menu-link flex items-center justify-between gap-2 transition-all"
                        @mouseenter="el._activeMenuLink = idx"
                        @mouseleave="el._activeMenuLink = null"
-                       :style='(device === "mobile" || device === "tablet") ? ("color: " + (el._activeMenuLink === idx ? (el.settings.mobileMenuTextColorHover || "#0091ea") : (el.settings.mobileMenuTextColor || "#333")) + " !important; " +
+                       :style='(device === "mobile" || device === "tablet") ? ("color: " + (el._activeMenuLink === idx ? (el.settings.mobileMenuTextColorHover || "#2271b1") : (el.settings.mobileMenuTextColor || "#333")) + " !important; " +
                               "background-color: " + (el._activeMenuLink === idx ? (el.settings.mobileMenuBgColorHover || "#f8f9fa") : "transparent") + " !important; " +
                               "padding-top: " + getUnitVal(el.settings.mobileMenuItemPaddingTop ?? 12, "px") + " !important; " +
                               "padding-right: " + getUnitVal(el.settings.mobileMenuItemPaddingRight ?? 20, "px") + " !important; " +
@@ -166,7 +166,7 @@
                               "display: flex !important; align-items: center !important; justify-content: " + ((el.settings.mobileMenuTextAlign === "center") ? "center" : "space-between") + " !important; " +
                               "flex-direction: " + ((el.settings.mobileMenuTextAlign === "right") ? "row-reverse" : "row") + " !important; " +
                               "border-bottom: " + (el.settings.mobileSeparatorEnabled === "no" ? "none" : ("1px solid " + (el.settings.mobileMenuSeparatorColor || "rgba(0,0,0,0.05)"))) + " !important; text-decoration: none !important;") : {
-                               color: el._hoveredIdx === idx ? (el.settings.itemColorHover || "#0091ea") : (el.settings.itemColor || "#333"),
+                               color: el._hoveredIdx === idx ? (el.settings.itemColorHover || "#2271b1") : (el.settings.itemColor || "#333"),
                                backgroundColor: el._hoveredIdx === idx ? (el.settings.itemBgColorHover || "transparent") : (el.settings.itemBgColor || "transparent"),
                                paddingTop: getUnitVal(el.settings.itemPaddingTop ?? 10, "px"),
                                paddingRight: getUnitVal(el.settings.itemPaddingRight ?? 15, "px"),
@@ -264,7 +264,7 @@
                                class="admin-menu-link flex items-center justify-between transition-all"
                                @mouseenter="el._activeSubMenuLink = cidx"
                                @mouseleave="el._activeSubMenuLink = null"
-                                :style='(device === "mobile" || device === "tablet") ? ("color: " + (el._activeSubMenuLink === cidx ? (el.settings.mobileMenuTextColorHover || "#0091ea") : (el.settings.mobileMenuTextColor || "#333")) + " !important; " +
+                                :style='(device === "mobile" || device === "tablet") ? ("color: " + (el._activeSubMenuLink === cidx ? (el.settings.mobileMenuTextColorHover || "#2271b1") : (el.settings.mobileMenuTextColor || "#333")) + " !important; " +
                                        "background-color: " + (el._activeSubMenuLink === cidx ? (el.settings.mobileMenuBgColorHover || "#f8f9fa") : "transparent") + " !important; " +
                                        "padding-top: " + getUnitVal(el.settings.mobileMenuItemPaddingTop ?? 12, "px") + " !important; " +
                                        "padding-right: " + getUnitVal(el.settings.mobileMenuItemPaddingRight ?? 20, "px") + " !important; " +
@@ -281,7 +281,7 @@
                                        "display: flex !important; align-items: center !important; justify-content: " + ((el.settings.mobileMenuTextAlign === "center") ? "center" : "space-between") + " !important; " +
                                        "flex-direction: " + ((el.settings.mobileMenuTextAlign === "right") ? "row-reverse" : "row") + " !important; " +
                                        "text-decoration: none !important; border-bottom: " + (el.settings.mobileSeparatorEnabled === "no" ? "none" : ("1px solid " + (el.settings.mobileMenuSeparatorColor || "rgba(0,0,0,0.05)"))) + " !important;") : {
-                                    color: (el._hoveredSubIdx === cidx ? (el.settings.submenuTextColorHover || "#0091ea") : (el.settings.submenuTextColor || "#333")),
+                                    color: (el._hoveredSubIdx === cidx ? (el.settings.submenuTextColorHover || "#2271b1") : (el.settings.submenuTextColor || "#333")),
                                     paddingTop: (el.settings.submenuPaddingTop !== undefined ? el.settings.submenuPaddingTop : 10) + "px",
                                     paddingRight: (el.settings.submenuPaddingRight !== undefined ? el.settings.submenuPaddingRight : 20) + "px",
                                     paddingBottom: (el.settings.submenuPaddingBottom !== undefined ? el.settings.submenuPaddingBottom : 10) + "px",
@@ -376,7 +376,7 @@
                                     @mouseleave="el._hoveredGSubIdx = null">
                                     <a href="javascript:void(0)" 
                                        class="admin-menu-link flex items-center justify-between transition-all"
-                                :style='(device === "mobile" || device === "tablet") ? ("color: " + (el._hoveredGSubIdx === gidx ? (el.settings.mobileMenuTextColorHover || "#0091ea") : (el.settings.mobileMenuTextColor || "#333")) + " !important; " +
+                                :style='(device === "mobile" || device === "tablet") ? ("color: " + (el._hoveredGSubIdx === gidx ? (el.settings.mobileMenuTextColorHover || "#2271b1") : (el.settings.mobileMenuTextColor || "#333")) + " !important; " +
                                        "background-color: " + (el._hoveredGSubIdx === gidx ? (el.settings.mobileMenuBgColorHover || "#f8f9fa") : "transparent") + " !important; " +
                                        "padding-top: " + getUnitVal(el.settings.mobileMenuItemPaddingTop ?? 12, "px") + " !important; " +
                                        "padding-right: " + getUnitVal(el.settings.mobileMenuItemPaddingRight ?? 20, "px") + " !important; " +
@@ -393,7 +393,7 @@
                                        "display: flex !important; align-items: center !important; justify-content: " + ((el.settings.mobileMenuTextAlign === "center") ? "center" : "space-between") + " !important; " +
                                        "flex-direction: " + ((el.settings.mobileMenuTextAlign === "right") ? "row-reverse" : "row") + " !important; " +
                                        "text-decoration: none !important; border-bottom: " + (el.settings.mobileSeparatorEnabled === "no" ? "none" : ("1px solid " + (el.settings.mobileMenuSeparatorColor || "rgba(0,0,0,0.05)"))) + " !important;") : {
-                                             color: el._hoveredGSubIdx === gidx ? (el.settings.submenuTextColorHover || "#0091ea") : (el.settings.submenuTextColor || "#333"),
+                                             color: el._hoveredGSubIdx === gidx ? (el.settings.submenuTextColorHover || "#2271b1") : (el.settings.submenuTextColor || "#333"),
                                              paddingTop: (el.settings.submenuPaddingTop !== undefined ? el.settings.submenuPaddingTop : 10) + "px",
                                              paddingRight: (el.settings.submenuPaddingRight !== undefined ? el.settings.submenuPaddingRight : 20) + "px",
                                              paddingBottom: (el.settings.submenuPaddingBottom !== undefined ? el.settings.submenuPaddingBottom : 10) + "px",

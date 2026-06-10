@@ -1,4 +1,4 @@
-<div v-if="el.type === 'button'"
+﻿<div v-if="el.type === 'button'"
      class="element-button-wrapper w-full"
      :class="[el.settings.cssClass || '', 'button-container-' + el.id]"
      :id="el.settings.cssId || undefined"
@@ -28,7 +28,7 @@
            marginBottom: getUnitVal(el.settings.marginBottomInner ?? 0, 'px'),
            marginLeft: getUnitVal(getResponsiveVal(el.settings, 'marginLeft', device) ?? 0, getResponsiveVal(el.settings, 'marginLeftUnit', device) || 'px'),
            marginRight: getUnitVal(getResponsiveVal(el.settings, 'marginRight', device) ?? 0, getResponsiveVal(el.settings, 'marginRightUnit', device) || 'px'),
-           backgroundColor: (el.settings.buttonStyle === 'custom' && el.settings.bgGradientStartColor && el.settings.bgGradientEndColor) ? 'transparent' : (el.isHovered ? hexToRgba(el.settings.hoverBgColor || '#007cc0', el.settings.hoverBgColorOpacity) : hexToRgba(el.settings.bgColor || '#0091ea', el.settings.bgColorOpacity)),
+           backgroundColor: (el.settings.buttonStyle === 'custom' && el.settings.bgGradientStartColor && el.settings.bgGradientEndColor) ? 'transparent' : (el.isHovered ? hexToRgba(el.settings.hoverBgColor || '#1a5a96', el.settings.hoverBgColorOpacity) : hexToRgba(el.settings.bgColor || '#2271b1', el.settings.bgColorOpacity)),
            backgroundImage: (el.settings.buttonStyle === 'custom' && el.settings.bgGradientStartColor && el.settings.bgGradientEndColor)
                 ? (el.isHovered
                     ? (el.settings.bgGradientType === 'radial'

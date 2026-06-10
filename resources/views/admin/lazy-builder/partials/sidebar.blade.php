@@ -1,4 +1,4 @@
-<aside class="builder-sidebar flex flex-col" v-if="!isPreview">
+﻿<aside class="builder-sidebar flex flex-col" v-if="!isPreview">
     <!-- Mini Tab Icons at Top (WP/Avada Style) -->
     <div class="flex border-b border-slate-100 bg-slate-50/50">
         <button @click="activeTab='settings'" :class="activeTab==='settings' ? 'bg-white border-b-2 border-[#0091ea] text-[#0091ea]' : 'text-slate-400'" class="w-12 h-12 flex items-center justify-center transition-all">
@@ -17,7 +17,7 @@
         <!-- Navigator Tab -->
         <div v-show="activeTab==='navigator'" class="h-full overflow-y-auto custom-scrollbar animate-fade-in py-2">
             <div v-if="layout.length === 0" class="flex flex-col items-center justify-center py-20 px-10 text-center bg-slate-50/30">
-                <div class="w-14 h-14 bg-[#0091ea] rounded-lg shadow-xl shadow-blue-500/20 flex items-center justify-center mb-6">
+                <div class="w-14 h-14 bg-[#2271b1] rounded-lg shadow-xl shadow-blue-500/20 flex items-center justify-center mb-6">
                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                 </div>
                 <h3 class="text-[12px] font-black text-slate-800 uppercase tracking-widest mb-2">Navigator</h3>
@@ -179,7 +179,7 @@
                 <div class="flex flex-col h-full bg-white">
                     <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                         <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 bg-[#0091ea] rounded flex items-center justify-center text-white shadow-sm">
+                            <div class="w-8 h-8 bg-[#2271b1] rounded flex items-center justify-center text-white shadow-sm">
                                 <i :class="editingElement?.icon || 'fa fa-cube'" class="text-sm"></i>
                             </div>
                             <div>
@@ -192,17 +192,17 @@
                         </button>
                     </div>
 
-                    <div class="flex border-b border-white/10 bg-[#0091ea] overflow-hidden">
-                        <button @click="editingContext.tab = 'content'" 
-                                :class="(editingContext.tab || 'content') === 'content' ? 'bg-[#007cc0] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'" 
-                                class="builder-tab-btn py-3 text-[10px] font-black uppercase tracking-widest border-r border-white/10">
+                    <div class="flex border-b border-black/20 bg-[#2271b1] overflow-hidden divide-x divide-black/20">
+                        <button @click="editingContext.tab = 'content'"
+                                :class="(editingContext.tab || 'content') === 'content' ? 'bg-[#0091EA] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'"
+                                class="builder-tab-btn py-3 text-[10px] font-black uppercase tracking-widest">
                             <span v-if="(editingContext.tab || 'content') === 'content'">General</span>
                             <i v-else class="fa fa-cog text-xs"></i>
                         </button>
-                        
-                        <button @click="editingContext.tab = 'design'" 
-                                :class="editingContext.tab === 'design' ? 'bg-[#007cc0] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'" 
-                                class="builder-tab-btn py-3 border-r border-white/10 text-[10px] font-black uppercase tracking-widest transition-all">
+
+                        <button @click="editingContext.tab = 'design'"
+                                :class="editingContext.tab === 'design' ? 'bg-[#0091EA] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'"
+                                class="builder-tab-btn py-3 text-[10px] font-black uppercase tracking-widest transition-all">
                             <template v-if="editingContext.tab === 'design'">
                                 <span>@{{ editingElement?.type === 'menu' ? 'Main Menu' : 'Design' }}</span>
                             </template>
@@ -212,23 +212,23 @@
                         </button>
 
                         <button v-if="editingElement?.type === 'menu'"
-                                @click="editingContext.tab = 'submenu'" 
-                                :class="editingContext.tab === 'submenu' ? 'bg-[#007cc0] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'" 
-                                class="builder-tab-btn py-3 border-r border-white/10 text-[10px] font-black uppercase tracking-widest transition-all">
+                                @click="editingContext.tab = 'submenu'"
+                                :class="editingContext.tab === 'submenu' ? 'bg-[#0091EA] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'"
+                                class="builder-tab-btn py-3 text-[10px] font-black uppercase tracking-widest transition-all">
                             <span v-if="editingContext.tab === 'submenu'">Sub Menu</span>
                             <i v-else class="fa fa-indent text-xs"></i>
                         </button>
 
                         <button v-if="editingElement?.type === 'menu'"
                                 @click="editingContext.tab = 'mobile'"
-                                :class="editingContext.tab === 'mobile' ? 'bg-[#007cc0] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'" 
-                                class="builder-tab-btn py-3 border-r border-white/10 text-[10px] font-black uppercase tracking-widest transition-all">
+                                :class="editingContext.tab === 'mobile' ? 'bg-[#0091EA] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'"
+                                class="builder-tab-btn py-3 text-[10px] font-black uppercase tracking-widest transition-all">
                             <span v-if="editingContext.tab === 'mobile'">Mobile</span>
                             <i v-else class="fa fa-mobile-screen text-xs"></i>
                         </button>
 
-                        <button @click="editingContext.tab = 'extras'" 
-                                :class="editingContext.tab === 'extras' ? 'bg-[#007cc0] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'" 
+                        <button @click="editingContext.tab = 'extras'"
+                                :class="editingContext.tab === 'extras' ? 'bg-[#0091EA] text-white flex-grow-[2]' : 'text-white/70 hover:text-white flex-grow-[1]'"
                                 class="builder-tab-btn py-3 text-[10px] font-black uppercase tracking-widest transition-all">
                             <span v-if="editingContext.tab === 'extras'">Extras</span>
                             <i v-else class="fa fa-copy text-xs"></i>
@@ -246,12 +246,12 @@
                                         <label class="text-[12px] font-bold text-[#333]">Content</label>
                                         <button @click.stop="openDynSrcMenu(editingElement.settings, 'dynamic_source', 'text', $event)"
                                                 class="w-6 h-6 flex items-center justify-center rounded border transition-all"
-                                                :class="editingElement.settings.dynamic_source ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                                :class="editingElement.settings.dynamic_source ? 'bg-[#2271b1]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
                                             <i class="fa fa-database text-[10px]"></i>
                                         </button>
                                     </div>
                                     <div v-show="editingElement.settings.dynamic_source"
-                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#2271b1]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
                                          @click.stop="openDynSrcMenu(editingElement.settings, 'dynamic_source', 'text', $event)">
                                         <div class="flex items-center gap-2">
                                             <i :class="['fa', getDynSrcDef(editingElement.settings.dynamic_source).icon, 'text-[#0091ea] text-sm']"></i>
@@ -283,13 +283,13 @@
                                                     <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
                                                 </button>
                                                 <div v-show="activeResponsiveMenu === 'tbAlign'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
-                                                    <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                                    <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
                                                         <i class="fa fa-desktop text-[11px]"></i>
                                                     </button>
-                                                    <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                                    <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
                                                         <i class="fa fa-tablet-alt text-[11px]"></i>
                                                     </button>
-                                                    <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                                    <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
                                                         <i class="fa fa-mobile-alt text-[11px]"></i>
                                                     </button>
                                                 </div>
@@ -298,13 +298,13 @@
                                     </div>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                                         <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, 'left')"
-                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'left' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'left' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2 text-[11px] font-bold border-r border-slate-200 last:border-r-0 transition-all">Left</button>
                                         <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, 'center')"
-                                                :class="(getResponsiveVal(editingElement.settings, 'textAlign', device) === 'center' || !getResponsiveVal(editingElement.settings, 'textAlign', device)) ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="(getResponsiveVal(editingElement.settings, 'textAlign', device) === 'center' || !getResponsiveVal(editingElement.settings, 'textAlign', device)) ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2 text-[11px] font-bold border-r border-slate-200 last:border-r-0 transition-all">Center</button>
                                         <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, 'right')"
-                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'right' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'right' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2 text-[11px] font-bold border-r border-slate-200 last:border-r-0 transition-all">Right</button>
                                     </div>
                                 </div>
@@ -314,20 +314,21 @@
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -359,12 +360,12 @@
                                         <label class="text-[12px] font-bold text-[#333]">Title</label>
                                         <button @click.stop="openDynSrcMenu(editingElement.settings, 'dynamic_source', 'text', $event)"
                                                 class="w-6 h-6 flex items-center justify-center rounded border transition-all"
-                                                :class="editingElement.settings.dynamic_source ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                                :class="editingElement.settings.dynamic_source ? 'bg-[#2271b1]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
                                             <i class="fa fa-database text-[10px]"></i>
                                         </button>
                                     </div>
                                     <div v-if="editingElement.settings.dynamic_source"
-                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#2271b1]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
                                          @click.stop="openDynSrcMenu(editingElement.settings, 'dynamic_source', 'text', $event)">
                                         <div class="flex items-center gap-2">
                                             <i :class="['fa', getDynSrcDef(editingElement.settings.dynamic_source).icon, 'text-[#0091ea] text-sm']"></i>
@@ -388,10 +389,10 @@
                                     </div>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
                                         <button @click="editingElement.settings.useLink = true"
-                                                :class="editingElement.settings.useLink ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.useLink ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">On</button>
                                         <button @click="editingElement.settings.useLink = false"
-                                                :class="!editingElement.settings.useLink ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="!editingElement.settings.useLink ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">Off</button>
                                     </div>
                                 </div>
@@ -402,12 +403,12 @@
                                         <label class="text-[12px] font-bold text-[#333]">Link URL</label>
                                         <button @click.stop="openDynSrcMenu(editingElement.settings, 'link_dynamic_source', 'link', $event)"
                                                 class="w-6 h-6 flex items-center justify-center rounded border transition-all"
-                                                :class="editingElement.settings.link_dynamic_source ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                                :class="editingElement.settings.link_dynamic_source ? 'bg-[#2271b1]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
                                             <i class="fa fa-database text-[10px]"></i>
                                         </button>
                                     </div>
                                     <div v-if="editingElement.settings.link_dynamic_source"
-                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#2271b1]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
                                          @click.stop="openDynSrcMenu(editingElement.settings, 'link_dynamic_source', 'link', $event)">
                                         <div class="flex items-center gap-2">
                                             <i :class="['fa', getDynSrcDef(editingElement.settings.link_dynamic_source).icon, 'text-[#0091ea] text-sm']"></i>
@@ -442,20 +443,21 @@
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -494,12 +496,12 @@
                                         <label class="text-[12px] font-bold text-[#333]">Button Text</label>
                                         <button @click.stop="openDynSrcMenu(editingElement.settings, 'dynamic_source', 'text', $event)"
                                                 class="w-6 h-6 flex items-center justify-center rounded border transition-all"
-                                                :class="editingElement.settings.dynamic_source ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                                :class="editingElement.settings.dynamic_source ? 'bg-[#2271b1]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
                                             <i class="fa fa-database text-[10px]"></i>
                                         </button>
                                     </div>
                                     <div v-if="editingElement.settings.dynamic_source"
-                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#2271b1]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
                                          @click.stop="openDynSrcMenu(editingElement.settings, 'dynamic_source', 'text', $event)">
                                         <div class="flex items-center gap-2">
                                             <i :class="['fa', getDynSrcDef(editingElement.settings.dynamic_source).icon, 'text-[#0091ea] text-sm']"></i>
@@ -520,12 +522,12 @@
                                         <label class="text-[12px] font-bold text-[#333]">Link URL</label>
                                         <button @click.stop="openDynSrcMenu(editingElement.settings, 'link_dynamic_source', 'link', $event)"
                                                 class="w-6 h-6 flex items-center justify-center rounded border transition-all"
-                                                :class="editingElement.settings.link_dynamic_source ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                                :class="editingElement.settings.link_dynamic_source ? 'bg-[#2271b1]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
                                             <i class="fa fa-database text-[10px]"></i>
                                         </button>
                                     </div>
                                     <div v-if="editingElement.settings.link_dynamic_source"
-                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#2271b1]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
                                          @click.stop="openDynSrcMenu(editingElement.settings, 'link_dynamic_source', 'link', $event)">
                                         <div class="flex items-center gap-2">
                                             <i :class="['fa', getDynSrcDef(editingElement.settings.link_dynamic_source).icon, 'text-[#0091ea] text-sm']"></i>
@@ -569,13 +571,13 @@
                                                     <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
                                                 </button>
                                                 <div v-show="activeResponsiveMenu === 'btnAlign'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
-                                                    <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                                    <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
                                                         <i class="fa fa-desktop text-[11px]"></i>
                                                     </button>
-                                                    <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                                    <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
                                                         <i class="fa fa-tablet-alt text-[11px]"></i>
                                                     </button>
-                                                    <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                                    <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
                                                         <i class="fa fa-mobile-alt text-[11px]"></i>
                                                     </button>
                                                 </div>
@@ -584,17 +586,17 @@
                                     </div>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                                         <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, 'left')"
-                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'left' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'left' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2.5 flex items-center justify-center border-r border-slate-200 transition-all">
                                             <i class="fa fa-align-left text-sm"></i>
                                         </button>
                                         <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, 'center')"
-                                                :class="(getResponsiveVal(editingElement.settings, 'textAlign', device) === 'center' || !getResponsiveVal(editingElement.settings, 'textAlign', device)) ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="(getResponsiveVal(editingElement.settings, 'textAlign', device) === 'center' || !getResponsiveVal(editingElement.settings, 'textAlign', device)) ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2.5 flex items-center justify-center border-r border-slate-200 transition-all">
                                             <i class="fa fa-align-center text-sm"></i>
                                         </button>
                                         <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, 'right')"
-                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'right' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'right' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2.5 flex items-center justify-center transition-all">
                                             <i class="fa fa-align-right text-sm"></i>
                                         </button>
@@ -606,20 +608,21 @@
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -652,13 +655,13 @@
                                         <label class="text-[12px] font-bold text-[#333]">Image</label>
                                         <button @click.stop="openDynSrcMenu(editingElement.settings, 'dynamic_source', 'image', $event)"
                                                 class="w-6 h-6 flex items-center justify-center rounded border transition-all"
-                                                :class="editingElement.settings.dynamic_source ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                                :class="editingElement.settings.dynamic_source ? 'bg-[#2271b1]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
                                             <i class="fa fa-database text-[10px]"></i>
                                         </button>
                                     </div>
                                     <!-- Dynamic source active state -->
                                     <div v-if="editingElement.settings.dynamic_source"
-                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#2271b1]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
                                          @click.stop="openDynSrcMenu(editingElement.settings, 'dynamic_source', 'image', $event)">
                                         <div class="flex items-center gap-2">
                                             <i :class="['fa', getDynSrcDef(editingElement.settings.dynamic_source).icon, 'text-[#0091ea] text-sm']"></i>
@@ -674,7 +677,7 @@
                                         <div v-if="!editingElement.settings.url"
                                              @click="openMediaModal('url')"
                                              class="w-full aspect-[16/10] border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#0091ea] hover:bg-blue-50/30 transition-all group">
-                                            <div class="w-10 h-10 bg-[#0091ea] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                                            <div class="w-10 h-10 bg-[#2271b1] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
                                                 <i class="fa fa-plus"></i>
                                             </div>
                                         </div>
@@ -682,7 +685,7 @@
                                             <div class="relative group aspect-[16/10] bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
                                                 <img :src="editingElement.settings.url" class="w-full h-full object-cover">
                                                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                    <button @click="openMediaModal('url')" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0091ea] hover:bg-[#0091ea] hover:text-white transition-all shadow-sm">
+                                                    <button @click="openMediaModal('url')" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0091ea] hover:bg-[#1a5a96] hover:text-white transition-all shadow-sm">
                                                         <i class="fa fa-edit text-xs"></i>
                                                     </button>
                                                     <button @click="editingElement.settings.url = ''" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
@@ -692,7 +695,7 @@
                                             </div>
                                             <div class="flex gap-2">
                                                 <button @click="editingElement.settings.url = ''" class="flex-1 h-9 flex items-center justify-center border border-slate-200 rounded text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-colors">Remove</button>
-                                                <button @click="openMediaModal('url')" class="flex-1 h-9 flex items-center justify-center bg-[#0091ea] text-white rounded text-[11px] font-bold hover:bg-[#007cc0] transition-colors">Change</button>
+                                                <button @click="openMediaModal('url')" class="flex-1 h-9 flex items-center justify-center bg-[#2271b1] text-white rounded text-[11px] font-bold hover:bg-[#1a5a96] transition-colors">Change</button>
                                             </div>
                                         </div>
                                     </div>
@@ -705,7 +708,7 @@
                                         <button v-for="ar in [{l:'Auto',v:'none'},{l:'16:9',v:'16/9'},{l:'4:3',v:'4/3'},{l:'1:1',v:'1/1'},{l:'3:4',v:'3/4'}]"
                                                 :key="ar.v"
                                                 @click="editingElement.settings.aspectRatio = ar.v"
-                                                :class="(editingElement.settings.aspectRatio || 'none') === ar.v ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
+                                                :class="(editingElement.settings.aspectRatio || 'none') === ar.v ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
                                                 class="py-1.5 rounded text-[10px] font-bold transition-colors">
                                             @{{ ar.l }}
                                         </button>
@@ -751,12 +754,12 @@
                                         <label class="text-[12px] font-bold text-[#333]">Link URL</label>
                                         <button @click.stop="openDynSrcMenu(editingElement.settings, 'link_dynamic_source', 'link', $event)"
                                                 class="w-6 h-6 flex items-center justify-center rounded border transition-all"
-                                                :class="editingElement.settings.link_dynamic_source ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
+                                                :class="editingElement.settings.link_dynamic_source ? 'bg-[#2271b1]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'">
                                             <i class="fa fa-database text-[10px]"></i>
                                         </button>
                                     </div>
                                     <div v-if="editingElement.settings.link_dynamic_source"
-                                         class="flex items-center justify-between px-3 py-2.5 bg-[#0091ea]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
+                                         class="flex items-center justify-between px-3 py-2.5 bg-[#2271b1]/8 border border-[#0091ea]/25 rounded-lg cursor-pointer select-none"
                                          @click.stop="openDynSrcMenu(editingElement.settings, 'link_dynamic_source', 'link', $event)">
                                         <div class="flex items-center gap-2">
                                             <i :class="['fa', getDynSrcDef(editingElement.settings.link_dynamic_source).icon, 'text-[#0091ea] text-sm']"></i>
@@ -800,13 +803,13 @@
                                                     <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
                                                 </button>
                                                 <div v-show="activeResponsiveMenu === 'imgAlign'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
-                                                    <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                                                    <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
                                                         <i class="fa fa-desktop text-[11px]"></i>
                                                     </button>
-                                                    <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                                                    <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
                                                         <i class="fa fa-tablet-alt text-[11px]"></i>
                                                     </button>
-                                                    <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                                                    <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
                                                         <i class="fa fa-mobile-alt text-[11px]"></i>
                                                     </button>
                                                 </div>
@@ -815,17 +818,17 @@
                                     </div>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                                         <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, 'left')"
-                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'left' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'left' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2.5 flex items-center justify-center border-r border-slate-200 transition-all">
                                             <i class="fa fa-align-left text-sm"></i>
                                         </button>
                                         <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, 'center')"
-                                                :class="(getResponsiveVal(editingElement.settings, 'textAlign', device) === 'center' || !getResponsiveVal(editingElement.settings, 'textAlign', device)) ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="(getResponsiveVal(editingElement.settings, 'textAlign', device) === 'center' || !getResponsiveVal(editingElement.settings, 'textAlign', device)) ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2.5 flex items-center justify-center border-r border-slate-200 transition-all">
                                             <i class="fa fa-align-center text-sm"></i>
                                         </button>
                                         <button @click="setResponsiveVal(editingElement.settings, 'textAlign', device, 'right')"
-                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'right' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="getResponsiveVal(editingElement.settings, 'textAlign', device) === 'right' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2.5 flex items-center justify-center transition-all">
                                             <i class="fa fa-align-right text-sm"></i>
                                         </button>
@@ -837,20 +840,21 @@
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -1000,10 +1004,10 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Out Of Stock Products</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
                                         <button @click="editingElement.settings.hide_out_of_stock = false"
-                                                :class="!editingElement.settings.hide_out_of_stock ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="!editingElement.settings.hide_out_of_stock ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="px-5 py-1.5 text-[11px] font-black uppercase rounded transition-all">Show</button>
                                         <button @click="editingElement.settings.hide_out_of_stock = true"
-                                                :class="editingElement.settings.hide_out_of_stock ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.hide_out_of_stock ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="px-5 py-1.5 text-[11px] font-black uppercase rounded transition-all">Hide</button>
                                     </div>
                                 </div>
@@ -1061,10 +1065,10 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Order</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1">
                                         <button @click="editingElement.settings.order = 'asc'"
-                                                :class="editingElement.settings.order === 'asc' ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.order === 'asc' ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">ASC</button>
                                         <button @click="editingElement.settings.order = 'desc'"
-                                                :class="(editingElement.settings.order === 'desc' || !editingElement.settings.order) ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="(editingElement.settings.order === 'desc' || !editingElement.settings.order) ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">DESC</button>
                                     </div>
                                 </div>
@@ -1092,20 +1096,21 @@
                                 <!-- Element Visibility -->
                                 <div class="pt-4 border-t border-slate-50">
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Element Visibility</label>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -1149,20 +1154,21 @@
                                 <!-- Element Visibility -->
                                 <div class="pt-4 border-t border-slate-50">
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Element Visibility</label>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -1201,20 +1207,21 @@
                                 <!-- Element Visibility -->
                                 <div class="pt-4 border-t border-slate-50">
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Element Visibility</label>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -1273,7 +1280,7 @@
                                         <div class="p-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
                                             <div class="flex items-center gap-2">
                                                 <div class="w-7 h-7 bg-white rounded border border-slate-200 flex items-center justify-center"
-                                                     :style="{ color: editingElement.settings.iconColor || '#0091ea' }">
+                                                     :style="{ color: editingElement.settings.iconColor || '#2271b1' }">
                                                     <i :class="editingElement.settings.icon || 'fas fa-star'"></i>
                                                 </div>
                                                 <span class="text-[10px] text-slate-500 font-medium truncate max-w-[120px]">@{{ editingElement.settings.icon || 'No icon selected' }}</span>
@@ -1289,19 +1296,19 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Layout</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1">
                                         <button @click="editingElement.settings.layout = 'top'"
-                                                :class="(!editingElement.settings.layout || editingElement.settings.layout === 'top') ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
+                                                :class="(!editingElement.settings.layout || editingElement.settings.layout === 'top') ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
                                                 class="flex-1 py-2 rounded transition-all flex items-center justify-center"
                                                 title="Top (Icon Above Text)">
                                             <i class="fas fa-arrow-up text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.layout = 'left'"
-                                                :class="editingElement.settings.layout === 'left' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
+                                                :class="editingElement.settings.layout === 'left' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
                                                 class="flex-1 py-2 rounded transition-all flex items-center justify-center"
                                                 title="Left (Icon Left of Text)">
                                             <i class="fas fa-arrow-left text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.layout = 'right'"
-                                                :class="editingElement.settings.layout === 'right' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
+                                                :class="editingElement.settings.layout === 'right' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
                                                 class="flex-1 py-2 rounded transition-all flex items-center justify-center"
                                                 title="Right (Icon Right of Text)">
                                             <i class="fas fa-arrow-right text-sm"></i>
@@ -1314,19 +1321,19 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Alignment</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1">
                                         <button @click="editingElement.settings.alignment = 'left'"
-                                                :class="editingElement.settings.alignment === 'left' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
+                                                :class="editingElement.settings.alignment === 'left' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
                                                 class="flex-1 py-2 rounded transition-all flex items-center justify-center"
                                                 title="Align Left">
                                             <i class="fas fa-align-left text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.alignment = 'center'"
-                                                :class="(!editingElement.settings.alignment || editingElement.settings.alignment === 'center') ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
+                                                :class="(!editingElement.settings.alignment || editingElement.settings.alignment === 'center') ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
                                                 class="flex-1 py-2 rounded transition-all flex items-center justify-center"
                                                 title="Align Center">
                                             <i class="fas fa-align-center text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.alignment = 'right'"
-                                                :class="editingElement.settings.alignment === 'right' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
+                                                :class="editingElement.settings.alignment === 'right' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
                                                 class="flex-1 py-2 rounded transition-all flex items-center justify-center"
                                                 title="Align Right">
                                             <i class="fas fa-align-right text-sm"></i>
@@ -1378,20 +1385,21 @@
                                 <!-- Visibility -->
                                 <div class="pt-4 border-t border-slate-50">
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Element Visibility</label>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -1477,12 +1485,12 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Icon Type</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1">
                                         <button @click="editingElement.settings.iconType = 'plus'"
-                                                :class="(!editingElement.settings.iconType || editingElement.settings.iconType === 'plus') ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="(!editingElement.settings.iconType || editingElement.settings.iconType === 'plus') ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">
                                             <i class="fas fa-plus mr-1"></i> Plus
                                         </button>
                                         <button @click="editingElement.settings.iconType = 'chevron'"
-                                                :class="editingElement.settings.iconType === 'chevron' ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.iconType === 'chevron' ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">
                                             <i class="fas fa-chevron-down mr-1"></i> Chevron
                                         </button>
@@ -1494,10 +1502,10 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Icon Position</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1">
                                         <button @click="editingElement.settings.iconPosition = 'left'"
-                                                :class="editingElement.settings.iconPosition === 'left' ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.iconPosition === 'left' ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">Left</button>
                                         <button @click="editingElement.settings.iconPosition = 'right'"
-                                                :class="(!editingElement.settings.iconPosition || editingElement.settings.iconPosition === 'right') ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="(!editingElement.settings.iconPosition || editingElement.settings.iconPosition === 'right') ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">Right</button>
                                     </div>
                                 </div>
@@ -1506,7 +1514,7 @@
                                 <div class="flex items-center justify-between">
                                     <label class="text-[12px] font-bold text-[#333]">Allow Multiple Open</label>
                                     <button @click="editingElement.settings.allowMultiple = !editingElement.settings.allowMultiple"
-                                            :class="editingElement.settings.allowMultiple ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                                            :class="editingElement.settings.allowMultiple ? 'bg-[#2271b1]' : 'bg-slate-200'"
                                             class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200">
                                         <span :class="editingElement.settings.allowMultiple ? 'translate-x-4' : 'translate-x-1'"
                                               class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200"></span>
@@ -1516,20 +1524,21 @@
                                 <!-- Visibility -->
                                 <div class="pt-4 border-t border-slate-50">
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Element Visibility</label>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -1576,7 +1585,7 @@
                                                  @click="activeIconListItem = (activeIconListItem === idx ? null : idx)">
                                                 <i class="fa fa-grip-vertical text-slate-300 text-[11px] cursor-grab"></i>
                                                 <i :class="item.icon || editingElement.settings.defaultIcon || 'fa fa-check'"
-                                                   :style="{color: item.iconColor || editingElement.settings.iconColor || '#0091ea', fontSize:'12px'}"></i>
+                                                   :style="{color: item.iconColor || editingElement.settings.iconColor || '#2271b1', fontSize:'12px'}"></i>
                                                 <span class="flex-1 text-[12px] text-slate-600 truncate">@{{ item.text || 'Item ' + (idx+1) }}</span>
                                                 <button @click.stop="editingElement.settings.items.splice(idx,1); if(activeIconListItem===idx) activeIconListItem=null;"
                                                         class="text-slate-300 hover:text-red-400 transition-colors">
@@ -1619,7 +1628,7 @@
                                                         <div class="p-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
                                                             <div class="flex items-center gap-2">
                                                                 <div class="w-7 h-7 bg-white rounded border border-slate-200 flex items-center justify-center"
-                                                                     :style="{ color: item.iconColor || editingElement.settings.iconColor || '#0091ea' }">
+                                                                     :style="{ color: item.iconColor || editingElement.settings.iconColor || '#2271b1' }">
                                                                     <i :class="item.icon || editingElement.settings.defaultIcon || 'fas fa-check'"></i>
                                                                 </div>
                                                                 <span class="text-[10px] text-slate-500 font-medium truncate max-w-[120px]">@{{ item.icon || 'Using default' }}</span>
@@ -1637,7 +1646,7 @@
                                                     <div class="flex gap-2 items-center">
                                                         <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                                              @click="openColorPicker($event, item, 'iconColor')">
-                                                            <div :style="{ backgroundColor: item.iconColor || editingElement.settings.iconColor || '#0091ea' }" class="w-full h-full rounded-full"></div>
+                                                            <div :style="{ backgroundColor: item.iconColor || editingElement.settings.iconColor || '#2271b1' }" class="w-full h-full rounded-full"></div>
                                                         </div>
                                                         <input type="text" v-model="item.iconColor" placeholder="default" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px]">
                                                     </div>
@@ -1662,10 +1671,10 @@
                                                     <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Link Target</label>
                                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-0.5">
                                                         <button @click="item.linkTarget='_self'"
-                                                                :class="(!item.linkTarget||item.linkTarget==='_self') ? 'bg-[#0091ea] text-white shadow-sm':'text-slate-500 hover:bg-slate-100'"
+                                                                :class="(!item.linkTarget||item.linkTarget==='_self') ? 'bg-[#2271b1] text-white shadow-sm':'text-slate-500 hover:bg-slate-100'"
                                                                 class="flex-1 py-1 text-[10px] font-bold rounded transition-all">Same Tab</button>
                                                         <button @click="item.linkTarget='_blank'"
-                                                                :class="item.linkTarget==='_blank' ? 'bg-[#0091ea] text-white shadow-sm':'text-slate-500 hover:bg-slate-100'"
+                                                                :class="item.linkTarget==='_blank' ? 'bg-[#2271b1] text-white shadow-sm':'text-slate-500 hover:bg-slate-100'"
                                                                 class="flex-1 py-1 text-[10px] font-bold rounded transition-all">New Tab</button>
                                                     </div>
                                                 </div>
@@ -1679,20 +1688,21 @@
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -1781,13 +1791,13 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Tab Style</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1">
                                         <button @click="editingElement.settings.style = 'underline'"
-                                                :class="(!editingElement.settings.style || editingElement.settings.style === 'underline') ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="(!editingElement.settings.style || editingElement.settings.style === 'underline') ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">Underline</button>
                                         <button @click="editingElement.settings.style = 'pill'"
-                                                :class="editingElement.settings.style === 'pill' ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.style === 'pill' ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">Pill</button>
                                         <button @click="editingElement.settings.style = 'boxed'"
-                                                :class="editingElement.settings.style === 'boxed' ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.style === 'boxed' ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">Boxed</button>
                                     </div>
                                 </div>
@@ -1797,17 +1807,17 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Tab Alignment</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1">
                                         <button @click="editingElement.settings.alignment = 'left'"
-                                                :class="(!editingElement.settings.alignment || editingElement.settings.alignment === 'left') ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="(!editingElement.settings.alignment || editingElement.settings.alignment === 'left') ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 rounded transition-all flex items-center justify-center" title="Left">
                                             <i class="fas fa-align-left text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.alignment = 'center'"
-                                                :class="editingElement.settings.alignment === 'center' ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.alignment === 'center' ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 rounded transition-all flex items-center justify-center" title="Center">
                                             <i class="fas fa-align-center text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.alignment = 'right'"
-                                                :class="editingElement.settings.alignment === 'right' ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.alignment === 'right' ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 rounded transition-all flex items-center justify-center" title="Right">
                                             <i class="fas fa-align-right text-sm"></i>
                                         </button>
@@ -1817,20 +1827,21 @@
                                 <!-- Visibility -->
                                 <div class="pt-4 border-t border-slate-50">
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Element Visibility</label>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -1862,10 +1873,10 @@
                                     </div>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1">
                                         <button @click="editingElement.settings.content_display = 'excerpt'"
-                                                :class="(editingElement.settings.content_display === 'excerpt' || !editingElement.settings.content_display) ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="(editingElement.settings.content_display === 'excerpt' || !editingElement.settings.content_display) ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">Excerpt</button>
                                         <button @click="editingElement.settings.content_display = 'full'"
-                                                :class="editingElement.settings.content_display === 'full' ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.content_display === 'full' ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">Full Content</button>
                                     </div>
                                 </div>
@@ -1891,10 +1902,10 @@
                                         </div>
                                         <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
                                             <button @click="editingElement.settings.stripHtml = true"
-                                                    :class="editingElement.settings.stripHtml !== false ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                    :class="editingElement.settings.stripHtml !== false ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                     class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">Yes</button>
                                             <button @click="editingElement.settings.stripHtml = false"
-                                                    :class="editingElement.settings.stripHtml === false ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                    :class="editingElement.settings.stripHtml === false ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                     class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">No</button>
                                         </div>
                                     </div>
@@ -1905,20 +1916,21 @@
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -1961,13 +1973,13 @@
                                                 <div class="flex flex-col gap-0.5 flex-shrink-0">
                                                     <button type="button"
                                                             @click="idx > 0 && (editingElement.settings.metaOrder = (() => { const a = [...(editingElement.settings.metaOrder||['categories','tags','author','date','reading_time'])]; a.splice(idx-1,0,a.splice(idx,1)[0]); return a; })())"
-                                                            :class="idx === 0 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-[#0091ea] hover:text-white'"
+                                                            :class="idx === 0 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-[#1a5a96] hover:text-white'"
                                                             class="w-5 h-4 rounded text-[9px] flex items-center justify-center bg-slate-100 text-slate-500 transition-colors">
                                                         <i class="fa fa-caret-up"></i>
                                                     </button>
                                                     <button type="button"
                                                             @click="idx < ((editingElement.settings.metaOrder||[]).length-1) && (editingElement.settings.metaOrder = (() => { const a = [...(editingElement.settings.metaOrder||['categories','tags','author','date','reading_time'])]; a.splice(idx+1,0,a.splice(idx,1)[0]); return a; })())"
-                                                            :class="idx === (editingElement.settings.metaOrder||[]).length-1 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-[#0091ea] hover:text-white'"
+                                                            :class="idx === (editingElement.settings.metaOrder||[]).length-1 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-[#1a5a96] hover:text-white'"
                                                             class="w-5 h-4 rounded text-[9px] flex items-center justify-center bg-slate-100 text-slate-500 transition-colors">
                                                         <i class="fa fa-caret-down"></i>
                                                     </button>
@@ -2048,12 +2060,12 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Layout</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1">
                                         <button @click="editingElement.settings.layout = 'inline'"
-                                                :class="(editingElement.settings.layout || 'inline') === 'inline' ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="(editingElement.settings.layout || 'inline') === 'inline' ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">
                                             <i class="fa fa-grip-horizontal mr-1"></i> Inline
                                         </button>
                                         <button @click="editingElement.settings.layout = 'stacked'"
-                                                :class="editingElement.settings.layout === 'stacked' ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.layout === 'stacked' ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="flex-1 py-1.5 text-[11px] font-black uppercase rounded transition-all">
                                             <i class="fa fa-list mr-1"></i> Stacked
                                         </button>
@@ -2065,10 +2077,10 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Show Icons</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
                                         <button @click="editingElement.settings.showIcons = true"
-                                                :class="editingElement.settings.showIcons !== false ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.showIcons !== false ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">Yes</button>
                                         <button @click="editingElement.settings.showIcons = false"
-                                                :class="editingElement.settings.showIcons === false ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                                                :class="editingElement.settings.showIcons === false ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                                                 class="px-6 py-1.5 text-[11px] font-black uppercase rounded transition-all">No</button>
                                     </div>
                                 </div>
@@ -2088,20 +2100,21 @@
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -2135,12 +2148,12 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Video Source</label>
                                     <div class="grid grid-cols-2 gap-1">
                                         <button @click="editingElement.settings.videoSource = 'youtube'"
-                                                :class="(editingElement.settings.videoSource || 'youtube') === 'youtube' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
+                                                :class="(editingElement.settings.videoSource || 'youtube') === 'youtube' ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
                                                 class="py-2 rounded text-[11px] font-bold transition-colors flex items-center justify-center gap-1.5">
                                             <i class="fa fa-play-circle"></i> YouTube / Vimeo
                                         </button>
                                         <button @click="editingElement.settings.videoSource = 'selfhost'"
-                                                :class="(editingElement.settings.videoSource || 'youtube') === 'selfhost' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
+                                                :class="(editingElement.settings.videoSource || 'youtube') === 'selfhost' ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
                                                 class="py-2 rounded text-[11px] font-bold transition-colors flex items-center justify-center gap-1.5">
                                             <i class="fa fa-upload"></i> Self Host / MP4
                                         </button>
@@ -2165,7 +2178,7 @@
                                     <div v-if="!editingElement.settings.url"
                                          @click="openMediaModal('url')"
                                          class="w-full border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center gap-2 py-5 cursor-pointer hover:border-[#0091ea] hover:bg-blue-50/30 transition-all group">
-                                        <div class="w-8 h-8 bg-[#0091ea] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform flex-shrink-0">
+                                        <div class="w-8 h-8 bg-[#2271b1] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform flex-shrink-0">
                                             <i class="fa fa-upload text-xs"></i>
                                         </div>
                                         <span class="text-[12px] text-slate-500 font-medium">Upload or select video</span>
@@ -2177,7 +2190,7 @@
                                         </div>
                                         <div class="flex gap-2">
                                             <button @click="editingElement.settings.url = ''" class="flex-1 h-9 flex items-center justify-center border border-slate-200 rounded text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-colors">Remove</button>
-                                            <button @click="openMediaModal('url')" class="flex-1 h-9 flex items-center justify-center bg-[#0091ea] text-white rounded text-[11px] font-bold hover:bg-[#007cc0] transition-colors">Change</button>
+                                            <button @click="openMediaModal('url')" class="flex-1 h-9 flex items-center justify-center bg-[#2271b1] text-white rounded text-[11px] font-bold hover:bg-[#1a5a96] transition-colors">Change</button>
                                         </div>
                                     </div>
                                 </div>
@@ -2188,7 +2201,7 @@
                                     <div class="grid grid-cols-4 gap-1">
                                         <button v-for="ratio in ['16-9','4-3','1-1','9-16']" :key="ratio"
                                                 @click="editingElement.settings.aspectRatio = ratio"
-                                                :class="(editingElement.settings.aspectRatio || '16-9') === ratio ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
+                                                :class="(editingElement.settings.aspectRatio || '16-9') === ratio ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
                                                 class="py-2 rounded text-[11px] font-bold transition-colors">
                                             @{{ ratio.replace('-',':') }}
                                         </button>
@@ -2202,7 +2215,7 @@
                                         <div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded">
                                             <span class="text-[12px] text-slate-600">Show Controls</span>
                                             <button @click="editingElement.settings.controls = editingElement.settings.controls === false ? true : false"
-                                                    :class="editingElement.settings.controls !== false ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                                                    :class="editingElement.settings.controls !== false ? 'bg-[#2271b1]' : 'bg-slate-200'"
                                                     class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200">
                                                 <span :class="editingElement.settings.controls !== false ? 'translate-x-4' : 'translate-x-1'"
                                                       class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200"></span>
@@ -2211,7 +2224,7 @@
                                         <div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded">
                                             <span class="text-[12px] text-slate-600">Autoplay</span>
                                             <button @click="editingElement.settings.autoplay = !editingElement.settings.autoplay"
-                                                    :class="editingElement.settings.autoplay ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                                                    :class="editingElement.settings.autoplay ? 'bg-[#2271b1]' : 'bg-slate-200'"
                                                     class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200">
                                                 <span :class="editingElement.settings.autoplay ? 'translate-x-4' : 'translate-x-1'"
                                                       class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200"></span>
@@ -2220,7 +2233,7 @@
                                         <div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded">
                                             <span class="text-[12px] text-slate-600">Muted</span>
                                             <button @click="editingElement.settings.muted = !editingElement.settings.muted"
-                                                    :class="editingElement.settings.muted ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                                                    :class="editingElement.settings.muted ? 'bg-[#2271b1]' : 'bg-slate-200'"
                                                     class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200">
                                                 <span :class="editingElement.settings.muted ? 'translate-x-4' : 'translate-x-1'"
                                                       class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200"></span>
@@ -2229,7 +2242,7 @@
                                         <div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded">
                                             <span class="text-[12px] text-slate-600">Loop</span>
                                             <button @click="editingElement.settings.loop = !editingElement.settings.loop"
-                                                    :class="editingElement.settings.loop ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                                                    :class="editingElement.settings.loop ? 'bg-[#2271b1]' : 'bg-slate-200'"
                                                     class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200">
                                                 <span :class="editingElement.settings.loop ? 'translate-x-4' : 'translate-x-1'"
                                                       class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200"></span>
@@ -2241,20 +2254,21 @@
                                 <!-- Visibility -->
                                 <div class="pt-4 border-t border-slate-50">
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Element Visibility</label>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -2317,7 +2331,7 @@
                                                     <input type="text" v-model="img.url" placeholder="Image URL..."
                                                            class="flex-1 border border-slate-200 rounded px-2 py-1.5 text-[11px] focus:outline-none focus:border-[#0091ea]">
                                                     <button @click="openGalleryImageMedia(idx)"
-                                                            class="px-2 py-1.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-bold text-slate-600 hover:bg-[#0091ea] hover:text-white hover:border-[#0091ea] transition-all whitespace-nowrap flex-shrink-0">
+                                                            class="px-2 py-1.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-bold text-slate-600 hover:bg-[#1a5a96] hover:text-white hover:border-[#0091ea] transition-all whitespace-nowrap flex-shrink-0">
                                                         <i class="fa fa-upload text-[9px]"></i>
                                                     </button>
                                                 </div>
@@ -2346,13 +2360,13 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Caption Alignment</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                                         <button @click="editingElement.settings.captionAlign = 'left'"
-                                                :class="(editingElement.settings.captionAlign || 'center') === 'left' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="(editingElement.settings.captionAlign || 'center') === 'left' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2 text-[11px] font-bold border-r border-slate-100 transition-all">Left</button>
                                         <button @click="editingElement.settings.captionAlign = 'center'"
-                                                :class="(!editingElement.settings.captionAlign || editingElement.settings.captionAlign === 'center') ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="(!editingElement.settings.captionAlign || editingElement.settings.captionAlign === 'center') ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2 text-[11px] font-bold border-r border-slate-100 transition-all">Center</button>
                                         <button @click="editingElement.settings.captionAlign = 'right'"
-                                                :class="editingElement.settings.captionAlign === 'right' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="editingElement.settings.captionAlign === 'right' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2 text-[11px] font-bold transition-all">Right</button>
                                     </div>
                                 </div>
@@ -2362,20 +2376,21 @@
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -2454,16 +2469,16 @@
                                     <label class="text-[12px] font-bold text-[#333] block mb-2">Alignment</label>
                                     <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                                         <button @click="editingElement.settings.textAlign = 'left'"
-                                                :class="(editingElement.settings.textAlign || 'center') === 'left' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="(editingElement.settings.textAlign || 'center') === 'left' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2 text-[11px] font-bold border-r border-slate-100 transition-all">Left</button>
                                         <button @click="editingElement.settings.textAlign = 'center'"
-                                                :class="(!editingElement.settings.textAlign || editingElement.settings.textAlign === 'center') ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="(!editingElement.settings.textAlign || editingElement.settings.textAlign === 'center') ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2 text-[11px] font-bold border-r border-slate-100 transition-all">Center</button>
                                         <button @click="editingElement.settings.textAlign = 'right'"
-                                                :class="editingElement.settings.textAlign === 'right' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="editingElement.settings.textAlign === 'right' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2 text-[11px] font-bold border-r border-slate-100 transition-all">Right</button>
                                         <button @click="editingElement.settings.textAlign = 'full'"
-                                                :class="editingElement.settings.textAlign === 'full' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                :class="editingElement.settings.textAlign === 'full' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                 class="flex-1 py-2 text-[11px] font-bold transition-all">Full</button>
                                     </div>
                                 </div>
@@ -2478,20 +2493,21 @@
                                     <div class="flex justify-between items-center mb-3">
                                         <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-1">
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                                         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                                                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
                                             <i class="fa fa-mobile-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                                                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
                                             <i class="fa fa-tablet-alt text-sm"></i>
                                         </button>
                                         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                                                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
-                                                class="py-3 rounded transition-all flex items-center justify-center">
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
                                             <i class="fa fa-desktop text-sm"></i>
                                         </button>
                                     </div>
@@ -2534,27 +2550,18 @@
                                 </div>
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
-                                        <div class="flex justify-between items-center mb-2">
-                                            <label class="text-[12px] font-bold text-[#333]">Prefix</label>
-                                            <button type="button" @click.stop="openDynMenu(editingElement.settings, 'prefix', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
-                                        </div>
+                                        <label class="text-[12px] font-bold text-[#333] block mb-2">Prefix</label>
                                         <input type="text" v-model="editingElement.settings.prefix" placeholder="e.g. $"
                                                class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
                                     </div>
                                     <div>
-                                        <div class="flex justify-between items-center mb-2">
-                                            <label class="text-[12px] font-bold text-[#333]">Suffix</label>
-                                            <button type="button" @click.stop="openDynMenu(editingElement.settings, 'suffix', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
-                                        </div>
+                                        <label class="text-[12px] font-bold text-[#333] block mb-2">Suffix</label>
                                         <input type="text" v-model="editingElement.settings.suffix" placeholder="e.g. +"
                                                class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
                                     </div>
                                 </div>
                                 <div>
-                                    <div class="flex justify-between items-center mb-2">
-                                        <label class="text-[12px] font-bold text-[#333]">Label (caption)</label>
-                                        <button type="button" @click.stop="openDynMenu(editingElement.settings, 'label', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
-                                    </div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-2">Label (caption)</label>
                                     <input type="text" v-model="editingElement.settings.label" placeholder="e.g. Happy Clients"
                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
                                 </div>
@@ -2572,6 +2579,49 @@
                                             <option value=",">Comma (1,000)</option>
                                             <option value=".">Dot (1.000)</option>
                                         </select>
+                                    </div>
+                                </div>
+
+                                <!-- Visibility -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2"
+                                         @click.capture="if (!editingElement.settings.visibility) { editingElement.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
+                                        <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.mobile !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
+                                            <i class="fa fa-mobile-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.tablet !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
+                                            <i class="fa fa-tablet-alt text-sm"></i>
+                                        </button>
+                                        <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
+                                                :class="editingElement.settings.visibility && editingElement.settings.visibility.desktop !== false ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
+                                                class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
+                                            <i class="fa fa-desktop text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- CSS Class & ID -->
+                                <div class="grid grid-cols-1 gap-6 pt-4 border-t border-slate-50">
+                                    <div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <label class="text-[12px] font-bold text-[#333]">CSS Class</label>
+                                        </div>
+                                        <input type="text" v-model="editingElement.settings.cssClass"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <label class="text-[12px] font-bold text-[#333]">CSS ID</label>
+                                        </div>
+                                        <input type="text" v-model="editingElement.settings.cssId"
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
                                     </div>
                                 </div>
                             </div>
@@ -2727,7 +2777,7 @@
                                              <div class="flex gap-2 items-center">
                                                  <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                                       @click="openColorPicker($event, editingElement.settings, 'iconColor')">
-                                                     <div :style="{ backgroundColor: editingElement.settings.iconColor || '#0091ea' }" class="w-full h-full rounded-full"></div>
+                                                     <div :style="{ backgroundColor: editingElement.settings.iconColor || '#2271b1' }" class="w-full h-full rounded-full"></div>
                                                  </div>
                                                  <input type="text" v-model="editingElement.settings.iconColor" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px]">
                                              </div>
@@ -2841,16 +2891,16 @@
                                              <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Text Transform</label>
                                              <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                                                  <button @click="editingElement.settings.titleTextTransform = 'none'"
-                                                         :class="(!editingElement.settings.titleTextTransform || editingElement.settings.titleTextTransform === 'none') ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                         :class="(!editingElement.settings.titleTextTransform || editingElement.settings.titleTextTransform === 'none') ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                          class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all" title="Normal">—</button>
                                                  <button @click="editingElement.settings.titleTextTransform = 'uppercase'"
-                                                         :class="editingElement.settings.titleTextTransform === 'uppercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                         :class="editingElement.settings.titleTextTransform === 'uppercase' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                          class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all" title="Uppercase">AB</button>
                                                  <button @click="editingElement.settings.titleTextTransform = 'lowercase'"
-                                                         :class="editingElement.settings.titleTextTransform === 'lowercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                         :class="editingElement.settings.titleTextTransform === 'lowercase' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                          class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all" title="Lowercase">ab</button>
                                                  <button @click="editingElement.settings.titleTextTransform = 'capitalize'"
-                                                         :class="editingElement.settings.titleTextTransform === 'capitalize' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                         :class="editingElement.settings.titleTextTransform === 'capitalize' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                          class="flex-1 py-2 text-[10px] font-bold transition-all" title="Capitalize">Ab</button>
                                              </div>
                                          </div>
@@ -2932,16 +2982,16 @@
                                              <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Text Transform</label>
                                              <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                                                  <button @click="editingElement.settings.descTextTransform = 'none'"
-                                                         :class="(!editingElement.settings.descTextTransform || editingElement.settings.descTextTransform === 'none') ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                         :class="(!editingElement.settings.descTextTransform || editingElement.settings.descTextTransform === 'none') ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                          class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all" title="Normal">—</button>
                                                  <button @click="editingElement.settings.descTextTransform = 'uppercase'"
-                                                         :class="editingElement.settings.descTextTransform === 'uppercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                         :class="editingElement.settings.descTextTransform === 'uppercase' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                          class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all" title="Uppercase">AB</button>
                                                  <button @click="editingElement.settings.descTextTransform = 'lowercase'"
-                                                         :class="editingElement.settings.descTextTransform === 'lowercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                         :class="editingElement.settings.descTextTransform === 'lowercase' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                          class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all" title="Lowercase">ab</button>
                                                  <button @click="editingElement.settings.descTextTransform = 'capitalize'"
-                                                         :class="editingElement.settings.descTextTransform === 'capitalize' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                         :class="editingElement.settings.descTextTransform === 'capitalize' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                          class="flex-1 py-2 text-[10px] font-bold transition-all" title="Capitalize">Ab</button>
                                              </div>
                                          </div>
@@ -3093,16 +3143,16 @@
                                              <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Text Transform</label>
                                              <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                                                  <button @click="editingElement.settings.titleTextTransform = 'none'"
-                                                         :class="(!editingElement.settings.titleTextTransform || editingElement.settings.titleTextTransform === 'none') ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                         :class="(!editingElement.settings.titleTextTransform || editingElement.settings.titleTextTransform === 'none') ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                          class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all" title="Normal">—</button>
                                                  <button @click="editingElement.settings.titleTextTransform = 'uppercase'"
-                                                         :class="editingElement.settings.titleTextTransform === 'uppercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                         :class="editingElement.settings.titleTextTransform === 'uppercase' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                          class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all" title="Uppercase">AB</button>
                                                  <button @click="editingElement.settings.titleTextTransform = 'lowercase'"
-                                                         :class="editingElement.settings.titleTextTransform === 'lowercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                         :class="editingElement.settings.titleTextTransform === 'lowercase' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                          class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all" title="Lowercase">ab</button>
                                                  <button @click="editingElement.settings.titleTextTransform = 'capitalize'"
-                                                         :class="editingElement.settings.titleTextTransform === 'capitalize' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                                                         :class="editingElement.settings.titleTextTransform === 'capitalize' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                                                          class="flex-1 py-2 text-[10px] font-bold transition-all" title="Capitalize">Ab</button>
                                              </div>
                                          </div>
@@ -3159,7 +3209,7 @@
                                                  <div class="flex gap-1.5 items-center">
                                                      <div class="checkerboard rounded-full overflow-hidden w-7 h-7 border border-slate-200 cursor-pointer flex-shrink-0"
                                                           @click="openColorPicker($event, editingElement.settings, 'titleActiveBgColor')">
-                                                         <div :style="{ backgroundColor: editingElement.settings.titleActiveBgColor || '#0091ea' }" class="w-full h-full rounded-full"></div>
+                                                         <div :style="{ backgroundColor: editingElement.settings.titleActiveBgColor || '#2271b1' }" class="w-full h-full rounded-full"></div>
                                                      </div>
                                                      <input type="text" v-model="editingElement.settings.titleActiveBgColor" class="w-full border border-slate-200 rounded px-2 py-1 text-[10px]">
                                                  </div>
@@ -3318,7 +3368,7 @@
                                                  <div class="p-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
                                                      <div class="flex items-center gap-2">
                                                          <div class="w-7 h-7 bg-white rounded border border-slate-200 flex items-center justify-center"
-                                                              :style="{ color: editingElement.settings.iconColor || '#0091ea' }">
+                                                              :style="{ color: editingElement.settings.iconColor || '#2271b1' }">
                                                              <i :class="editingElement.settings.defaultIcon || 'fas fa-check'"></i>
                                                          </div>
                                                          <span class="text-[10px] text-slate-500 font-medium truncate max-w-[120px]">@{{ editingElement.settings.defaultIcon || 'No icon selected' }}</span>
@@ -3336,7 +3386,7 @@
                                              <div class="flex gap-2 items-center">
                                                  <div class="checkerboard rounded-full overflow-hidden w-8 h-8 border border-slate-200 cursor-pointer flex-shrink-0"
                                                       @click="openColorPicker($event, editingElement.settings, 'iconColor')">
-                                                     <div :style="{ backgroundColor: editingElement.settings.iconColor || '#0091ea' }" class="w-full h-full rounded-full"></div>
+                                                     <div :style="{ backgroundColor: editingElement.settings.iconColor || '#2271b1' }" class="w-full h-full rounded-full"></div>
                                                  </div>
                                                  <input type="text" v-model="editingElement.settings.iconColor" class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px]">
                                              </div>
@@ -3350,10 +3400,10 @@
                                              <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Icon Position</label>
                                              <div class="flex bg-slate-50 border border-slate-100 rounded p-0.5">
                                                  <button @click="editingElement.settings.iconPosition='left'"
-                                                         :class="(!editingElement.settings.iconPosition||editingElement.settings.iconPosition==='left') ? 'bg-[#0091ea] text-white shadow-sm':'text-slate-500 hover:bg-slate-100'"
+                                                         :class="(!editingElement.settings.iconPosition||editingElement.settings.iconPosition==='left') ? 'bg-[#2271b1] text-white shadow-sm':'text-slate-500 hover:bg-slate-100'"
                                                          class="flex-1 py-1.5 text-[11px] font-bold rounded transition-all">Left</button>
                                                  <button @click="editingElement.settings.iconPosition='right'"
-                                                         :class="editingElement.settings.iconPosition==='right' ? 'bg-[#0091ea] text-white shadow-sm':'text-slate-500 hover:bg-slate-100'"
+                                                         :class="editingElement.settings.iconPosition==='right' ? 'bg-[#2271b1] text-white shadow-sm':'text-slate-500 hover:bg-slate-100'"
                                                          class="flex-1 py-1.5 text-[11px] font-bold rounded transition-all">Right</button>
                                              </div>
                                          </div>
@@ -3438,7 +3488,7 @@
                                              <div class="flex bg-slate-50 border border-slate-100 rounded p-0.5">
                                                  <button v-for="a in ['left','center','right']" :key="a"
                                                          @click="editingElement.settings.textAlign=a"
-                                                         :class="(editingElement.settings.textAlign||'left')===a ? 'bg-[#0091ea] text-white shadow-sm':'text-slate-500 hover:bg-slate-100'"
+                                                         :class="(editingElement.settings.textAlign||'left')===a ? 'bg-[#2271b1] text-white shadow-sm':'text-slate-500 hover:bg-slate-100'"
                                                          class="flex-1 py-1.5 text-[11px] font-bold rounded capitalize transition-all">@{{ a }}</button>
                                              </div>
                                          </div>
@@ -3464,9 +3514,9 @@
                                                              <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
                                                          </button>
                                                          <div v-show="activeResponsiveMenu === 'iconListMargin'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
-                                                             <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)"><i class="fa fa-desktop text-[11px]"></i></button>
-                                                             <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)"><i class="fa fa-tablet-alt text-[11px]"></i></button>
-                                                             <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)"><i class="fa fa-mobile-alt text-[11px]"></i></button>
+                                                             <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)"><i class="fa fa-desktop text-[11px]"></i></button>
+                                                             <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)"><i class="fa fa-tablet-alt text-[11px]"></i></button>
+                                                             <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)"><i class="fa fa-mobile-alt text-[11px]"></i></button>
                                                          </div>
                                                      </div>
                                                  </div>
@@ -3564,7 +3614,7 @@
                                                  <div class="flex gap-1.5 items-center">
                                                      <div class="checkerboard rounded-full overflow-hidden w-7 h-7 border border-slate-200 cursor-pointer flex-shrink-0"
                                                           @click="openColorPicker($event, editingElement.settings, 'activeColor')">
-                                                         <div :style="{ backgroundColor: editingElement.settings.activeColor || '#0091ea' }" class="w-full h-full rounded-full"></div>
+                                                         <div :style="{ backgroundColor: editingElement.settings.activeColor || '#2271b1' }" class="w-full h-full rounded-full"></div>
                                                      </div>
                                                      <input type="text" v-model="editingElement.settings.activeColor" class="w-full border border-slate-200 rounded px-2 py-1 text-[10px]">
                                                  </div>
@@ -3806,7 +3856,7 @@
                         </div>
 
                         <!-- ══ EXTRAS TAB (shared partial) ══ -->
-                        <div v-if="editingContext.tab === 'extras'" class="p-5">
+                        <div v-if="editingContext.tab === 'extras' && editingElement" class="p-5">
                             @include('cms-dashboard::admin.lazy-builder.partials.components.fields.extra-options')
                         </div>
                     </div>
@@ -3888,7 +3938,7 @@
                     <button v-for="opt in group.items" :key="opt.key"
                             @click="selectDynSource(opt.key)"
                             class="w-full flex items-center gap-2 px-2.5 py-1.5 text-left transition-all"
-                            :class="dynSrcMenu.settings?.[dynSrcMenu.sourceKey] === opt.key ? 'bg-[#0091ea]/10 text-[#0091ea]' : 'text-slate-600 hover:bg-slate-50'">
+                            :class="dynSrcMenu.settings?.[dynSrcMenu.sourceKey] === opt.key ? 'bg-[#2271b1]/10 text-[#0091ea]' : 'text-slate-600 hover:bg-slate-50'">
                         <i :class="['fa', opt.icon, 'text-[10px] w-3.5 flex-shrink-0']"></i>
                         <span class="text-[12px] font-medium flex-1">@{{ opt.label }}</span>
                         <i v-if="opt.subFields && opt.subFields.length" class="fa fa-chevron-right text-[9px] text-slate-300 flex-shrink-0"></i>
@@ -3966,7 +4016,7 @@
                                @keydown.enter.prevent="insertDynAcpt()">
                         <button @click="insertDynAcpt()"
                                 :disabled="!dynAcptSlug.trim()"
-                                class="px-2.5 py-1.5 bg-[#0091ea] text-white rounded text-[10px] font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#007cc0] transition-colors">
+                                class="px-2.5 py-1.5 bg-[#2271b1] text-white rounded text-[10px] font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#1a5a96] transition-colors">
                             Insert
                         </button>
                     </div>

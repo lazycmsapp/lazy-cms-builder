@@ -1,17 +1,17 @@
-<div class="space-y-5">
+﻿<div class="space-y-5">
 
     <!-- Alignment -->
     <div>
         <label class="text-[12px] font-bold text-[#333] block mb-2">Alignment</label>
         <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
             <button @click="editingElement.settings.textAlign = 'left'"
-                    :class="(editingElement.settings.textAlign || 'center') === 'left' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                    :class="(editingElement.settings.textAlign || 'center') === 'left' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                     class="flex-1 py-2 text-[11px] font-bold border-r border-slate-100 transition-all">Left</button>
             <button @click="editingElement.settings.textAlign = 'center'"
-                    :class="(!editingElement.settings.textAlign || editingElement.settings.textAlign === 'center') ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                    :class="(!editingElement.settings.textAlign || editingElement.settings.textAlign === 'center') ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                     class="flex-1 py-2 text-[11px] font-bold border-r border-slate-100 transition-all">Center</button>
             <button @click="editingElement.settings.textAlign = 'right'"
-                    :class="editingElement.settings.textAlign === 'right' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                    :class="editingElement.settings.textAlign === 'right' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                     class="flex-1 py-2 text-[11px] font-bold transition-all">Right</button>
         </div>
     </div>
@@ -135,19 +135,19 @@
             <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Text Transform</label>
             <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                 <button @click="editingElement.settings.labelTextTransform = 'none'"
-                        :class="(editingElement.settings.labelTextTransform || 'none') === 'none' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        :class="(editingElement.settings.labelTextTransform || 'none') === 'none' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                         class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">Normal</button>
                 <button @click="editingElement.settings.labelTextTransform = 'initial'"
-                        :class="editingElement.settings.labelTextTransform === 'initial' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        :class="editingElement.settings.labelTextTransform === 'initial' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                         class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">—</button>
                 <button @click="editingElement.settings.labelTextTransform = 'uppercase'"
-                        :class="editingElement.settings.labelTextTransform === 'uppercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        :class="editingElement.settings.labelTextTransform === 'uppercase' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                         class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">AB</button>
                 <button @click="editingElement.settings.labelTextTransform = 'lowercase'"
-                        :class="editingElement.settings.labelTextTransform === 'lowercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        :class="editingElement.settings.labelTextTransform === 'lowercase' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                         class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">ab</button>
                 <button @click="editingElement.settings.labelTextTransform = 'capitalize'"
-                        :class="editingElement.settings.labelTextTransform === 'capitalize' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        :class="editingElement.settings.labelTextTransform === 'capitalize' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                         class="flex-1 py-2 text-[10px] font-bold transition-all">Ab</button>
             </div>
         </div>

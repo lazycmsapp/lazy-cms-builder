@@ -1,7 +1,7 @@
-<div class="space-y-8">
+﻿<div class="space-y-8">
     <!-- General Settings Header -->
     <div class="flex items-center gap-2 pb-2 border-b border-slate-50">
-        <div class="w-1.5 h-4 bg-[#0091ea] rounded-full"></div>
+        <div class="w-1.5 h-4 bg-[#2271b1] rounded-full"></div>
         <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-700">General Settings</h4>
     </div>
 
@@ -25,10 +25,10 @@
             </div>
             <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
                 <button @click="editingElement.settings.layout = 'horizontal'" 
-                        :class="(editingElement.settings.layout === 'horizontal' || !editingElement.settings.layout) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400 hover:bg-white/50'"
+                        :class="(editingElement.settings.layout === 'horizontal' || !editingElement.settings.layout) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400 hover:bg-white/50'"
                         class="px-5 py-2 text-[11px] font-bold rounded transition-all">Horizontal</button>
                 <button @click="editingElement.settings.layout = 'vertical'" 
-                        :class="editingElement.settings.layout === 'vertical' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400 hover:bg-white/50'"
+                        :class="editingElement.settings.layout === 'vertical' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400 hover:bg-white/50'"
                         class="px-5 py-2 text-[11px] font-bold rounded transition-all">Vertical</button>
             </div>
         </div>
@@ -83,13 +83,13 @@
             </div>
             <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                 <button @click="editingElement.settings.arrowScopeObj = editingElement.settings.arrowScopeObj || {main:true, active:false, submenu:false}; editingElement.settings.arrowScopeObj.main = !editingElement.settings.arrowScopeObj.main" 
-                        :class="(editingElement.settings.arrowScopeObj?.main ?? true) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'"
+                        :class="(editingElement.settings.arrowScopeObj?.main ?? true) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'"
                         class="flex-1 py-2.5 text-[11px] font-bold transition-all border-r border-slate-100">Main</button>
                 <button @click="editingElement.settings.arrowScopeObj = editingElement.settings.arrowScopeObj || {main:true, active:false, submenu:false}; editingElement.settings.arrowScopeObj.active = !editingElement.settings.arrowScopeObj.active" 
-                        :class="editingElement.settings.arrowScopeObj?.active ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'"
+                        :class="editingElement.settings.arrowScopeObj?.active ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'"
                         class="flex-1 py-2.5 text-[11px] font-bold transition-all border-r border-slate-100">Main Active</button>
                 <button @click="editingElement.settings.arrowScopeObj = editingElement.settings.arrowScopeObj || {main:true, active:false, submenu:false}; editingElement.settings.arrowScopeObj.submenu = !editingElement.settings.arrowScopeObj.submenu" 
-                        :class="editingElement.settings.arrowScopeObj?.submenu ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'"
+                        :class="editingElement.settings.arrowScopeObj?.submenu ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'"
                         class="flex-1 py-2.5 text-[11px] font-bold transition-all">Submenu</button>
             </div>
         </div>
@@ -101,17 +101,17 @@
             </div>
             <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                 <button @click="editingElement.settings.visibility = editingElement.settings.visibility || {mobile:true, tablet:true, desktop:true}; editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                        :class="(editingElement.settings.visibility?.mobile ?? true) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="(editingElement.settings.visibility?.mobile ?? true) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="flex-1 py-2.5 flex items-center justify-center border-r border-slate-100 transition-all">
                     <i class="fa fa-mobile-alt text-xs"></i>
                 </button>
                 <button @click="editingElement.settings.visibility = editingElement.settings.visibility || {mobile:true, tablet:true, desktop:true}; editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                        :class="(editingElement.settings.visibility?.tablet ?? true) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="(editingElement.settings.visibility?.tablet ?? true) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="flex-1 py-2.5 flex items-center justify-center border-r border-slate-100 transition-all">
                     <i class="fa fa-tablet-alt text-xs"></i>
                 </button>
                 <button @click="editingElement.settings.visibility = editingElement.settings.visibility || {mobile:true, tablet:true, desktop:true}; editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                        :class="(editingElement.settings.visibility?.desktop ?? true) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="(editingElement.settings.visibility?.desktop ?? true) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="flex-1 py-2.5 flex items-center justify-center transition-all">
                     <i class="fa fa-desktop text-xs"></i>
                 </button>

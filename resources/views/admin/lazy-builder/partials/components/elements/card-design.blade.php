@@ -1,11 +1,11 @@
-{{-- 1. Layout --}}
+﻿{{-- 1. Layout --}}
 <div>
     <label class="text-[12px] font-bold text-[#333] block mb-2">Layout</label>
     <div class="grid grid-cols-4 gap-1.5">
         <button v-for="opt in [{v:'grid',i:'fa-th-large',l:'Grid'},{v:'list',i:'fa-list',l:'List'},{v:'masonry',i:'fa-columns',l:'Masonry'},{v:'carousel',i:'fa-film',l:'Carousel'}]"
                 :key="opt.v"
                 @click="editingElement.settings.layout = opt.v"
-                :class="editingElement.settings.layout === opt.v ? 'bg-[#0091ea] text-white border-[#0091ea]' : 'bg-white text-slate-500 border-slate-200 hover:border-[#0091ea]/50'"
+                :class="editingElement.settings.layout === opt.v ? 'bg-[#2271b1] text-white border-[#0091ea]' : 'bg-white text-slate-500 border-slate-200 hover:border-[#0091ea]/50'"
                 class="flex flex-col items-center justify-center gap-1 py-2.5 border rounded transition-all text-center">
             <i :class="'fa ' + opt.i" class="text-sm"></i>
             <span class="text-[10px] font-bold">@{{ opt.l }}</span>
@@ -20,7 +20,7 @@
         <div class="flex items-center justify-between">
             <span class="text-[12px] text-slate-600 font-semibold">Autoplay</span>
             <button @click="editingElement.settings.carousel_autoplay = !editingElement.settings.carousel_autoplay"
-                    :class="editingElement.settings.carousel_autoplay ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                    :class="editingElement.settings.carousel_autoplay ? 'bg-[#2271b1]' : 'bg-slate-200'"
                     class="relative w-9 h-5 rounded-full transition-colors">
                 <span :class="editingElement.settings.carousel_autoplay ? 'translate-x-4' : 'translate-x-0.5'"
                       class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
@@ -42,7 +42,7 @@
         <div class="flex items-center justify-between">
             <span class="text-[12px] text-slate-600 font-semibold">Show Arrows</span>
             <button @click="editingElement.settings.carousel_arrows = !(editingElement.settings.carousel_arrows ?? true)"
-                    :class="(editingElement.settings.carousel_arrows ?? true) ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                    :class="(editingElement.settings.carousel_arrows ?? true) ? 'bg-[#2271b1]' : 'bg-slate-200'"
                     class="relative w-9 h-5 rounded-full transition-colors">
                 <span :class="(editingElement.settings.carousel_arrows ?? true) ? 'translate-x-4' : 'translate-x-0.5'"
                       class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
@@ -51,7 +51,7 @@
         <div class="flex items-center justify-between">
             <span class="text-[12px] text-slate-600 font-semibold">Show Dots</span>
             <button @click="editingElement.settings.carousel_dots = !(editingElement.settings.carousel_dots ?? true)"
-                    :class="(editingElement.settings.carousel_dots ?? true) ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                    :class="(editingElement.settings.carousel_dots ?? true) ? 'bg-[#2271b1]' : 'bg-slate-200'"
                     class="relative w-9 h-5 rounded-full transition-colors">
                 <span :class="(editingElement.settings.carousel_dots ?? true) ? 'translate-x-4' : 'translate-x-0.5'"
                       class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
@@ -60,7 +60,7 @@
         <div class="flex items-center justify-between">
             <span class="text-[12px] text-slate-600 font-semibold">Infinite Loop</span>
             <button @click="editingElement.settings.carousel_loop = !editingElement.settings.carousel_loop"
-                    :class="editingElement.settings.carousel_loop ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                    :class="editingElement.settings.carousel_loop ? 'bg-[#2271b1]' : 'bg-slate-200'"
                     class="relative w-9 h-5 rounded-full transition-colors">
                 <span :class="editingElement.settings.carousel_loop ? 'translate-x-4' : 'translate-x-0.5'"
                       class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
@@ -69,7 +69,7 @@
         <div class="flex items-center justify-between">
             <span class="text-[12px] text-slate-600 font-semibold">Equal Height</span>
             <button @click="editingElement.settings.carousel_equal_height = !editingElement.settings.carousel_equal_height"
-                    :class="editingElement.settings.carousel_equal_height ? 'bg-[#0091ea]' : 'bg-slate-200'"
+                    :class="editingElement.settings.carousel_equal_height ? 'bg-[#2271b1]' : 'bg-slate-200'"
                     class="relative w-9 h-5 rounded-full transition-colors">
                 <span :class="editingElement.settings.carousel_equal_height ? 'translate-x-4' : 'translate-x-0.5'"
                       class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
@@ -241,7 +241,7 @@
     <label class="text-[12px] font-bold text-[#333] block mb-2">Card Alignment</label>
     <div class="grid grid-cols-2 gap-2">
         <button @click="editingElement.settings.card_alignment = 'flex-start'"
-                :class="(editingElement.settings.card_alignment === 'flex-start' || editingElement.settings.card_alignment === 'start' || editingElement.settings.card_alignment === 'left' || !editingElement.settings.card_alignment) ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                :class="(editingElement.settings.card_alignment === 'flex-start' || editingElement.settings.card_alignment === 'start' || editingElement.settings.card_alignment === 'left' || !editingElement.settings.card_alignment) ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                 class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="5" y="4" width="3" height="10" rx="0.5"/>
@@ -251,7 +251,7 @@
             <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Align Top</div>
         </button>
         <button @click="editingElement.settings.card_alignment = 'center'"
-                :class="editingElement.settings.card_alignment === 'center' ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                :class="editingElement.settings.card_alignment === 'center' ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                 class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="5" y="7" width="3" height="10" rx="0.5"/>
@@ -261,7 +261,7 @@
             <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Align Center</div>
         </button>
         <button @click="editingElement.settings.card_alignment = 'flex-end'"
-                :class="(editingElement.settings.card_alignment === 'flex-end' || editingElement.settings.card_alignment === 'end' || editingElement.settings.card_alignment === 'right') ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                :class="(editingElement.settings.card_alignment === 'flex-end' || editingElement.settings.card_alignment === 'end' || editingElement.settings.card_alignment === 'right') ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                 class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="5" y="10" width="3" height="10" rx="0.5"/>
@@ -271,7 +271,7 @@
             <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Align Bottom</div>
         </button>
         <button @click="editingElement.settings.card_alignment = 'stretch'"
-                :class="(editingElement.settings.card_alignment === 'stretch' || editingElement.settings.card_alignment === '') ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                :class="(editingElement.settings.card_alignment === 'stretch' || editingElement.settings.card_alignment === '') ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                 class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 3l3 3h-2v12h2l-3 3-3-3h2V6H9l3-3z"/>
@@ -366,17 +366,17 @@
     <label class="text-[12px] font-bold text-[#333] block mb-2">Element Visibility</label>
     <div class="grid grid-cols-3 gap-1">
         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
-                :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                :class="editingElement.settings.visibility.mobile ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
                 class="py-3 rounded transition-all flex items-center justify-center">
             <i class="fa fa-mobile-alt text-sm"></i>
         </button>
         <button @click="editingElement.settings.visibility.tablet = !editingElement.settings.visibility.tablet"
-                :class="editingElement.settings.visibility.tablet ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                :class="editingElement.settings.visibility.tablet ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
                 class="py-3 rounded transition-all flex items-center justify-center">
             <i class="fa fa-tablet-alt text-sm"></i>
         </button>
         <button @click="editingElement.settings.visibility.desktop = !editingElement.settings.visibility.desktop"
-                :class="editingElement.settings.visibility.desktop ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                :class="editingElement.settings.visibility.desktop ? 'bg-[#2271b1] text-white' : 'bg-slate-100 text-slate-400'"
                 class="py-3 rounded transition-all flex items-center justify-center">
             <i class="fa fa-desktop text-sm"></i>
         </button>

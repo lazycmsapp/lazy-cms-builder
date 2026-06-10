@@ -1,8 +1,8 @@
-<div class="space-y-8 pb-10">
+﻿<div class="space-y-8 pb-10">
     <!-- Layout Settings -->
     <div class="space-y-6">
         <div class="flex items-center gap-2 pb-2 border-b border-slate-50">
-            <div class="w-1.5 h-4 bg-[#0091ea] rounded-full"></div>
+            <div class="w-1.5 h-4 bg-[#2271b1] rounded-full"></div>
             <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-700">Layout Settings</h4>
         </div>
 
@@ -22,7 +22,7 @@
                 </div>
                 <div class="grid grid-cols-4 gap-2">
                     <button @click="editingElement.settings.alignItems = 'flex-start'"
-                            :class="(editingElement.settings.alignItems === 'flex-start' || !editingElement.settings.alignItems) ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                            :class="(editingElement.settings.alignItems === 'flex-start' || !editingElement.settings.alignItems) ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                             class="py-2 rounded transition-all flex items-center justify-center relative group/btn h-10" title="Align Top">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <rect x="5" y="4" width="3" height="10" rx="0.5"/>
@@ -31,7 +31,7 @@
                         </svg>
                     </button>
                     <button @click="editingElement.settings.alignItems = 'center'"
-                            :class="editingElement.settings.alignItems === 'center' ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                            :class="editingElement.settings.alignItems === 'center' ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                             class="py-2 rounded transition-all flex items-center justify-center relative group/btn h-10" title="Align Center">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <rect x="5" y="7" width="3" height="10" rx="0.5"/>
@@ -40,7 +40,7 @@
                         </svg>
                     </button>
                     <button @click="editingElement.settings.alignItems = 'flex-end'"
-                            :class="editingElement.settings.alignItems === 'flex-end' ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                            :class="editingElement.settings.alignItems === 'flex-end' ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                             class="py-2 rounded transition-all flex items-center justify-center relative group/btn h-10" title="Align Bottom">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <rect x="5" y="10" width="3" height="10" rx="0.5"/>
@@ -49,7 +49,7 @@
                         </svg>
                     </button>
                     <button @click="editingElement.settings.alignItems = 'stretch'"
-                            :class="editingElement.settings.alignItems === 'stretch' ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                            :class="editingElement.settings.alignItems === 'stretch' ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                             class="py-2 rounded transition-all flex items-center justify-center relative group/btn h-10" title="Stretch">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 3l3 3h-2v12h2l-3 3-3-3h2V6H9l3-3z" fill="currentColor"/>
@@ -65,7 +65,7 @@
                 </div>
                 <div class="grid grid-cols-3 gap-2">
                     <button @click="editingElement.settings.justification = 'flex-start'"
-                            :class="(editingElement.settings.justification === 'flex-start' || !editingElement.settings.justification) ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                            :class="(editingElement.settings.justification === 'flex-start' || !editingElement.settings.justification) ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                             class="py-2 rounded transition-all flex items-center justify-center relative group/btn h-10" title="Justify Left">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <rect x="4" y="5" width="8" height="3" rx="0.5"/>
@@ -74,7 +74,7 @@
                         </svg>
                     </button>
                     <button @click="editingElement.settings.justification = 'center'"
-                            :class="editingElement.settings.justification === 'center' ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                            :class="editingElement.settings.justification === 'center' ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                             class="py-2 rounded transition-all flex items-center justify-center relative group/btn h-10" title="Justify Center">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <rect x="8" y="5" width="8" height="3" rx="0.5"/>
@@ -83,7 +83,7 @@
                         </svg>
                     </button>
                     <button @click="editingElement.settings.justification = 'flex-end'"
-                            :class="editingElement.settings.justification === 'flex-end' ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                            :class="editingElement.settings.justification === 'flex-end' ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                             class="py-2 rounded transition-all flex items-center justify-center relative group/btn h-10" title="Justify Right">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <rect x="12" y="5" width="8" height="3" rx="0.5"/>
@@ -92,14 +92,14 @@
                         </svg>
                     </button>
                     <button @click="editingElement.settings.justification = 'space-between'"
-                            :class="editingElement.settings.justification === 'space-between' ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                            :class="editingElement.settings.justification === 'space-between' ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                             class="py-2 rounded transition-all flex items-center justify-center relative group/btn h-10" title="Space Between">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M6 16v-3h12v3l4-4-4-4v3H6V8l-4 4 4 4z" fill="currentColor"/>
                         </svg>
                     </button>
                     <button @click="editingElement.settings.justification = 'space-around'"
-                            :class="editingElement.settings.justification === 'space-around' ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                            :class="editingElement.settings.justification === 'space-around' ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                             class="py-2 rounded transition-all flex items-center justify-center relative group/btn h-10" title="Space Around">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <rect x="4" y="6" width="16" height="3" rx="0.5"/>
@@ -108,7 +108,7 @@
                         </svg>
                     </button>
                     <button @click="editingElement.settings.justification = 'space-evenly'"
-                            :class="editingElement.settings.justification === 'space-evenly' ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
+                            :class="editingElement.settings.justification === 'space-evenly' ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                             class="py-2 rounded transition-all flex items-center justify-center relative group/btn h-10" title="Space Evenly">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <rect x="4" y="9.5" width="16" height="5" rx="0.5"/>
@@ -122,7 +122,7 @@
     <!-- Typography Settings -->
     <div class="space-y-6 pt-4 border-t border-slate-50">
         <div class="flex items-center gap-2 pb-2 border-b border-slate-50">
-            <div class="w-1.5 h-4 bg-[#0091ea] rounded-full"></div>
+            <div class="w-1.5 h-4 bg-[#2271b1] rounded-full"></div>
             <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-700">Typography Settings</h4>
         </div>
 
@@ -186,16 +186,16 @@
                 <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">TEXT TRANSFORM</label>
                 <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                     <button @click="editingElement.settings.textTransform = 'none'"
-                            :class="editingElement.settings.textTransform === 'none' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="editingElement.settings.textTransform === 'none' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all uppercase">None</button>
                     <button @click="editingElement.settings.textTransform = 'uppercase'"
-                            :class="editingElement.settings.textTransform === 'uppercase' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="editingElement.settings.textTransform === 'uppercase' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">AB</button>
                     <button @click="editingElement.settings.textTransform = 'lowercase'"
-                            :class="editingElement.settings.textTransform === 'lowercase' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="editingElement.settings.textTransform === 'lowercase' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">ab</button>
                     <button @click="editingElement.settings.textTransform = 'capitalize'"
-                            :class="editingElement.settings.textTransform === 'capitalize' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="editingElement.settings.textTransform === 'capitalize' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="flex-1 py-2 text-[10px] font-bold transition-all">Ab</button>
                 </div>
             </div>
@@ -205,7 +205,7 @@
     <!-- Menu Item Styling -->
     <div class="space-y-6 pt-4 border-t border-slate-50">
         <div class="flex items-center gap-2 pb-2 border-b border-slate-50">
-            <div class="w-1.5 h-4 bg-[#0091ea] rounded-full"></div>
+            <div class="w-1.5 h-4 bg-[#2271b1] rounded-full"></div>
             <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-700">Menu Item Styling</h4>
         </div>
 
@@ -413,7 +413,7 @@
     <!-- Menu Icon (position + gap between icon and label) -->
     <div class="space-y-6">
         <div class="flex items-center gap-2 pb-2 border-b border-slate-50">
-            <div class="w-1.5 h-4 bg-[#0091ea] rounded-full"></div>
+            <div class="w-1.5 h-4 bg-[#2271b1] rounded-full"></div>
             <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-700">Menu Icon</h4>
         </div>
         <div class="space-y-6">
@@ -422,10 +422,10 @@
                 <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">ICON POSITION</label>
                 <div class="flex bg-slate-100 rounded-lg p-1">
                     <button type="button" @click="editingElement.settings.menuIconPosition = 'left'"
-                            :class="(editingElement.settings.menuIconPosition || 'left') === 'left' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-500'"
+                            :class="(editingElement.settings.menuIconPosition || 'left') === 'left' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-500'"
                             class="flex-1 py-2 text-[11px] font-bold rounded transition-all">Left</button>
                     <button type="button" @click="editingElement.settings.menuIconPosition = 'right'"
-                            :class="editingElement.settings.menuIconPosition === 'right' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-500'"
+                            :class="editingElement.settings.menuIconPosition === 'right' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-500'"
                             class="flex-1 py-2 text-[11px] font-bold rounded transition-all">Right</button>
                 </div>
                 <p class="text-[10px] text-slate-400 mt-1.5">Show the icon before (Left) or after (Right) the menu label.</p>

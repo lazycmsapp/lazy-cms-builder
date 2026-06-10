@@ -1,4 +1,4 @@
-<div v-if="el.type === 'icon_list'"
+﻿<div v-if="el.type === 'icon_list'"
      class="element-icon-list w-full"
      :class="[el.settings.cssClass || '']"
      :id="el.settings.cssId || undefined"
@@ -21,7 +21,7 @@
             }">
             <i :class="item.icon || el.settings.defaultIcon || 'fa fa-check'"
                :style="{
-                   color:      item.iconColor || el.settings.iconColor || '#0091ea',
+                   color:      item.iconColor || el.settings.iconColor || '#2271b1',
                    fontSize:   (el.settings.iconSize || 14) + 'px',
                    flexShrink: 0,
                    width:      (el.settings.iconSize || 14) + 'px',

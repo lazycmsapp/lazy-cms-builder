@@ -13,13 +13,13 @@
                         <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
                     </button>
                     <div v-show="activeResponsiveMenu === 'textMargin'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
-                        <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                        <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
                             <i class="fa fa-desktop text-[11px]"></i>
                         </button>
-                        <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                        <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
                             <i class="fa fa-tablet-alt text-[11px]"></i>
                         </button>
-                        <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                        <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
                             <i class="fa fa-mobile-alt text-[11px]"></i>
                         </button>
                     </div>
@@ -72,13 +72,13 @@
                         <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
                     </button>
                     <div v-show="activeResponsiveMenu === 'textPadding'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
-                        <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
+                        <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)">
                             <i class="fa fa-desktop text-[11px]"></i>
                         </button>
-                        <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
+                        <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)">
                             <i class="fa fa-tablet-alt text-[11px]"></i>
                         </button>
-                        <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
+                        <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)">
                             <i class="fa fa-mobile-alt text-[11px]"></i>
                         </button>
                     </div>
@@ -176,19 +176,19 @@
             <label class="text-[9px] font-bold text-slate-400 uppercase mb-1.5 block">Text Transform</label>
             <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                 <button @click="editingElement.settings.textTransform = 'none'"
-                        :class="editingElement.settings.textTransform === 'none' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        :class="editingElement.settings.textTransform === 'none' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                         class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">Normal</button>
                 <button @click="editingElement.settings.textTransform = 'initial'"
-                        :class="editingElement.settings.textTransform === 'initial' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        :class="editingElement.settings.textTransform === 'initial' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                         class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">—</button>
                 <button @click="editingElement.settings.textTransform = 'uppercase'"
-                        :class="editingElement.settings.textTransform === 'uppercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        :class="editingElement.settings.textTransform === 'uppercase' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                         class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">AB</button>
                 <button @click="editingElement.settings.textTransform = 'lowercase'"
-                        :class="editingElement.settings.textTransform === 'lowercase' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        :class="editingElement.settings.textTransform === 'lowercase' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                         class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">ab</button>
                 <button @click="editingElement.settings.textTransform = 'capitalize'"
-                        :class="editingElement.settings.textTransform === 'capitalize' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                        :class="editingElement.settings.textTransform === 'capitalize' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                         class="flex-1 py-2 text-[10px] font-bold transition-all">Ab</button>
             </div>
         </div>

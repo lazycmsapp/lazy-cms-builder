@@ -1,4 +1,4 @@
-<div v-if="el.type === 'card'"
+﻿<div v-if="el.type === 'card'"
      class="w-full py-2"
      :style="[getCanvasVisibilityStyle(el.settings), {
          marginTop:    (el.settings.marginTop    || 0) + (el.settings.marginTopUnit    || 'px'),
@@ -9,12 +9,12 @@
 
     {{-- Header bar --}}
     <div class="flex items-center gap-1.5 mb-2 px-1">
-        <div class="w-5 h-5 bg-[#0091ea] rounded flex items-center justify-center">
+        <div class="w-5 h-5 bg-[#2271b1] rounded flex items-center justify-center">
             <i class="fa fa-th-large text-white text-[9px]"></i>
         </div>
         <span class="text-[11px] font-black text-[#1d2327] uppercase tracking-wider">Card</span>
         <span v-if="el.settings.post_card_id && postCardsMap[el.settings.post_card_id]"
-              class="text-[9px] bg-[#0091ea] text-white px-2 py-0.5 rounded-full font-bold">
+              class="text-[9px] bg-[#2271b1] text-white px-2 py-0.5 rounded-full font-bold">
             @{{ postCardsMap[el.settings.post_card_id] }}
         </span>
         <span v-else class="text-[9px] bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full font-bold">No card selected</span>

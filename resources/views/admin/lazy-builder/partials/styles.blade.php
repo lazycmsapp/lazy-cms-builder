@@ -3,7 +3,7 @@
         --builder-bg: #ffffff;
         --sidebar-width: 300px;
         --topbar-height: 50px;
-        --primary: #0091ea;
+        --primary: #2271b1;
         --dark-bg: #1b1b1b;
         --border-color: #e1e1e1;
     }
@@ -219,7 +219,7 @@
     .handle-blue, .handle-purple, .handle-blue-h, .handle-purple-h {
         width: 18px;
         height: 18px;
-        background: #0091ea;
+        background: #2271b1;
         border-radius: 3px;
         display: flex;
         align-items: center;
@@ -938,13 +938,13 @@
         font-weight: 600 !important;
         text-transform: capitalize !important;
     }
-    /* Active = black */
+    /* Active = brand blue */
     .builder-sidebar .flex.bg-slate-100 > button.text-white,
     .builder-sidebar .flex.bg-slate-100 > button.bg-slate-200,
     .builder-sidebar .flex.bg-slate-100 > button.bg-white,
     .builder-sidebar .flex.bg-slate-50 > button.text-white,
     .builder-sidebar .flex.bg-slate-50 > button.bg-white {
-        background-color: #111 !important;
+        background-color: #2271b1 !important;
         color: #fff !important;
     }
     /* Inactive — neutralize any blue-tinted states to muted gray */

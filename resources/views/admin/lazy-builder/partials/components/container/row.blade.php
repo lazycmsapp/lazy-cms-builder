@@ -1,4 +1,4 @@
-@php $pcMode = ($postCardMode ?? false); @endphp
+﻿@php $pcMode = ($postCardMode ?? false); @endphp
 @if($pcMode)
 <div class="relative w-full"
      :class="[getVisibilityClasses(container.settings)]"
@@ -38,22 +38,22 @@
              :class="shouldShowGuide('container', ci) ? ( (editingCi === ci || (isDragging && dragCi === ci && dragType === 'marginBottom' && !isColumnDrag)) ? 'opacity-100' : 'opacity-0' ) : 'hidden'">
              <div class="absolute bottom-0 left-0 w-full border-b border-dashed border-[#9c27b0]/40"></div>
         </div>
-        <div class="absolute left-0 right-0 pointer-events-auto z-0 bg-[#0091ea]/5 transition-opacity"
+        <div class="absolute left-0 right-0 pointer-events-auto z-0 bg-[#2271b1]/5 transition-opacity"
              :style="{ height: (container.settings.paddingTop || 0) + 'px', top: '0px' }"
              :class="shouldShowGuide('container', ci) ? ( (editingCi === ci || (isDragging && dragCi === ci && dragType === 'paddingTop' && !isColumnDrag)) ? 'opacity-100' : 'opacity-0' ) : 'hidden'">
              <div class="absolute bottom-0 left-0 w-full border-b border-dashed border-[#0091ea]/30"></div>
         </div>
-        <div class="absolute left-0 right-0 pointer-events-auto z-0 bg-[#0091ea]/5 transition-opacity"
+        <div class="absolute left-0 right-0 pointer-events-auto z-0 bg-[#2271b1]/5 transition-opacity"
              :style="{ height: (container.settings.paddingBottom || 0) + 'px', bottom: '0px' }"
              :class="shouldShowGuide('container', ci) ? ( (editingCi === ci || (isDragging && dragCi === ci && dragType === 'paddingBottom' && !isColumnDrag)) ? 'opacity-100' : 'opacity-0' ) : 'hidden'">
              <div class="absolute top-0 left-0 w-full border-t border-dashed border-[#0091ea]/30"></div>
         </div>
-        <div class="absolute top-0 bottom-0 pointer-events-auto z-0 bg-[#0091ea]/5 transition-opacity"
+        <div class="absolute top-0 bottom-0 pointer-events-auto z-0 bg-[#2271b1]/5 transition-opacity"
              :style="{ width: (container.settings.paddingLeft || 0) + 'px', left: '0px' }"
              :class="shouldShowGuide('container', ci) ? ( (editingCi === ci || (isDragging && dragCi === ci && dragType === 'paddingLeft' && !isColumnDrag)) ? 'opacity-100' : 'opacity-0' ) : 'hidden'">
              <div class="absolute top-0 right-0 h-full border-r border-dashed border-[#0091ea]/30"></div>
         </div>
-        <div class="absolute top-0 bottom-0 pointer-events-auto z-0 bg-[#0091ea]/5 transition-opacity"
+        <div class="absolute top-0 bottom-0 pointer-events-auto z-0 bg-[#2271b1]/5 transition-opacity"
              :style="{ width: (container.settings.paddingRight || 0) + 'px', right: '0px' }"
              :class="shouldShowGuide('container', ci) ? ( (editingCi === ci || (isDragging && dragCi === ci && dragType === 'paddingRight' && !isColumnDrag)) ? 'opacity-100' : 'opacity-0' ) : 'hidden'">
              <div class="absolute top-0 left-0 h-full border-l border-dashed border-[#0091ea]/30"></div>
@@ -119,7 +119,7 @@
     @if(!$pcMode)
     <!-- Sticky Badge -->
     <div v-if="!isPreview && container.settings && container.settings.sticky && (device === 'desktop' ? container.settings.stickyDesktop !== false : device === 'tablet' ? container.settings.stickyTablet !== false : container.settings.stickyMobile !== false)"
-         class="absolute top-0 left-0 bg-[#0091ea] text-white text-[9px] px-2 py-0.5 z-10 flex items-center gap-1 rounded-br-sm select-none pointer-events-none">
+         class="absolute top-0 left-0 bg-[#2271b1] text-white text-[9px] px-2 py-0.5 z-10 flex items-center gap-1 rounded-br-sm select-none pointer-events-none">
         <i class="fa fa-thumbtack"></i> Sticky
     </div>
     <!-- Global Badge -->
@@ -142,7 +142,7 @@
              class="absolute inset-0 flex items-center justify-center z-[100] transition-opacity"
              :class="(editingCi === ci || (isDragging && dragCi === ci) || (hoveredType === 'container' && hoveredCi === ci)) ? 'opacity-100' : 'opacity-0'">
             <button @click.stop="openColumnModal(ci, 'edit')" 
-                    class="w-8 h-8 bg-[#0091ea] text-white rounded shadow-lg flex items-center justify-center hover:scale-110 transition-all relative group/addbtn pointer-events-auto">
+                    class="w-8 h-8 bg-[#2271b1] text-white rounded shadow-lg flex items-center justify-center hover:scale-110 transition-all relative group/addbtn pointer-events-auto">
                 <i class="fa fa-plus text-base pointer-events-none"></i>
                 <div class="lazy-tooltip opacity-0 group-hover/addbtn:opacity-100" style="top: 100%; margin-top: 10px; display: block !important;">Add Column Layout</div>
             </button>

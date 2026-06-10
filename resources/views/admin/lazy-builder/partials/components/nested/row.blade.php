@@ -1,4 +1,4 @@
-<div v-if="el.type === 'row'" class="nested-row-outer-wrapper w-full basis-full shrink-0 relative py-4 px-4 bg-slate-50/20 border border-slate-100 rounded-lg mb-2 mt-2 group/nrow shadow-sm"
+﻿<div v-if="el.type === 'row'" class="nested-row-outer-wrapper w-full basis-full shrink-0 relative py-4 px-4 bg-slate-50/20 border border-slate-100 rounded-lg mb-2 mt-2 group/nrow shadow-sm"
      @contextmenu.prevent.stop="openCtxMenu($event, 'nested-row', ci, coli, eli)"
      @mouseenter="setHover('nested-row', ci, coli, eli)"
      @mouseleave="setHover(null)">
@@ -274,7 +274,7 @@
                                     <img v-if="(it.kind === 'image' || it.kind === 'media') && it.value" :src="it.value" :style="it.style" :class="it.hoverClass" class="max-w-full h-auto block">
                                     <i v-else-if="it.kind === 'icon' && it.value" :class="[it.value, it.hoverClass]" :style="it.style"></i>
                                     <span v-else-if="it.kind === 'social'" :style="it.style" :class="it.hoverClass" :data-tip="it.tip || null" style="transition:background .25s,color .25s,filter .2s"><i :class="it.icon" :style="it.iconStyle"></i></span>
-                                    <button v-else-if="it.kind === 'button'" :style="it.style" :class="it.hoverClass" class="inline-block px-3 py-1.5 rounded bg-[#0091ea] text-white text-[12px] font-semibold" v-text="it.value || 'Button'"></button>
+                                    <button v-else-if="it.kind === 'button'" :style="it.style" :class="it.hoverClass" class="inline-block px-3 py-1.5 rounded bg-[#2271b1] text-white text-[12px] font-semibold" v-text="it.value || 'Button'"></button>
                                     <div v-else-if="it.kind === 'repeater'" :style="it.style" :class="it.hoverClass" class="space-y-1.5">
                                         <div v-for="(row, ri) in it.rows" :key="ri" class="flex items-center gap-2 flex-wrap">
                                             <template v-for="(sf, si) in it.subFields" :key="si">

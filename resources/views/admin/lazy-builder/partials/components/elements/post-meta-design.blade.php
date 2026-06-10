@@ -1,20 +1,20 @@
-<div class="space-y-6">
+﻿<div class="space-y-6">
     <!-- Alignment -->
     <div>
         <label class="text-[12px] font-bold text-[#333] block mb-2">Alignment</label>
         <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
             <button @click="editingElement.settings.metaAlign = 'left'"
-                    :class="(editingElement.settings.metaAlign || 'left') === 'left' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                    :class="(editingElement.settings.metaAlign || 'left') === 'left' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                     class="flex-1 py-2 text-[11px] font-bold border-r border-slate-200 last:border-r-0 transition-all">
                 <i class="fa fa-align-left"></i>
             </button>
             <button @click="editingElement.settings.metaAlign = 'center'"
-                    :class="editingElement.settings.metaAlign === 'center' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                    :class="editingElement.settings.metaAlign === 'center' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                     class="flex-1 py-2 text-[11px] font-bold border-r border-slate-200 last:border-r-0 transition-all">
                 <i class="fa fa-align-center"></i>
             </button>
             <button @click="editingElement.settings.metaAlign = 'right'"
-                    :class="editingElement.settings.metaAlign === 'right' ? 'bg-[#0091ea] text-white' : 'text-slate-400'"
+                    :class="editingElement.settings.metaAlign === 'right' ? 'bg-[#2271b1] text-white' : 'text-slate-400'"
                     class="flex-1 py-2 text-[11px] font-bold border-r border-slate-200 last:border-r-0 transition-all">
                 <i class="fa fa-align-right"></i>
             </button>
@@ -99,9 +99,9 @@
                         <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
                     </button>
                     <div v-show="activeResponsiveMenu === 'postMetaMargin'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
-                        <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)"><i class="fa fa-desktop text-[11px]"></i></button>
-                        <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)"><i class="fa fa-tablet-alt text-[11px]"></i></button>
-                        <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)"><i class="fa fa-mobile-alt text-[11px]"></i></button>
+                        <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)"><i class="fa fa-desktop text-[11px]"></i></button>
+                        <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)"><i class="fa fa-tablet-alt text-[11px]"></i></button>
+                        <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)"><i class="fa fa-mobile-alt text-[11px]"></i></button>
                     </div>
                 </div>
             </div>

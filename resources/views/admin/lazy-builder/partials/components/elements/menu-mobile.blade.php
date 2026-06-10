@@ -1,4 +1,4 @@
-<div class="space-y-8 pb-10">
+﻿<div class="space-y-8 pb-10">
     <!-- Collapse to Mobile Breakpoint -->
     <div class="space-y-4">
         <div class="flex justify-between items-center">
@@ -6,25 +6,25 @@
         </div>
         <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
             <button @click="editingElement.settings.mobileCollapseBreakpoint = 'none'"
-                    :class="editingElement.settings.mobileCollapseBreakpoint === 'none' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                    :class="editingElement.settings.mobileCollapseBreakpoint === 'none' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                     class="flex-1 py-2.5 flex items-center justify-center border-r border-slate-100 transition-all"
                     title="Never">
                 <i class="fa fa-times text-xs"></i>
             </button>
             <button @click="editingElement.settings.mobileCollapseBreakpoint = 'mobile'"
-                    :class="editingElement.settings.mobileCollapseBreakpoint === 'mobile' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                    :class="editingElement.settings.mobileCollapseBreakpoint === 'mobile' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                     class="flex-1 py-2.5 flex items-center justify-center border-r border-slate-100 transition-all"
                     title="Small">
                 <i class="fa fa-mobile-alt text-xs"></i>
             </button>
             <button @click="editingElement.settings.mobileCollapseBreakpoint = 'tablet'"
-                    :class="(editingElement.settings.mobileCollapseBreakpoint === 'tablet' || !editingElement.settings.mobileCollapseBreakpoint) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                    :class="(editingElement.settings.mobileCollapseBreakpoint === 'tablet' || !editingElement.settings.mobileCollapseBreakpoint) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                     class="flex-1 py-2.5 flex items-center justify-center border-r border-slate-100 transition-all"
                     title="Medium">
                 <i class="fa fa-tablet-alt text-xs"></i>
             </button>
             <button @click="editingElement.settings.mobileCollapseBreakpoint = 'desktop'"
-                    :class="editingElement.settings.mobileCollapseBreakpoint === 'desktop' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                    :class="editingElement.settings.mobileCollapseBreakpoint === 'desktop' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                     class="flex-1 py-2.5 flex items-center justify-center transition-all"
                     title="Large">
                 <i class="fa fa-desktop text-xs"></i>
@@ -39,10 +39,10 @@
         </div>
         <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
             <button @click="editingElement.settings.mobileMenuMode = 'collapsed'"
-                    :class="(editingElement.settings.mobileMenuMode === 'collapsed' || !editingElement.settings.mobileMenuMode) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                    :class="(editingElement.settings.mobileMenuMode === 'collapsed' || !editingElement.settings.mobileMenuMode) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                     class="px-5 py-2 text-[11px] font-bold rounded transition-all">Collapsed</button>
             <button @click="editingElement.settings.mobileMenuMode = 'expanded'"
-                    :class="editingElement.settings.mobileMenuMode === 'expanded' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                    :class="editingElement.settings.mobileMenuMode === 'expanded' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                     class="px-5 py-2 text-[11px] font-bold rounded transition-all">Expanded</button>
         </div>
     </div>
@@ -70,10 +70,10 @@
             </div>
             <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
                 <button @click="editingElement.settings.mobileMenuSidebarSide = 'left'"
-                        :class="(editingElement.settings.mobileMenuSidebarSide === 'left' || !editingElement.settings.mobileMenuSidebarSide) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="(editingElement.settings.mobileMenuSidebarSide === 'left' || !editingElement.settings.mobileMenuSidebarSide) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="px-8 py-1.5 text-[10px] font-black uppercase rounded transition-all">Left</button>
                 <button @click="editingElement.settings.mobileMenuSidebarSide = 'right'"
-                        :class="editingElement.settings.mobileMenuSidebarSide === 'right' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="editingElement.settings.mobileMenuSidebarSide === 'right' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="px-8 py-1.5 text-[10px] font-black uppercase rounded transition-all">Right</button>
             </div>
         </div>
@@ -265,17 +265,17 @@
             </div>
             <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden w-fit">
                 <button @click="editingElement.settings.mobileMenuTriggerHorizontalAlign = 'flex-start'"
-                        :class="(editingElement.settings.mobileMenuTriggerHorizontalAlign === 'flex-start' || !editingElement.settings.mobileMenuTriggerHorizontalAlign) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="(editingElement.settings.mobileMenuTriggerHorizontalAlign === 'flex-start' || !editingElement.settings.mobileMenuTriggerHorizontalAlign) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="px-8 py-3 flex items-center justify-center border-r border-slate-100 transition-all">
                     <i class="fa fa-align-left"></i>
                 </button>
                 <button @click="editingElement.settings.mobileMenuTriggerHorizontalAlign = 'center'"
-                        :class="editingElement.settings.mobileMenuTriggerHorizontalAlign === 'center' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="editingElement.settings.mobileMenuTriggerHorizontalAlign === 'center' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="px-8 py-3 flex items-center justify-center border-r border-slate-100 transition-all">
                     <i class="fa fa-align-center"></i>
                 </button>
                 <button @click="editingElement.settings.mobileMenuTriggerHorizontalAlign = 'flex-end'"
-                        :class="editingElement.settings.mobileMenuTriggerHorizontalAlign === 'flex-end' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="editingElement.settings.mobileMenuTriggerHorizontalAlign === 'flex-end' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="px-8 py-3 flex items-center justify-center transition-all">
                     <i class="fa fa-align-right"></i>
                 </button>
@@ -289,7 +289,7 @@
     <!-- Common Options -->
     <div class="space-y-6 pt-6 border-t border-slate-50">
         <div class="flex items-center gap-2">
-            <div class="w-1 h-3 bg-[#0091ea] rounded-full"></div>
+            <div class="w-1 h-3 bg-[#2271b1] rounded-full"></div>
             <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Common Styling</span>
         </div>
 
@@ -337,13 +337,13 @@
             </div>
             <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden w-fit">
                 <button @click="editingElement.settings.mobileMenuTextAlign = 'left'"
-                        :class="(editingElement.settings.mobileMenuTextAlign === 'left' || !editingElement.settings.mobileMenuTextAlign) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="(editingElement.settings.mobileMenuTextAlign === 'left' || !editingElement.settings.mobileMenuTextAlign) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="px-6 py-2.5 text-[11px] font-bold border-r border-slate-100 transition-all">Left</button>
                 <button @click="editingElement.settings.mobileMenuTextAlign = 'center'"
-                        :class="editingElement.settings.mobileMenuTextAlign === 'center' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="editingElement.settings.mobileMenuTextAlign === 'center' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="px-6 py-2.5 text-[11px] font-bold border-r border-slate-100 transition-all">Center</button>
                 <button @click="editingElement.settings.mobileMenuTextAlign = 'right'"
-                        :class="editingElement.settings.mobileMenuTextAlign === 'right' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="editingElement.settings.mobileMenuTextAlign === 'right' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="px-6 py-2.5 text-[11px] font-bold transition-all">Right</button>
             </div>
         </div>
@@ -355,10 +355,10 @@
             </div>
             <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden w-fit">
                 <button @click="editingElement.settings.mobileMenuIndentSubmenus = 'on'"
-                        :class="(editingElement.settings.mobileMenuIndentSubmenus === 'on' || !editingElement.settings.mobileMenuIndentSubmenus) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="(editingElement.settings.mobileMenuIndentSubmenus === 'on' || !editingElement.settings.mobileMenuIndentSubmenus) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="px-8 py-2.5 text-[11px] font-bold border-r border-slate-100 transition-all">On</button>
                 <button @click="editingElement.settings.mobileMenuIndentSubmenus = 'off'"
-                        :class="editingElement.settings.mobileMenuIndentSubmenus === 'off' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                        :class="editingElement.settings.mobileMenuIndentSubmenus === 'off' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                         class="px-8 py-2.5 text-[11px] font-bold transition-all">Off</button>
             </div>
         </div>
@@ -366,7 +366,7 @@
         <!-- Typography Section -->
         <div class="pt-6 border-t border-slate-100 space-y-6">
             <div class="flex items-center gap-2">
-                <div class="w-1 h-3 bg-[#0091ea] rounded-full"></div>
+                <div class="w-1 h-3 bg-[#2271b1] rounded-full"></div>
                 <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Mobile Menu Typography</span>
             </div>
 
@@ -422,16 +422,16 @@
                     <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">Text Transform</label>
                     <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                         <button @click="editingElement.settings.mobileMenuTextTransform = 'none'"
-                                :class="(editingElement.settings.mobileMenuTextTransform === 'none' || !editingElement.settings.mobileMenuTextTransform) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                                :class="(editingElement.settings.mobileMenuTextTransform === 'none' || !editingElement.settings.mobileMenuTextTransform) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                                 class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all uppercase">None</button>
                         <button @click="editingElement.settings.mobileMenuTextTransform = 'uppercase'"
-                                :class="editingElement.settings.mobileMenuTextTransform === 'uppercase' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                                :class="editingElement.settings.mobileMenuTextTransform === 'uppercase' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                                 class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">AB</button>
                         <button @click="editingElement.settings.mobileMenuTextTransform = 'lowercase'"
-                                :class="editingElement.settings.mobileMenuTextTransform === 'lowercase' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                                :class="editingElement.settings.mobileMenuTextTransform === 'lowercase' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                                 class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">ab</button>
                         <button @click="editingElement.settings.mobileMenuTextTransform = 'capitalize'"
-                                :class="editingElement.settings.mobileMenuTextTransform === 'capitalize' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                                :class="editingElement.settings.mobileMenuTextTransform === 'capitalize' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                                 class="flex-1 py-2 text-[10px] font-bold transition-all">Ab</button>
                     </div>
                 </div>
@@ -441,7 +441,7 @@
         <!-- Colors Section -->
         <div class="pt-6 border-t border-slate-100 space-y-6">
             <div class="flex items-center gap-2">
-                <div class="w-1 h-3 bg-[#0091ea] rounded-full"></div>
+                <div class="w-1 h-3 bg-[#2271b1] rounded-full"></div>
                 <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Mobile Menu Colors</span>
             </div>
 
@@ -451,10 +451,10 @@
                     <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">Mobile Menu Separator</label>
                     <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
                         <button @click="editingElement.settings.mobileSeparatorEnabled = 'yes'"
-                                :class="(editingElement.settings.mobileSeparatorEnabled === 'yes' || !editingElement.settings.mobileSeparatorEnabled) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                                :class="(editingElement.settings.mobileSeparatorEnabled === 'yes' || !editingElement.settings.mobileSeparatorEnabled) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                                 class="px-6 py-1.5 text-[10px] font-black uppercase rounded transition-all">Yes</button>
                         <button @click="editingElement.settings.mobileSeparatorEnabled = 'no'"
-                                :class="editingElement.settings.mobileSeparatorEnabled === 'no' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                                :class="editingElement.settings.mobileSeparatorEnabled === 'no' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                                 class="px-6 py-1.5 text-[10px] font-black uppercase rounded transition-all">No</button>
                     </div>
                 </div>

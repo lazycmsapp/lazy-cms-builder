@@ -1,4 +1,4 @@
-{{-- Renders a single custom element field in the builder settings panel.
+﻿{{-- Renders a single custom element field in the builder settings panel.
      Variables: $field (array), $fieldKey (string)
      Supported types: text/textfield, textarea, number, select, radio, toggle, checkbox,
        color, media/image, url, link, date, icon, slider, dimensions, typography, wysiwyg, repeater
@@ -22,7 +22,7 @@
         @if($allowDynamic)
         <button @click.stop="openDynSrcMenu(editingElement.settings, '{{ $dynKey }}', 'text', $event)"
                 class="w-6 h-6 flex items-center justify-center rounded border transition-all"
-                :class="editingElement.settings.{{ $dynKey }} ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'"
+                :class="editingElement.settings.{{ $dynKey }} ? 'bg-[#2271b1]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'"
                 title="Dynamic source">
             <i class="fa fa-database text-[10px]"></i>
         </button>
@@ -144,7 +144,7 @@
     <div class="flex flex-wrap gap-2">
         @foreach($field['options'] ?? [] as $optVal => $optLabel)
         <button @click="editingElement.settings.{{ $fieldKey }} = '{{ $optVal }}'"
-                :class="editingElement.settings.{{ $fieldKey }} === '{{ $optVal }}' ? 'bg-[#0091ea] text-white border-[#0091ea]' : 'bg-white text-slate-600 border-slate-200 hover:border-[#0091ea]'"
+                :class="editingElement.settings.{{ $fieldKey }} === '{{ $optVal }}' ? 'bg-[#2271b1] text-white border-[#0091ea]' : 'bg-white text-slate-600 border-slate-200 hover:border-[#0091ea]'"
                 class="px-4 py-1.5 text-[12px] font-semibold rounded border transition-all">
             {{ $optLabel }}
         </button>
@@ -195,7 +195,7 @@
     <div v-if="!editingElement.settings.{{ $fieldKey }}"
          @click="openMediaModal('{{ $fieldKey }}')"
          class="w-full aspect-[16/10] border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#0091ea] hover:bg-blue-50/30 transition-all group">
-        <div class="w-10 h-10 bg-[#0091ea] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+        <div class="w-10 h-10 bg-[#2271b1] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
             <i class="fa fa-plus"></i>
         </div>
     </div>
@@ -203,7 +203,7 @@
         <div class="relative group aspect-[16/10] bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
             <img :src="editingElement.settings.{{ $fieldKey }}" class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                <button @click="openMediaModal('{{ $fieldKey }}')" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0091ea] hover:bg-[#0091ea] hover:text-white transition-all shadow-sm">
+                <button @click="openMediaModal('{{ $fieldKey }}')" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0091ea] hover:bg-[#1a5a96] hover:text-white transition-all shadow-sm">
                     <i class="fa fa-edit text-xs"></i>
                 </button>
                 <button @click="editingElement.settings.{{ $fieldKey }} = ''" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
@@ -213,7 +213,7 @@
         </div>
         <div class="flex gap-2">
             <button @click="editingElement.settings.{{ $fieldKey }} = ''" class="flex-1 h-9 flex items-center justify-center border border-slate-200 rounded text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-colors">Remove</button>
-            <button @click="openMediaModal('{{ $fieldKey }}')" class="flex-1 h-9 flex items-center justify-center bg-[#0091ea] text-white rounded text-[11px] font-bold hover:bg-[#007cc0] transition-colors">Edit</button>
+            <button @click="openMediaModal('{{ $fieldKey }}')" class="flex-1 h-9 flex items-center justify-center bg-[#2271b1] text-white rounded text-[11px] font-bold hover:bg-[#1a5a96] transition-colors">Edit</button>
         </div>
     </div>
     @if($fieldDesc)<p class="text-[10px] text-slate-400 mt-1">{{ $fieldDesc }}</p>@endif
@@ -227,7 +227,7 @@
         @if($allowDynamic)
         <button @click.stop="openDynSrcMenu(editingElement.settings, '{{ $dynKey }}', 'link', $event)"
                 class="w-6 h-6 flex items-center justify-center rounded border transition-all"
-                :class="editingElement.settings.{{ $dynKey }} ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'"
+                :class="editingElement.settings.{{ $dynKey }} ? 'bg-[#2271b1]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'"
                 title="Dynamic source">
             <i class="fa fa-database text-[10px]"></i>
         </button>
@@ -245,7 +245,7 @@
     <div v-else class="flex gap-2 items-center">
         {!! $__urlBox !!}
         <button @click="openMediaModal('{{ $fieldKey }}')" title="Upload / Browse"
-                class="shrink-0 w-9 h-9 flex items-center justify-center bg-slate-100 border border-slate-200 rounded hover:bg-[#0091ea] hover:text-white hover:border-[#0091ea] text-slate-500 transition-all">
+                class="shrink-0 w-9 h-9 flex items-center justify-center bg-slate-100 border border-slate-200 rounded hover:bg-[#1a5a96] hover:text-white hover:border-[#0091ea] text-slate-500 transition-all">
             <i class="fa fa-upload text-xs"></i>
         </button>
     </div>
@@ -253,7 +253,7 @@
     <div class="flex gap-2 items-center">
         {!! $__urlBox !!}
         <button @click="openMediaModal('{{ $fieldKey }}')" title="Upload / Browse"
-                class="shrink-0 w-9 h-9 flex items-center justify-center bg-slate-100 border border-slate-200 rounded hover:bg-[#0091ea] hover:text-white hover:border-[#0091ea] text-slate-500 transition-all">
+                class="shrink-0 w-9 h-9 flex items-center justify-center bg-slate-100 border border-slate-200 rounded hover:bg-[#1a5a96] hover:text-white hover:border-[#0091ea] text-slate-500 transition-all">
             <i class="fa fa-upload text-xs"></i>
         </button>
     </div>
@@ -269,7 +269,7 @@
         @if($allowDynamic)
         <button @click.stop="openDynSrcMenu(editingElement.settings, '{{ $dynKey }}', 'link', $event)"
                 class="w-6 h-6 flex items-center justify-center rounded border transition-all"
-                :class="editingElement.settings.{{ $dynKey }} ? 'bg-[#0091ea]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'"
+                :class="editingElement.settings.{{ $dynKey }} ? 'bg-[#2271b1]/10 text-[#0091ea] border-[#0091ea]/30' : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'"
                 title="Dynamic source">
             <i class="fa fa-database text-[10px]"></i>
         </button>
@@ -432,18 +432,18 @@
                             <button @click="row.{{ $sfKey }} = ''" class="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa fa-trash"></i></button>
                         </div>
                         <button @click="openMediaModalForTarget(row, '{{ $sfKey }}')"
-                                class="w-full py-1.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded hover:bg-[#0091ea] hover:text-white transition-all">Change</button>
+                                class="w-full py-1.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded hover:bg-[#1a5a96] hover:text-white transition-all">Change</button>
                     </div>
                     @elseif($sfType === 'url')
                     <div class="flex gap-1.5 items-center">
                         <input type="text" v-model="row.{{ $sfKey }}" placeholder="https://..."
                                class="flex-1 border border-slate-200 rounded px-2 py-1.5 text-[12px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
                         <button @click="openMediaModalForTarget(row, '{{ $sfKey }}')"
-                                class="shrink-0 w-8 h-8 flex items-center justify-center bg-slate-100 border border-slate-200 rounded hover:bg-[#0091ea] hover:text-white text-slate-400 transition-all"><i class="fa fa-upload text-xs"></i></button>
+                                class="shrink-0 w-8 h-8 flex items-center justify-center bg-slate-100 border border-slate-200 rounded hover:bg-[#1a5a96] hover:text-white text-slate-400 transition-all"><i class="fa fa-upload text-xs"></i></button>
                     </div>
                     @elseif($sfType === 'toggle')
                     <div class="flex bg-slate-50 border border-slate-100 rounded p-0.5 w-fit">
-                        <button @click="row.{{ $sfKey }} = true" :class="row.{{ $sfKey }} ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'" class="px-4 py-1 text-[10px] font-black uppercase rounded transition-all">On</button>
+                        <button @click="row.{{ $sfKey }} = true" :class="row.{{ $sfKey }} ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'" class="px-4 py-1 text-[10px] font-black uppercase rounded transition-all">On</button>
                         <button @click="row.{{ $sfKey }} = false" :class="!row.{{ $sfKey }} ? 'bg-white text-slate-600 shadow-sm' : 'text-slate-400'" class="px-4 py-1 text-[10px] font-black uppercase rounded transition-all">Off</button>
                     </div>
                     @elseif($sfType === 'select')

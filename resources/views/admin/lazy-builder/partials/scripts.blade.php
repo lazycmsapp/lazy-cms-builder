@@ -1,4 +1,4 @@
-{{-- CodeMirror — HTML Block IDE editor (local assets) --}}
+﻿{{-- CodeMirror — HTML Block IDE editor (local assets) --}}
 <link rel="stylesheet" href="{{ asset('vendor/cms-dashboard/css/codemirror/codemirror.min.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/cms-dashboard/css/codemirror/dracula.min.css') }}">
 <script src="{{ asset('vendor/cms-dashboard/js/codemirror/codemirror.min.js') }}"></script>
@@ -837,7 +837,7 @@
                 // Advanced Search: render a live search-bar mockup in the canvas.
                 if (el.type === 'advanced_search') {
                     const esc = (v) => String(v == null ? '' : v).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const accent = s.accentColor || '#0091ea';
+                    const accent = s.accentColor || '#2271b1';
                     const bg     = s.bgColor || '#ffffff';
                     const txt    = s.textColor || '#1d2327';
                     const phc    = s.placeholderColor || '#9ca3af';
@@ -2222,7 +2222,7 @@
 
                 if (ctx.ncoli !== null && ctx.neli !== null) {
                     const ncol = el.columns ? el.columns[ctx.ncoli] : null;
-                    return ncol ? ncol.elements[ctx.neli] : null;
+                    return ncol ? (ncol.elements[ctx.neli] ?? null) : null;
                 }
                 return el;
             });
@@ -2929,7 +2929,7 @@
                             numberLineHeight: '1.1', numberLetterSpacing: '0px',
                             labelFontSize: '14px', labelFontWeight: '400', labelColor: '#666666',
                             labelFontFamily: 'inherit', labelLineHeight: '1.4', labelLetterSpacing: '0px', labelTextTransform: 'none',
-                            icon: '', iconSize: 40, iconColor: '#0091ea',
+                            icon: '', iconSize: 40, iconColor: '#2271b1',
                             marginTop: 0, marginTopUnit: 'px', marginBottom: 0, marginBottomUnit: 'px',
                             cssClass: '', cssId: '',
                             visibility: { mobile: true, tablet: true, desktop: true },
@@ -2962,8 +2962,8 @@
                         ...(type === 'heading' ? { title: 'New Heading', textAlign: 'left' } : {}),
                         ...(type === 'title' ? {
                             title: 'Title', titleColor: '#222', fontSize: 36, fontSizeUnit: 'px', fontWeight: '800', textAlign: 'center',
-                            useLink: false, linkUrl: '', linkColor: '#0091ea', linkHoverColor: '#007cc0',
-                            separator: 'none', separatorColor: '#0091ea', dividerWidth: 60, dividerHeight: 3,
+                            useLink: false, linkUrl: '', linkColor: '#2271b1', linkHoverColor: '#1a5a96',
+                            separator: 'none', separatorColor: '#2271b1', dividerWidth: 60, dividerHeight: 3,
                             paddingTop: 20, paddingBottom: 20, marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0,
                             visibility: { mobile: true, tablet: true, desktop: true },
                             dynamic_source: '', link_dynamic_source: ''
@@ -2972,10 +2972,10 @@
                         ...(type === 'button' ? {
                             text: 'Click Me', url: '#', style: 'primary',
                             buttonStyle: 'default',
-                            bgColor: '#0091ea', color: '#ffffff',
-                            hoverColor: '#ffffff', hoverBgColor: '#007cc0',
-                            bgGradientStartColor: '#0091ea', bgGradientEndColor: '#007cc0',
-                            bgGradientHoverStartColor: '#007cc0', bgGradientHoverEndColor: '#005fa3',
+                            bgColor: '#2271b1', color: '#ffffff',
+                            hoverColor: '#ffffff', hoverBgColor: '#1a5a96',
+                            bgGradientStartColor: '#2271b1', bgGradientEndColor: '#1a5a96',
+                            bgGradientHoverStartColor: '#1a5a96', bgGradientHoverEndColor: '#135e96',
                             bgGradientType: 'linear', bgGradientAngle: 180,
                             bgGradientStartPosition: 0, bgGradientEndPosition: 100,
                             dynamic_source: '', link_dynamic_source: '',
@@ -2988,7 +2988,7 @@
                                 { id: Date.now() + '_3', icon: 'fa fa-check', iconColor: '', text: 'List item three', link: '', linkTarget: '_self' },
                             ],
                             defaultIcon: 'fa fa-check',
-                            iconSize: 14, iconColor: '#0091ea', iconPosition: 'left',
+                            iconSize: 14, iconColor: '#2271b1', iconPosition: 'left',
                             gap: 10, itemSpacing: 10, textAlign: 'left',
                             textColor: '#333333', fontSize: 15, fontSizeUnit: 'px',
                             fontWeight: '400', fontFamily: 'inherit', lineHeight: '1.5',
@@ -3046,7 +3046,7 @@
                             linkUrl: '', linkTarget: '_self',
                             layout: 'top', alignment: 'center',
                             iconSize: 40, iconSizeUnit: 'px',
-                            iconColor: '#0091ea',
+                            iconColor: '#2271b1',
                             iconBgColor: '', iconBgColorOpacity: 1,
                             iconBorderRadius: 50, iconSpacing: 16, iconPadding: 0,
                             titleTag: 'h3',
@@ -3073,7 +3073,7 @@
                             titleFontSize: 15, titleFontWeight: '600',
                             titleFontFamily: 'inherit', titleLetterSpacing: '0px', titleLineHeight: 1.4, titleTextTransform: 'none',
                             titleColor: '#222222', titleBgColor: '#f8fafc',
-                            titleActiveBgColor: '#0091ea', titleActiveColor: '#ffffff', titlePadding: 16,
+                            titleActiveBgColor: '#2271b1', titleActiveColor: '#ffffff', titlePadding: 16,
                             contentFontSize: 14, contentFontFamily: 'inherit', contentLetterSpacing: '0px', contentLineHeight: 1.6,
                             contentColor: '#555555', contentBgColor: '#ffffff', contentPadding: 16,
                             borderColor: '#e2e8f0', borderRadius: 8, itemGap: 8,
@@ -3089,7 +3089,7 @@
                             defaultActive: 0, style: 'underline', alignment: 'left',
                             tabFontSize: 14, tabFontWeight: '500',
                             tabFontFamily: 'inherit', tabLetterSpacing: '0px',
-                            tabColor: '#666666', activeColor: '#0091ea',
+                            tabColor: '#666666', activeColor: '#2271b1',
                             contentFontSize: 14, contentFontFamily: 'inherit', contentLetterSpacing: '0px', contentLineHeight: 1.6,
                             contentColor: '#555555', contentBgColor: '#ffffff', contentPadding: 20,
                             borderColor: '#e2e8f0', borderRadius: 4,

@@ -1,4 +1,4 @@
-<!-- Columns Loop -->
+﻿<!-- Columns Loop -->
 <div v-for="(column, coli) in container.columns" :key="column.id"
      class="column-outer relative"
      :class="['col-' + column.id, (column.settings.hoverType && column.settings.hoverType !== 'none') ? 'hover-effect-' + column.settings.hoverType : '', getVisibilityClasses(column.settings), isDragging && dragCi === ci && dragColi === coli ? 'dragging-no-transition' : '']"
@@ -55,22 +55,22 @@
                  :class="shouldShowGuide('column', ci, coli) ? ( ((activeColi === coli && activeColCi === ci) || (isDragging && dragCi === ci && dragColi === coli && dragType === 'marginBottom')) ? 'opacity-100' : 'opacity-0' ) : 'hidden'">
                  <div class="absolute bottom-0 left-0 w-full border-b border-dashed border-[#9c27b0]/20"></div>
             </div>
-            <div class="absolute left-0 right-0 pointer-events-none z-0 bg-[#0091ea]/5 transition-opacity"
+            <div class="absolute left-0 right-0 pointer-events-none z-0 bg-[#2271b1]/5 transition-opacity"
                  :style="{ height: (column.settings.paddingTop || 0) + 'px', top: '0px' }"
                  :class="shouldShowGuide('column', ci, coli) ? ( ((activeColi === coli && activeColCi === ci) || (isDragging && dragCi === ci && dragColi === coli && dragType === 'paddingTop')) ? 'opacity-100' : 'opacity-0' ) : 'hidden'">
                  <div class="absolute bottom-0 left-0 w-full border-b border-dashed border-[#0091ea]/20"></div>
             </div>
-            <div class="absolute left-0 right-0 pointer-events-none z-0 bg-[#0091ea]/5 transition-opacity"
+            <div class="absolute left-0 right-0 pointer-events-none z-0 bg-[#2271b1]/5 transition-opacity"
                  :style="{ height: (column.settings.paddingBottom || 0) + 'px', bottom: '0px' }"
                  :class="shouldShowGuide('column', ci, coli) ? ( ((activeColi === coli && activeColCi === ci) || (isDragging && dragCi === ci && dragColi === coli && dragType === 'paddingBottom')) ? 'opacity-100' : 'opacity-0' ) : 'hidden'">
                  <div class="absolute top-0 left-0 w-full border-t border-dashed border-[#0091ea]/20"></div>
             </div>
-            <div class="absolute top-0 bottom-0 pointer-events-none z-0 bg-[#0091ea]/5 transition-opacity"
+            <div class="absolute top-0 bottom-0 pointer-events-none z-0 bg-[#2271b1]/5 transition-opacity"
                  :style="{ width: (column.settings.paddingLeft || 0) + 'px', left: '0px' }"
                  :class="shouldShowGuide('column', ci, coli) ? ( ((activeColi === coli && activeColCi === ci) || (isDragging && dragCi === ci && dragColi === coli && dragType === 'paddingLeft')) ? 'opacity-100' : 'opacity-0' ) : 'hidden'">
                  <div class="absolute top-0 right-0 h-full border-r border-dashed border-[#0091ea]/20"></div>
             </div>
-            <div class="absolute top-0 bottom-0 pointer-events-none z-0 bg-[#0091ea]/5 transition-opacity"
+            <div class="absolute top-0 bottom-0 pointer-events-none z-0 bg-[#2271b1]/5 transition-opacity"
                  :style="{ width: (column.settings.paddingRight || 0) + 'px', right: '0px' }"
                  :class="shouldShowGuide('column', ci, coli) ? ( ((activeColi === coli && activeColCi === ci) || (isDragging && dragCi === ci && dragColi === coli && dragType === 'paddingRight')) ? 'opacity-100' : 'opacity-0' ) : 'hidden'">
                  <div class="absolute top-0 left-0 h-full border-l border-dashed border-[#0091ea]/20"></div>
@@ -132,7 +132,7 @@
         <div v-if="!isPreview && !column.elements.some(el => el.type !== 'row')" 
              class="absolute inset-0 flex items-center justify-center z-10 transition-opacity pointer-events-none opacity-100">
             <button @click.stop="openElementModal(ci, coli, 'design')" 
-                    class="w-8 h-8 bg-[#0091ea] text-white rounded shadow-lg flex items-center justify-center hover:scale-110 transition-all relative group/coladdbtn pointer-events-auto">
+                    class="w-8 h-8 bg-[#2271b1] text-white rounded shadow-lg flex items-center justify-center hover:scale-110 transition-all relative group/coladdbtn pointer-events-auto">
                 <i class="fa fa-plus text-base pointer-events-none"></i>
                 <div class="lazy-tooltip opacity-0 group-hover/coladdbtn:opacity-100" style="top: 100%; margin-top: 10px; display: block !important;">Add Element</div>
             </button>
@@ -192,7 +192,7 @@
                     {{-- social icon chip --}}
                     <span v-else-if="it.kind === 'social'" :style="it.style" :class="it.hoverClass" :data-tip="it.tip || null" style="transition:background .25s,color .25s,filter .2s"><i :class="it.icon" :style="it.iconStyle"></i></span>
                     {{-- button --}}
-                    <button v-else-if="it.kind === 'button'" :style="it.style" :class="it.hoverClass" class="inline-block px-4 py-2 rounded bg-[#0091ea] text-white text-[13px] font-semibold" v-text="it.value || 'Button'"></button>
+                    <button v-else-if="it.kind === 'button'" :style="it.style" :class="it.hoverClass" class="inline-block px-4 py-2 rounded bg-[#2271b1] text-white text-[13px] font-semibold" v-text="it.value || 'Button'"></button>
                     {{-- repeater --}}
                     <div v-else-if="it.kind === 'repeater'" :style="it.style" :class="it.hoverClass" class="space-y-2">
                         <div v-for="(row, ri) in it.rows" :key="ri" class="flex items-center gap-2 flex-wrap">

@@ -1,4 +1,4 @@
-<div class="space-y-8 pb-10">
+﻿<div class="space-y-8 pb-10">
     <!-- Submenu Behavior -->
     <div class="space-y-6">
         <div class="flex items-center gap-2 pb-2 border-b border-slate-50">
@@ -16,10 +16,10 @@
                 </p>
                 <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
                     <button @click="editingElement.settings.showArrows = 'yes'"
-                            :class="(editingElement.settings.showArrows === 'yes' || !editingElement.settings.showArrows) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="(editingElement.settings.showArrows === 'yes' || !editingElement.settings.showArrows) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="px-6 py-1.5 text-[10px] font-black uppercase rounded transition-all">Yes</button>
                     <button @click="editingElement.settings.showArrows = 'no'"
-                            :class="editingElement.settings.showArrows === 'no' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="editingElement.settings.showArrows === 'no' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="px-6 py-1.5 text-[10px] font-black uppercase rounded transition-all">No</button>
                 </div>
             </div>
@@ -33,13 +33,13 @@
                 <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">Submenu Expand Direction</label>
                 <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
                     <button @click="editingElement.settings.submenuDirection = 'left'"
-                            :class="editingElement.settings.submenuDirection === 'left' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="editingElement.settings.submenuDirection === 'left' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="px-4 py-1.5 text-[10px] font-black uppercase rounded transition-all">Left</button>
                     <button @click="editingElement.settings.submenuDirection = 'center'"
-                            :class="editingElement.settings.submenuDirection === 'center' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="editingElement.settings.submenuDirection === 'center' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="px-4 py-1.5 text-[10px] font-black uppercase rounded transition-all">Center</button>
                     <button @click="editingElement.settings.submenuDirection = 'right'"
-                            :class="(editingElement.settings.submenuDirection === 'right' || !editingElement.settings.submenuDirection) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="(editingElement.settings.submenuDirection === 'right' || !editingElement.settings.submenuDirection) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="px-4 py-1.5 text-[10px] font-black uppercase rounded transition-all">Right</button>
                 </div>
             </div>
@@ -49,13 +49,13 @@
                 <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">Submenu Expand Transition</label>
                 <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
                     <button @click="editingElement.settings.submenuTransition = 'fade'"
-                            :class="(editingElement.settings.submenuTransition === 'fade' || !editingElement.settings.submenuTransition) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="(editingElement.settings.submenuTransition === 'fade' || !editingElement.settings.submenuTransition) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="px-3 py-1.5 text-[10px] font-black uppercase rounded transition-all">Fade</button>
                     <button @click="editingElement.settings.submenuTransition = 'slide-up'"
-                            :class="editingElement.settings.submenuTransition === 'slide-up' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="editingElement.settings.submenuTransition === 'slide-up' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="px-3 py-1.5 text-[10px] font-black uppercase rounded transition-all">Slide Up</button>
                     <button @click="editingElement.settings.submenuTransition = 'slide-down'"
-                            :class="editingElement.settings.submenuTransition === 'slide-down' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="editingElement.settings.submenuTransition === 'slide-down' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="px-3 py-1.5 text-[10px] font-black uppercase rounded transition-all">Slide Down</button>
                 </div>
             </div>
@@ -100,10 +100,10 @@
                 <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">Expand Direction</label>
                 <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
                     <button @click="editingElement.settings.subSubMenuDirection = 'left'"
-                            :class="editingElement.settings.subSubMenuDirection === 'left' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="editingElement.settings.subSubMenuDirection === 'left' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="px-6 py-1.5 text-[10px] font-black uppercase rounded transition-all">Left</button>
                     <button @click="editingElement.settings.subSubMenuDirection = 'right'"
-                            :class="(editingElement.settings.subSubMenuDirection === 'right' || !editingElement.settings.subSubMenuDirection) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'"
+                            :class="(editingElement.settings.subSubMenuDirection === 'right' || !editingElement.settings.subSubMenuDirection) ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'"
                             class="px-6 py-1.5 text-[10px] font-black uppercase rounded transition-all">Right</button>
                 </div>
             </div>
@@ -166,16 +166,16 @@
                 <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-2">TEXT TRANSFORM</label>
                 <div class="flex bg-slate-50 border border-slate-100 rounded overflow-hidden">
                     <button @click="editingElement.settings.submenuTextTransform = 'none'" 
-                            :class="editingElement.settings.submenuTextTransform === 'none' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'" 
+                            :class="editingElement.settings.submenuTextTransform === 'none' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'" 
                             class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all uppercase">None</button>
                     <button @click="editingElement.settings.submenuTextTransform = 'uppercase'" 
-                            :class="editingElement.settings.submenuTextTransform === 'uppercase' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'" 
+                            :class="editingElement.settings.submenuTextTransform === 'uppercase' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'" 
                             class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">AB</button>
                     <button @click="editingElement.settings.submenuTextTransform = 'lowercase'" 
-                            :class="editingElement.settings.submenuTextTransform === 'lowercase' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'" 
+                            :class="editingElement.settings.submenuTextTransform === 'lowercase' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'" 
                             class="flex-1 py-2 text-[10px] font-bold border-r border-slate-100 transition-all">ab</button>
                     <button @click="editingElement.settings.submenuTextTransform = 'capitalize'" 
-                            :class="editingElement.settings.submenuTextTransform === 'capitalize' ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'" 
+                            :class="editingElement.settings.submenuTextTransform === 'capitalize' ? 'bg-[#2271b1] text-white shadow-sm' : 'text-slate-400'" 
                             class="flex-1 py-2 text-[10px] font-bold transition-all">Ab</button>
                 </div>
             </div>
@@ -189,22 +189,22 @@
             <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-3">Submenu Item Text Align</label>
             <div class="grid grid-cols-4 gap-1">
                 <button @click="editingElement.settings.submenuTextAlign = 'left'"
-                        :class="editingElement.settings.submenuTextAlign === 'left' ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400'"
+                        :class="editingElement.settings.submenuTextAlign === 'left' ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400'"
                         class="py-2.5 rounded transition-all flex items-center justify-center">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 19h16v2H4v-2zm0-4h11v2H4v-2zm0-4h16v2H4v-2zm0-8h16v2H4V3zm0 4h11v2H4V7z"/></svg>
                 </button>
                 <button @click="editingElement.settings.submenuTextAlign = 'center'"
-                        :class="editingElement.settings.submenuTextAlign === 'center' ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400'"
+                        :class="editingElement.settings.submenuTextAlign === 'center' ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400'"
                         class="py-2.5 rounded transition-all flex items-center justify-center">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 19h16v2H4v-2zm3-4h10v2H7v-2zm-3-4h16v2H4v-2zm0-8h16v2H4V3zm3 4h10v2H7V7z"/></svg>
                 </button>
                 <button @click="editingElement.settings.submenuTextAlign = 'right'"
-                        :class="editingElement.settings.submenuTextAlign === 'right' ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400'"
+                        :class="editingElement.settings.submenuTextAlign === 'right' ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400'"
                         class="py-2.5 rounded transition-all flex items-center justify-center">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 19h16v2H4v-2zm5-4h11v2H9v-2zm-5-4h16v2H4v-2zm0-8h16v2H4V3zm5 4h11v2H9V7z"/></svg>
                 </button>
                 <button @click="editingElement.settings.submenuTextAlign = 'justify'"
-                        :class="editingElement.settings.submenuTextAlign === 'justify' ? 'bg-[#0091ea] text-white shadow-sm' : 'bg-slate-100 text-slate-400'"
+                        :class="editingElement.settings.submenuTextAlign === 'justify' ? 'bg-[#2271b1] text-white shadow-sm' : 'bg-slate-100 text-slate-400'"
                         class="py-2.5 rounded transition-all flex items-center justify-center">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 19h16v2H4v-2zm0-4h16v2H4v-2zm0-4h16v2H4v-2zm0-8h16v2H4V3zm0 4h16v2H4V7z"/></svg>
                 </button>

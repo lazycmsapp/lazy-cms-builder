@@ -1,4 +1,4 @@
-<div v-if="el.type === 'accordion'"
+﻿<div v-if="el.type === 'accordion'"
      class="w-full"
      :class="[el.settings.cssClass || '']"
      :id="el.settings.cssId || undefined"
@@ -25,7 +25,7 @@
                          lineHeight: el.settings.titleLineHeight || 1.4,
                          textTransform: el.settings.titleTextTransform || 'none',
                          color: idx === (el.settings.defaultOpen ?? 0) ? (el.settings.titleActiveColor || '#ffffff') : (el.settings.titleColor || '#222222'),
-                         backgroundColor: idx === (el.settings.defaultOpen ?? 0) ? (el.settings.titleActiveBgColor || '#0091ea') : (el.settings.titleBgColor || '#f8fafc'),
+                         backgroundColor: idx === (el.settings.defaultOpen ?? 0) ? (el.settings.titleActiveBgColor || '#2271b1') : (el.settings.titleBgColor || '#f8fafc'),
                          border: '1px solid ' + (el.settings.borderColor || '#e2e8f0'),
                          borderRadius: idx === (el.settings.defaultOpen ?? 0)
                              ? (el.settings.borderRadius ?? 8) + 'px ' + (el.settings.borderRadius ?? 8) + 'px 0 0'

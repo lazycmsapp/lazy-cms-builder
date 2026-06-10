@@ -1,4 +1,4 @@
-{{-- 1. Flex Grow --}}
+﻿{{-- 1. Flex Grow --}}
 <div>
     <div class="flex justify-between items-center mb-2">
         <label class="text-[12px] font-bold text-[#333]">Flex Grow</label>
@@ -58,7 +58,7 @@
             <button v-for="opt in [{v:'left',i:'fa-align-left'},{v:'center',i:'fa-align-center'},{v:'right',i:'fa-align-right'}]"
                     :key="opt.v"
                     @click="editingElement.settings.alignment = opt.v"
-                    :class="(editingElement.settings.alignment === opt.v || (!editingElement.settings.alignment && opt.v === 'center')) ? 'bg-[#0091ea] text-white shadow-md' : 'bg-[#0091ea]/20 text-[#0091ea]'"
+                    :class="(editingElement.settings.alignment === opt.v || (!editingElement.settings.alignment && opt.v === 'center')) ? 'bg-[#2271b1] text-white shadow-md' : 'bg-[#2271b1]/20 text-[#0091ea]'"
                     class="flex-1 py-1.5 rounded transition-all flex items-center justify-center">
                 <i :class="'fa ' + opt.i" class="text-xs"></i>
             </button>

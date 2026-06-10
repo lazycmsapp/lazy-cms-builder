@@ -1,4 +1,4 @@
-<div v-if="el.type === 'tabs'"
+﻿<div v-if="el.type === 'tabs'"
      class="w-full"
      :class="[el.settings.cssClass || '']"
      :id="el.settings.cssId || undefined"
@@ -31,15 +31,15 @@
                      transition: 'all 0.2s',
                      color: el.settings.style === 'pill' && idx === (el.settings.defaultActive ?? 0)
                          ? '#ffffff'
-                         : (idx === (el.settings.defaultActive ?? 0) ? (el.settings.activeColor || '#0091ea') : (el.settings.tabColor || '#666666')),
+                         : (idx === (el.settings.defaultActive ?? 0) ? (el.settings.activeColor || '#2271b1') : (el.settings.tabColor || '#666666')),
                      borderBottom: (!el.settings.style || el.settings.style === 'underline')
                          ? (idx === (el.settings.defaultActive ?? 0)
-                             ? '2px solid ' + (el.settings.activeColor || '#0091ea')
+                             ? '2px solid ' + (el.settings.activeColor || '#2271b1')
                              : '2px solid transparent')
                          : 'none',
                      marginBottom: (!el.settings.style || el.settings.style === 'underline') ? '-2px' : '0',
                      backgroundColor: el.settings.style === 'pill'
-                         ? (idx === (el.settings.defaultActive ?? 0) ? (el.settings.activeColor || '#0091ea') : 'transparent')
+                         ? (idx === (el.settings.defaultActive ?? 0) ? (el.settings.activeColor || '#2271b1') : 'transparent')
                          : (el.settings.style === 'boxed' ? (idx === (el.settings.defaultActive ?? 0) ? (el.settings.contentBgColor || '#ffffff') : 'transparent') : 'transparent'),
                      borderRadius: el.settings.style === 'pill' ? '999px' : (el.settings.style === 'boxed' ? ((el.settings.borderRadius ?? 4) + 'px ' + (el.settings.borderRadius ?? 4) + 'px 0 0') : '0'),
                      border: el.settings.style === 'boxed'
