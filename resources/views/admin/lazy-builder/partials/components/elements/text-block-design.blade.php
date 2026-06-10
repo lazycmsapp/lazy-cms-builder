@@ -1,8 +1,8 @@
-<div class="space-y-6">
+﻿<div class="space-y-6">
     <!-- Margin -->
     <div>
         <div class="flex justify-between items-center mb-3">
-            <label class="text-[12px] font-bold text-[#333] uppercase">MARGIN</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Margin</label>
             <div class="flex gap-1 items-center">
                 <button @click="['Top','Right','Bottom','Left'].forEach(s => setResponsiveVal(editingElement.settings, 'margin' + s, device, ''))" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
                     <i class="fa fa-undo text-[10px]"></i>
@@ -61,7 +61,7 @@
     <!-- Padding -->
     <div>
         <div class="flex justify-between items-center mb-3">
-            <label class="text-[12px] font-bold text-[#333] uppercase">PADDING</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Padding</label>
             <div class="flex gap-1 items-center">
                 <button @click="['Top','Right','Bottom','Left'].forEach(s => setResponsiveVal(editingElement.settings, 'padding' + s, device, ''))" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
                     <i class="fa fa-undo text-[10px]"></i>
@@ -120,7 +120,7 @@
     <!-- Typography -->
     <div class="pt-4 border-t border-slate-50 space-y-4">
         <div class="flex justify-between items-center mb-1">
-            <label class="text-[12px] font-bold text-[#333] uppercase">TYPOGRAPHY</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Typography</label>
         </div>
 
         <!-- Font Family -->
@@ -197,7 +197,7 @@
     <!-- Font Color -->
     <div class="pt-4 border-t border-slate-50">
         <div class="flex justify-between items-center mb-3">
-            <label class="text-[12px] font-bold text-[#333] uppercase">FONT COLOR</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Font Color</label>
             <button @click="editingElement.settings.color = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
                 <i class="fa fa-undo text-[10px]"></i>
             </button>
@@ -217,7 +217,7 @@
     <!-- Font Hover Color -->
     <div class="pt-4 border-t border-slate-50 pb-10">
         <div class="flex justify-between items-center mb-3">
-            <label class="text-[12px] font-bold text-[#333] uppercase">FONT HOVER COLOR</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Font Hover Color</label>
             <button @click="editingElement.settings.hoverColor = ''" title="Reset" class="text-slate-300 hover:text-red-500 transition-colors">
                 <i class="fa fa-undo text-[10px]"></i>
             </button>
@@ -235,3 +235,4 @@
         </div>
     </div>
 </div>
+

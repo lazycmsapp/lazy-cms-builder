@@ -383,8 +383,10 @@ class ShopController extends Controller
     {
         // 1. Explicitly handle toggles (so they save 0 when unchecked)
         $toggles = [
-            'enable_coupons'        => 'shop_enable_coupons',
-            'multi_coupon_policy'   => 'shop_coupon_stacking_policy',
+            'enable_coupons'          => 'shop_enable_coupons',
+            'multi_coupon_policy'     => 'shop_coupon_stacking_policy',
+            'enable_guest_checkout'   => 'shop_enable_guest_checkout',
+            'force_login_checkout'    => 'shop_force_login_checkout',
         ];
 
         foreach ($toggles as $reqKey => $optKey) {

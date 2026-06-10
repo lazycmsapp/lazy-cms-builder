@@ -3,7 +3,7 @@
     <div class="flex justify-between items-center mb-3">
         <label class="text-[12px] font-bold text-[#333]">Element Visibility</label>
     </div>
-    <div class="grid grid-cols-3 gap-1">
+    <div class="grid grid-cols-3 gap-2">
         <button @click="editingElement.settings.visibility.mobile = !editingElement.settings.visibility.mobile"
                 :class="editingElement.settings.visibility.mobile ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
                 class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">

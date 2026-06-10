@@ -1,8 +1,8 @@
-<div class="space-y-6 pb-10">
+﻿<div class="space-y-6 pb-10">
     <!-- Button Style Toggle -->
     <div>
         <div class="flex justify-between items-center mb-3">
-            <label class="text-[12px] font-bold text-[#333] uppercase">BUTTON STYLE</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Button Style</label>
         </div>
         <div class="flex bg-slate-50 border border-slate-100 rounded p-1 w-fit">
             <button @click="editingElement.settings.buttonStyle = 'default'"
@@ -17,7 +17,7 @@
     <!-- Default Color Options (Shown when Style is Default) -->
     <div v-if="editingElement.settings.buttonStyle !== 'custom'" class="pt-4 border-t border-slate-50 space-y-4">
         <div class="flex justify-between items-center mb-1">
-            <label class="text-[12px] font-bold text-[#333] uppercase">COLORS (SOLID)</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Colors (Solid)</label>
         </div>
         <div class="space-y-4">
             <div>
@@ -56,7 +56,7 @@
     <!-- Custom Gradient Options (Shown when Style is Custom) -->
     <div v-if="editingElement.settings.buttonStyle === 'custom'" class="pt-4 border-t border-slate-50 space-y-4">
         <div class="flex justify-between items-center mb-1">
-            <label class="text-[12px] font-bold text-[#333] uppercase">GRADIENT COLORS</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Gradient Colors</label>
         </div>
 
         <!-- Start Color -->
@@ -139,7 +139,7 @@
     <!-- Hover Color Options -->
     <div class="pt-4 border-t border-slate-50 space-y-4">
         <div class="flex justify-between items-center mb-1">
-            <label class="text-[12px] font-bold text-[#333] uppercase">HOVER COLORS</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Hover Colors</label>
         </div>
         
         <!-- Text Hover Color (Common) -->
@@ -214,7 +214,7 @@
     <!-- Margin -->
     <div class="pt-4 border-t border-slate-50">
         <div class="flex justify-between items-center mb-3">
-            <label class="text-[12px] font-bold text-[#333] uppercase">MARGIN</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Margin</label>
             <div class="flex gap-1 items-center">
                 <button @click="['Top','Right','Bottom','Left'].forEach(s => setResponsiveVal(editingElement.settings, 'margin' + s, device, ''))" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
                     <i class="fa fa-undo text-[10px]"></i>
@@ -273,7 +273,7 @@
     <!-- Padding -->
     <div class="pt-4 border-t border-slate-50">
         <div class="flex justify-between items-center mb-3">
-            <label class="text-[12px] font-bold text-[#333] uppercase">PADDING</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Padding</label>
             <div class="flex gap-1 items-center">
                 <button @click="['Top','Right','Bottom','Left'].forEach(s => setResponsiveVal(editingElement.settings, 'padding' + s, device, ''))" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
                     <i class="fa fa-undo text-[10px]"></i>
@@ -332,7 +332,7 @@
     <!-- Typography (Restored to Text Block Style) -->
     <div class="pt-4 border-t border-slate-50 space-y-4">
         <div class="flex justify-between items-center mb-1">
-            <label class="text-[12px] font-bold text-[#333] uppercase">TYPOGRAPHY</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Typography</label>
         </div>
         
         <!-- Font Family -->
@@ -411,7 +411,7 @@
     <!-- Border Size -->
     <div class="pt-4 border-t border-slate-50">
         <div class="flex justify-between items-center mb-3">
-            <label class="text-[12px] font-bold text-[#333] uppercase">BORDER SIZE</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Border Size</label>
         </div>
         <div class="grid grid-cols-4 gap-2">
             <div>
@@ -454,7 +454,7 @@
     <!-- Border Radius -->
     <div class="pt-4 border-t border-slate-50">
         <div class="flex justify-between items-center mb-1.5">
-            <label class="text-[12px] font-bold text-[#333] uppercase">BORDER RADIUS</label>
+            <label class="text-[12px] font-bold text-[#333] uppercase">Border Radius</label>
             <span class="text-[10px] text-slate-400">@{{ editingElement.settings.borderRadius || 0 }}px</span>
         </div>
         <input type="range" v-model.number="editingElement.settings.borderRadius" min="0" max="100" class="w-full accent-[#0091ea]">
@@ -489,7 +489,7 @@
 
     <!-- Inline Icon Picker -->
     <div class="pt-4 border-t border-slate-50 space-y-3">
-        <label class="text-[12px] font-bold text-[#333] uppercase">BUTTON ICON</label>
+        <label class="text-[12px] font-bold text-[#333] uppercase">Button Icon</label>
         
         <div class="bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
             <!-- Search -->
@@ -552,3 +552,4 @@
         </div>
     </div>
 </div>
+

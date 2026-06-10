@@ -11,11 +11,11 @@
     </div>
 
     <!-- Tab Content -->
-    <div class="flex-1 overflow-y-auto custom-scrollbar bg-white">
+    <div class="flex-1 overflow-hidden bg-white">
         <!-- Elements Tab (Removed) -->
 
         <!-- Navigator Tab -->
-        <div v-show="activeTab==='navigator'" class="animate-fade-in py-2">
+        <div v-show="activeTab==='navigator'" class="h-full overflow-y-auto custom-scrollbar animate-fade-in py-2">
             <div v-if="layout.length === 0" class="flex flex-col items-center justify-center py-20 px-10 text-center bg-slate-50/30">
                 <div class="w-14 h-14 bg-[#0091ea] rounded-lg shadow-xl shadow-blue-500/20 flex items-center justify-center mb-6">
                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
@@ -24,7 +24,7 @@
                 <p class="text-[11px] text-slate-400 leading-relaxed font-medium">No content has been added yet.</p>
             </div>
             
-            <div v-else class="space-y-0.5">
+            <div v-else class="space-y-1.5">
                 <!-- Container Loop -->
                 <div v-for="(cont, ci) in layout" :key="cont.id" class="group/nav">
                     @if(!($postCardMode ?? false))
@@ -50,8 +50,8 @@
                     @endif
 
                     <!-- Column Loop -->
-                    <div v-for="(col, coli) in cont.columns" :key="col.id" class="{{ ($postCardMode ?? false) ? '' : 'ml-6 border-l border-slate-100' }}">
-                        <div class="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line transition-all"
+                    <div v-for="(col, coli) in cont.columns" :key="col.id" class="{{ ($postCardMode ?? false) ? '' : 'nav-branch' }}">
+                        <div class="nav-leaf flex items-center gap-2 py-1.5 hover:bg-slate-50 cursor-pointer group/line transition-all"
                              :class="[editingContext.type === 'column' && editingContext.ci === ci && editingContext.coli === coli ? 'bg-slate-50 border-l-2 border-[#0091ea] -ml-[1px]' : '', navDragOver?.type === 'column' && navDragOver?.ci === ci && navDragOver?.coli === coli && navDragSrc?.coli !== coli ? 'border-t-2 border-[#0091ea]' : '']"
                              draggable="true"
                              @dragstart.stop="navDragStart($event, 'column', ci, coli)"
@@ -59,7 +59,7 @@
                              @drop="navDrop($event, 'column', ci, coli)"
                              @dragend="navDragEnd()"
                              @click="setEditingContext('column', ci, coli)">
-                            <i class="fa fa-caret-down text-[10px] text-slate-300"></i>
+                            <i class="fa fa-caret-down text-[10px] text-slate-500"></i>
                             <span class="text-[14px] font-semibold text-slate-700 flex-1">Column @{{ formatBasisToFraction(col.basis) }}</span>
                             <div class="flex items-center gap-2 opacity-0 group-hover/line:opacity-100 transition-opacity">
                                 <i @click.stop @mousedown.stop class="fa fa-grip-vertical text-[9px] text-slate-300 hover:text-slate-500 cursor-grab" title="Drag to reorder"></i>
@@ -71,10 +71,10 @@
                         </div>
 
                         <!-- Elements Loop -->
-                        <div v-for="(el, eli) in col.elements" :key="el.id" class="ml-6 border-l border-slate-50">
+                        <div v-for="(el, eli) in col.elements" :key="el.id" class="nav-branch nav-branch-2">
                             <!-- Standard Element -->
                             <div v-if="el.type !== 'row'"
-                                 class="flex items-center gap-3 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line transition-all"
+                                 class="nav-leaf flex items-center gap-3 py-1.5 hover:bg-slate-50 cursor-pointer group/line transition-all"
                                  :class="navDragOver?.type === 'element' && navDragOver?.ci === ci && navDragOver?.coli === coli && navDragOver?.eli === eli && navDragSrc?.eli !== eli ? 'border-t-2 border-[#0091ea]' : ''"
                                  draggable="true"
                                  @dragstart.stop="navDragStart($event, 'element', ci, coli, eli)"
@@ -83,7 +83,7 @@
                                  @dragend="navDragEnd()"
                                  @click="setEditingContext('element', ci, coli, eli)">
                                 <i :class="el.icon" class="text-[11px] text-slate-400 w-4 text-center"></i>
-                                <span class="text-[14px] text-slate-500 flex-1 capitalize">@{{ (el.type === 'text_block' || el.type === 'special_text') ? 'Text Block' : el.type.replace(/_/g, ' ') }}</span>
+                                <span class="text-[14px] text-slate-600 flex-1 capitalize">@{{ (el.type === 'text_block' || el.type === 'special_text') ? 'Text Block' : el.type.replace(/_/g, ' ') }}</span>
                                 <div class="flex items-center gap-2 opacity-0 group-hover/line:opacity-100 transition-opacity">
                                     <i @click.stop @mousedown.stop class="fa fa-grip-vertical text-[9px] text-slate-300 hover:text-slate-500 cursor-grab" title="Drag to reorder"></i>
                                     <i @click.stop="openElementModal(ci, coli, 'design', false, eli + 1)" class="fa fa-plus text-[9px] text-slate-400 hover:text-[#0091ea]" title="Add Below"></i>
@@ -95,7 +95,7 @@
 
                             <!-- Nested Row (Nested Columns) -->
                             <div v-else class="space-y-0.5">
-                                <div class="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line transition-all"
+                                <div class="nav-leaf flex items-center gap-2 py-1.5 hover:bg-slate-50 cursor-pointer group/line transition-all"
                                      :class="navDragOver?.type === 'element' && navDragOver?.ci === ci && navDragOver?.coli === coli && navDragOver?.eli === eli && navDragSrc?.eli !== eli ? 'border-t-2 border-[#0091ea]' : ''"
                                      draggable="true"
                                      @dragstart.stop="navDragStart($event, 'element', ci, coli, eli)"
@@ -115,8 +115,8 @@
                                     </div>
                                 </div>
                                 <!-- Nested Column Loop -->
-                                <div v-for="(ncol, ncoli) in el.columns" :key="ncol.id" class="ml-6 border-l border-slate-100">
-                                    <div class="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 cursor-pointer group/line transition-all"
+                                <div v-for="(ncol, ncoli) in el.columns" :key="ncol.id" class="nav-branch">
+                                    <div class="nav-leaf flex items-center gap-2 py-1.5 hover:bg-slate-50 cursor-pointer group/line transition-all"
                                          :class="navDragOver?.type === 'nested-column' && navDragOver?.ci === ci && navDragOver?.coli === coli && navDragOver?.eli === eli && navDragOver?.ncoli === ncoli && navDragSrc?.ncoli !== ncoli ? 'border-t-2 border-[#0091ea]' : ''"
                                          draggable="true"
                                          @dragstart.stop="navDragStart($event, 'nested-column', ci, coli, eli, ncoli)"
@@ -124,8 +124,8 @@
                                          @drop="navDrop($event, 'nested-column', ci, coli, eli, ncoli)"
                                          @dragend="navDragEnd()"
                                          @click="setEditingContext('nested-column', ci, coli, eli, ncoli)">
-                                        <i class="fa fa-caret-down text-[10px] text-slate-300"></i>
-                                        <span class="text-[14px] font-bold text-slate-500 flex-1">Nested Column</span>
+                                        <i class="fa fa-caret-down text-[10px] text-slate-500"></i>
+                                        <span class="text-[14px] font-bold text-slate-600 flex-1">Nested Column</span>
                                         <div class="flex items-center gap-2 opacity-0 group-hover/line:opacity-100 transition-opacity">
                                             <i @click.stop @mousedown.stop class="fa fa-grip-vertical text-[9px] text-slate-300 hover:text-slate-500 cursor-grab" title="Drag to reorder"></i>
                                             <i @click.stop="openElementModal(ci, coli, 'design', true, eli, ncoli)" class="fa fa-plus text-[9px] text-slate-400 hover:text-[#0091ea]" title="Add Nested Element"></i>
@@ -135,8 +135,8 @@
                                         </div>
                                     </div>
                                     <!-- Nested Elements -->
-                                    <div v-for="(nel, neli) in ncol.elements" :key="nel.id" class="ml-6 border-l border-slate-50">
-                                        <div class="flex items-center gap-3 px-4 py-1 hover:bg-slate-50 cursor-pointer group/line transition-all"
+                                    <div v-for="(nel, neli) in ncol.elements" :key="nel.id" class="nav-branch nav-branch-2">
+                                        <div class="nav-leaf flex items-center gap-3 py-1 hover:bg-slate-50 cursor-pointer group/line transition-all"
                                              :class="navDragOver?.type === 'nested-element' && navDragOver?.ci === ci && navDragOver?.coli === coli && navDragOver?.eli === eli && navDragOver?.ncoli === ncoli && navDragOver?.neli === neli && navDragSrc?.neli !== neli ? 'border-t-2 border-[#0091ea]' : ''"
                                              draggable="true"
                                              @dragstart.stop="navDragStart($event, 'nested-element', ci, coli, eli, ncoli, neli)"
@@ -145,7 +145,7 @@
                                              @dragend="navDragEnd()"
                                              @click="setEditingContext('element', ci, coli, eli, ncoli, neli)">
                                             <i :class="nel.icon" class="text-[10px] text-slate-400 w-4 text-center"></i>
-                                            <span class="text-[14px] text-slate-500 flex-1 capitalize">@{{ (nel.type === 'text_block' || nel.type === 'special_text') ? 'Text Block' : nel.type.replace(/_/g, ' ') }}</span>
+                                            <span class="text-[14px] text-slate-600 flex-1 capitalize">@{{ (nel.type === 'text_block' || nel.type === 'special_text') ? 'Text Block' : nel.type.replace(/_/g, ' ') }}</span>
                                             <div class="flex items-center gap-2 opacity-0 group-hover/line:opacity-100 transition-opacity">
                                                 <i @click.stop @mousedown.stop class="fa fa-grip-vertical text-[9px] text-slate-300 hover:text-slate-500 cursor-grab" title="Drag to reorder"></i>
                                                 <i @click.stop="openElementModal(ci, coli, 'design', true, eli, ncoli, neli + 1)" class="fa fa-plus text-[9px] text-slate-400 hover:text-[#0091ea]" title="Add Below"></i>
@@ -418,13 +418,10 @@
                                             <i class="fa fa-times text-[10px]"></i>
                                         </button>
                                     </div>
-                                    <div v-else class="flex">
+                                    <div v-else>
                                         <input type="text" v-model="editingElement.settings.linkUrl"
                                                placeholder="Select Link"
-                                               class="flex-1 border border-slate-200 border-r-0 rounded-l px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#0091ea]">
-                                        <button class="bg-white border border-slate-200 rounded-r px-3 text-slate-400 hover:text-[#0091ea] transition-colors">
-                                            <i class="fa fa-link text-[12px]"></i>
-                                        </button>
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#0091ea]">
                                     </div>
                                 </div>
 
@@ -539,13 +536,10 @@
                                             <i class="fa fa-times text-[10px]"></i>
                                         </button>
                                     </div>
-                                    <div v-else class="flex">
+                                    <div v-else>
                                         <input type="text" v-model="editingElement.settings.linkUrl"
                                                placeholder="https://"
-                                               class="flex-1 border border-slate-200 border-r-0 rounded-l px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#0091ea]">
-                                        <button class="bg-white border border-slate-200 rounded-r px-3 text-slate-400 hover:text-[#0091ea] transition-colors">
-                                            <i class="fa fa-link text-[12px]"></i>
-                                        </button>
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#0091ea]">
                                     </div>
                                 </div>
 
@@ -773,13 +767,10 @@
                                             <i class="fa fa-times text-[10px]"></i>
                                         </button>
                                     </div>
-                                    <div v-else class="flex">
+                                    <div v-else>
                                         <input type="text" v-model="editingElement.settings.linkUrl"
                                                placeholder="https://"
-                                               class="flex-1 border border-slate-200 border-r-0 rounded-l px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#0091ea]">
-                                        <button class="bg-white border border-slate-200 rounded-r px-3 text-slate-400 hover:text-[#0091ea] transition-colors">
-                                            <i class="fa fa-link text-[12px]"></i>
-                                        </button>
+                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#0091ea]">
                                     </div>
                                 </div>
 

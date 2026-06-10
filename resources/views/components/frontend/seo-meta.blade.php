@@ -61,12 +61,19 @@
 @endif
 
 <!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image">
+@php
+    $twitterCardType = get_cms_option('twitter_card_type', 'summary_large_image');
+    $twitterHandle   = get_cms_option('twitter_handle', '');
+@endphp
+<meta property="twitter:card" content="{{ $twitterCardType }}">
 <meta property="twitter:url" content="{{ url()->current() }}">
 <meta property="twitter:title" content="{{ $twitterTitle }}">
 <meta property="twitter:description" content="{{ $ogDesc }}">
 @if($twitterImage)
 <meta property="twitter:image" content="{{ $twitterImage }}">
+@endif
+@if($twitterHandle)
+<meta property="twitter:site" content="@{{ $twitterHandle }}">
 @endif
 
 <!-- JSON-LD Schema Markup -->

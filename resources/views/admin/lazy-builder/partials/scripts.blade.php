@@ -2615,16 +2615,6 @@
                     style.minHeight = getUnitVal(s.minHeight, s.minHeightUnit) || (isEmpty ? '100px' : 'auto');
                 }
 
-                // Visibility
-                if (s.visibility) {
-                    if (s.visibility.desktop === false) style.opacity = isPreview.value ? 0 : 0.5;
-                    if (s.visibility.tablet === false) style.opacity = isPreview.value ? 0 : 0.5;
-                    if (s.visibility.mobile === false) style.opacity = isPreview.value ? 0 : 0.5;
-                    // In real frontend, we'd use classes like 'hidden md:block'.
-                    // In builder, we'll just dim them if they are hidden on the current "hypothetical" device,
-                    // or just pass the settings for the frontend to handle.
-                }
-
                 return style;
             };
 

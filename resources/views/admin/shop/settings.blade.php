@@ -549,6 +549,15 @@
                                     <input type="password" name="payment_stripe_secret" value="{{ get_shop_option('shop_payment_stripe_secret') }}" class="wp-input w-full h-8 shadow-sm">
                                 </td>
                             </tr>
+                            <tr>
+                                <th scope="row" class="w-[200px] text-left align-top pt-2">
+                                    <label class="text-[14px] font-semibold text-[#1d2327]">Webhook Secret</label>
+                                </th>
+                                <td>
+                                    <input type="password" name="payment_stripe_webhook_secret" value="{{ get_shop_option('shop_payment_stripe_webhook_secret') }}" class="wp-input w-full h-8 shadow-sm" placeholder="whsec_...">
+                                    <p class="text-[12px] text-[#646970] mt-1">Webhook signing secret from your Stripe Dashboard. Required to verify incoming payment events in production.</p>
+                                </td>
+                            </tr>
                         </table>
                     </div>
 
@@ -1087,16 +1096,21 @@
                                             </div>
 
                                             <!-- Row 2: Restrictions -->
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-50">
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-50">
                                                 <div class="space-y-2">
                                                     <label class="block text-[12px] font-semibold text-[#1d2327]">Minimum Spend Required</label>
                                                     <input type="number" step="0.01" :name="'coupons['+index+'][min_spend]'" x-model="coupon.min_spend" placeholder="0.00" class="wp-input w-full h-9 text-[13px]">
-                                                    <p class="text-[11px] text-[#646970] italic">The minimum cart subtotal needed to use this coupon.</p>
+                                                    <p class="text-[11px] text-[#646970] italic">Minimum cart subtotal needed to apply this coupon.</p>
                                                 </div>
                                                 <div class="space-y-2">
                                                     <label class="block text-[12px] font-semibold text-[#1d2327]">Usage Limit Per User</label>
-                                                    <input type="number" :name="'coupons['+index+'][usage_limit]'" x-model="coupon.usage_limit" placeholder="1" class="wp-input w-full h-9 text-[13px]">
-                                                    <p class="text-[11px] text-[#646970] italic">How many times a single customer can use this code.</p>
+                                                    <input type="number" :name="'coupons['+index+'][usage_limit]'" x-model="coupon.usage_limit" placeholder="Unlimited" class="wp-input w-full h-9 text-[13px]">
+                                                    <p class="text-[11px] text-[#646970] italic">Max times a single customer can use this code.</p>
+                                                </div>
+                                                <div class="space-y-2">
+                                                    <label class="block text-[12px] font-semibold text-[#1d2327]">Total Usage Limit</label>
+                                                    <input type="number" :name="'coupons['+index+'][total_usage_limit]'" x-model="coupon.total_usage_limit" placeholder="Unlimited" class="wp-input w-full h-9 text-[13px]">
+                                                    <p class="text-[11px] text-[#646970] italic">Max total redemptions across all customers combined.</p>
                                                 </div>
                                             </div>
 
@@ -1183,7 +1197,7 @@
                                     <p class="text-[#646970] italic">No coupons created yet. Start by adding a new discount code below.</p>
                                 </div>
 
-                                <button type="button" @click="coupons.push({code: '', type: 'percent', amount: '', min_spend: '', usage_limit: '1', expiry: '', products: [], categories: []})" class="wp-btn px-6 h-10 text-[14px] flex items-center gap-2 font-bold bg-[#f6f7f7] border-[#c3c4c7] hover:bg-white transition-all shadow-sm">
+                                <button type="button" @click="coupons.push({code: '', type: 'percent', amount: '', min_spend: '', usage_limit: '', total_usage_limit: '', expiry: '', products: [], categories: []})" class="wp-btn px-6 h-10 text-[14px] flex items-center gap-2 font-bold bg-[#f6f7f7] border-[#c3c4c7] hover:bg-white transition-all shadow-sm">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                     </svg>
@@ -1209,6 +1223,28 @@
             <!-- Email and Account Tab -->
             <div x-show="tab === 'emails_accounts'" x-transition>
                 <table class="w-full border-separate border-spacing-y-6">
+                    <!-- Customer Accounts -->
+                    <tr><td colspan="2"><h3 class="text-[16px] font-semibold text-[#1d2327] mb-2">Customer accounts</h3></td></tr>
+                    <tr>
+                        <th scope="row" class="w-[200px] text-left align-top pt-2">
+                            <label class="text-[14px] font-semibold text-[#1d2327]">Guest checkout</label>
+                        </th>
+                        <td>
+                            <div class="space-y-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="enable_guest_checkout" value="1" {{ get_shop_option('shop_enable_guest_checkout', '1') === '1' ? 'checked' : '' }} class="w-4 h-4 mr-2">
+                                    <span class="text-[14px] text-[#1d2327]">Allow customers to place orders without an account</span>
+                                </label>
+                                <br>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="force_login_checkout" value="1" {{ get_shop_option('shop_force_login_checkout', '0') === '1' ? 'checked' : '' }} class="w-4 h-4 mr-2">
+                                    <span class="text-[14px] text-[#1d2327]">Require customers to log in or register before checkout</span>
+                                </label>
+                            </div>
+                            <p class="text-[12px] text-[#646970] mt-2">Control whether customers need an account to complete a purchase.</p>
+                        </td>
+                    </tr>
+
                     <!-- Email Settings -->
                     <tr><td colspan="2"><h3 class="text-[16px] font-semibold text-[#1d2327] mt-8 mb-2">Email sender options</h3></td></tr>
                     <tr>
@@ -1357,6 +1393,10 @@
                 placeholder: 'Select a page...'
             });
             new TomSelect('#checkout_page_id', {
+                ...config,
+                placeholder: 'Select a page...'
+            });
+            new TomSelect('#account_page_id', {
                 ...config,
                 placeholder: 'Select a page...'
             });

@@ -333,10 +333,9 @@
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-bold text-[#444]">Link URL</label>
                 </div>
-                <div class="relative">
+                <div>
                     <input type="text" v-model="editingColumn.settings.linkUrl" placeholder="https://"
-                           class="w-full border border-slate-200 rounded px-2 py-1.5 pr-7 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
-                    <i class="fa fa-link absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400"></i>
+                           class="w-full border border-slate-200 rounded px-2 py-1.5 text-[11px] text-[#444] focus:outline-none focus:border-[#0091ea]">
                 </div>
             </div>
 
@@ -348,22 +347,19 @@
                 <div class="grid grid-cols-3 gap-2"
                      @click.capture="if (!editingColumn.settings.visibility) { editingColumn.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
                     <button @click="editingColumn.settings.visibility.mobile = !editingColumn.settings.visibility.mobile"
-                            :class="editingColumn.settings.visibility && editingColumn.settings.visibility.mobile !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
-                            class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
-                        <i class="fa fa-mobile-alt text-[12px]"></i>
-                        <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Mobile</div>
+                            :class="editingColumn.settings.visibility && editingColumn.settings.visibility.mobile !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                            class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
+                        <i class="fa fa-mobile-alt text-sm"></i>
                     </button>
                     <button @click="editingColumn.settings.visibility.tablet = !editingColumn.settings.visibility.tablet"
-                            :class="editingColumn.settings.visibility && editingColumn.settings.visibility.tablet !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
-                            class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
-                        <i class="fa fa-tablet-alt text-[12px]"></i>
-                        <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Tablet</div>
+                            :class="editingColumn.settings.visibility && editingColumn.settings.visibility.tablet !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                            class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
+                        <i class="fa fa-tablet-alt text-sm"></i>
                     </button>
                     <button @click="editingColumn.settings.visibility.desktop = !editingColumn.settings.visibility.desktop"
-                            :class="editingColumn.settings.visibility && editingColumn.settings.visibility.desktop !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
-                            class="py-2 rounded transition-colors flex items-center justify-center relative group/btn">
-                        <i class="fa fa-desktop text-[12px]"></i>
-                        <div class="lazy-tooltip-v2 opacity-0 group-hover/btn:opacity-100 z-[100] whitespace-nowrap">Desktop</div>
+                            :class="editingColumn.settings.visibility && editingColumn.settings.visibility.desktop !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                            class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
+                        <i class="fa fa-desktop text-sm"></i>
                     </button>
                 </div>
             </div>
@@ -668,13 +664,9 @@
 
             <!-- Box Shadow Section -->
             <div class="pt-4 border-t border-slate-50 space-y-4">
-                <div class="flex justify-between items-center">
-                    <label class="text-[11px] font-bold text-[#444]">Box Shadow</label>
-                    <div class="flex items-center gap-2">
-                        <div class="flex bg-slate-100 rounded p-0.5">
-                            <button @click="setResponsiveVal(editingColumn.settings, 'boxShadow', device, true)" :class="getResponsiveVal(editingColumn.settings, 'boxShadow', device) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'" class="px-4 py-1 text-[10px] font-bold rounded transition-all">Yes</button>
-                            <button @click="setResponsiveVal(editingColumn.settings, 'boxShadow', device, false)" :class="!getResponsiveVal(editingColumn.settings, 'boxShadow', device) ? 'bg-white text-slate-600 shadow-sm' : 'text-slate-400'" class="px-4 py-1 text-[10px] font-bold rounded transition-all">No</button>
-                        </div>
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-[11px] font-bold text-[#444]">Box Shadow</label>
                         <div class="relative inline-block">
                             <button @click="activeResponsiveMenu = activeResponsiveMenu === 'colBoxShadow' ? null : 'colBoxShadow'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
                                 <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
@@ -686,6 +678,10 @@
                                 <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#0091ea] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)"><i class="fa fa-mobile-alt text-[11px]"></i></button>
                             </div>
                         </div>
+                    </div>
+                    <div class="flex w-[100px] bg-slate-100 rounded p-0.5">
+                        <button @click="setResponsiveVal(editingColumn.settings, 'boxShadow', device, true)" :class="getResponsiveVal(editingColumn.settings, 'boxShadow', device) ? 'bg-[#0091ea] text-white shadow-sm' : 'text-slate-400'" class="flex-1 py-1 text-[10px] font-bold rounded transition-all">Yes</button>
+                        <button @click="setResponsiveVal(editingColumn.settings, 'boxShadow', device, false)" :class="!getResponsiveVal(editingColumn.settings, 'boxShadow', device) ? 'bg-white text-slate-600 shadow-sm' : 'text-slate-400'" class="flex-1 py-1 text-[10px] font-bold rounded transition-all">No</button>
                     </div>
                 </div>
 

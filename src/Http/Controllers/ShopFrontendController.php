@@ -247,11 +247,33 @@ class ShopFrontendController extends Controller
                 return $this->couponResponse(false, 'Minimum spend for this coupon is ' . lazy_price_format($minSpend), $request);
             }
 
-            // 3. Usage Limit Check
-            $usedCoupons = Session::get('lazy_used_coupons', []);
-            $usageCount = $usedCoupons[$code] ?? 0;
-            if (!empty($coupon['usage_limit']) && $usageCount >= (int)$coupon['usage_limit']) {
-                return $this->couponResponse(false, 'Usage limit reached for this coupon.', $request);
+            // 3a. Total Usage Limit Check (global across all customers)
+            $totalLimit = (int)($coupon['total_usage_limit'] ?? 0);
+            $usedCount  = (int)($coupon['used_count'] ?? 0);
+            if ($totalLimit > 0 && $usedCount >= $totalLimit) {
+                return $this->couponResponse(false, 'This coupon has reached its total usage limit.', $request);
+            }
+
+            // 3b. Per-User Usage Limit Check
+            if (!empty($coupon['usage_limit'])) {
+                $perUserLimit = (int)$coupon['usage_limit'];
+                if (auth()->check()) {
+                    $userUsageCount = \Acme\CmsDashboard\Models\Order::where('user_id', auth()->id())
+                        ->where(function ($q) use ($code) {
+                            $q->where('coupon_code', $code)
+                              ->orWhere('coupon_code', 'like', $code . ',%')
+                              ->orWhere('coupon_code', 'like', '%, ' . $code . ',%')
+                              ->orWhere('coupon_code', 'like', '%, ' . $code);
+                        })->count();
+                    if ($userUsageCount >= $perUserLimit) {
+                        return $this->couponResponse(false, 'You have already used this coupon the maximum number of times.', $request);
+                    }
+                } else {
+                    $usedCoupons = Session::get('lazy_used_coupons', []);
+                    if (($usedCoupons[$code] ?? 0) >= $perUserLimit) {
+                        return $this->couponResponse(false, 'Usage limit reached for this coupon.', $request);
+                    }
+                }
             }
 
             // 4. Product/Category Restrictions
@@ -526,34 +548,49 @@ class ShopFrontendController extends Controller
 
         $request->validate($rules, [], $attributes);
 
-        // Non-logged-in users must create an account to place an order
+        // Handle guest checkout based on shop settings
         if (!auth()->check()) {
-            $request->validate([
-                'account_password' => 'required|min:6',
-            ], [
-                'account_password.required' => 'Please enter a password to create your account.',
-                'account_password.min'      => 'Password must be at least 6 characters.',
-            ]);
+            $guestCheckoutEnabled = get_shop_option('shop_enable_guest_checkout', '1') === '1';
+            $forceLogin           = get_shop_option('shop_force_login_checkout', '0') === '1';
+            $submittingPassword   = $request->filled('account_password');
 
-            $existingUser = \App\Models\User::where('email', $request->billing_email)->first();
-            if ($existingUser) {
+            // Block only pure guest orders (no password) when force login is required
+            if ($forceLogin && !$submittingPassword) {
                 if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json(['success' => false, 'message' => 'An account with this email already exists. Please log in.']);
+                    return response()->json(['success' => false, 'message' => 'Please log in or register to place an order.']);
                 }
-                return redirect()->back()->with('error', 'An account with this email already exists. Please log in.');
+                return redirect()->back()->with('error', 'Please log in or register to place an order.');
             }
 
-            $customerRole = \Acme\CmsDashboard\Models\Role::firstOrCreate(
-                ['slug' => 'customer'],
-                ['name' => 'Customer', 'description' => 'Customer who registered via store checkout or account.']
-            );
-            $newUser = \App\Models\User::create([
-                'name'     => trim($request->billing_first_name . ' ' . $request->billing_last_name),
-                'email'    => $request->billing_email,
-                'password' => \Illuminate\Support\Facades\Hash::make($request->account_password),
-                'role_id'  => $customerRole->id,
-            ]);
-            auth()->login($newUser);
+            // Create account when: guest checkout disabled (mandatory), user opted in, or force login requires it
+            if (!$guestCheckoutEnabled || $request->boolean('create_account') || $forceLogin) {
+                $request->validate([
+                    'account_password' => 'required|min:6',
+                ], [
+                    'account_password.required' => 'Please enter a password to create your account.',
+                    'account_password.min'      => 'Password must be at least 6 characters.',
+                ]);
+
+                $existingUser = \App\Models\User::where('email', $request->billing_email)->first();
+                if ($existingUser) {
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json(['success' => false, 'message' => 'An account with this email already exists. Please log in.']);
+                    }
+                    return redirect()->back()->with('error', 'An account with this email already exists. Please log in.');
+                }
+
+                $customerRole = \Acme\CmsDashboard\Models\Role::firstOrCreate(
+                    ['slug' => 'customer'],
+                    ['name' => 'Customer', 'description' => 'Customer who registered via store checkout or account.']
+                );
+                $newUser = \App\Models\User::create([
+                    'name'     => trim($request->billing_first_name . ' ' . $request->billing_last_name),
+                    'email'    => $request->billing_email,
+                    'password' => \Illuminate\Support\Facades\Hash::make($request->account_password),
+                    'role_id'  => $customerRole->id,
+                ]);
+                auth()->login($newUser);
+            }
         }
 
         $cart = Session::get('lazy_cart', []);
@@ -656,6 +693,26 @@ class ShopFrontendController extends Controller
         }
 
         $order = Order::create($orderData);
+
+        // Increment used_count for each applied coupon (total usage tracking)
+        if (!empty($couponCodes)) {
+            $allCoupons = json_decode(get_cms_option('shop_coupons', '[]'), true) ?: [];
+            $upperCodes = array_map('strtoupper', $couponCodes);
+            $changed = false;
+            foreach ($allCoupons as &$c) {
+                if (in_array(strtoupper($c['code'] ?? ''), $upperCodes)) {
+                    $c['used_count'] = ((int)($c['used_count'] ?? 0)) + 1;
+                    $changed = true;
+                }
+            }
+            unset($c);
+            if ($changed) {
+                \Illuminate\Support\Facades\DB::table('cms_settings')->updateOrInsert(
+                    ['key' => 'shop_coupons'],
+                    ['value' => json_encode($allCoupons), 'updated_at' => now()]
+                );
+            }
+        }
 
         do_lazy_action('lazy_before_place_order', $order, $cart, $request);
 

@@ -17,33 +17,15 @@ class SitemapController extends Controller
         $categories = collect();
         $tags = collect();
 
-        // 1. Posts
-        if (get_cms_option('sitemap_include_posts', '1') == '1') {
-            $postItems = Post::where('type', 'post')
-                ->where('status', 'published')
-                ->latest()
-                ->get();
-            $posts = $posts->merge($postItems);
-        }
-
-        // 2. Pages
-        if (get_cms_option('sitemap_include_pages', '1') == '1') {
-            $pageItems = Post::where('type', 'page')
-                ->where('status', 'published')
-                ->latest()
-                ->get();
-            $posts = $posts->merge($pageItems);
-        }
-
-        // 2. Custom Post Types
-        $cpts = PostType::where('is_builtin', false)->get();
-        foreach ($cpts as $cpt) {
-            if (get_cms_option('sitemap_include_cpt_' . $cpt->slug, '1') == '1') {
-                $cptPosts = Post::where('type', $cpt->slug)
+        // All active post types (builtin + custom) — dynamic
+        $allPostTypes = PostType::where('is_active', true)->get();
+        foreach ($allPostTypes as $pt) {
+            if (get_cms_option('sitemap_include_' . $pt->slug, '1') == '1') {
+                $ptPosts = Post::where('type', $pt->slug)
                     ->where('status', 'published')
                     ->latest()
                     ->get();
-                $posts = $posts->merge($cptPosts);
+                $posts = $posts->merge($ptPosts);
             }
         }
 

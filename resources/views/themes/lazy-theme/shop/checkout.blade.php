@@ -88,6 +88,8 @@
                     </div>
 
                     @guest
+                    @php $guestCheckout = get_shop_option('shop_enable_guest_checkout', '1') === '1'; @endphp
+                    @if(!$guestCheckout)
                     <div class="mb-4 border border-[#ddd] rounded-[3px] p-4 bg-[#f9f9f9]">
                         <p class="text-[13px] font-semibold text-[#2c3338] mb-3">Create an account</p>
                         <p class="text-[13px] text-[#515151] mb-3">Set a password to create your account. You'll be able to track orders after checkout.</p>
@@ -98,6 +100,24 @@
                             @error('account_password')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
                         </div>
                     </div>
+                    @else
+                    <div class="mb-4">
+                        <label class="flex items-center gap-2 cursor-pointer mb-2 select-none">
+                            <input type="checkbox" id="toggle-create-account" {{ old('create_account') ? 'checked' : '' }}
+                                   onchange="document.getElementById('create-account-fields').classList.toggle('hidden', !this.checked); document.getElementById('create-account-flag').value = this.checked ? '1' : '';"
+                                   class="w-4 h-4 border-[#ddd] rounded-sm">
+                            <span class="text-[13px] font-semibold text-[#2c3338]">Create an account? <span class="font-normal text-[#646970]">(optional — track your orders after checkout)</span></span>
+                        </label>
+                        <input type="hidden" id="create-account-flag" name="create_account" value="{{ old('create_account', '') }}">
+                        <div id="create-account-fields" class="{{ old('create_account') ? '' : 'hidden' }} border border-[#ddd] rounded-[3px] p-4 bg-[#f9f9f9] mt-2">
+                            <div class="space-y-1.5">
+                                <label class="text-[14px] font-bold text-[#2c3338]">Password</label>
+                                <input type="password" name="account_password" autocomplete="new-password" class="w-full border border-[#ddd] rounded-sm px-3 py-2 text-[14px] focus:border-[#1363df] outline-none {{ $errors->has('account_password') ? 'border-red-400' : '' }}">
+                                @error('account_password')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                     @endguest
                 </div>
 

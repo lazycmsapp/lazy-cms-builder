@@ -312,14 +312,13 @@ class DashboardController extends Controller
         
         $data = $request->except('_token');
         
-        // Handle Sitemap Checkboxes
-        $checkboxes = ['sitemap_include_posts', 'sitemap_include_pages', 'sitemap_include_categories', 'sitemap_include_tags', 'noindex', 'nofollow'];
-        
-        // Dynamic CPT sitemap checkboxes
+        // Handle Sitemap Checkboxes — all active post types + taxonomies
+        $checkboxes = ['sitemap_include_categories', 'sitemap_include_tags', 'noindex', 'nofollow'];
+
         try {
-            $cpts = \Acme\CmsDashboard\Models\PostType::where('is_builtin', false)->pluck('slug');
-            foreach ($cpts as $slug) {
-                $checkboxes[] = 'sitemap_include_cpt_' . $slug;
+            $slugs = \Acme\CmsDashboard\Models\PostType::where('is_active', true)->pluck('slug');
+            foreach ($slugs as $slug) {
+                $checkboxes[] = 'sitemap_include_' . $slug;
             }
         } catch (\Exception $e) {}
 

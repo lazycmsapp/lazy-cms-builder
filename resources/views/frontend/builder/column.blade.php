@@ -81,8 +81,8 @@
         "width: " . ($flexBasis === '100%' || $flexBasis === 'auto' ? '100%' : $flexBasis),
         "padding-left: {$pLeft}",
         "padding-right: {$pRight}",
-        'display: flex !important',
-        'flex-direction: column !important',
+        'display: flex',
+        'flex-direction: column',
     ];
     if (!$isDefaultAlign) {
         $outerStyles[] = "flex-grow: " . ($shouldStretch ? '1' : ($s['flexGrow'] ?? '0'));
@@ -184,14 +184,21 @@
     }
 
     // BG Image — works when bgType is 'image' or 'gradient' (not 'color')
+    $colBgLazyUrl = null;
     if ($bgType !== 'color' && !empty($s['bgImage'])) {
-        $bgImages[] = "url('{$s['bgImage']}')";
         $innerStyles[] = "background-position: " . ($s['bgImagePosition'] ?? 'center center');
         $innerStyles[] = "background-repeat: " . ($s['bgImageRepeat'] ?? 'no-repeat');
         $innerStyles[] = "background-size: " . ($s['bgImageSize'] ?? 'cover');
         $innerStyles[] = "background-attachment: " . (($s['bgImageParallax'] ?? 'none') === 'fixed' ? 'fixed' : 'scroll');
         if (!empty($s['bgImageBlendMode']) && $s['bgImageBlendMode'] !== 'normal') {
             $innerStyles[] = "background-blend-mode: {$s['bgImageBlendMode']}";
+        }
+        if (!empty($s['bgImageSkipLazy'])) {
+            // Skip lazy loading — apply immediately via inline CSS
+            $bgImages[] = "url('{$s['bgImage']}')";
+        } else {
+            // Lazy load — JS IntersectionObserver will apply when element enters viewport
+            $colBgLazyUrl = "url('{$s['bgImage']}')";
         }
     }
 
@@ -572,7 +579,10 @@
         <a href="{{ $link }}" target="{{ $s['linkTarget'] ?? '_self' }}" style="text-decoration: none; color: inherit; display: flex !important; flex-direction: column !important; flex-grow: 1 !important; height: 100% !important; width: 100%;">
     @endif
 
-    <div class="lazy-column-inner" style="{{ implode('; ', $innerStyles) }}">
+    @if($colBgLazyUrl)
+    <script>if(!window.__lzBgObserverInit){window.__lzBgObserverInit=1;document.addEventListener('DOMContentLoaded',function(){var f=function(el){var u=el.getAttribute('data-bg');if(!u)return;var p=el.style.backgroundImage;el.style.backgroundImage=p?u+', '+p:u;el.removeAttribute('data-bg');el.classList.remove('lz-lazy-bg');};if(!('IntersectionObserver'in window)){document.querySelectorAll('.lz-lazy-bg').forEach(f);return;}var o=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){f(e.target);o.unobserve(e.target);}});},{rootMargin:'200px 0px'});document.querySelectorAll('.lz-lazy-bg').forEach(function(el){o.observe(el);});});}</script>
+    @endif
+    <div class="lazy-column-inner{{ $colBgLazyUrl ? ' lz-lazy-bg' : '' }}" style="{{ implode('; ', $innerStyles) }}"@if($colBgLazyUrl) data-bg="{{ $colBgLazyUrl }}"@endif>
         @if(!empty($column['elements']))
             @php $__customBuilderDefs = apply_lazy_filters('lazy_builder_elements', []); @endphp
             @foreach($column['elements'] as $el)

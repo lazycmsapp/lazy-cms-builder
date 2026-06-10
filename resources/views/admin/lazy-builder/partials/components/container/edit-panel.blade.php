@@ -510,21 +510,21 @@
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[11px] font-bold text-[#444]">Device Visibility</label>
             </div>
-            <div class="flex gap-0.5 rounded overflow-hidden" @click.capture="if (!{{ $base }}.settings.visibility) { {{ $base }}.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
-                <button @click="{{ $base }}.settings.visibility.mobile = !{{ $base }}.settings.visibility.mobile" 
-                        :class="{{ $base }}.settings.visibility && {{ $base }}.settings.visibility.mobile !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-200 text-slate-400'"
-                        class="flex-1 py-1.5 transition-colors flex items-center justify-center">
-                    <i class="fa fa-mobile-alt text-[11px]"></i>
+            <div class="grid grid-cols-3 gap-2" @click.capture="if (!{{ $base }}.settings.visibility) { {{ $base }}.settings.visibility = { mobile: true, tablet: true, desktop: true }; }">
+                <button @click="{{ $base }}.settings.visibility.mobile = !{{ $base }}.settings.visibility.mobile"
+                        :class="{{ $base }}.settings.visibility && {{ $base }}.settings.visibility.mobile !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                        class="py-3 rounded transition-all flex items-center justify-center" title="Mobile">
+                    <i class="fa fa-mobile-alt text-sm"></i>
                 </button>
-                <button @click="{{ $base }}.settings.visibility.tablet = !{{ $base }}.settings.visibility.tablet" 
-                        :class="{{ $base }}.settings.visibility && {{ $base }}.settings.visibility.tablet !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-200 text-slate-400'"
-                        class="flex-1 py-1.5 transition-colors flex items-center justify-center">
-                    <i class="fa fa-tablet-alt text-[11px]"></i>
+                <button @click="{{ $base }}.settings.visibility.tablet = !{{ $base }}.settings.visibility.tablet"
+                        :class="{{ $base }}.settings.visibility && {{ $base }}.settings.visibility.tablet !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                        class="py-3 rounded transition-all flex items-center justify-center" title="Tablet">
+                    <i class="fa fa-tablet-alt text-sm"></i>
                 </button>
-                <button @click="{{ $base }}.settings.visibility.desktop = !{{ $base }}.settings.visibility.desktop" 
-                        :class="{{ $base }}.settings.visibility && {{ $base }}.settings.visibility.desktop !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-200 text-slate-400'"
-                        class="flex-1 py-1.5 transition-colors flex items-center justify-center">
-                    <i class="fa fa-desktop text-[11px]"></i>
+                <button @click="{{ $base }}.settings.visibility.desktop = !{{ $base }}.settings.visibility.desktop"
+                        :class="{{ $base }}.settings.visibility && {{ $base }}.settings.visibility.desktop !== false ? 'bg-[#0091ea] text-white' : 'bg-slate-100 text-slate-400'"
+                        class="py-3 rounded transition-all flex items-center justify-center" title="Desktop">
+                    <i class="fa fa-desktop text-sm"></i>
                 </button>
             </div>
         </div>

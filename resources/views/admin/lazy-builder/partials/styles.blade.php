@@ -95,12 +95,12 @@
         width: 100%;
     }
     
-    .builder-sidebar { 
-        grid-area: sidebar; 
-        background: #fff; 
-        border-right: 1px solid var(--border-color); 
-        z-index: 40; 
-        overflow-y: auto;
+    .builder-sidebar {
+        grid-area: sidebar;
+        background: #fff;
+        border-right: 1px solid var(--border-color);
+        z-index: 40;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
     }
@@ -579,29 +579,31 @@
     .hover-effect-glow:hover { box-shadow: 0 0 25px rgba(0, 145, 234, 0.5) !important; z-index: 50 !important; }
     .hover-effect-fade:hover { opacity: 0.7 !important; }
 
-    /* Device Visibility Logic (User Breakpoints) */
-    @media (max-width: {{ get_cms_option('theme_small_screen_breakpoint', '800') }}px) {
-        .lazy-hide-mobile { display: none !important; }
-    }
-    @media (min-width: {{ (int)get_cms_option('theme_small_screen_breakpoint', '800') + 1 }}px) and (max-width: {{ get_cms_option('theme_medium_screen_breakpoint', '1100') }}px) {
-        .lazy-hide-tablet { display: none !important; }
-    }
-    @media (min-width: {{ (int)get_cms_option('theme_medium_screen_breakpoint', '1100') + 1 }}px) {
-        .lazy-hide-desktop { display: none !important; }
-    }
     .lazy-hide-all { display: none !important; }
 
     /* Builder-Specific Canvas Device Overrides (Simulating Media Queries) */
-    .canvas-container.mobile .lazy-hide-mobile { display: none !important; }
     .canvas-container.mobile .lazy-column,
     .canvas-container.mobile .column-outer {
         flex-basis: 100%;
         max-width: 100%;
         width: 100%;
     }
-    
-    .canvas-container.tablet .lazy-hide-tablet { display: none !important; }
-    .canvas-container.desktop .lazy-hide-desktop { display: none !important; }
+
+    /* Editing: dim hidden elements + yellow border instead of removing */
+    .builder-wrapper:not(.is-preview) .canvas-container.mobile .lazy-hide-mobile,
+    .builder-wrapper:not(.is-preview) .canvas-container.tablet .lazy-hide-tablet,
+    .builder-wrapper:not(.is-preview) .canvas-container.desktop .lazy-hide-desktop {
+        opacity: 0.35 !important;
+        outline: 2px dashed #fbbf24 !important;
+        outline-offset: -2px !important;
+    }
+
+    /* Preview: hide completely to simulate frontend */
+    .builder-wrapper.is-preview .canvas-container.mobile .lazy-hide-mobile,
+    .builder-wrapper.is-preview .canvas-container.tablet .lazy-hide-tablet,
+    .builder-wrapper.is-preview .canvas-container.desktop .lazy-hide-desktop {
+        display: none !important;
+    }
     /* Alpha/Transparency Checkerboard */
     .checkerboard {
         background-color: #fff;
@@ -815,5 +817,162 @@
     @keyframes builderFadeIn {
         from { opacity: 0; transform: translateX(-5px); }
         to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ===== Navigator Tree — FB-thread style ===== */
+    .nav-branch {
+        margin-left: 14px;
+        border-left: 2px solid #94a3b8; /* slate-400 — clearly visible spine */
+        position: relative;
+    }
+    .nav-branch-2 {
+        border-left-color: #cbd5e1; /* slate-300 — lighter for deeper levels */
+    }
+    /* Each child row: horizontal connector branching from the spine */
+    .nav-leaf {
+        position: relative;
+        padding-left: 14px !important;
+        padding-right: 16px !important;
+    }
+    .nav-leaf::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 10px;
+        height: 2px;
+        background: #94a3b8;
+        transform: translateY(-50%);
+        border-radius: 1px;
+        pointer-events: none;
+    }
+    /* Element rows (nav-branch-2 direct children) have icon+gap that push text far — tighten */
+    .nav-branch-2 > .nav-leaf,
+    .nav-branch-2 > div > .nav-leaf {
+        gap: 6px !important;
+    }
+    .nav-branch-2 > .nav-leaf > i:first-child,
+    .nav-branch-2 > div > .nav-leaf > i:first-child {
+        width: 10px !important;
+        min-width: 10px !important;
+    }
+    .nav-branch-2 > .nav-leaf::before,
+    .nav-branch-2 > * > .nav-leaf::before {
+        background: #cbd5e1;
+    }
+    /* Last child: clip the spine below the midpoint so it doesn't dangle */
+    .nav-branch > *:last-child,
+    .nav-branch > * > *:last-child {
+        position: relative;
+    }
+    .nav-branch > .nav-leaf:last-child::after,
+    .nav-branch > * > .nav-leaf:last-child::after {
+        content: '';
+        position: absolute;
+        left: -2px;
+        top: 50%;
+        bottom: 0;
+        width: 2px;
+        background: white;
+        pointer-events: none;
+    }
+
+    /* ===== Builder Panel Visibility Enhancements ===== */
+
+    /* 1. Main field labels — 14px, near-black */
+    .builder-sidebar label {
+        font-size: 14px !important;
+        color: #111 !important;
+    }
+    /* Sub-labels (uppercase grid labels: Top / Right / Bottom / Left etc.) — bigger + black */
+    .builder-sidebar label.uppercase {
+        font-size: 11px !important;
+        color: #222 !important;
+        letter-spacing: 0.02em !important;
+        text-transform: capitalize !important;
+    }
+    /* Info/description text under sections */
+    .builder-sidebar div.text-slate-500,
+    .builder-sidebar p.text-slate-500 {
+        color: #333 !important;
+        font-size: 12px !important;
+    }
+
+    /* 2. Inputs / Selects / Textareas — darker borders */
+    .builder-sidebar input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    .builder-sidebar select,
+    .builder-sidebar textarea {
+        border-color: #9a9da0 !important;
+        color: #111 !important;
+    }
+    .builder-sidebar input:focus:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    .builder-sidebar select:focus,
+    .builder-sidebar textarea:focus {
+        border-color: #0091ea !important;
+        box-shadow: 0 0 0 1px #0091ea !important;
+    }
+    /* Compound field wrappers (input + unit select together) */
+    .builder-sidebar .border.border-slate-200.rounded-md,
+    .builder-sidebar .border.border-slate-200.overflow-hidden {
+        border-color: #9a9da0 !important;
+    }
+    .builder-sidebar .border.border-slate-200.rounded-md:focus-within,
+    .builder-sidebar .border.border-slate-200.overflow-hidden:focus-within {
+        border-color: #0091ea !important;
+    }
+
+    /* 3. Left sidebar tab bar — bigger font */
+    .builder-sidebar span.tracking-widest {
+        font-size: 12.5px !important;
+    }
+    .builder-sidebar > div:first-child .fa-cog {
+        font-size: 17px !important;
+    }
+
+    /* Toggle / segment button groups — all panels */
+    .builder-sidebar .flex.bg-slate-100 > button,
+    .builder-sidebar .flex.bg-slate-50 > button {
+        font-size: 12.5px !important;
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+        font-weight: 600 !important;
+        text-transform: capitalize !important;
+    }
+    /* Active = black */
+    .builder-sidebar .flex.bg-slate-100 > button.text-white,
+    .builder-sidebar .flex.bg-slate-100 > button.bg-slate-200,
+    .builder-sidebar .flex.bg-slate-100 > button.bg-white,
+    .builder-sidebar .flex.bg-slate-50 > button.text-white,
+    .builder-sidebar .flex.bg-slate-50 > button.bg-white {
+        background-color: #111 !important;
+        color: #fff !important;
+    }
+    /* Inactive — neutralize any blue-tinted states to muted gray */
+    .builder-sidebar .flex.bg-slate-50 > button:not(.text-white):not(.bg-white) {
+        background-color: transparent !important;
+        color: #94a3b8 !important;
+    }
+
+    /* Device / Element Visibility buttons */
+    .builder-sidebar .grid.grid-cols-3.gap-2 > button {
+        padding-top: 7px !important;
+        padding-bottom: 7px !important;
+        font-size: 12px !important;
+    }
+
+    /* 4. Icons next to field labels — darker (was near-invisible slate-300/400) */
+    .builder-sidebar .flex.justify-between .text-slate-300,
+    .builder-sidebar .flex.items-center.mb-2 .text-slate-300,
+    .builder-sidebar .flex.items-center.mb-4 .text-slate-300 {
+        color: #555 !important;
+    }
+    .builder-sidebar .flex.justify-between .text-slate-300:hover,
+    .builder-sidebar .flex.items-center.mb-2 .text-slate-300:hover,
+    .builder-sidebar .flex.items-center.mb-4 .text-slate-300:hover {
+        color: rgb(239, 68, 68) !important;
+    }
+    .builder-sidebar .flex.justify-between i.fa-caret-down,
+    .builder-sidebar .flex.items-center.mb-2 i.fa-caret-down {
+        color: #555 !important;
     }
 </style>

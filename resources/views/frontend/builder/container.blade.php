@@ -39,10 +39,17 @@
             $bgImages[] = "radial-gradient(circle at center, {$start} {$startPos}%, {$end} {$endPos}%)";
         }
     }
+    $ctnBgLazyUrl = null;
     if ($bgType !== 'color' && !empty($s['bgImage'])) {
-        $bgImages[] = "url('{$s['bgImage']}')";
         // background-attachment has no responsive control — keep inline
         $containerStyles[] = "background-attachment: " . (($s['bgImageParallax'] ?? 'none') === 'fixed' ? 'fixed' : 'scroll');
+        if (!empty($s['bgImageSkipLazy'])) {
+            // Skip lazy loading — apply immediately via inline CSS
+            $bgImages[] = "url('{$s['bgImage']}')";
+        } else {
+            // Lazy load — JS IntersectionObserver will apply when element enters viewport
+            $ctnBgLazyUrl = "url('{$s['bgImage']}')";
+        }
     }
     if (!empty($bgImages)) {
         $containerStyles[] = "background-image: " . implode(', ', $bgImages);
@@ -340,7 +347,7 @@
 @endphp
 @if($status === 'published' && $showByCondition)
     @php $ctnAnimType = $s['anim_type'] ?? ''; @endphp
-    <{{ $htmlTag }} id="{{ $s['menuAnchor'] ?? '' }}" class="lazy-container {{ $cid }} {{ $hoverClass }} {{ $s['cssClass'] ?? '' }} {{ $visibilityClasses }} {{ !empty($s['sticky']) ? 'lazy-sticky-col' : '' }}{{ $ctnAnimType ? ' lz-anim lz-anim-' . $ctnAnimType : '' }}" style="{{ implode('; ', $containerStyles) }}"@if($ctnAnimType) data-anim-duration="{{ $s['anim_duration'] ?? 600 }}" data-anim-delay="{{ $s['anim_delay'] ?? 0 }}" data-anim-easing="{{ $s['anim_easing'] ?? 'ease' }}"@endif>
+    <{{ $htmlTag }} id="{{ $s['menuAnchor'] ?? '' }}" class="lazy-container {{ $cid }} {{ $hoverClass }} {{ $s['cssClass'] ?? '' }} {{ $visibilityClasses }} {{ !empty($s['sticky']) ? 'lazy-sticky-col' : '' }}{{ $ctnAnimType ? ' lz-anim lz-anim-' . $ctnAnimType : '' }}{{ $ctnBgLazyUrl ? ' lz-lazy-bg' : '' }}" style="{{ implode('; ', $containerStyles) }}"@if($ctnAnimType) data-anim-duration="{{ $s['anim_duration'] ?? 600 }}" data-anim-delay="{{ $s['anim_delay'] ?? 0 }}" data-anim-easing="{{ $s['anim_easing'] ?? 'ease' }}"@endif @if($ctnBgLazyUrl) data-bg="{{ $ctnBgLazyUrl }}"@endif>
         @if($link)
             <a href="{{ $link }}" target="{{ $linkTarget }}" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; flex-grow: 1; width: 100%;">
         @endif
