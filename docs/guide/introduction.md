@@ -1,0 +1,66 @@
+# Introduction
+
+**Lazy CMS Builder** is a full-featured, WordPress-inspired CMS package for Laravel. Drop it into any Laravel app and get a complete admin dashboard with a drag-and-drop page builder, e-commerce, multi-language support, and much more — in minutes.
+
+## Why Lazy CMS Builder?
+
+Most Laravel CMS solutions are either too simple or require you to rebuild everything from scratch. Lazy CMS Builder gives you a production-ready foundation:
+
+- **No separate installation** — it's a Composer package, lives inside your Laravel app
+- **Full admin dashboard** — pages, posts, custom post types, menus, media, users, settings
+- **Lazy Builder** — a visual drag-and-drop page builder (think Elementor, but for Laravel)
+- **E-commerce ready** — shop, cart, checkout, orders, coupons out of the box
+- **Extensible** — WordPress-like hooks let you customize everything without modifying core files
+
+## Requirements
+
+| Requirement | Version |
+|---|---|
+| PHP | 8.1+ |
+| Laravel | 10, 11, or 12 |
+| Database | MySQL 5.7+ / MariaDB 10.3+ / SQLite 3.x |
+
+## Quick Start
+
+```bash
+# 1. Install the package
+composer require lazycmsapp/lazy-cms-builder
+
+# 2. Run the installer
+php artisan lazy:install
+```
+
+That's it. Visit `/admin` to access your dashboard.
+
+::: tip Default credentials
+After installation, use the credentials shown in your terminal output to log in.
+:::
+
+## What's Included
+
+### Admin Dashboard
+A clean, fast admin interface for managing all your content, settings, and users.
+
+### Lazy Builder (Page Builder)
+Visual drag-and-drop builder with:
+- Containers with responsive column layouts
+- 20+ element types
+- Device-specific visibility controls
+- Global Sections (reusable across pages)
+- Container & Column Library (save and reuse your designs)
+
+### E-commerce
+Complete shop system including products, variable products, cart, checkout, order management, and coupons.
+
+### Content Management
+- Pages, Posts, Custom Post Types
+- Categories, Tags, Custom Taxonomies
+- Revisions & Autosave
+- Media Library
+- SEO meta fields
+
+### Developer Tools
+- WordPress-like Action & Filter hooks
+- Template tags
+- CLI commands
+- REST API (headless mode)

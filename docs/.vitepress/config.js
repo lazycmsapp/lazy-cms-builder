@@ -1,0 +1,117 @@
+import { defineConfig } from 'vitepress'
+
+export default defineConfig({
+  title: 'Lazy CMS Builder',
+  description: 'A powerful WordPress-like CMS package for Laravel',
+  head: [
+    ['link', { rel: 'icon', href: '/favicon.ico' }],
+  ],
+
+  themeConfig: {
+    logo: '/logo.svg',
+    siteTitle: 'Lazy CMS Builder',
+
+    nav: [
+      { text: 'Guide', link: '/guide/introduction' },
+      { text: 'Builder', link: '/builder/overview' },
+      { text: 'E-commerce', link: '/ecommerce/overview' },
+      { text: 'Hooks API', link: '/api/hooks' },
+      {
+        text: 'v1.0.3',
+        items: [
+          { text: 'Changelog', link: 'https://github.com/lazycmsapp/lazy-cms-builder/releases' },
+          { text: 'Packagist', link: 'https://packagist.org/packages/lazycmsapp/lazy-cms-builder' },
+        ]
+      }
+    ],
+
+    sidebar: {
+      '/guide/': [
+        {
+          text: 'Getting Started',
+          items: [
+            { text: 'Introduction', link: '/guide/introduction' },
+            { text: 'Installation', link: '/guide/installation' },
+            { text: 'Configuration', link: '/guide/configuration' },
+            { text: 'Upgrade Guide', link: '/guide/upgrade' },
+          ]
+        },
+        {
+          text: 'Core Concepts',
+          items: [
+            { text: 'Post Types', link: '/guide/post-types' },
+            { text: 'Taxonomies', link: '/guide/taxonomies' },
+            { text: 'Menus', link: '/guide/menus' },
+            { text: 'Widgets', link: '/guide/widgets' },
+            { text: 'Media Library', link: '/guide/media' },
+            { text: 'Multi-language', link: '/guide/multilang' },
+          ]
+        },
+        {
+          text: 'Roles & Permissions',
+          items: [
+            { text: 'RBAC Overview', link: '/guide/rbac' },
+          ]
+        },
+        {
+          text: 'Theme Development',
+          items: [
+            { text: 'Theme Structure', link: '/guide/themes' },
+            { text: 'Template Tags', link: '/guide/template-tags' },
+          ]
+        },
+      ],
+      '/builder/': [
+        {
+          text: 'Lazy Builder',
+          items: [
+            { text: 'Overview', link: '/builder/overview' },
+            { text: 'Containers & Columns', link: '/builder/containers' },
+            { text: 'Elements', link: '/builder/elements' },
+            { text: 'Device Visibility', link: '/builder/visibility' },
+            { text: 'Global Sections', link: '/builder/global-sections' },
+            { text: 'Library', link: '/builder/library' },
+          ]
+        },
+      ],
+      '/ecommerce/': [
+        {
+          text: 'E-commerce',
+          items: [
+            { text: 'Overview', link: '/ecommerce/overview' },
+            { text: 'Products', link: '/ecommerce/products' },
+            { text: 'Orders', link: '/ecommerce/orders' },
+            { text: 'Coupons', link: '/ecommerce/coupons' },
+          ]
+        },
+      ],
+      '/api/': [
+        {
+          text: 'API Reference',
+          items: [
+            { text: 'Hooks', link: '/api/hooks' },
+            { text: 'Helper Functions', link: '/api/helpers' },
+          ]
+        },
+      ],
+    },
+
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/lazycmsapp/lazy-cms-builder' },
+    ],
+
+    footer: {
+      message: 'Released under the MIT License.',
+      copyright: 'Copyright © 2024-present Tareq Codex'
+    },
+
+    search: {
+      provider: 'local'
+    },
+
+    editLink: {
+      pattern: 'https://github.com/lazycmsapp/lazy-cms-builder/edit/main/docs/:path',
+      text: 'Edit this page on GitHub'
+    },
+  }
+})
