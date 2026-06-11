@@ -1,5 +1,5 @@
 {
-    "name": "lazy-cms/lazy-cms-builder",
+    "name": "lazycmsapp/lazy-cms-builder",
     "description": "A reusable WordPress-like admin dashboard package.",
     "license": "MIT",
     "type": "library",

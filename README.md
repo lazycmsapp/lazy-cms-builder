@@ -8,7 +8,7 @@ To install the package in a fresh Laravel project:
 
 1. **Require the package via Composer:**
    ```bash
-   composer require lazy-cms/lazy-cms-builder
+   composer require lazycmsapp/lazy-cms-builder
    ```
 
 2. **Run the Automated Installation:**
