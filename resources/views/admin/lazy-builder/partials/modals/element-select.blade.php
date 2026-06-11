@@ -6,8 +6,8 @@
             <h3 class="text-sm font-bold uppercase tracking-wider text-white">Select Element</h3>
             <div class="flex items-center gap-4">
                 <div class="relative" v-show="elementModalTab === 'elements' || elementModalTab === 'nested'">
-                    <input type="text" v-model="searchElementQuery" :placeholder="elementModalTab === 'nested' ? 'Search Columns' : 'Search Elements'" class="bg-[#2271b1] border-none text-xs text-white px-10 py-2 rounded focus:ring-1 focus:ring-[#0091ea] w-64 outline-none">
-                    <i class="fa fa-search absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                    <input type="text" v-model="searchElementQuery" :placeholder="elementModalTab === 'nested' ? 'Search Columns' : 'Search Elements'" class="bg-white border-none text-xs text-slate-800 placeholder-slate-400 px-10 py-2 rounded focus:ring-1 focus:ring-[#0091ea] w-64 outline-none">
+                    <i class="fa fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
                 </div>
                 <button @click="showElementModal = false" class="text-slate-500 hover:text-white transition-colors"><i class="fa fa-times text-lg"></i></button>
             </div>
