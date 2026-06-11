@@ -1,6 +1,9 @@
-# Lazy CMS Rebuild v5.13.0
+# Lazy CMS Builder
 
-A powerful, modular, and easy-to-use CMS package for Laravel applications with built-in multi-language support, robust Role-Based Access Control (RBAC), and a WordPress-like theme & hook system.
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/lazycmsapp/lazy-cms-builder.svg)](https://packagist.org/packages/lazycmsapp/lazy-cms-builder)
+[![License](https://img.shields.io/github/license/lazycmsapp/lazy-cms-builder)](LICENSE)
+
+A powerful, modular, and easy-to-use CMS package for Laravel applications with built-in multi-language support, robust Role-Based Access Control (RBAC), a drag-and-drop page builder (Lazy Builder), and a WordPress-like theme & hook system.
 
 ## 🚀 Installation
 
@@ -136,4 +139,12 @@ Run the suite after changing the converter, scheduling, or save/publish code.
 
 ---
 
-Developed by **Tareq Codex**
+## Requirements
+
+- PHP 8.1+
+- Laravel 10, 11, or 12
+- MySQL 5.7+ / MariaDB 10.3+ / SQLite 3.x
+
+---
+
+Developed by **[Tareq Codex](https://github.com/tareqcodex)**
