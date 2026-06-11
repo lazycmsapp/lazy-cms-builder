@@ -16,7 +16,7 @@ if (!function_exists('lazy_cms_installed_version')) {
     {
         if (class_exists(\Composer\InstalledVersions::class)) {
             try {
-                $v = \Composer\InstalledVersions::getPrettyVersion('tareqcodex/lazy-cms-rebuild');
+                $v = \Composer\InstalledVersions::getPrettyVersion('lazy-cms/lazy-cms-builder');
                 if ($v) {
                     $clean = ltrim($v, 'v');
                     if (preg_match('/^\d+\.\d+\.\d+$/', $clean)) {
@@ -43,15 +43,15 @@ if (!function_exists('lazy_check_update')) {
         try {
             $res = \Illuminate\Support\Facades\Http::timeout(5)
                 ->withHeaders(['Accept' => 'application/json', 'User-Agent' => 'LazyCMS/' . $current])
-                ->get('https://repo.packagist.org/p2/tareqcodex/lazy-cms-rebuild.json');
+                ->get('https://repo.packagist.org/p2/lazy-cms/lazy-cms-builder.json');
 
             if ($res->successful()) {
-                $versions = $res->json('packages.tareqcodex/lazy-cms-rebuild') ?? [];
+                $versions = $res->json('packages.lazy-cms/lazy-cms-builder') ?? [];
                 foreach ($versions as $v) {
                     $ver = ltrim($v['version'] ?? '', 'v');
                     if (preg_match('/^\d+\.\d+\.\d+$/', $ver)) {
                         $result['latest'] = $ver;
-                        $result['url']    = 'https://packagist.org/packages/tareqcodex/lazy-cms-rebuild';
+                        $result['url']    = 'https://packagist.org/packages/lazy-cms/lazy-cms-builder';
                         break;
                     }
                 }
@@ -62,7 +62,7 @@ if (!function_exists('lazy_check_update')) {
             try {
                 $gh = \Illuminate\Support\Facades\Http::timeout(5)
                     ->withHeaders(['Accept' => 'application/vnd.github.v3+json', 'User-Agent' => 'LazyCMS/' . $current])
-                    ->get('https://api.github.com/repos/tareqcodex/lazy-cms-rebuild/releases/latest');
+                    ->get('https://api.github.com/repos/lazy-cms/lazy-cms-builder/releases/latest');
                 if ($gh->successful()) {
                     $tag = ltrim($gh->json('tag_name') ?? '', 'v');
                     if ($tag) {

@@ -51,7 +51,7 @@
                         <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-xs space-y-4">
                             <div>
                                 <span class="text-gray-500"># 1. Install via composer</span><br>
-                                <code class="text-green-400">composer require tareqcodex/lazy-cms-rebuild</code>
+                                <code class="text-green-400">composer require lazy-cms/lazy-cms-builder</code>
                             </div>
                             <div>
                                 <span class="text-gray-500"># 2. Run CMS installer</span><br>
@@ -80,7 +80,7 @@
                     <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-xs space-y-4">
                         <div>
                             <span class="text-gray-500"># 1. Update composer package</span><br>
-                            <code class="text-green-400">composer require tareqcodex/lazy-cms-rebuild</code>
+                            <code class="text-green-400">composer require lazy-cms/lazy-cms-builder</code>
                         </div>
                         <div>
                             <span class="text-gray-500"># 2. Run Sync Command</span><br>

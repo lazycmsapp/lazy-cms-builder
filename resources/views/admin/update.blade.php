@@ -159,7 +159,7 @@
                 <div class="p-4 space-y-2.5 text-[13px]">
                     <div class="flex justify-between">
                         <span class="text-[#646970]">Package</span>
-                        <span class="font-medium text-[#1d2327]">tareqcodex/lazy-cms-rebuild</span>
+                        <span class="font-medium text-[#1d2327]">lazy-cms/lazy-cms-builder</span>
                     </div>
                     <div class="flex justify-between border-t border-[#f0f0f1] pt-2.5">
                         <span class="text-[#646970]">Installed</span>

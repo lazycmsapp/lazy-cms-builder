@@ -43,7 +43,7 @@ class WidgetController extends Controller
 
         // Scan active theme for custom widgets
         $activeTheme = get_cms_option('active_theme', 'lazy-theme');
-        $themeWidgetPath = base_path("vendor/tareqcodex/lazy-cms-rebuild/resources/views/themes/{$activeTheme}/widgets");
+        $themeWidgetPath = base_path("vendor/lazy-cms/lazy-cms-builder/resources/views/themes/{$activeTheme}/widgets");
         
         if (is_dir($themeWidgetPath)) {
             $files = scandir($themeWidgetPath);
