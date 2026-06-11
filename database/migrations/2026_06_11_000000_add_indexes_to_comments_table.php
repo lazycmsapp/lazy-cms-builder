@@ -8,17 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('comments')) return;
+
         Schema::table('comments', function (Blueprint $table) {
-            $table->index('parent_id');
-            $table->index('is_approved');
+            try { $table->index('parent_id'); } catch (\Exception $e) {}
+            try { $table->index('is_approved'); } catch (\Exception $e) {}
         });
     }
 
     public function down(): void
     {
+        if (!Schema::hasTable('comments')) return;
+
         Schema::table('comments', function (Blueprint $table) {
-            $table->dropIndex(['parent_id']);
-            $table->dropIndex(['is_approved']);
+            try { $table->dropIndex(['parent_id']); } catch (\Exception $e) {}
+            try { $table->dropIndex(['is_approved']); } catch (\Exception $e) {}
         });
     }
 };
