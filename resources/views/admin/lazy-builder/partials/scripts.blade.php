@@ -512,6 +512,7 @@
                 { type: 'title', name: 'Title', icon: 'fa fa-heading' },
                 { type: 'star_rating', name: 'Star Rating', icon: 'fa fa-star' },
                 { type: 'gallery', name: 'Gallery', icon: 'fa fa-images' },
+                { type: 'ticker', name: 'Ticker', icon: 'fa fa-rss' },
             ];
             if (postCardMode.value) {
                 availableElements.push({ type: 'post_content', name: 'Content', icon: 'fa fa-paragraph' });
@@ -1149,6 +1150,7 @@
 
             watch(layout, () => {
                 if (_isUndoRedo) return;
+                if (isDragging.value) return; // skip per-pixel drag events; stopDrag pushes one snapshot
                 _historyStack.splice(historyIndex.value + 1);
                 _historyStack.push(JSON.parse(JSON.stringify(layout.value)));
                 if (_historyStack.length > MAX_HISTORY) _historyStack.shift();
@@ -1519,7 +1521,10 @@
 
             // Canvas Right-Click Context Menu
             const ctxMenu = ref({ show: false, x: 0, y: 0, type: null, ci: null, coli: null, eli: null, ncoli: null, neli: null });
-            const ctxClipboard = ref(null); // { type, data }
+            // localStorage-backed clipboard — initialized synchronously from storage so cross-page paste works
+            const _CLIP_KEY = 'lazy_builder_clipboard';
+            const _clipInit = (() => { try { const s = localStorage.getItem(_CLIP_KEY); return s ? JSON.parse(s) : null; } catch(e) { return null; } })();
+            const ctxClipboard = ref(_clipInit); // { type, data }
 
             const ctxMenuTitle = computed(() => {
                 const m = ctxMenu.value;
@@ -1544,7 +1549,10 @@
             const openCtxMenu = (e, type, ci = null, coli = null, eli = null, ncoli = null, neli = null) => {
                 e.preventDefault();
                 e.stopPropagation();
-                ctxMenu.value = { show: true, x: e.clientX, y: e.clientY, type, ci, coli, eli, ncoli, neli };
+                const menuW = 220, menuH = 360;
+                const x = (e.clientX + menuW > window.innerWidth)  ? e.clientX - menuW : e.clientX;
+                const y = (e.clientY + menuH > window.innerHeight) ? e.clientY - menuH : e.clientY;
+                ctxMenu.value = { show: true, x, y, type, ci, coli, eli, ncoli, neli };
             };
             const closeCtxMenu = () => { ctxMenu.value = { ...ctxMenu.value, show: false }; };
 
@@ -1587,6 +1595,12 @@
                 else if (m.type === 'nested-column') data = cloneObject(layout.value[m.ci].columns[m.coli].elements[m.eli].columns[m.ncoli]);
                 else if (m.type === 'nested-element') data = cloneObject(layout.value[m.ci].columns[m.coli].elements[m.eli].columns[m.ncoli].elements[m.neli]);
                 ctxClipboard.value = { type: m.type, data };
+                try {
+                    localStorage.setItem(_CLIP_KEY, JSON.stringify({ type: m.type, data }));
+                    showToast('Copied! Paste available on other pages.', 'success');
+                } catch (e) {
+                    showToast('Copied (cross-page paste unavailable: ' + e.message + ')', 'error');
+                }
                 closeCtxMenu();
             };
             const ctxPaste = (position) => {
@@ -1903,6 +1917,11 @@
                 window.removeEventListener('mouseup', stopDrag);
                 document.body.style.cursor = '';
                 document.body.classList.remove('select-none');
+                // push one clean snapshot for the completed drag
+                _historyStack.splice(historyIndex.value + 1);
+                _historyStack.push(JSON.parse(JSON.stringify(layout.value)));
+                if (_historyStack.length > MAX_HISTORY) _historyStack.shift();
+                historyIndex.value = _historyStack.length - 1;
             };
 
             const openMediaModal = (settingKey) => {
@@ -3021,6 +3040,30 @@
                             marginTop: 0, marginBottom: 8, marginTopUnit: 'px', marginBottomUnit: 'px',
                             cssClass: '', cssId: '',
                             visibility: { mobile: true, tablet: true, desktop: true }
+                        } : {}),
+                        ...(type === 'ticker' ? {
+                            items: [
+                                { id: Date.now() + '_1', text: 'Breaking news item one', url: '' },
+                                { id: Date.now() + '_2', text: 'Breaking news item two', url: '' },
+                                { id: Date.now() + '_3', text: 'Breaking news item three', url: '' },
+                            ],
+                            label: 'LIVE',
+                            separator: '•',
+                            direction: 'left',
+                            speed: 50,
+                            pauseOnHover: true,
+                            bgColor: '#1e3a8a',
+                            textColor: '#ffffff',
+                            labelBgColor: '#ef4444',
+                            labelTextColor: '#ffffff',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            height: 44,
+                            borderRadius: 0,
+                            marginTop: 0, marginTopUnit: 'px',
+                            marginBottom: 0, marginBottomUnit: 'px',
+                            cssClass: '', cssId: '',
+                            visibility: { mobile: true, tablet: true, desktop: true },
                         } : {}),
                         ...(type === 'spacer' ? {
                             style: 'default',

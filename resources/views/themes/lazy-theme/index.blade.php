@@ -66,10 +66,10 @@
 
 <section class="py-12 bg-white min-h-screen">
     <div class="container-custom">
-        <div class="flex flex-col gap-10 {{ $sidebar !== 'none' ? 'lg:flex-row' : '' }}">
+        <div class="flex flex-col gap-10 {{ $sidebar !== 'none' ? 'lg:flex-row lb-with-sidebar' : '' }}">
 
             {{-- ===== Main content ===== --}}
-            <main class="w-full flex-1 {{ $sidebar === 'left' ? 'lg:order-2' : '' }}">
+            <main class="w-full flex-1 {{ $sidebar === 'left' ? 'lg:order-2 lb-main-order-second' : '' }}">
                 @if($posts->count() > 0)
                     @if($blogLayout === 'list')
                         {{-- List layout --}}
@@ -108,7 +108,7 @@
                         </div>
                     @else
                         {{-- Grid layout --}}
-                        <div class="grid {{ $gridClass }} gap-8">
+                        <div class="grid {{ $gridClass }} gap-8 lb-grid-{{ $blogCols }}">
                             @foreach($posts as $post)
                                 <article class="post-card flex flex-col group overflow-hidden bg-white rounded-2xl border border-slate-100 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">
                                     @if($showFeat && $imgUrl($post))
@@ -200,7 +200,7 @@
 
             {{-- ===== Sidebar (Left / Right / None — Customizer → Blog → General → Sidebar) ===== --}}
             @if($sidebar !== 'none')
-            <aside class="w-full lg:w-[320px] flex-shrink-0 space-y-8 {{ $sidebar === 'left' ? 'lg:order-1' : '' }}">
+            <aside class="w-full lg:w-[320px] flex-shrink-0 space-y-8 lb-sidebar-widget {{ $sidebar === 'left' ? 'lg:order-1 lb-sidebar-order-first' : '' }}">
 
                 {{-- Search --}}
                 <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100">

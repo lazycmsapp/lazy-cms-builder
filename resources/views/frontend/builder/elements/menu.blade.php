@@ -27,7 +27,8 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
         }
 
         echo '<li class="lazy-menu-item ' . ($hasChildren ? 'has-children' : '') . ($isActive ? ' active' : '') . '">';
-        echo '<a href="' . ($item->url ?? '#') . '" class="lazy-menu-link" style="' . $style . '">';
+        $targetAttr = (!empty($item->target) && $item->target === '_blank') ? ' target="_blank" rel="noopener noreferrer"' : '';
+        echo '<a href="' . ($item->url ?? '#') . '"' . $targetAttr . ' class="lazy-menu-link" style="' . $style . '">';
         // Optional icon + "show only icon" support (set via menu builder → Options).
         // Icon position (left/right) and gap come from the Menu element settings.
         $itemIcon = $item->icon ?? '';

@@ -2,18 +2,38 @@
 @if(get_cms_option('theme_single_show_related', '1') === '1')
 @php
     try {
-        $catIds = $post->categories->pluck('id');
-        $relQ = \Acme\CmsDashboard\Models\Post::where('type', 'post')
+        $relCatInfo = get_lazy_category_taxonomy($post->type);
+        $relQ = \Acme\CmsDashboard\Models\Post::where('type', $post->type)
             ->where('status', 'published')
             ->where('id', '!=', $post->id)
             ->where('lang_code', app()->getLocale());
-        if ($catIds->count()) {
-            $relQ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $catIds));
+
+        if ($relCatInfo['type'] === 'native') {
+            $relCatIds = $post->categories->pluck('id');
+            if ($relCatIds->count()) {
+                $relQ->whereHas('categories', fn($q) => $q->whereIn('categories.id', $relCatIds));
+            }
+        } elseif ($relCatInfo['type'] === 'product') {
+            $relCatIds = $post->productCategories->pluck('id');
+            if ($relCatIds->count()) {
+                $relQ->whereHas('productCategories', fn($q) => $q->whereIn('product_categories.id', $relCatIds));
+            }
+        } elseif ($relCatInfo['type'] === 'acpt') {
+            $relTermIds = $post->taxonomyTerms
+                ->where('taxonomy_slug', $relCatInfo['taxonomy_slug'])
+                ->pluck('id');
+            if ($relTermIds->count()) {
+                $relQ->whereHas('taxonomyTerms', fn($q) => $q->whereIn('taxonomy_terms.id', $relTermIds));
+            }
         }
+
         $related = $relQ->latest()->take(3)->get();
         if ($related->isEmpty()) {
-            $related = \Acme\CmsDashboard\Models\Post::where('type', 'post')->where('status', 'published')
-                ->where('id', '!=', $post->id)->where('lang_code', app()->getLocale())->latest()->take(3)->get();
+            $related = \Acme\CmsDashboard\Models\Post::where('type', $post->type)
+                ->where('status', 'published')
+                ->where('id', '!=', $post->id)
+                ->where('lang_code', app()->getLocale())
+                ->latest()->take(3)->get();
         }
     } catch (\Throwable $e) { $related = collect(); }
 @endphp

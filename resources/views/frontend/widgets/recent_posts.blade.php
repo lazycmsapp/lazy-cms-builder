@@ -1,11 +1,16 @@
-<div class="widget mb-12">
+﻿<div class="widget mb-12">
     @if($widget->title)
         <h4 class="widget-title">{{ $widget->title }}</h4>
     @endif
     <div class="space-y-6">
-        @php 
-            $limit = $widget->settings['limit'] ?? 5;
-            $recentPosts = get_lazy_posts(['limit' => $limit]);
+        @php
+            $limit    = $widget->settings['limit']     ?? 5;
+            $postType = $widget->settings['post_type'] ?? 'auto';
+            if ($postType === 'auto') {
+                $currentPost = view()->shared('current_post');
+                $postType = $currentPost ? $currentPost->type : 'post';
+            }
+            $recentPosts = get_lazy_posts(['limit' => $limit, 'post_type' => $postType]);
         @endphp
         @foreach($recentPosts as $recent)
             <div class="flex gap-4 group">

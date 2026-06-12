@@ -1,5 +1,9 @@
 <x-cms-dashboard::layouts.admin title="Manage Widgets">
     <x-cms-dashboard::admin.delete-modal />
+@php
+    $hasBuilderFooter = \Acme\CmsDashboard\Models\Post::where('type', 'lazy_footer')->where('status', 'published')->exists();
+    $hasBuilderHeader = \Acme\CmsDashboard\Models\Post::where('type', 'lazy_header')->where('status', 'published')->exists();
+@endphp
 <div class="max-w-[1400px] mx-auto px-6 py-8">
     <div class="flex items-center justify-between mb-8">
         <div>
@@ -7,6 +11,29 @@
             <p class="text-slate-500 text-sm mt-1">Drag and add widgets to your theme areas.</p>
         </div>
     </div>
+
+    {{-- Footer Builder status notice --}}
+    @if($hasBuilderFooter)
+    <div class="mb-6 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+        <span class="material-symbols-outlined text-amber-500 text-[22px] mt-0.5 shrink-0">info</span>
+        <div>
+            <p class="text-[13px] font-bold text-amber-800">Footer Builder is active</p>
+            <p class="text-[12px] text-amber-700 mt-0.5">
+                A published <strong>Footer Builder</strong> page is overriding the default footer.
+                Footer column widgets (1–4) will <strong>not appear</strong> on the frontend until the Footer Builder is unpublished or deleted.
+                <a href="{{ route('admin.posts.index', ['type' => 'lazy_footer']) }}" class="underline hover:text-amber-900">Manage Footer Builder →</a>
+            </p>
+        </div>
+    </div>
+    @else
+    <div class="mb-6 flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl px-5 py-4">
+        <span class="material-symbols-outlined text-green-500 text-[22px] mt-0.5 shrink-0">check_circle</span>
+        <div>
+            <p class="text-[13px] font-bold text-green-800">Default footer is active</p>
+            <p class="text-[12px] text-green-700 mt-0.5">No Footer Builder is published. Footer column widgets (1–4) are <strong>live on the frontend</strong>.</p>
+        </div>
+    </div>
+    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <!-- Available Widgets -->
@@ -50,7 +77,18 @@
             @foreach($widgetAreas as $areaKey => $areaName)
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                        <h3 class="font-bold text-slate-800">{{ $areaName }}</h3>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold text-slate-800">{{ $areaName }}</h3>
+                            @if(str_starts_with($areaKey, 'footer-'))
+                                @if($hasBuilderFooter)
+                                    <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-600">Builder Active</span>
+                                @else
+                                    <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-green-100 text-green-600">Live</span>
+                                @endif
+                            @elseif($areaKey === 'primary-sidebar')
+                                <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-600">Blog / Single Posts</span>
+                            @endif
+                        </div>
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                             {{ ($activeWidgets[$areaKey] ?? collect())->count() }} Widgets
                         </span>
@@ -81,7 +119,7 @@
                                 </div>
                                 
                                 <!-- Widget Settings Form -->
-                                <div id="widget-settings-{{ $widget->id }}" class="hidden px-5 py-5 border-t-2 border-primary/10 bg-slate-50/30">
+                                <div id="widget-settings-{{ $widget->id }}" data-widget-type="{{ $widget->type }}" class="hidden px-5 py-5 border-t-2 border-primary/10 bg-slate-50/30">
                                     <form action="{{ route('admin.widgets.update', $widget->id) }}" method="POST" class="space-y-5">
                                         @csrf
                                         @method('PUT')
@@ -91,10 +129,120 @@
                                                 <input type="text" name="title" value="{{ $widget->title }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
                                             </div>
 
-                                            @if($widget->type === 'recent_posts')
+                                            @if($widget->type === 'search')
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Placeholder Text</label>
+                                                    <input type="text" name="settings[placeholder]" value="{{ $widget->settings['placeholder'] ?? 'Search...' }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                </div>
+                                            @elseif($widget->type === 'recent_posts')
                                                 <div>
                                                     <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Number of posts</label>
-                                                    <input type="number" name="settings[limit]" value="{{ $widget->settings['limit'] ?? 5 }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                    <input type="number" name="settings[limit]" value="{{ $widget->settings['limit'] ?? 5 }}" min="1" max="20" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Post Type</label>
+                                                    <select name="settings[post_type]" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                        <option value="auto" {{ ($widget->settings['post_type'] ?? 'auto') === 'auto' ? 'selected' : '' }}>Auto (Current Page)</option>
+                                                        @foreach($allActivePostTypes as $slug => $name)
+                                                            <option value="{{ $slug }}" {{ ($widget->settings['post_type'] ?? 'auto') === $slug ? 'selected' : '' }}>
+                                                                {{ $name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            @elseif($widget->type === 'categories')
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Post Type</label>
+                                                    <select name="settings[post_type]" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                        <option value="auto" {{ ($widget->settings['post_type'] ?? 'auto') === 'auto' ? 'selected' : '' }}>Auto (Current Page)</option>
+                                                        @foreach($postTypesWithCategories as $slug => $name)
+                                                            <option value="{{ $slug }}" {{ ($widget->settings['post_type'] ?? 'auto') === $slug ? 'selected' : '' }}>
+                                                                {{ $name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Show post count</label>
+                                                    <select name="settings[show_count]" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                        <option value="1" {{ ($widget->settings['show_count'] ?? '1') === '1' ? 'selected' : '' }}>Yes</option>
+                                                        <option value="0" {{ ($widget->settings['show_count'] ?? '1') === '0' ? 'selected' : '' }}>No</option>
+                                                    </select>
+                                                </div>
+                                            @elseif($widget->type === 'nav_menu')
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Select Menu</label>
+                                                    <select name="settings[menu_id]" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                        <option value="">— Select a Menu —</option>
+                                                        @foreach($menus as $menu)
+                                                            <option value="{{ $menu->id }}" {{ ($widget->settings['menu_id'] ?? '') == $menu->id ? 'selected' : '' }}>{{ $menu->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                            @elseif($widget->type === 'image')
+                                                {{-- Image picker using the global media modal --}}
+                                                @php $wpid = 'widget_img_' . $widget->id; $wpInitial = $widget->settings['image_url'] ?? ''; @endphp
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Image</label>
+                                                    <div x-data="{ imgUrl: '{{ $wpInitial }}' }" class="space-y-2">
+                                                        {{-- Preview / pick area --}}
+                                                        <div @click="window.openMediaModal(function(a){ let u=a.full_url||a.url||a.path||''; if(u.startsWith('media/'))u='/storage/'+u; imgUrl=u; document.getElementById('{{ $wpid }}').value=u; })"
+                                                             class="relative w-full h-36 rounded-xl border-2 border-dashed cursor-pointer overflow-hidden flex items-center justify-center transition-all hover:border-primary"
+                                                             :class="imgUrl ? 'border-slate-200 bg-slate-50' : 'border-slate-300 bg-slate-50 hover:bg-primary/5'">
+                                                            <template x-if="imgUrl">
+                                                                <img :src="imgUrl" class="w-full h-full object-contain p-1">
+                                                            </template>
+                                                            <template x-if="!imgUrl">
+                                                                <div class="text-center text-slate-400">
+                                                                    <i data-lucide="image-plus" class="w-8 h-8 mx-auto mb-1 opacity-40"></i>
+                                                                    <span class="text-[11px] font-bold uppercase tracking-wide">Click to Upload / Select</span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                        {{-- Actions --}}
+                                                        <div class="flex items-center gap-3">
+                                                            <button type="button"
+                                                                @click="window.openMediaModal(function(a){ let u=a.full_url||a.url||a.path||''; if(u.startsWith('media/'))u='/storage/'+u; imgUrl=u; document.getElementById('{{ $wpid }}').value=u; })"
+                                                                class="text-[11px] font-bold text-primary hover:text-primary/80 uppercase tracking-wide flex items-center gap-1">
+                                                                <i data-lucide="image" class="w-3.5 h-3.5"></i> Select Image
+                                                            </button>
+                                                            <template x-if="imgUrl">
+                                                                <button type="button" @click="imgUrl=''; document.getElementById('{{ $wpid }}').value=''"
+                                                                    class="text-[11px] font-bold text-red-500 hover:text-red-700 uppercase tracking-wide flex items-center gap-1">
+                                                                    <i data-lucide="x" class="w-3.5 h-3.5"></i> Remove
+                                                                </button>
+                                                            </template>
+                                                        </div>
+                                                        <input type="hidden" name="settings[image_url]" id="{{ $wpid }}" :value="imgUrl">
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Link URL <span class="text-slate-300 normal-case font-normal">(optional)</span></label>
+                                                    <input type="text" name="settings[link_url]" value="{{ $widget->settings['link_url'] ?? '' }}" placeholder="https://..." class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Open Link In</label>
+                                                        <select name="settings[link_target]" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                            <option value="_self"  {{ ($widget->settings['link_target'] ?? '_self') === '_self'  ? 'selected' : '' }}>Same Tab</option>
+                                                            <option value="_blank" {{ ($widget->settings['link_target'] ?? '_self') === '_blank' ? 'selected' : '' }}>New Tab</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Alt Text</label>
+                                                        <input type="text" name="settings[alt_text]" value="{{ $widget->settings['alt_text'] ?? '' }}" placeholder="Image description..." class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Caption <span class="text-slate-300 normal-case font-normal">(optional)</span></label>
+                                                    <input type="text" name="settings[caption]" value="{{ $widget->settings['caption'] ?? '' }}" placeholder="Image caption..." class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                </div>
+
+                                            @elseif($widget->type === 'text')
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Content</label>
+                                                    <textarea id="tinymce-widget-{{ $widget->id }}" name="settings[content]" rows="8" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">{{ $widget->settings['content'] ?? '' }}</textarea>
                                                 </div>
                                             @elseif($widget->type === 'custom_html')
                                                 <div>
@@ -103,22 +251,21 @@
                                                 </div>
                                             @elseif($widget->type === 'social_media')
                                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    @foreach([
+                                                        'facebook'  => 'Facebook URL',
+                                                        'twitter'   => 'Twitter / X URL',
+                                                        'instagram' => 'Instagram URL',
+                                                        'linkedin'  => 'LinkedIn URL',
+                                                        'youtube'   => 'YouTube URL',
+                                                        'github'    => 'GitHub URL',
+                                                        'tiktok'    => 'TikTok URL',
+                                                        'whatsapp'  => 'WhatsApp URL',
+                                                    ] as $key => $label)
                                                     <div>
-                                                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Facebook URL</label>
-                                                        <input type="text" name="settings[facebook]" value="{{ $widget->settings['facebook'] ?? get_cms_option('social_facebook') }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">{{ $label }}</label>
+                                                        <input type="text" name="settings[{{ $key }}]" value="{{ $widget->settings[$key] ?? get_cms_option('theme_social_' . $key) }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="https://...">
                                                     </div>
-                                                    <div>
-                                                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Twitter URL</label>
-                                                        <input type="text" name="settings[twitter]" value="{{ $widget->settings['twitter'] ?? get_cms_option('social_twitter') }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Instagram URL</label>
-                                                        <input type="text" name="settings[instagram]" value="{{ $widget->settings['instagram'] ?? get_cms_option('social_instagram') }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">LinkedIn URL</label>
-                                                        <input type="text" name="settings[linkedin]" value="{{ $widget->settings['linkedin'] ?? get_cms_option('social_linkedin') }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                                                    </div>
+                                                    @endforeach
                                                 </div>
                                             @endif
                                         </div>
@@ -195,6 +342,8 @@
 <div class="toast-container" id="toast-container"></div>
 
 <script src="{{ asset('vendor/cms-dashboard/js/sortable.min.js') }}"></script>
+<script src="{{ asset('vendor/cms-dashboard/js/tinymce.min.js') }}"></script>
+<script>if(window.tinymce) tinymce.baseURL='https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3';</script>
 <script>
     function showToast(message, type = 'success') {
         const container = document.getElementById('toast-container');
@@ -220,7 +369,23 @@
 
     function toggleWidgetSettings(id) {
         const el = document.getElementById(`widget-settings-${id}`);
+        const opening = el.classList.contains('hidden');
         el.classList.toggle('hidden');
+
+        if (opening && el.dataset.widgetType === 'text' && window.tinymce) {
+            const editorId = `tinymce-widget-${id}`;
+            if (!tinymce.get(editorId)) {
+                tinymce.init({
+                    selector: `#${editorId}`,
+                    menubar: false,
+                    height: 280,
+                    plugins: ['lists', 'link', 'code'],
+                    toolbar: 'formatselect | bold italic underline | bullist numlist | link | code',
+                    content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size:14px; padding:12px; }',
+                    branding: false,
+                });
+            }
+        }
     }
 
     async function saveWidgetSettings(id) {
@@ -233,6 +398,12 @@
         btn.disabled = true;
         text.innerText = 'Saving...';
         loader.classList.remove('hidden');
+
+        // Sync TinyMCE content to its textarea before serializing
+        if (window.tinymce) {
+            const editor = tinymce.get(`tinymce-widget-${id}`);
+            if (editor) editor.save();
+        }
 
         const formData = new FormData(form);
         const data = {};
@@ -247,6 +418,9 @@
                 data[key] = value;
             }
         });
+        // FormData skips unchecked checkboxes — explicitly capture is_active
+        const isActiveCheckbox = form.querySelector('input[name="is_active"][type="checkbox"]');
+        if (isActiveCheckbox) data.is_active = isActiveCheckbox.checked ? 1 : 0;
 
         try {
             const baseUrl = '{{ url("admin/widgets") }}';

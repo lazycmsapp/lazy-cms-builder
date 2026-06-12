@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 
 if (!defined('LAZY_CMS_VERSION')) {
-    define('LAZY_CMS_VERSION', '1.0.5');
+    define('LAZY_CMS_VERSION', '1.0.6');
 }
 
 if (!function_exists('lazy_cms_installed_version')) {
@@ -643,29 +643,50 @@ if (!function_exists('the_lazy_loop')) {
 if (!function_exists('get_lazy_excerpt')) {
     function get_lazy_excerpt($post, $limit = 120)
     {
-        if ($post->editor_type !== 'builder') {
-            return \Illuminate\Support\Str::limit(strip_tags($post->content), $limit);
+        $content = $post->content ?? '';
+        $isBuilder = ($post->editor_type ?? '') === 'builder'
+            || (is_string($content) && (str_starts_with(ltrim($content), '[') || str_starts_with(ltrim($content), '{')));
+
+        if (!$isBuilder) {
+            return \Illuminate\Support\Str::limit(strip_tags($content), $limit);
         }
+
         try {
-            $layout = is_string($post->content) ? json_decode($post->content, true) : $post->content;
+            $layout = is_string($content) ? json_decode($content, true) : $content;
+            if (!is_array($layout)) return '';
+
+            $textTypes = ['title', 'heading', 'text', 'text_block', 'special_text'];
             $text = '';
-            if (is_array($layout)) {
-                foreach ($layout as $container) {
-                    if (!empty($container['columns'])) {
-                        foreach ($container['columns'] as $column) {
-                            if (!empty($column['elements'])) {
-                                foreach ($column['elements'] as $el) {
-                                    if ($el['type'] === 'heading') $text .= ($el['settings']['title'] ?? '') . ' ';
-                                    elseif ($el['type'] === 'text') $text .= strip_tags($el['settings']['content'] ?? '') . ' ';
-                                    if (strlen($text) > $limit) break 3;
-                                }
-                            }
+
+            $extractFromElements = function (array $elements) use (&$text, &$limit, $textTypes, &$extractFromElements) {
+                foreach ($elements as $el) {
+                    $type = $el['type'] ?? '';
+                    $s    = $el['settings'] ?? [];
+                    if (in_array($type, ['title', 'heading'])) {
+                        $text .= trim($s['title'] ?? '') . ' ';
+                    } elseif (in_array($type, ['text', 'text_block', 'special_text'])) {
+                        $text .= trim(strip_tags($s['content'] ?? '')) . ' ';
+                    } elseif ($type === 'nested-row' && !empty($el['columns'])) {
+                        foreach ($el['columns'] as $ncol) {
+                            $extractFromElements($ncol['elements'] ?? []);
+                            if (strlen($text) > $limit) return;
                         }
                     }
+                    if (strlen($text) > $limit) return;
+                }
+            };
+
+            foreach ($layout as $container) {
+                foreach ($container['columns'] ?? [] as $column) {
+                    $extractFromElements($column['elements'] ?? []);
+                    if (strlen($text) > $limit) break 2;
                 }
             }
-            return \Illuminate\Support\Str::limit(trim($text), $limit);
-        } catch (\Exception $e) { return ''; }
+
+            return \Illuminate\Support\Str::limit(trim($text) ?: '', $limit);
+        } catch (\Exception $e) {
+            return '';
+        }
     }
 }
 
@@ -676,10 +697,51 @@ if (!function_exists('get_lazy_post')) {
     }
 }
 
+if (!function_exists('get_lazy_category_taxonomy')) {
+    /**
+     * Returns ['type' => 'native'|'product'|'acpt', 'taxonomy_slug' => string|null]
+     * for the category taxonomy of a given post type.
+     */
+    function get_lazy_category_taxonomy($postType) {
+        if (!$postType || $postType === 'post') {
+            return ['type' => 'native', 'taxonomy_slug' => null];
+        }
+        if ($postType === 'product') {
+            return ['type' => 'product', 'taxonomy_slug' => null];
+        }
+        // ACPT: find an active hierarchical (category) taxonomy for this CPT
+        $row = \Illuminate\Support\Facades\DB::table('custom_taxonomies')
+            ->where('hierarchical', true)
+            ->where('is_active', true)
+            ->whereNull('deleted_at')
+            ->get()
+            ->first(fn($t) => in_array($postType, json_decode($t->post_types ?? '[]', true)));
+        if (!$row) return ['type' => 'none', 'taxonomy_slug' => null];
+        return ['type' => 'acpt', 'taxonomy_slug' => $row->slug];
+    }
+}
+
 if (!function_exists('get_lazy_categories')) {
-    function get_lazy_categories($taxonomy = 'category') {
-        if ($taxonomy === 'category') return \Acme\CmsDashboard\Models\Category::withCount(['posts' => fn($q) => $q->where('status', 'published')])->orderBy('name')->get();
-        return \Acme\CmsDashboard\Models\TaxonomyTerm::where('taxonomy_slug', $taxonomy)->withCount(['posts' => fn($q) => $q->where('status', 'published')])->get();
+    function get_lazy_categories($taxonomy = 'category', $postType = null) {
+        if ($taxonomy === 'category') {
+            $info = get_lazy_category_taxonomy($postType);
+            if ($info['type'] === 'native') {
+                return \Acme\CmsDashboard\Models\Category::withCount(['posts' => fn($r) => $r->where('status', 'published')])
+                    ->orderBy('name')->get();
+            }
+            if ($info['type'] === 'product') {
+                return \Acme\CmsDashboard\Models\ProductCategory::withCount(['posts as posts_count' => fn($r) => $r->where('status', 'published')])
+                    ->orderBy('name')->get();
+            }
+            if ($info['type'] === 'acpt') {
+                return \Acme\CmsDashboard\Models\TaxonomyTerm::where('taxonomy_slug', $info['taxonomy_slug'])
+                    ->withCount(['posts as posts_count' => fn($q) => $q->where('status', 'published')])
+                    ->orderBy('name')->get();
+            }
+            return collect();
+        }
+        return \Acme\CmsDashboard\Models\TaxonomyTerm::where('taxonomy_slug', $taxonomy)
+            ->withCount(['posts' => fn($q) => $q->where('status', 'published')])->get();
     }
 }
 
@@ -885,16 +947,23 @@ if (!function_exists('render_lazy_widgets')) {
         })->get();
 
         $output = '';
+        $activeTheme = get_cms_option('active_theme', 'lazy-theme');
         foreach ($widgets as $widget) {
-            // 1. Try Theme Specific Widget first: themes/lazy-theme/widgets/name.blade.php
-            $activeTheme = get_cms_option('active_theme', 'lazy-theme');
-            $themeWidget = "cms-dashboard::themes.{$activeTheme}.widgets.{$widget->type}";
-            
-            // 2. Try Package Default Widget: frontend.widgets.name
-            $defaultWidget = "cms-dashboard::frontend.widgets.{$widget->type}";
+            // Resolution order mirrors FrontendController::resolveThemeView():
+            // 1. Published theme widget (non-namespaced): resources/views/themes/{theme}/widgets/{type}
+            // 2. Package theme widget (namespaced):       cms-dashboard::themes.{theme}.widgets.{type}
+            // 3. Package default widget (namespaced):     cms-dashboard::frontend.widgets.{type}
+            $publishedThemeWidget = "themes.{$activeTheme}.widgets.{$widget->type}";
+            $packageThemeWidget   = "cms-dashboard::themes.{$activeTheme}.widgets.{$widget->type}";
+            $lazyThemeWidget      = "cms-dashboard::themes.lazy-theme.widgets.{$widget->type}";
+            $defaultWidget        = "cms-dashboard::frontend.widgets.{$widget->type}";
 
-            if (view()->exists($themeWidget)) {
-                $output .= view($themeWidget, ['widget' => $widget])->render();
+            if (view()->exists($publishedThemeWidget)) {
+                $output .= view($publishedThemeWidget, ['widget' => $widget])->render();
+            } elseif (view()->exists($packageThemeWidget)) {
+                $output .= view($packageThemeWidget, ['widget' => $widget])->render();
+            } elseif (view()->exists($lazyThemeWidget)) {
+                $output .= view($lazyThemeWidget, ['widget' => $widget])->render();
             } elseif (view()->exists($defaultWidget)) {
                 $output .= view($defaultWidget, ['widget' => $widget])->render();
             } else {

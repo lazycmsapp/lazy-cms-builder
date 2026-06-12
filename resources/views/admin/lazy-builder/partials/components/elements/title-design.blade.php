@@ -94,21 +94,49 @@
             </select>
         </div>
 
-        <div class="grid grid-cols-3 gap-3">
-            <div>
-                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Font Size</label>
-                <input type="text" v-model="editingElement.settings.fontSize"
-                       class="w-full border border-slate-200 rounded px-2 py-2 text-[12px] text-center">
+        <!-- Font Size / Line Height / Letter Spacing (responsive) -->
+        <div>
+            <div class="flex justify-between items-center mb-2">
+                <label class="text-[9px] font-bold text-slate-400 uppercase">Size &amp; Spacing</label>
+                <div class="flex gap-1 items-center">
+                    <button @click="setResponsiveVal(editingElement.settings, 'fontSize', device, ''); setResponsiveVal(editingElement.settings, 'lineHeight', device, ''); setResponsiveVal(editingElement.settings, 'letterSpacing', device, '')" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <i class="fa fa-undo text-[10px]"></i>
+                    </button>
+                    <div class="relative inline-block">
+                        <button @click="activeResponsiveMenu = activeResponsiveMenu === 'titleTypo' ? null : 'titleTypo'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                            <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                            <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                        </button>
+                        <div v-show="activeResponsiveMenu === 'titleTypo'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                            <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)"><i class="fa fa-desktop text-[11px]"></i></button>
+                            <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)"><i class="fa fa-tablet-alt text-[11px]"></i></button>
+                            <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)"><i class="fa fa-mobile-alt text-[11px]"></i></button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Line Hei...</label>
-                <input type="text" v-model="editingElement.settings.lineHeight"
-                       class="w-full border border-slate-200 rounded px-2 py-2 text-[12px] text-center">
-            </div>
-            <div>
-                <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Letter S...</label>
-                <input type="text" v-model="editingElement.settings.letterSpacing"
-                       class="w-full border border-slate-200 rounded px-2 py-2 text-[12px] text-center">
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Font Size</label>
+                    <div class="flex border border-slate-200 rounded overflow-hidden">
+                        <input type="number" :value="getResponsiveVal(editingElement.settings, 'fontSize', device)" @input="setResponsiveVal(editingElement.settings, 'fontSize', device, $event.target.value)"
+                               :placeholder="getResponsiveVal(editingElement.settings, 'fontSize', 'desktop') || 36"
+                               class="w-full border-none px-1 py-2 text-[11px] text-center focus:ring-0">
+                        <select :value="getResponsiveVal(editingElement.settings, 'fontSizeUnit', device) || 'px'" @change="setResponsiveVal(editingElement.settings, 'fontSizeUnit', device, $event.target.value)" class="bg-slate-50 border-l border-slate-200 text-[9px] px-0.5 border-none outline-none cursor-pointer text-center"><option value="px">px</option><option value="rem">rem</option><option value="em">em</option><option value="vw">vw</option></select>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Line Hei...</label>
+                    <input type="text" :value="getResponsiveVal(editingElement.settings, 'lineHeight', device)" @input="setResponsiveVal(editingElement.settings, 'lineHeight', device, $event.target.value)"
+                           :placeholder="getResponsiveVal(editingElement.settings, 'lineHeight', 'desktop') || '1.2'"
+                           class="w-full border border-slate-200 rounded px-2 py-2 text-[11px] text-center">
+                </div>
+                <div>
+                    <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Letter S...</label>
+                    <input type="text" :value="getResponsiveVal(editingElement.settings, 'letterSpacing', device)" @input="setResponsiveVal(editingElement.settings, 'letterSpacing', device, $event.target.value)"
+                           :placeholder="getResponsiveVal(editingElement.settings, 'letterSpacing', 'desktop') || '0'"
+                           class="w-full border border-slate-200 rounded px-2 py-2 text-[11px] text-center">
+                </div>
             </div>
         </div>
 
@@ -268,6 +296,59 @@
             <button @click="editingElement.settings.textOverflow = 'clip'"
                     :class="editingElement.settings.textOverflow === 'clip' ? 'bg-slate-700 text-white' : 'text-slate-400'"
                     class="flex-1 py-2 text-[11px] font-bold transition-all">Clip</button>
+        </div>
+    </div>
+
+    <!-- Padding -->
+    <div class="pt-4 border-t border-slate-50">
+        <div class="flex justify-between items-center mb-3">
+            <label class="text-[12px] font-bold text-[#333]">Padding</label>
+            <div class="flex gap-1 items-center">
+                <button @click="['Top','Right','Bottom','Left'].forEach(s => setResponsiveVal(editingElement.settings, 'padding' + s, device, ''))" title="Reset Value" class="text-slate-300 hover:text-red-500 transition-colors">
+                    <i class="fa fa-undo text-[10px]"></i>
+                </button>
+                <div class="relative inline-block">
+                    <button @click="activeResponsiveMenu = activeResponsiveMenu === 'titlePadding' ? null : 'titlePadding'" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] transition-all flex items-center gap-1" title="Responsive Mode">
+                        <i class="fa" :class="device === 'desktop' ? 'fa-desktop' : (device === 'tablet' ? 'fa-tablet-alt' : 'fa-mobile-alt')"></i>
+                        <i class="fa fa-caret-down text-[8px] text-slate-400"></i>
+                    </button>
+                    <div v-show="activeResponsiveMenu === 'titlePadding'" class="absolute right-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 flex gap-0.5 p-1 min-w-max">
+                        <button @click="device = 'desktop'; activeResponsiveMenu = null" :class="device === 'desktop' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Large (Desktop)"><i class="fa fa-desktop text-[11px]"></i></button>
+                        <button @click="device = 'tablet'; activeResponsiveMenu = null" :class="device === 'tablet' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Medium (Tablet)"><i class="fa fa-tablet-alt text-[11px]"></i></button>
+                        <button @click="device = 'mobile'; activeResponsiveMenu = null" :class="device === 'mobile' ? 'bg-[#2271b1] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'" class="w-6 h-6 rounded text-[10px] flex items-center justify-center transition-all" title="Small (Mobile)"><i class="fa fa-mobile-alt text-[11px]"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-4">
+            <div class="flex flex-col gap-1">
+                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">Top</label>
+                <div class="flex border border-slate-200 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-[#0091ea]/20 focus-within:border-[#0091ea]">
+                    <input type="number" min="0" v-model.number="editingElement.settings[device === 'desktop' ? 'paddingTop' : 'paddingTop_' + device]" :placeholder="getResponsiveVal(editingElement.settings, 'paddingTop', device) || '0'" class="w-full h-8 px-1 text-[11px] text-center border-none focus:ring-0">
+                    <select :value="getResponsiveVal(editingElement.settings, 'paddingTopUnit', device) || 'px'" @change="setResponsiveVal(editingElement.settings, 'paddingTopUnit', device, $event.target.value)" class="bg-slate-50 border-l border-slate-200 text-[9px] px-0.5 focus:ring-0 border-none outline-none cursor-pointer text-center"><option value="px">px</option><option value="rem">rem</option><option value="%">%</option><option value="em">em</option></select>
+                </div>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">Right</label>
+                <div class="flex border border-slate-200 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-[#0091ea]/20 focus-within:border-[#0091ea]">
+                    <input type="number" min="0" v-model.number="editingElement.settings[device === 'desktop' ? 'paddingRight' : 'paddingRight_' + device]" :placeholder="getResponsiveVal(editingElement.settings, 'paddingRight', device) || '0'" class="w-full h-8 px-1 text-[11px] text-center border-none focus:ring-0">
+                    <select :value="getResponsiveVal(editingElement.settings, 'paddingRightUnit', device) || 'px'" @change="setResponsiveVal(editingElement.settings, 'paddingRightUnit', device, $event.target.value)" class="bg-slate-50 border-l border-slate-200 text-[9px] px-0.5 focus:ring-0 border-none outline-none cursor-pointer text-center"><option value="px">px</option><option value="rem">rem</option><option value="%">%</option><option value="em">em</option></select>
+                </div>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">Bottom</label>
+                <div class="flex border border-slate-200 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-[#0091ea]/20 focus-within:border-[#0091ea]">
+                    <input type="number" min="0" v-model.number="editingElement.settings[device === 'desktop' ? 'paddingBottom' : 'paddingBottom_' + device]" :placeholder="getResponsiveVal(editingElement.settings, 'paddingBottom', device) || '0'" class="w-full h-8 px-1 text-[11px] text-center border-none focus:ring-0">
+                    <select :value="getResponsiveVal(editingElement.settings, 'paddingBottomUnit', device) || 'px'" @change="setResponsiveVal(editingElement.settings, 'paddingBottomUnit', device, $event.target.value)" class="bg-slate-50 border-l border-slate-200 text-[9px] px-0.5 focus:ring-0 border-none outline-none cursor-pointer text-center"><option value="px">px</option><option value="rem">rem</option><option value="%">%</option><option value="em">em</option></select>
+                </div>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">Left</label>
+                <div class="flex border border-slate-200 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-[#0091ea]/20 focus-within:border-[#0091ea]">
+                    <input type="number" min="0" v-model.number="editingElement.settings[device === 'desktop' ? 'paddingLeft' : 'paddingLeft_' + device]" :placeholder="getResponsiveVal(editingElement.settings, 'paddingLeft', device) || '0'" class="w-full h-8 px-1 text-[11px] text-center border-none focus:ring-0">
+                    <select :value="getResponsiveVal(editingElement.settings, 'paddingLeftUnit', device) || 'px'" @change="setResponsiveVal(editingElement.settings, 'paddingLeftUnit', device, $event.target.value)" class="bg-slate-50 border-l border-slate-200 text-[9px] px-0.5 focus:ring-0 border-none outline-none cursor-pointer text-center"><option value="px">px</option><option value="rem">rem</option><option value="%">%</option><option value="em">em</option></select>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -683,12 +683,18 @@
                         <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:#1d2327;margin-bottom:4px;">URL</label>
                         <a href="${esc(item.url)}" style="font-size:13px;color:#2271b1;">${esc(item.url)}</a>
                     </div>`}
-                    <div style="margin-bottom:12px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
                         <button type="button" onclick="openItemOptions('${esc(item.id)}')" class="wp-btn-secondary" style="height:30px;font-size:12px;display:inline-flex;align-items:center;gap:6px;">
                             <i class="fa fa-sliders-h"></i> Options
                             ${item.icon ? `<i class="${esc(item.icon)}" style="color:#2271b1;"></i>` : ''}
                             ${item.show_only_icon ? `<span style="font-size:10px;color:#646970;">(icon only)</span>` : ''}
                         </button>
+                        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#1d2327;cursor:pointer;user-select:none;">
+                            <input type="checkbox" ${item.target === '_blank' ? 'checked' : ''}
+                                   onchange="updateField('${esc(item.id)}','target',this.checked?'_blank':'_self')"
+                                   style="width:15px;height:15px;flex-shrink:0;">
+                            Open in New Tab
+                        </label>
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #dfdfdf;">
                         <button type="button" onclick="removeItem('${esc(item.id)}')" style="color:#b32d2e;font-size:12px;text-decoration:underline;border:none;background:none;cursor:pointer;">Remove</button>
@@ -730,7 +736,7 @@
         const stack = []; // stack of {depth, children}
 
         flat.forEach(item => {
-            const node = { id: item.id, title: item.title, url: item.url, type: item.type, object_id: item.object_id || null, icon: item.icon || '', show_only_icon: !!item.show_only_icon, children: [] };
+            const node = { id: item.id, title: item.title, url: item.url, type: item.type, object_id: item.object_id || null, icon: item.icon || '', show_only_icon: !!item.show_only_icon, target: item.target || '_self', children: [] };
             const depth = item.depth || 0;
 
             if (depth === 0) {

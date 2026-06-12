@@ -6,7 +6,7 @@
     };
 @endphp
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lb-grid-3">
     @forelse($posts as $post)
         <article class="post-card flex flex-col group overflow-hidden bg-white rounded-2xl border border-slate-100/50 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500">
             <!-- Image Area -->
@@ -39,7 +39,7 @@
                 
                 <p class="text-slate-500 text-sm mb-6 line-clamp-3 leading-relaxed">
                     @php
-                        $description = $post->excerpt ?: Str::limit(strip_tags($post->content), 120);
+                        $description = $post->excerpt ?: get_lazy_excerpt($post, 120);
                     @endphp
                     {!! $highlight($description, $searchTerm) !!}
                 </p>

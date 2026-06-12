@@ -39,17 +39,32 @@
         {{-- Categories, tags, share, related and comments at the bottom (outside the builder layout) --}}
         <div class="container-custom py-16">
             @php
+                $builderCatInfo = get_lazy_category_taxonomy($post->type);
                 $isProduct   = $post->type === 'product';
-                $catRoute    = $isProduct ? 'frontend.product_category' : 'frontend.category';
-                $tagRoute    = $isProduct ? 'frontend.product_tag'      : 'frontend.tag';
-                $postCatsCt  = $isProduct ? ($post->productCategories ?? collect()) : ($post->categories ?? collect());
-                $postTagsCt  = $isProduct ? ($post->productTags       ?? collect()) : ($post->tags       ?? collect());
+                $tagRoute    = $isProduct ? 'frontend.product_tag' : 'frontend.tag';
+                $postTagsCt  = $isProduct ? ($post->productTags ?? collect()) : ($post->tags ?? collect());
+                if ($builderCatInfo['type'] === 'product') {
+                    $postCatsCt = $post->productCategories ?? collect();
+                } elseif ($builderCatInfo['type'] === 'acpt') {
+                    $postCatsCt = $post->taxonomyTerms->where('taxonomy_slug', $builderCatInfo['taxonomy_slug']);
+                } else {
+                    $postCatsCt = $post->categories ?? collect();
+                }
             @endphp
             @if($postCatsCt->isNotEmpty())
                 <div class="mt-8 pt-8 border-t border-slate-100 flex items-center gap-3 flex-wrap">
                     <span class="text-xs font-black uppercase tracking-widest text-slate-400 mr-2">Categories:</span>
                     @foreach($postCatsCt as $cat)
-                        <a href="{{ route($catRoute, $cat->slug) }}" class="px-4 py-2 bg-slate-50 hover:bg-primary hover:text-white text-slate-600 text-xs font-bold rounded-lg transition-all">
+                        @php
+                            if ($builderCatInfo['type'] === 'product') {
+                                $catHref = route('frontend.product_category', $cat->getFullSlugPath());
+                            } elseif ($builderCatInfo['type'] === 'acpt') {
+                                $catHref = route('frontend.show', ['typeOrSlug' => $builderCatInfo['taxonomy_slug'], 'slug' => $cat->slug]);
+                            } else {
+                                $catHref = route('frontend.category', $cat->slug);
+                            }
+                        @endphp
+                        <a href="{{ $catHref }}" class="px-4 py-2 bg-slate-50 hover:bg-primary hover:text-white text-slate-600 text-xs font-bold rounded-lg transition-all">
                             {{ $cat->name }}
                         </a>
                     @endforeach
@@ -77,12 +92,13 @@
         </div>
     @else
         <!-- Main Content Area -->
+        @php $sidebarContent = render_lazy_widgets('primary-sidebar'); @endphp
         <div class="py-16 bg-white">
             <div class="container-custom">
-                <div class="flex flex-col lg:flex-row gap-16">
-                    
+                <div class="{{ $sidebarContent ? 'flex flex-col lg:flex-row gap-16 lb-with-sidebar' : '' }}">
+
                     <!-- Content Column -->
-                    <article class="w-full lg:w-[70%]">
+                    <article class="w-full {{ $sidebarContent ? 'lg:w-[70%]' : '' }}">
                         {{-- Post meta — each item toggled from Customizer → Blog → Single Blog --}}
                         @if($sAuthor || $sDate || $sCats)
                         <header class="mb-10">
@@ -101,16 +117,24 @@
                                 @endif
                                 @if($sCats)
                                 @php
-                                    $isProductPost   = $post->type === 'product';
-                                    $firstCat        = $isProductPost
-                                        ? ($post->productCategories->first() ?? null)
-                                        : ($post->categories->first() ?? null);
-                                    $catArchiveRoute = $isProductPost ? 'frontend.product_category' : 'frontend.category';
+                                    $postCatInfo = get_lazy_category_taxonomy($post->type);
+                                    if ($postCatInfo['type'] === 'product') {
+                                        $firstCat   = $post->productCategories->first() ?? null;
+                                        $firstCatUrl = $firstCat ? route('frontend.product_category', $firstCat->getFullSlugPath()) : null;
+                                    } elseif ($postCatInfo['type'] === 'acpt') {
+                                        $firstCat   = $post->taxonomyTerms->where('taxonomy_slug', $postCatInfo['taxonomy_slug'])->first() ?? null;
+                                        $firstCatUrl = $firstCat ? route('frontend.show', ['typeOrSlug' => $postCatInfo['taxonomy_slug'], 'slug' => $firstCat->slug]) : null;
+                                    } else {
+                                        $firstCat   = $post->categories->first() ?? null;
+                                        $firstCatUrl = $firstCat ? route('frontend.category', $firstCat->slug) : null;
+                                    }
                                 @endphp
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="folder" class="w-4 h-4 text-primary"></i>
-                                    @if($firstCat)
-                                        <a href="{{ route($catArchiveRoute, $firstCat->slug) }}" class="font-bold text-slate-600 hover:text-primary transition-colors">{{ $firstCat->name }}</a>
+                                    @if($firstCat && $firstCatUrl)
+                                        <a href="{{ $firstCatUrl }}" class="font-bold text-slate-600 hover:text-primary transition-colors">{{ $firstCat->name }}</a>
+                                    @elseif($firstCat)
+                                        <span class="font-bold text-slate-600">{{ $firstCat->name }}</span>
                                     @else
                                         <span class="font-bold text-slate-600">Uncategorized</span>
                                     @endif
@@ -171,43 +195,12 @@
                         @endif
                     </article>
 
-                    <!-- Sidebar -->
-                    <aside class="w-full lg:w-[30%] space-y-12">
-                        @php $sidebarContent = render_lazy_widgets('primary-sidebar'); @endphp
-                        @if($sidebarContent)
-                            {!! $sidebarContent !!}
-                        @else
-                            <!-- Default Widgets if none configured -->
-                            <div class="widget">
-                                <h4 class="widget-title">Search</h4>
-                                <form action="{{ route('frontend.search') }}" method="GET" class="relative">
-                                    <input type="text" name="s" placeholder="Type and hit enter..." class="w-full border border-slate-200 rounded px-4 py-3 text-sm focus:border-primary outline-none transition-all">
-                                </form>
-                            </div>
-
-                            <div class="widget">
-                                <h4 class="widget-title">Recent Posts</h4>
-                                <div class="space-y-6">
-                                    @foreach(get_lazy_posts(['limit' => 5]) as $recent)
-                                        <div class="flex gap-4 group">
-                                            @if($recent->featured_image)
-                                                <div class="w-16 h-16 shrink-0 bg-slate-50 rounded overflow-hidden border border-slate-100">
-                                                    <img src="{{ str_starts_with($recent->featured_image, 'http') ? $recent->featured_image : asset('storage/'.$recent->featured_image) }}" 
-                                                         class="w-full h-full object-cover group-hover:scale-110 transition duration-500" alt="{{ $recent->title }}">
-                                                </div>
-                                            @endif
-                                            <div>
-                                                <h5 class="text-sm font-bold leading-snug group-hover:text-primary transition-colors">
-                                                    <a href="{{ get_lazy_permalink($recent) }}">{{ $recent->title }}</a>
-                                                </h5>
-                                                <p class="text-[10px] font-bold text-slate-400 uppercase mt-2 tracking-widest">{{ $recent->created_at->format('M d, Y') }}</p>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
+                    <!-- Sidebar — hidden when empty, post goes full width -->
+                    @if($sidebarContent)
+                    <aside class="w-full lg:w-[30%] space-y-12 lb-sidebar-widget">
+                        {!! $sidebarContent !!}
                     </aside>
+                    @endif
 
                 </div>
             </div>

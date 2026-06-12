@@ -535,6 +535,47 @@ class CustomizerController extends \Illuminate\Routing\Controller
                         'default'     => '40px',
                         'placeholder' => '40px',
                     ],
+                    'theme_social_icons_heading' => [
+                        'type'  => 'heading',
+                        'label' => 'Social Icons',
+                    ],
+                    'theme_social_icon_style' => [
+                        'type'    => 'button_group',
+                        'label'   => 'Icon Color Mode',
+                        'desc'    => 'Brand Colors uses each network\'s official color. Custom Color applies a single palette you define.',
+                        'default' => 'brand',
+                        'options' => ['brand' => 'Brand Colors', 'custom' => 'Custom Color'],
+                    ],
+                    'theme_social_icon_color' => [
+                        'type'          => 'color',
+                        'label'         => 'Icon Color',
+                        'desc'          => 'Foreground color of the icon (text / glyph).',
+                        'default'       => '#ffffff',
+                        'depends_on'    => 'theme_social_icon_style',
+                        'depends_value' => 'custom',
+                    ],
+                    'theme_social_icon_bg' => [
+                        'type'          => 'color',
+                        'label'         => 'Icon Background',
+                        'desc'          => 'Background fill of each icon button.',
+                        'default'       => '#6366f1',
+                        'depends_on'    => 'theme_social_icon_style',
+                        'depends_value' => 'custom',
+                    ],
+                    'theme_social_icon_hover_color' => [
+                        'type'          => 'color',
+                        'label'         => 'Hover — Icon Color',
+                        'default'       => '#ffffff',
+                        'depends_on'    => 'theme_social_icon_style',
+                        'depends_value' => 'custom',
+                    ],
+                    'theme_social_icon_hover_bg' => [
+                        'type'          => 'color',
+                        'label'         => 'Hover — Background',
+                        'default'       => '#4338ca',
+                        'depends_on'    => 'theme_social_icon_style',
+                        'depends_value' => 'custom',
+                    ],
                 ],
             ],
             // ── Blog (grouped: renders as a "Blog" parent with General + Single Blog sub-items) ──
@@ -749,21 +790,6 @@ class CustomizerController extends \Illuminate\Routing\Controller
                     ],
                 ],
             ],
-            'social' => [
-                'title' => 'Social Media',
-                'icon'  => 'share',
-                'fields' => [
-                    'theme_social_facebook'  => ['type' => 'url', 'label' => 'Facebook URL',   'default' => '', 'placeholder' => 'https://facebook.com/yourpage'],
-                    'theme_social_twitter'   => ['type' => 'url', 'label' => 'X (Twitter) URL','default' => '', 'placeholder' => 'https://x.com/yourhandle'],
-                    'theme_social_instagram' => ['type' => 'url', 'label' => 'Instagram URL',  'default' => '', 'placeholder' => 'https://instagram.com/yourhandle'],
-                    'theme_social_linkedin'  => ['type' => 'url', 'label' => 'LinkedIn URL',   'default' => '', 'placeholder' => 'https://linkedin.com/in/yourprofile'],
-                    'theme_social_youtube'   => ['type' => 'url', 'label' => 'YouTube URL',    'default' => '', 'placeholder' => 'https://youtube.com/@yourchannel'],
-                    'theme_social_github'    => ['type' => 'url', 'label' => 'GitHub URL',     'default' => '', 'placeholder' => 'https://github.com/yourprofile'],
-                    'theme_social_pinterest' => ['type' => 'url', 'label' => 'Pinterest URL',  'default' => '', 'placeholder' => 'https://pinterest.com/yourprofile'],
-                    'theme_social_tiktok'    => ['type' => 'url', 'label' => 'TikTok URL',     'default' => '', 'placeholder' => 'https://tiktok.com/@yourhandle'],
-                    'theme_social_whatsapp'  => ['type' => 'url', 'label' => 'WhatsApp Link',  'default' => '', 'placeholder' => 'https://wa.me/yourphone'],
-                ],
-            ],
             'custom_css' => [
                 'title' => 'Custom CSS',
                 'icon'  => 'code',
@@ -819,11 +845,14 @@ class CustomizerController extends \Illuminate\Routing\Controller
 
         $rawSettings = DB::table('cms_settings')->pluck('value', 'key')->toArray();
 
-        // Merge defaults so fields always have a value
+        // Merge defaults so fields always have a value.
+        // If the DB has an empty string (can happen when a locked section's fields were overwritten
+        // by an earlier save bug), treat it the same as missing and fall back to the field default.
         $settings = [];
         foreach ($sections as $sec) {
             foreach ($sec['fields'] as $key => $field) {
-                $settings[$key] = $rawSettings[$key] ?? ($field['default'] ?? '');
+                $raw = $rawSettings[$key] ?? null;
+                $settings[$key] = ($raw !== null && $raw !== '') ? $raw : ($field['default'] ?? '');
             }
         }
 
@@ -844,8 +873,25 @@ class CustomizerController extends \Illuminate\Routing\Controller
 
         $activeSection = $request->input('_section', 'layout');
 
-        foreach ($this->sections() as $sec) {
+        // Mirror the view's locking logic: skip sections whose builder overrides are active,
+        // so saving from any other section doesn't overwrite those fields with empty strings.
+        $builderHeaderActive = function_exists('get_lazy_header') ? (bool) get_lazy_header() : false;
+        $builderFooterActive = function_exists('get_lazy_footer') ? (bool) get_lazy_footer() : false;
+
+        $lockedSections = [];
+        if ($builderHeaderActive) {
+            $lockedSections[] = 'header';
+            $lockedSections[] = 'menu';
+        }
+        if ($builderFooterActive) {
+            $lockedSections[] = 'footer';
+        }
+
+        $nonDataTypes = ['heading', 'info', 'action_button'];
+        foreach ($this->sections() as $sectionKey => $sec) {
+            if (in_array($sectionKey, $lockedSections)) continue;
             foreach ($sec['fields'] as $key => $field) {
+                if (in_array($field['type'] ?? '', $nonDataTypes)) continue;
                 $value = $request->input($key, '');
                 DB::table('cms_settings')->updateOrInsert(['key' => $key], ['value' => $value]);
             }
@@ -869,9 +915,11 @@ class CustomizerController extends \Illuminate\Routing\Controller
         $section  = $request->input('section', '');
         $sections = $this->sections();
 
+        $nonDataTypes = ['heading', 'info', 'action_button'];
         if ($request->input('all') === '1') {
             foreach ($sections as $sec) {
                 foreach ($sec['fields'] as $key => $field) {
+                    if (in_array($field['type'] ?? '', $nonDataTypes)) continue;
                     DB::table('cms_settings')->updateOrInsert(['key' => $key], ['value' => $field['default'] ?? '']);
                 }
             }
@@ -884,6 +932,7 @@ class CustomizerController extends \Illuminate\Routing\Controller
 
         if (isset($sections[$section])) {
             foreach ($sections[$section]['fields'] as $key => $field) {
+                if (in_array($field['type'] ?? '', $nonDataTypes)) continue;
                 DB::table('cms_settings')->updateOrInsert(['key' => $key], ['value' => $field['default'] ?? '']);
             }
         }

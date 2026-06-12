@@ -4,6 +4,7 @@ namespace Acme\CmsDashboard\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
 use Acme\CmsDashboard\Models\Widget;
+use Acme\CmsDashboard\Models\PostType;
 use Illuminate\Http\Request;
 
 class WidgetController extends Controller
@@ -31,19 +32,39 @@ class WidgetController extends Controller
             ],
             'categories' => [
                 'name' => 'Categories List',
-                'description' => 'Displays a list of categories or taxonomies.',
-                'settings' => ['taxonomy' => 'category']
+                'description' => 'Displays a list of post categories.',
+                'settings' => []
             ],
             'custom_html' => [
                 'name' => 'Custom HTML',
                 'description' => 'Add arbitrary HTML code.',
                 'settings' => ['content' => '']
             ],
+            'social_media' => [
+                'name' => 'Social Media',
+                'description' => 'Display links to your social media profiles.',
+                'settings' => []
+            ],
+            'text' => [
+                'name' => 'Text',
+                'description' => 'Display rich formatted text content.',
+                'settings' => ['content' => '']
+            ],
+            'nav_menu' => [
+                'name' => 'Navigation Menu',
+                'description' => 'Display any navigation menu in a widget area.',
+                'settings' => ['menu_id' => '']
+            ],
+            'image' => [
+                'name' => 'Image',
+                'description' => 'Display an image with an optional clickable link.',
+                'settings' => ['image_url' => '', 'link_url' => '', 'link_target' => '_self', 'alt_text' => '', 'caption' => '']
+            ],
         ];
 
         // Scan active theme for custom widgets
         $activeTheme = get_cms_option('active_theme', 'lazy-theme');
-        $themeWidgetPath = base_path("vendor/lazycmsapp/lazy-cms-builder/resources/views/themes/{$activeTheme}/widgets");
+        $themeWidgetPath = base_path("vendor/tareqcodex/lazy-cms-rebuild/resources/views/themes/{$activeTheme}/widgets");
         
         if (is_dir($themeWidgetPath)) {
             $files = scandir($themeWidgetPath);
@@ -63,7 +84,44 @@ class WidgetController extends Controller
 
         $activeWidgets = Widget::orderBy('order')->get()->groupBy('area');
 
-        return view('cms-dashboard::admin.widgets.index', compact('widgetAreas', 'availableWidgets', 'activeWidgets'));
+        // Active hierarchical (category) taxonomies for CPTs
+        $cptCatTaxonomies = \Illuminate\Support\Facades\DB::table('custom_taxonomies')
+            ->where('hierarchical', true)
+            ->where('is_active', true)
+            ->whereNull('deleted_at')
+            ->get();
+
+        $allActivePostTypes = PostType::where('is_active', true)
+            ->whereNotIn('slug', ['page', 'lazy_header', 'lazy_footer'])
+            ->orderBy('name')
+            ->pluck('name', 'slug');
+
+        // Categories widget: only show post types that have active categories assigned
+        $postTypesWithCategories = PostType::where('is_active', true)
+            ->whereNotIn('slug', ['page', 'lazy_header', 'lazy_footer'])
+            ->orderBy('name')
+            ->get()
+            ->filter(function ($pt) use ($cptCatTaxonomies) {
+                if ($pt->slug === 'post') {
+                    return \Acme\CmsDashboard\Models\Category::exists();
+                }
+                if ($pt->slug === 'product') {
+                    return \Acme\CmsDashboard\Models\ProductCategory::exists();
+                }
+                $taxSlugs = $cptCatTaxonomies
+                    ->filter(fn($t) => in_array($pt->slug, json_decode($t->post_types ?? '[]', true)))
+                    ->pluck('slug');
+                if ($taxSlugs->isEmpty()) return false;
+                return \Acme\CmsDashboard\Models\TaxonomyTerm::whereIn('taxonomy_slug', $taxSlugs)->exists();
+            })
+            ->pluck('name', 'slug');
+
+        $menus = \Acme\CmsDashboard\Models\NavigationMenu::orderBy('name')->get(['id', 'name', 'slug']);
+
+        return view('cms-dashboard::admin.widgets.index', compact(
+            'widgetAreas', 'availableWidgets', 'activeWidgets',
+            'allActivePostTypes', 'postTypesWithCategories', 'menus'
+        ));
     }
 
     public function store(Request $request)
@@ -88,7 +146,9 @@ class WidgetController extends Controller
 
     public function update(Request $request, Widget $widget)
     {
-        $widget->update($request->only(['title', 'settings', 'order', 'is_active']));
+        $data = $request->only(['title', 'settings', 'order']);
+        $data['is_active'] = $request->boolean('is_active') ? 1 : 0;
+        $widget->update($data);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json(['status' => 'success', 'message' => 'Widget updated successfully!']);

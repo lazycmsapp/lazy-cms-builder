@@ -16,7 +16,7 @@
             </div>
 
             <!-- Desktop Navigation -->
-            <nav class="hidden lg:flex items-center gap-8 h-full">
+            <nav class="hidden lg:flex items-center gap-8 h-full lb-desktop-nav">
                 @php $menuItems = get_lazy_menu('header'); @endphp
                 @foreach($menuItems as $item)
                     @php 
@@ -24,7 +24,7 @@
                         $itemHoverColor = get_cms_option('theme_menu_hover_color', '#0091ea');
                     @endphp
                     <div class="relative group h-full flex items-center">
-                        <a href="{{ $item->url }}" class="nav-style {{ $isActive ? 'text-primary' : '' }} hover:text-[{{ $itemHoverColor }}] transition-colors flex items-center gap-1">
+                        <a href="{{ $item->url }}" target="{{ $item->target ?? '_self' }}" class="nav-style {{ $isActive ? 'text-primary' : '' }} hover:text-[{{ $itemHoverColor }}] transition-colors flex items-center gap-1">
                             @php
                                 $__ic = $item->icon ?? '';
                                 $__io = !empty($item->show_only_icon) && $__ic !== '';
@@ -42,7 +42,7 @@
                                 <ul class="py-2">
                                     @foreach($item->children as $child)
                                         <li class="relative group/sub">
-                                            <a href="{{ $child->url }}" class="flex items-center justify-between px-5 py-2.5 text-[13px] font-medium hover:bg-slate-50 transition-all"
+                                            <a href="{{ $child->url }}" target="{{ $child->target ?? '_self' }}" class="flex items-center justify-between px-5 py-2.5 text-[13px] font-medium hover:bg-slate-50 transition-all"
                                                style="color: {{ get_cms_option('theme_dropdown_text_color', '#1d2327') }};">
                                                 @php
                                                     $__cic = $child->icon ?? '';
@@ -61,7 +61,7 @@
                                                     <ul class="py-2">
                                                         @foreach($child->children as $grandChild)
                                                             <li>
-                                                                <a href="{{ $grandChild->url }}" class="block px-5 py-2.5 text-[13px] font-medium hover:bg-slate-50 transition-all"
+                                                                <a href="{{ $grandChild->url }}" target="{{ $grandChild->target ?? '_self' }}" class="block px-5 py-2.5 text-[13px] font-medium hover:bg-slate-50 transition-all"
                                                                    style="color: {{ get_cms_option('theme_dropdown_text_color', '#1d2327') }};">
                                                                     @php
                                                                         $__gic = $grandChild->icon ?? '';
@@ -102,7 +102,7 @@
                     <i data-lucide="search" class="w-5 h-5"></i>
                 </button>
                 
-                <button class="lg:hidden hover:text-primary transition-colors" style="color: inherit;" onclick="document.getElementById('mobile-menu').classList.remove('translate-x-full')">
+                <button class="lg:hidden hover:text-primary transition-colors lb-mobile-btn" style="color: inherit;" onclick="document.getElementById('mobile-menu').classList.remove('translate-x-full')">
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
             </div>
@@ -121,7 +121,7 @@
 </header>
 
 <!-- Mobile Menu Overlay -->
-<div id="mobile-menu" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] transform translate-x-full transition-transform duration-300 lg:hidden">
+<div id="mobile-menu" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] transform translate-x-full transition-transform duration-300 lg:hidden lb-mobile-menu">
     <div class="absolute right-0 top-0 h-full w-80 bg-white shadow-2xl flex flex-col">
         <div class="p-6 border-b border-slate-100 flex items-center justify-between">
             <span class="text-lg font-bold text-slate-900">Navigation</span>
@@ -147,7 +147,7 @@
                             $__mio = !empty($item->show_only_icon) && $__mic !== '';
                             $__mIconHtml = $__mic !== '' ? '<i class="'.e($__mic).' mr-2"'.($__mio ? ' title="'.e($item->title).'"' : '').'></i>' : '';
                         @endphp
-                        <a href="{{ $item->url }}" class="text-[15px] font-bold {{ $isActive ? 'text-primary' : 'text-slate-800' }} hover:text-primary block mb-2">{!! $__mIconHtml !!}@if(!$__mio){{ $item->title }}@endif</a>
+                        <a href="{{ $item->url }}" target="{{ $item->target ?? '_self' }}" class="text-[15px] font-bold {{ $isActive ? 'text-primary' : 'text-slate-800' }} hover:text-primary block mb-2">{!! $__mIconHtml !!}@if(!$__mio){{ $item->title }}@endif</a>
                         @if($item->children->count() > 0)
                             <div class="pl-4 space-y-2 border-l border-slate-100 ml-1">
                                 @foreach($item->children as $child)
@@ -159,7 +159,7 @@
                                         $__mcio = !empty($child->show_only_icon) && $__mcic !== '';
                                         $__mcIconHtml = $__mcic !== '' ? '<i class="'.e($__mcic).' mr-2"'.($__mcio ? ' title="'.e($child->title).'"' : '').'></i>' : '';
                                     @endphp
-                                    <a href="{{ $child->url }}" class="text-[14px] font-medium {{ $childActive ? 'text-primary' : 'text-slate-600' }} hover:text-primary block">{!! $__mcIconHtml !!}@if(!$__mcio){{ $child->title }}@endif</a>
+                                    <a href="{{ $child->url }}" target="{{ $child->target ?? '_self' }}" class="text-[14px] font-medium {{ $childActive ? 'text-primary' : 'text-slate-600' }} hover:text-primary block">{!! $__mcIconHtml !!}@if(!$__mcio){{ $child->title }}@endif</a>
                                 @endforeach
                             </div>
                         @endif

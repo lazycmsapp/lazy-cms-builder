@@ -269,6 +269,52 @@
             .container-custom, .page-container { width: var(--site-width) !important; max-width: none !important; }
         @endif
 
+        @if($responsiveEnabled)
+        /* Header: desktop nav ↔ mobile hamburger switch at $headerBP */
+        @media (min-width: {{ (int)$headerBP + 1 }}px) {
+            .lb-desktop-nav { display: flex !important; }
+            .lb-mobile-btn, .lb-mobile-menu { display: none !important; }
+        }
+        @media (max-width: {{ $headerBP }}px) {
+            .lb-desktop-nav { display: none !important; }
+            .lb-mobile-btn  { display: flex !important; }
+        }
+        /* Content + sidebar: stack vertically below $contentBP */
+        @media (min-width: {{ (int)$contentBP + 1 }}px) {
+            .lb-with-sidebar         { flex-direction: row !important; }
+            .lb-sidebar-widget       { flex-shrink: 0 !important; }
+            .lb-sidebar-order-first  { order: 1 !important; }
+            .lb-main-order-second    { order: 2 !important; }
+        }
+        @media (max-width: {{ $contentBP }}px) {
+            .lb-with-sidebar { flex-direction: column !important; }
+        }
+        /* Blog grid: collapse columns at $gridBP */
+        @media (max-width: 640px) {
+            .lb-grid-2,.lb-grid-3,.lb-grid-4 { grid-template-columns: 1fr !important; }
+        }
+        @media (min-width: 641px) and (max-width: {{ $gridBP }}px) {
+            .lb-grid-3,.lb-grid-4 { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+        }
+        @media (min-width: {{ (int)$gridBP + 1 }}px) {
+            .lb-grid-3 { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+            .lb-grid-4 { grid-template-columns: repeat(4,minmax(0,1fr)) !important; }
+        }
+        @endif
+
+        /* Widget title used by all sidebar/footer widgets */
+        .widget-title {
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-heading);
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--primary);
+            display: inline-block;
+        }
+
         /* Responsive Typography: headings (h1–h6) are emitted as fluid clamp() sizes
            above, controlled by the Sensitivity + Minimum Font Size Factor settings. */
 

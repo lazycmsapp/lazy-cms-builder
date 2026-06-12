@@ -280,11 +280,15 @@ class FrontendController extends Controller
                 $term = \Acme\CmsDashboard\Models\TaxonomyTerm::where('taxonomy_slug', $type)
                     ->where('slug', $lastSlug)
                     ->firstOrFail();
-                
-                $posts = $term->posts()->where('status', 'published')->where('lang_code', app()->getLocale())->latest()->paginate(12);
-                $title = $customTaxonomy->name . ': ' . $term->name;
-                $type = $customTaxonomy->name;
-                return view($this->resolveThemeView('archive'), compact('posts', 'title', 'type'));
+                $posts           = $term->posts()->where('status', 'published')->where('lang_code', app()->getLocale())->latest()->paginate(12)->withQueryString();
+                $title           = $term->name;
+                $archivePostType = $term->cpt_slug ?? 'post';
+                return view($this->resolveThemeView('archive'), [
+                    'posts'           => $posts,
+                    'title'           => $title,
+                    'type'            => $customTaxonomy->name,
+                    'archivePostType' => $archivePostType,
+                ]);
             }
 
             $postType = PostType::where('slug', $type)->first();

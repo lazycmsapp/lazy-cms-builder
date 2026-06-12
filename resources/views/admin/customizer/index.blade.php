@@ -129,19 +129,36 @@
                                 </div>
 
                                 <div class="border border-[#c3c4c7] rounded">
-                                    <div class="px-4 py-2.5 bg-[#f6f7f7] border-b border-[#c3c4c7]">
-                                        <h3 class="text-[13px] font-bold text-[#1d2327] m-0">Import Settings</h3>
+                                    <div class="px-4 py-2.5 bg-[#f6f7f7] border-b border-[#c3c4c7] flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-[18px] text-[#646970]">upload</span>
+                                        <div>
+                                            <h3 class="text-[13px] font-bold text-[#1d2327] m-0">Import Settings</h3>
+                                            <p class="text-[11px] text-[#646970] m-0">Upload a previously exported JSON file to restore settings.</p>
+                                        </div>
                                     </div>
                                     <div class="px-4 py-4">
-                                        <p class="text-[12px] text-[#646970] mb-3">Upload a previously exported JSON file to restore settings.</p>
-                                        <form id="import-settings-form" method="POST" action="{{ route('admin.customizer.import') }}" enctype="multipart/form-data" class="flex items-center gap-3">
+                                        <form id="import-settings-form" method="POST" action="{{ route('admin.customizer.import') }}" enctype="multipart/form-data">
                                             @csrf
-                                            <input type="file" name="import_file" accept=".json" class="text-[12px]" required>
-                                            <button type="button" class="wp-btn-secondary h-8 px-4 text-[12px] flex items-center gap-1.5"
-                                                    @click="confirmImport()">
-                                                <span class="material-symbols-outlined" style="font-size:15px !important;">upload</span>
-                                                Import
-                                            </button>
+                                            <div class="flex flex-col gap-3">
+                                                <div id="cust-import-drop-zone"
+                                                     class="relative border-2 border-dashed border-[#c3c4c7] rounded-sm p-5 text-center cursor-pointer hover:border-[#2271b1] transition-colors">
+                                                    <span class="material-symbols-outlined text-[36px] text-[#c3c4c7] block mb-1" id="cust-import-icon">upload_file</span>
+                                                    <p class="text-[13px] text-[#646970] m-0" id="cust-import-label">Click to choose file or drag &amp; drop here</p>
+                                                    <p class="text-[11px] text-[#9ca3af] mt-1 mb-0">Accepted: <strong>.json</strong></p>
+                                                    <input type="file" name="import_file" id="cust-import-file" accept=".json"
+                                                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                           onchange="handleCustImportSelect(this)" required>
+                                                </div>
+                                                <div class="flex justify-center">
+                                                    <button type="button" id="cust-import-btn"
+                                                            onclick="custConfirmImport()"
+                                                            disabled
+                                                            class="wp-btn-primary flex items-center gap-1.5 opacity-50 pointer-events-none">
+                                                        <span class="material-symbols-outlined" style="font-size:18px !important;">download_done</span>
+                                                        Import Settings
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </form>
                                     </div>
                                 </div>
@@ -199,6 +216,7 @@
 
                                                  <tr class="field-row border-b border-[#f0f0f1] hover:bg-[#f6f7f7]/60 transition-colors"
                                                 @if(!empty($field['depends'])) data-depends="{{ $field['depends'] }}" @endif
+                                                @if(!empty($field['depends_on'])) data-depends-on="{{ $field['depends_on'] }}" data-depends-value="{{ $field['depends_value'] ?? '' }}" @endif
                                                 data-label="{{ strtolower($label . ' ' . $desc . ' ' . $sectionKey . ' ' . $sections[$sectionKey]['title']) }}">
                                                 <th scope="row" class="w-[260px] text-left align-top px-5 py-3.5">
                                                     <label for="field_{{ $key }}" class="text-[13px] font-semibold text-[#2271b1] block mb-0.5 cursor-pointer">{{ $label }}</label>
@@ -590,6 +608,7 @@
 // Field dependency: rows with data-depends="<masterKey>" are only active when the
 // master toggle (#toggle_<masterKey>) is ON. When OFF they grey out and stop responding.
 function initCustomizerDeps() {
+    // Toggle-based dependency (existing behaviour)
     document.querySelectorAll('[data-depends]').forEach(function (row) {
         var masterKey = row.getAttribute('data-depends');
         var master = document.getElementById('toggle_' + masterKey);
@@ -602,6 +621,31 @@ function initCustomizerDeps() {
             row.setAttribute('aria-disabled', on ? 'false' : 'true');
         };
         master.addEventListener('change', apply);
+        apply();
+    });
+
+    // Value-based dependency (button_group / select master)
+    document.querySelectorAll('[data-depends-on]').forEach(function (row) {
+        if (row.dataset.depInit) return;
+        row.dataset.depInit = '1';
+        var masterKey   = row.getAttribute('data-depends-on');
+        var targetValue = row.getAttribute('data-depends-value');
+        var radios      = document.querySelectorAll('[name="' + masterKey + '"]');
+        var selectEl    = document.getElementById('field_' + masterKey);
+        var getValue = function () {
+            for (var i = 0; i < radios.length; i++) {
+                if (radios[i].checked) return radios[i].value;
+            }
+            return selectEl ? selectEl.value : '';
+        };
+        var apply = function () {
+            var on = getValue() === targetValue;
+            row.style.opacity      = on ? '' : '0.4';
+            row.style.pointerEvents = on ? '' : 'none';
+            row.setAttribute('aria-disabled', on ? 'false' : 'true');
+        };
+        radios.forEach(function (r) { r.addEventListener('change', apply); });
+        if (selectEl) selectEl.addEventListener('change', apply);
         apply();
     });
 }
@@ -930,19 +974,51 @@ function customizerApp(initialSection) {
             }, 3200);
         },
 
-        async confirmImport() {
-            const confirmed = await window.lazyConfirm({
-                title: 'Import Settings',
-                message: 'This will overwrite your current settings with the ones from the uploaded file. Continue?',
-                confirmText: 'Import Now',
-                isDanger: true
-            });
-
-            if (confirmed) {
-                document.getElementById('import-settings-form').submit();
-            }
-        }
     };
+}
+
+// Customizer Import — drag & drop + file feedback
+function handleCustImportSelect(input) {
+    const zone  = document.getElementById('cust-import-drop-zone');
+    const label = document.getElementById('cust-import-label');
+    const icon  = document.getElementById('cust-import-icon');
+    const btn   = document.getElementById('cust-import-btn');
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    label.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+    label.style.color = '#2271b1';
+    icon.textContent  = 'check_circle';
+    icon.style.color  = '#46b450';
+    zone.style.borderColor = '#46b450';
+    btn.disabled = false;
+    btn.classList.remove('opacity-50', 'pointer-events-none');
+}
+
+(function () {
+    document.addEventListener('DOMContentLoaded', function () {
+        const zone = document.getElementById('cust-import-drop-zone');
+        if (!zone) return;
+        zone.addEventListener('dragover',  e => { e.preventDefault(); zone.style.borderColor = '#2271b1'; });
+        zone.addEventListener('dragleave', () => { zone.style.borderColor = ''; });
+        zone.addEventListener('drop', e => {
+            e.preventDefault(); zone.style.borderColor = '';
+            const input = document.getElementById('cust-import-file');
+            if (e.dataTransfer && e.dataTransfer.files.length) {
+                input.files = e.dataTransfer.files;
+                handleCustImportSelect(input);
+            }
+        });
+    });
+})();
+
+async function custConfirmImport() {
+    const confirmed = await window.lazyConfirm({
+        title:       'Import Settings',
+        message:     'This will overwrite your current theme settings with the ones from the uploaded file. Continue?',
+        confirmText: 'Import Now',
+        isDanger:    true
+    });
+    if (confirmed) document.getElementById('import-settings-form').submit();
 }
 
 // Typography Component Logic

@@ -139,6 +139,7 @@ class MenuManagementController extends Controller
                     'object_id' => $objectId,
                     'icon'      => $item->icon ?? '',
                     'show_only_icon' => (bool)($item->show_only_icon ?? false),
+                    'target'    => $item->target ?? '_self',
                     'depth'     => $depth,
                     'orphaned'  => $orphaned || $isTrashed || $isInactiveTax,
                     'is_draft'  => $isDraft,
@@ -243,6 +244,7 @@ class MenuManagementController extends Controller
                 'object_id' => $item['object_id'] ?? null,
                 'icon' => $item['icon'] ?? null,
                 'show_only_icon' => !empty($item['show_only_icon']),
+                'target' => $item['target'] ?? '_self',
                 'order' => $index,
             ]);
 

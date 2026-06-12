@@ -45,7 +45,7 @@
 
         {{-- ═══ PRODUCT ARCHIVE ═══ --}}
         @if($isProductArchive)
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12 lb-grid-4">
             @foreach($posts as $product)
                 <div class="group flex flex-col">
                     <a href="{{ get_lazy_permalink($product) }}" class="block relative pt-[100%] overflow-hidden bg-[#eef1f5] mb-4">
@@ -98,7 +98,7 @@
 
         {{-- ═══ POST / CPT / AUTHOR ARCHIVE ═══ --}}
         @else
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lb-grid-3">
             @foreach($posts as $postItem)
             @php
                 $permalink  = get_lazy_permalink($postItem);

@@ -7,8 +7,10 @@
          getCanvasVisibilityStyle(el.settings)
      ]">
     <div :style="{
-        paddingTop: getUnitVal(el.settings.paddingTop, el.settings.paddingTopUnit),
-        paddingBottom: getUnitVal(el.settings.paddingBottom, el.settings.paddingBottomUnit),
+        paddingTop: getUnitVal(getResponsiveVal(el.settings, 'paddingTop', device), getResponsiveVal(el.settings, 'paddingTopUnit', device) || 'px'),
+        paddingRight: getUnitVal(getResponsiveVal(el.settings, 'paddingRight', device), getResponsiveVal(el.settings, 'paddingRightUnit', device) || 'px'),
+        paddingBottom: getUnitVal(getResponsiveVal(el.settings, 'paddingBottom', device), getResponsiveVal(el.settings, 'paddingBottomUnit', device) || 'px'),
+        paddingLeft: getUnitVal(getResponsiveVal(el.settings, 'paddingLeft', device), getResponsiveVal(el.settings, 'paddingLeftUnit', device) || 'px'),
         marginTop: getUnitVal(getResponsiveVal(el.settings, 'marginTop', device), getResponsiveVal(el.settings, 'marginTopUnit', device) || 'px'),
         marginRight: getUnitVal(getResponsiveVal(el.settings, 'marginRight', device), getResponsiveVal(el.settings, 'marginRightUnit', device) || 'px'),
         marginBottom: getUnitVal(getResponsiveVal(el.settings, 'marginBottom', device), getResponsiveVal(el.settings, 'marginBottomUnit', device) || 'px'),
@@ -53,10 +55,10 @@
                     backgroundClip: !el.settings.useLink && el.settings.useGradient ? 'text' : 'unset',
                     textAlign: getResponsiveVal(el.settings, 'textAlign', device) || 'center',
                     fontFamily: el.settings.fontFamily || 'inherit',
-                    fontSize: getUnitVal(el.settings.fontSize || 36, el.settings.fontSizeUnit || 'px'),
+                    fontSize: getUnitVal(getResponsiveVal(el.settings, 'fontSize', device) || 36, getResponsiveVal(el.settings, 'fontSizeUnit', device) || 'px'),
                     fontWeight: el.settings.fontWeight || '800',
-                    lineHeight: el.settings.lineHeight || '1.2',
-                    letterSpacing: getUnitVal(el.settings.letterSpacing, 'px'),
+                    lineHeight: getResponsiveVal(el.settings, 'lineHeight', device) || '1.2',
+                    letterSpacing: getUnitVal(getResponsiveVal(el.settings, 'letterSpacing', device), 'px'),
                     textTransform: el.settings.textTransform || 'none',
                     textShadow: el.settings.textShadow
                         ? (el.settings.textShadowH || 0) + 'px '

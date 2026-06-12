@@ -11,6 +11,7 @@
         <div class="px-3 py-2 bg-[#111111] text-[9px] font-black uppercase tracking-[0.2em] text-white/40 border-b border-white/10 flex items-center gap-1.5">
             <i class="fa fa-layer-group text-[9px]"></i>
             @{{ ctxMenuTitle }}
+            <span v-if="ctxClipboard" class="ml-auto text-[8px] text-green-400/70 normal-case font-normal">📋 @{{ ctxClipboard.type }}</span>
         </div>
 
         <!-- Actions -->
@@ -56,15 +57,15 @@
                     class="w-full px-3 py-2 text-left text-[12.5px] text-white/90 hover:bg-white/10 hover:text-white transition-colors flex items-center gap-2.5">
                 <i class="fa fa-clipboard w-3.5 text-center text-white/40 text-[11px]"></i> Copy
             </button>
-            <button @click="ctxClipboard?.type === ctxMenu.type && ctxPaste('start')"
-                    :class="ctxClipboard?.type === ctxMenu.type ? 'text-white/90 hover:bg-white/10 hover:text-white cursor-pointer' : 'text-white/25 cursor-not-allowed'"
+            <button @click="ctxClipboard && ctxClipboard.type === ctxMenu.type && ctxPaste('start')"
+                    :class="ctxClipboard && ctxClipboard.type === ctxMenu.type ? 'text-white/90 hover:bg-white/10 hover:text-white cursor-pointer' : 'text-white/25 cursor-not-allowed'"
                     class="w-full px-3 py-2 text-left text-[12.5px] transition-colors flex items-center gap-2.5">
-                <i class="fa fa-arrow-up w-3.5 text-center text-[11px]" :class="ctxClipboard?.type === ctxMenu.type ? 'text-white/40' : 'text-white/20'"></i> Paste at Start
+                <i class="fa fa-arrow-up w-3.5 text-center text-[11px]" :class="ctxClipboard && ctxClipboard.type === ctxMenu.type ? 'text-white/40' : 'text-white/20'"></i> Paste at Start
             </button>
-            <button @click="ctxClipboard?.type === ctxMenu.type && ctxPaste('end')"
-                    :class="ctxClipboard?.type === ctxMenu.type ? 'text-white/90 hover:bg-white/10 hover:text-white cursor-pointer' : 'text-white/25 cursor-not-allowed'"
+            <button @click="ctxClipboard && ctxClipboard.type === ctxMenu.type && ctxPaste('end')"
+                    :class="ctxClipboard && ctxClipboard.type === ctxMenu.type ? 'text-white/90 hover:bg-white/10 hover:text-white cursor-pointer' : 'text-white/25 cursor-not-allowed'"
                     class="w-full px-3 py-2 text-left text-[12.5px] transition-colors flex items-center gap-2.5">
-                <i class="fa fa-arrow-down w-3.5 text-center text-[11px]" :class="ctxClipboard?.type === ctxMenu.type ? 'text-white/40' : 'text-white/20'"></i> Paste at End
+                <i class="fa fa-arrow-down w-3.5 text-center text-[11px]" :class="ctxClipboard && ctxClipboard.type === ctxMenu.type ? 'text-white/40' : 'text-white/20'"></i> Paste at End
             </button>
         </div>
     </div>
