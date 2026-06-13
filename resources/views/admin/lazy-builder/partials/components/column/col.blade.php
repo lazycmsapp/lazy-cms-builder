@@ -141,7 +141,7 @@
         <template v-for="(el, eli) in column.elements" :key="el.id">
         <div v-if="el.type === 'row' && column.settings.contentLayout === 'row'"
              style="flex-basis:100%;width:100%;height:0;overflow:hidden;"></div>
-        <div class="relative group/el mb-2"
+        <div class="relative group/el"
              @click.stop="setEditingContext('element', ci, coli, eli)"
              @contextmenu.prevent.stop="openCtxMenu($event, 'element', ci, coli, eli)"
              :class="[
