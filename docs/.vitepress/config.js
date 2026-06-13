@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   lang: 'en-US',
+  base: '/lazy-cms-builder/',
   title: 'Lazy CMS Builder',
   titleTemplate: '%s | Lazy CMS Builder',
   description: 'A WordPress-like drag-and-drop CMS package for Laravel — page builder, e-commerce, multi-language, hooks API, mega menus, and more.',
