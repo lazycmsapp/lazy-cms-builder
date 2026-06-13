@@ -9,13 +9,13 @@ export default defineConfig({
   lastUpdated: true,
 
   head: [
-    ['link', { rel: 'icon', href: '/favicon.ico' }],
+    ['link', { rel: 'icon', href: '/lazy-cms-builder/hero.svg', type: 'image/svg+xml' }],
     ['meta', { property: 'og:type',        content: 'website' }],
     ['meta', { property: 'og:site_name',   content: 'Lazy CMS Builder' }],
     ['meta', { property: 'og:description', content: 'A WordPress-like drag-and-drop CMS package for Laravel — page builder, e-commerce, multi-language, hooks API, mega menus, and more.' }],
-    ['meta', { property: 'og:image',       content: '/hero.png' }],
+    ['meta', { property: 'og:image',       content: 'https://lazycmsapp.github.io/lazy-cms-builder/hero.svg' }],
     ['meta', { name: 'twitter:card',       content: 'summary_large_image' }],
-    ['meta', { name: 'twitter:image',      content: '/hero.png' }],
+    ['meta', { name: 'twitter:image',      content: 'https://lazycmsapp.github.io/lazy-cms-builder/hero.svg' }],
     ['meta', { name: 'keywords',           content: 'Laravel CMS, Laravel page builder, drag-and-drop, e-commerce, multi-language, mega menu, hooks API' }],
   ],
 
