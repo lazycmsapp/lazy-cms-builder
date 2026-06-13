@@ -29,7 +29,7 @@ export default defineConfig({
       { text: 'E-commerce', link: '/ecommerce/overview' },
       { text: 'Hooks API', link: '/api/hooks' },
       {
-        text: 'v1.0.7',
+        text: 'v1.0.8',
         items: [
           { text: 'Changelog', link: 'https://github.com/lazycmsapp/lazy-cms-builder/releases' },
           { text: 'Packagist', link: 'https://packagist.org/packages/lazycmsapp/lazy-cms-builder' },
