@@ -82,20 +82,38 @@ if (!function_exists('lazy_check_update')) {
     }
 }
 
+if (!function_exists('_lazy_cms_options_store')) {
+    function &_lazy_cms_options_store(): array
+    {
+        static $store = ['loaded' => false, 'data' => []];
+        return $store;
+    }
+}
+
 if (!function_exists('get_cms_option')) {
     function get_cms_option($key, $default = null)
     {
         try {
-            $currentLocale = app()->getLocale();
-            $localeKey = $key . '_' . $currentLocale;
-            
-            // 1. Check for locale specific key first (e.g. site_title_bn)
-            $value = DB::table('cms_settings')->where('key', $localeKey)->value('value');
-            if ($value !== null) return $value;
+            $store = &_lazy_cms_options_store();
 
-            // 2. Fallback to default key
-            $value = DB::table('cms_settings')->where('key', $key)->value('value');
-            return $value !== null ? $value : $default;
+            // Bulk-load all settings on first call — 1 DB query per request
+            if (!$store['loaded']) {
+                $rows = DB::table('cms_settings')->get(['key', 'value']);
+                foreach ($rows as $row) {
+                    $store['data'][$row->key] = $row->value;
+                }
+                $store['loaded'] = true;
+            }
+
+            $localeKey = $key . '_' . app()->getLocale();
+
+            if (array_key_exists($localeKey, $store['data'])) {
+                return $store['data'][$localeKey] ?? $default;
+            }
+            if (array_key_exists($key, $store['data'])) {
+                return $store['data'][$key] ?? $default;
+            }
+            return $default;
         } catch (\Exception $e) {
             return $default;
         }
@@ -110,6 +128,9 @@ if (!function_exists('update_cms_option')) {
                 ['key' => $key],
                 ['value' => $value, 'updated_at' => now()]
             );
+            // Keep in-memory cache consistent within the same request
+            $store = &_lazy_cms_options_store();
+            $store['data'][$key] = $value;
             return true;
         } catch (\Exception $e) {
             return false;
