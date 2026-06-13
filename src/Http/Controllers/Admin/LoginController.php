@@ -108,7 +108,7 @@ class LoginController extends Controller
             $request->session()->regenerate();
 
             // Multi-device Login Restriction
-            $multiDeviceAllowed = get_cms_option('allow_multi_device', '0') === '1';
+            $multiDeviceAllowed = get_cms_option('allow_multi_device', '1') === '1';
             $maxDevices = $multiDeviceAllowed ? (int) get_cms_option('max_devices', 3) : 1;
 
             $userSessions = \Illuminate\Support\Facades\DB::table('sessions')
