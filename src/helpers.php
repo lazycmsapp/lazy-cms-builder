@@ -1323,7 +1323,7 @@ if (!function_exists('lazy_resolve_dynamic_value')) {
                 $val = function_exists('get_cms_option') ? (string) get_cms_option('site_description', '') : '';
                 break;
             case 'site_url':
-                $val = config('app.url', '');
+                $val = function_exists('url') ? url('/') : config('app.url', '');
                 break;
             case 'post_title':
                 $val = $post->title ?? '';

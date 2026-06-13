@@ -97,11 +97,16 @@
         $heightCss    = 'auto';
     }
 
-    // Only non-responsive properties stay inline
+    // Only non-responsive properties stay inline.
+    // Padding is forced to 0 so builder containers are exactly site-width wide,
+    // matching the admin preview and the user's Site Width setting.
+    // Builder sections handle their own padding via their settings panel.
     $innerStyles = [
         'display: flex',
         'flex-grow: 1',
         'width: 100%',
+        'padding-left: 0',
+        'padding-right: 0',
     ];
 
     $contentWidth = $s['contentWidth'] ?? 'site';

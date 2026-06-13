@@ -132,17 +132,18 @@ class MenuManagementController extends Controller
                 }
 
                 return [
-                    'id'        => (string)$item->id,
-                    'title'     => $item->title,
-                    'url'       => $item->url ?? '#',
-                    'type'      => $type,
-                    'object_id' => $objectId,
-                    'icon'      => $item->icon ?? '',
+                    'id'          => (string)$item->id,
+                    'title'       => $item->title,
+                    'url'         => $item->url ?? '#',
+                    'type'        => $type,
+                    'object_id'   => $objectId,
+                    'icon'        => $item->icon ?? '',
                     'show_only_icon' => (bool)($item->show_only_icon ?? false),
-                    'target'    => $item->target ?? '_self',
-                    'depth'     => $depth,
-                    'orphaned'  => $orphaned || $isTrashed || $isInactiveTax,
-                    'is_draft'  => $isDraft,
+                    'target'      => $item->target ?? '_self',
+                    'mega_menu_id' => $item->mega_menu_id ?? null,
+                    'depth'       => $depth,
+                    'orphaned'    => $orphaned || $isTrashed || $isInactiveTax,
+                    'is_draft'    => $isDraft,
                     'is_inactive_tax' => $isInactiveTax,
                     'source_label' => $sourceLabel
                 ];
@@ -237,15 +238,16 @@ class MenuManagementController extends Controller
         foreach ($items as $index => $item) {
             $newItem = NavigationMenuItem::create([
                 'navigation_menu_id' => $menuId,
-                'parent_id' => $parentId,
-                'title' => $item['title'] ?? 'Item',
-                'url' => $item['url'] ?? '#',
-                'type' => $item['type'] ?? 'custom',
-                'object_id' => $item['object_id'] ?? null,
-                'icon' => $item['icon'] ?? null,
+                'parent_id'   => $parentId,
+                'title'       => $item['title'] ?? 'Item',
+                'url'         => $item['url'] ?? '#',
+                'type'        => $item['type'] ?? 'custom',
+                'object_id'   => $item['object_id'] ?? null,
+                'icon'        => $item['icon'] ?? null,
                 'show_only_icon' => !empty($item['show_only_icon']),
-                'target' => $item['target'] ?? '_self',
-                'order' => $index,
+                'target'      => $item['target'] ?? '_self',
+                'mega_menu_id' => $item['mega_menu_id'] ?? null,
+                'order'       => $index,
             ]);
 
             if (!empty($item['children'])) {

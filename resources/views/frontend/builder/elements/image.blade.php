@@ -14,13 +14,19 @@
     $elemId = 'img-' . str_replace('.', '', uniqid('', true));
 
     $dynamicSrc = $s['dynamic_source'] ?? '';
-    $url = ($dynamicSrc === 'feature_image')
-        ? ($postFeaturedImage ?? $s['url'] ?? $s['src'] ?? '')
-        : ($s['url'] ?? $s['src'] ?? '');
+    if ($dynamicSrc === 'feature_image') {
+        $url = $postFeaturedImage ?? $s['url'] ?? $s['src'] ?? '';
+    } elseif ($dynamicSrc === 'author_avatar') {
+        $url = $authorAvatar ?? $s['url'] ?? $s['src'] ?? '';
+    } elseif ($dynamicSrc === 'logo') {
+        $url = get_cms_option('theme_site_logo', '') ?: ($s['url'] ?? $s['src'] ?? '');
+    } else {
+        $url = $s['url'] ?? $s['src'] ?? '';
+    }
     $alt      = $s['alt']        ?? '';
     $linkDynamic = $s['link_dynamic_source'] ?? '';
-    $linkUrl  = ($linkDynamic === 'post_url')
-        ? ($postPermalink ?? $s['linkUrl'] ?? '')
+    $linkUrl = $linkDynamic
+        ? (function_exists('lazy_resolve_dynamic_value') ? (lazy_resolve_dynamic_value($linkDynamic, $post ?? null) ?: ($s['linkUrl'] ?? '')) : ($postPermalink ?? $s['linkUrl'] ?? ''))
         : ($s['linkUrl'] ?? '');
     $target   = $s['linkTarget'] ?? '_self';
     $hoverType  = $s['hoverType'] ?? 'none';

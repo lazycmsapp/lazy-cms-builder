@@ -363,7 +363,10 @@
     </div>
     @endif
 
-    {{-- Menu item Options modal: icon picker + show-only-icon toggle --}}
+    {{-- Menu item Options modal: icon picker + show-only-icon toggle + mega menu --}}
+    @php
+        $megaMenusList = json_decode(get_cms_option('lazy_mega_menus', '[]'), true) ?: [];
+    @endphp
     <div id="mi-options-modal" style="display:none;position:fixed;inset:0;z-index:100000;align-items:center;justify-content:center;padding:20px;">
         <div onclick="closeItemOptions()" style="position:absolute;inset:0;background:rgba(0,0,0,.5);"></div>
         <div style="position:relative;background:#fff;width:100%;max-width:560px;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;max-height:85vh;">
@@ -372,6 +375,27 @@
                 <button type="button" onclick="closeItemOptions()" style="border:none;background:none;font-size:20px;line-height:1;cursor:pointer;color:#646970;">&times;</button>
             </div>
             <div style="padding:16px 18px;overflow-y:auto;">
+                {{-- Mega Menu section — only for top-level (depth=0) items --}}
+                <div id="mi-mega-menu-section" style="margin-bottom:18px;padding:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <span class="material-symbols-outlined" style="font-size:18px;color:#2271b1;">view_quilt</span>
+                        <strong style="font-size:13px;color:#1d2327;">Mega Menu</strong>
+                        <span style="font-size:11px;color:#646970;font-style:italic;">Desktop only</span>
+                    </div>
+                    <p style="font-size:12px;color:#646970;margin-bottom:10px;">Assign a mega menu layout to this top-level item. It replaces the standard dropdown on desktop.</p>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <select id="mi-mega-menu-select" onchange="setItemMegaMenu(this.value)"
+                                style="flex:1;height:34px;border:1px solid #c3c4c7;border-radius:4px;padding:0 10px;font-size:13px;color:#1d2327;background:#fff;">
+                            <option value="">— None —</option>
+                            @foreach($megaMenusList as $mm)
+                            <option value="{{ $mm['id'] }}">{{ $mm['name'] }}</option>
+                            @endforeach
+                        </select>
+                        <a id="mi-mega-menu-edit-link" href="#" target="_blank" style="display:none;font-size:12px;color:#2271b1;white-space:nowrap;text-decoration:none;">
+                            <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">open_in_new</span> Edit Layout
+                        </a>
+                    </div>
+                </div>
                 <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;font-size:13px;color:#1d2327;">
                     <span><strong>Show only Icon?</strong><br><span style="font-size:11px;color:#646970;">Yes = show only the icon in the menu; No = show both icon and title</span></span>
                     <input type="checkbox" id="mi-show-only-icon" onchange="setItemShowOnlyIcon(this.checked)" style="width:18px;height:18px;flex-shrink:0;">
@@ -458,6 +482,7 @@
                 type:  cb.dataset.type,
                 object_id: cb.dataset.oid || null,
                 source_label: cb.dataset.source || null,
+                mega_menu_id: null,
                 depth: 0
             });
             cb.checked = false;
@@ -533,6 +558,9 @@
     ];
     let miOptionsItemId = null;
 
+    const MEGA_MENUS_DATA = @json($megaMenusList);
+    const MEGA_MENU_BUILDER_BASE = '{{ route("admin.lazy-builder.mega-menus.builder", ["id" => "__ID__"]) }}';
+
     function openItemOptions(id) {
         miOptionsItemId = id;
         const item = items.find(i => i.id === id);
@@ -541,6 +569,19 @@
         document.getElementById('mi-icon-search').value = '';
         miUpdateSelectedPreview();
         renderIconGrid('');
+
+        // Mega menu section: only show for top-level (depth=0) items
+        const mmSection = document.getElementById('mi-mega-menu-section');
+        if (mmSection) {
+            const isTopLevel = (item.depth || 0) === 0;
+            mmSection.style.display = isTopLevel ? '' : 'none';
+            if (isTopLevel) {
+                const sel = document.getElementById('mi-mega-menu-select');
+                if (sel) sel.value = item.mega_menu_id || '';
+                miUpdateMegaMenuEditLink(item.mega_menu_id || '');
+            }
+        }
+
         document.getElementById('mi-options-modal').style.display = 'flex';
     }
 
@@ -569,6 +610,23 @@
     function setItemShowOnlyIcon(checked) {
         if (!miOptionsItemId) return;
         updateField(miOptionsItemId, 'show_only_icon', !!checked);
+    }
+
+    function setItemMegaMenu(mmId) {
+        if (!miOptionsItemId) return;
+        updateField(miOptionsItemId, 'mega_menu_id', mmId || null);
+        miUpdateMegaMenuEditLink(mmId);
+    }
+
+    function miUpdateMegaMenuEditLink(mmId) {
+        const link = document.getElementById('mi-mega-menu-edit-link');
+        if (!link) return;
+        if (mmId) {
+            link.href = MEGA_MENU_BUILDER_BASE.replace('__ID__', mmId);
+            link.style.display = '';
+        } else {
+            link.style.display = 'none';
+        }
     }
 
     function renderIconGrid(query) {
@@ -657,6 +715,7 @@
                     </div>
                     <div style="display:flex;align-items:center;gap:6px;">
                         <span style="font-size:11px;color:#8c8f94;">${item.source_label ? esc(item.source_label) : typeLabel(item.type)}</span>
+                        ${item.mega_menu_id ? `<span style="font-size:10px;background:#eaf3fb;color:#2271b1;border:1px solid #c3d9ef;border-radius:3px;padding:1px 5px;font-weight:700;">MEGA</span>` : ''}
                         ${canOutdent ? `<button type="button" class="indent-btn" onclick="outdent('${esc(item.id)}')" title="Outdent">←</button>` : ''}
                         ${canIndent  ? `<button type="button" class="indent-btn" onclick="indent('${esc(item.id)}')"  title="Indent">→</button>` : ''}
                         <button type="button" onclick="toggleSettings('${esc(item.id)}')" style="color:#646970;border:none;background:none;cursor:pointer;padding:2px;">
@@ -736,7 +795,7 @@
         const stack = []; // stack of {depth, children}
 
         flat.forEach(item => {
-            const node = { id: item.id, title: item.title, url: item.url, type: item.type, object_id: item.object_id || null, icon: item.icon || '', show_only_icon: !!item.show_only_icon, target: item.target || '_self', children: [] };
+            const node = { id: item.id, title: item.title, url: item.url, type: item.type, object_id: item.object_id || null, icon: item.icon || '', show_only_icon: !!item.show_only_icon, target: item.target || '_self', mega_menu_id: item.mega_menu_id || null, children: [] };
             const depth = item.depth || 0;
 
             if (depth === 0) {

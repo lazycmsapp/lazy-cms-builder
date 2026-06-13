@@ -123,6 +123,8 @@
         display: block;
         width: 100%;
     }
+    .text-block-container-{{ $appliedId }} .text-block-content > p:first-child { margin-top: 0 !important; }
+    .text-block-container-{{ $appliedId }} .text-block-content > p:last-child { margin-bottom: 0 !important; }
     .text-block-container-{{ $appliedId }} ul { list-style-type: disc !important; margin-left: 20px !important; margin-bottom: 15px !important; }
     .text-block-container-{{ $appliedId }} ol { list-style-type: decimal !important; margin-left: 20px !important; margin-bottom: 15px !important; }
     .text-block-container-{{ $appliedId }} li { margin-bottom: 5px !important; }

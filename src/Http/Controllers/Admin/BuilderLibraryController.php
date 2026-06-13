@@ -9,6 +9,7 @@ class BuilderLibraryController extends Controller
 {
     const OPTION_KEY = 'lazy_builder_library';
     const GLOBAL_SECTIONS_KEY = 'lazy_global_sections';
+    const MEGA_MENUS_KEY = 'lazy_mega_menus';
 
     private function getLibrary(): array
     {
@@ -35,11 +36,113 @@ class BuilderLibraryController extends Controller
         return [];
     }
 
+    private function getMegaMenus(): array
+    {
+        $raw = get_cms_option(self::MEGA_MENUS_KEY, null);
+        if ($raw) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) return $decoded;
+        }
+        return [];
+    }
+
     public function page()
     {
-        $library   = $this->getLibrary();
-        $postCards = $this->getPostCards();
-        return view('cms-dashboard::admin.lazy-builder.library', compact('library', 'postCards'));
+        $library    = $this->getLibrary();
+        $postCards  = $this->getPostCards();
+        $megaMenus  = $this->getMegaMenus();
+        return view('cms-dashboard::admin.lazy-builder.library', compact('library', 'postCards', 'megaMenus'));
+    }
+
+    public function saveMegaMenu(Request $request)
+    {
+        $request->validate([
+            'name'   => 'required|string|max:255',
+            'config' => 'nullable|array',
+        ]);
+
+        $menus = $this->getMegaMenus();
+        $menu  = [
+            'id'         => (string) \Illuminate\Support\Str::uuid(),
+            'name'       => $request->input('name'),
+            'config'     => $request->input('config') ?? [],
+            'created_at' => now()->format('Y-m-d H:i'),
+        ];
+        array_unshift($menus, $menu);
+        update_cms_option(self::MEGA_MENUS_KEY, json_encode($menus));
+        return response()->json(['success' => true, 'menu' => $menu]);
+    }
+
+    public function editMegaMenuBuilder(string $id)
+    {
+        $menus    = $this->getMegaMenus();
+        $megaMenu = collect($menus)->firstWhere('id', $id);
+        if (!$megaMenu) abort(404);
+
+        $customElements   = apply_lazy_filters('lazy_builder_elements', []);
+        $bodyRaw          = get_cms_option('theme_typography_body');
+        $headingRaw       = get_cms_option('theme_typography_h1');
+        $bodyFont         = is_array($bodyRaw)    ? $bodyRaw    : json_decode((string)$bodyRaw,    true);
+        $headingFont      = is_array($headingRaw) ? $headingRaw : json_decode((string)$headingRaw, true);
+        $themeBodyFont    = $bodyFont['family']    ?? null;
+        $themeHeadingFont = $headingFont['family'] ?? null;
+
+        return view('cms-dashboard::admin.lazy-builder.mega-menu-builder', compact(
+            'megaMenu', 'customElements', 'themeBodyFont', 'themeHeadingFont'
+        ));
+    }
+
+    public function saveMegaMenuLayout(Request $request, string $id)
+    {
+        $request->validate(['layout' => 'required|array']);
+        $menus = $this->getMegaMenus();
+        foreach ($menus as &$menu) {
+            if ($menu['id'] === $id) {
+                $menu['config']['layout'] = $request->input('layout');
+                break;
+            }
+        }
+        update_cms_option(self::MEGA_MENUS_KEY, json_encode($menus));
+        return response()->json(['success' => true]);
+    }
+
+    public function saveMegaMenuSettings(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'width_type'   => 'required|in:site_width,full_width,custom',
+            'custom_width' => 'nullable|integer|min:200|max:3000',
+        ]);
+        $menus = $this->getMegaMenus();
+        foreach ($menus as &$menu) {
+            if ($menu['id'] === $id) {
+                $menu['config']['settings'] = [
+                    'width_type'   => $validated['width_type'],
+                    'custom_width' => (int)($validated['custom_width'] ?? 1200),
+                ];
+                break;
+            }
+        }
+        update_cms_option(self::MEGA_MENUS_KEY, json_encode($menus));
+        return response()->json(['success' => true]);
+    }
+
+    public function updateMegaMenu(Request $request, string $id)
+    {
+        $request->validate(['name' => 'required|string|max:255']);
+        $menus = $this->getMegaMenus();
+        foreach ($menus as &$menu) {
+            if ($menu['id'] === $id) { $menu['name'] = $request->input('name'); break; }
+        }
+        update_cms_option(self::MEGA_MENUS_KEY, json_encode($menus));
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteMegaMenu(string $id)
+    {
+        $menus = $this->getMegaMenus();
+        $menus = array_values(array_filter($menus, fn($m) => $m['id'] !== $id));
+        update_cms_option(self::MEGA_MENUS_KEY, json_encode($menus));
+        return response()->json(['success' => true]);
     }
 
     public function savePostCard(Request $request)

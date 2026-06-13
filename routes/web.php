@@ -79,6 +79,12 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
     Route::patch('lazy-builder-library/post-cards/{id}', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'updatePostCard'])->name('lazy-builder.post-cards.update');
     Route::get('lazy-builder-library/post-cards/{id}/builder', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'editPostCardBuilder'])->name('lazy-builder.post-cards.builder');
     Route::post('lazy-builder-library/post-cards/{id}/builder', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'savePostCardLayout'])->name('lazy-builder.post-cards.save-layout');
+    Route::post('lazy-builder-library/mega-menus', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'saveMegaMenu'])->name('lazy-builder.mega-menus.save');
+    Route::delete('lazy-builder-library/mega-menus/{id}', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'deleteMegaMenu'])->name('lazy-builder.mega-menus.delete');
+    Route::patch('lazy-builder-library/mega-menus/{id}', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'updateMegaMenu'])->name('lazy-builder.mega-menus.update');
+    Route::get('lazy-builder-library/mega-menus/{id}/builder', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'editMegaMenuBuilder'])->name('lazy-builder.mega-menus.builder');
+    Route::post('lazy-builder-library/mega-menus/{id}/builder', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'saveMegaMenuLayout'])->name('lazy-builder.mega-menus.save-layout');
+    Route::post('lazy-builder-library/mega-menus/{id}/settings', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'saveMegaMenuSettings'])->name('lazy-builder.mega-menus.save-settings');
     Route::get('lazy-builder/library', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'index'])->name('lazy-builder.library.index');
     Route::post('lazy-builder/library/save', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'save'])->name('lazy-builder.library.save');
     Route::delete('lazy-builder/library/{type}/{id}', [\Acme\CmsDashboard\Http\Controllers\Admin\BuilderLibraryController::class, 'delete'])->name('lazy-builder.library.delete');

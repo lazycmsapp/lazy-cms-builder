@@ -1,10 +1,20 @@
 ﻿<aside class="builder-sidebar flex flex-col" v-if="!isPreview">
     <!-- Tab Header -->
     <div class="flex border-b border-slate-100 bg-slate-50/50">
-        <button @click="activeTab='navigator'" class="flex-1 flex items-center justify-center gap-2 h-11 transition-all group">
-             <i class="fa fa-caret-down text-[10px] text-slate-400 group-hover:text-[#0091ea]"></i>
-             <span class="text-[11px] font-black uppercase tracking-widest text-slate-500 group-hover:text-[#0091ea]">Navigator</span>
+        <button @click="activeTab='navigator'"
+                :class="activeTab==='navigator' ? 'text-[#0091ea] border-b-2 border-[#0091ea]' : 'text-slate-500 hover:text-[#0091ea]'"
+                class="flex-1 flex items-center justify-center gap-2 h-11 transition-all group">
+             <i class="fa fa-caret-down text-[10px]"></i>
+             <span class="text-[11px] font-black uppercase tracking-widest">Navigator</span>
         </button>
+        @if($isMegaMenuBuilder ?? false)
+        <button @click="activeTab='page_options'"
+                :class="activeTab==='page_options' ? 'text-[#0091ea] border-b-2 border-[#0091ea]' : 'text-slate-500 hover:text-[#0091ea]'"
+                class="flex-1 flex items-center justify-center gap-1.5 h-11 transition-all border-l border-slate-100">
+            <i class="fa fa-cog text-[10px]"></i>
+            <span class="text-[11px] font-black uppercase tracking-widest">Page Options</span>
+        </button>
+        @endif
     </div>
 
     <!-- Tab Content -->
@@ -159,6 +169,76 @@
                 </div>
             </div>
         </div>
+
+        @if($isMegaMenuBuilder ?? false)
+        <!-- Page Options Tab (Mega Menu Builder only) -->
+        <div v-show="activeTab==='page_options'" class="h-full overflow-y-auto animate-fade-in">
+            <div class="px-4 py-5 space-y-5">
+
+                {{-- Width Type --}}
+                <div>
+                    <label class="block text-[11px] font-black text-[#1d2327] uppercase tracking-widest mb-2">
+                        Mega Menu Max Width
+                        <span class="ml-1 text-slate-400 cursor-help font-normal normal-case tracking-normal"
+                              title="Controls the inner content width of the mega menu panel">?</span>
+                    </label>
+                    <div class="relative">
+                        <select id="mm-width-type" class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea] appearance-none bg-white cursor-pointer"
+                                onchange="mmPoWidthTypeChange(this.value)">
+                            <option value="site_width" {{ ($mmPoSettings['width_type'] ?? 'site_width') === 'site_width' ? 'selected' : '' }}>
+                                Site Width ({{ $mmPoSettings['site_width'] ?? 1200 }}px)
+                            </option>
+                            <option value="full_width" {{ ($mmPoSettings['width_type'] ?? '') === 'full_width' ? 'selected' : '' }}>
+                                100% Width
+                            </option>
+                            <option value="custom" {{ ($mmPoSettings['width_type'] ?? '') === 'custom' ? 'selected' : '' }}>
+                                Custom Width
+                            </option>
+                        </select>
+                        <i class="fa fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] pointer-events-none"></i>
+                    </div>
+                </div>
+
+                {{-- Custom Width (visible only when custom selected) --}}
+                <div id="mm-custom-width-row" style="display:{{ ($mmPoSettings['width_type'] ?? 'site_width') === 'custom' ? 'block' : 'none' }}">
+                    <label class="block text-[11px] font-black text-[#1d2327] uppercase tracking-widest mb-2">
+                        Custom Max Width
+                        <span class="ml-1 text-slate-400 cursor-help font-normal normal-case tracking-normal"
+                              title="Max width in pixels for the mega menu inner content">?</span>
+                    </label>
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="number" id="mm-custom-width-input"
+                               value="{{ $mmPoSettings['custom_width'] ?? 1200 }}"
+                               min="200" max="3000" step="10"
+                               class="w-[80px] border border-slate-200 rounded px-3 py-2 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]"
+                               oninput="document.getElementById('mm-custom-width-slider').value=this.value">
+                        <span class="text-[12px] text-slate-400">px</span>
+                    </div>
+                    <input type="range" id="mm-custom-width-slider"
+                           min="200" max="3000" step="10"
+                           value="{{ $mmPoSettings['custom_width'] ?? 1200 }}"
+                           class="w-full accent-[#0091ea]"
+                           oninput="document.getElementById('mm-custom-width-input').value=this.value">
+                    <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                        <span>200</span><span>3000</span>
+                    </div>
+                </div>
+
+                {{-- Save Button --}}
+                <button onclick="mmPoSave()"
+                        class="w-full bg-[#0091ea] hover:bg-[#0078c8] text-white text-[12px] font-black uppercase tracking-widest py-2.5 rounded transition-colors">
+                    <i class="fa fa-save mr-1"></i> Save Settings
+                </button>
+                <div id="mm-po-saved-msg"
+                     style="display:none;"
+                     class="text-center text-[12px] font-bold text-[#00a32a] py-1">
+                    ✓ Settings saved!
+                </div>
+
+            </div>
+        </div>
+
+        @endif
 
         <!-- Settings Tab -->
         <div v-show="activeTab==='settings'" class="h-full animate-fade-in flex flex-col">
@@ -736,10 +816,7 @@
 
                                 <!-- Alt Text -->
                                 <div>
-                                    <div class="flex justify-between items-center mb-3">
-                                        <label class="text-[12px] font-bold text-[#333]">Alt Text</label>
-                                        <button type="button" @click.stop="openDynMenu(editingElement.settings, 'alt', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
-                                    </div>
+                                    <label class="text-[12px] font-bold text-[#333] block mb-3">Alt Text</label>
                                     <input type="text" v-model="editingElement.settings.alt"
                                            placeholder="Image description..."
                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">

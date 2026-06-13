@@ -28,7 +28,7 @@
             borderColor: el.settings.borderColor || 'transparent'
          }">
         
-         <img v-if="el.settings.url && el.settings.dynamic_source !== 'feature_image'"
+         <img v-if="el.settings.url && !['feature_image','author_avatar','logo'].includes(el.settings.dynamic_source)"
              :src="el.settings.url"
              :alt="el.settings.alt || ''"
              class="block w-full pointer-events-none"
@@ -40,6 +40,18 @@
              class="bg-[#2271b1]/6 border-2 border-dashed border-[#0091ea]/30 rounded flex flex-col items-center justify-center p-8 text-[#0091ea]">
             <i class="fa fa-image text-4xl mb-2 opacity-60"></i>
             <span class="text-xs font-bold uppercase tracking-widest">Feature Image</span>
+        </div>
+
+        <div v-else-if="el.settings.dynamic_source === 'author_avatar'"
+             class="bg-[#2271b1]/6 border-2 border-dashed border-[#0091ea]/30 rounded flex flex-col items-center justify-center p-8 text-[#0091ea]">
+            <i class="fa fa-user-circle text-4xl mb-2 opacity-60"></i>
+            <span class="text-xs font-bold uppercase tracking-widest">Author Avatar</span>
+        </div>
+
+        <div v-else-if="el.settings.dynamic_source === 'logo'"
+             class="bg-[#2271b1]/6 border-2 border-dashed border-[#0091ea]/30 rounded flex flex-col items-center justify-center p-8 text-[#0091ea]">
+            <i class="fa fa-star text-4xl mb-2 opacity-60"></i>
+            <span class="text-xs font-bold uppercase tracking-widest">Site Logo</span>
         </div>
 
         <div v-else

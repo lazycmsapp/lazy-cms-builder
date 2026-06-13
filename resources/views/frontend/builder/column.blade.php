@@ -21,7 +21,7 @@
 
     $flexBasis = $basisRaw;
     $totalCols = count($container['columns'] ?? [1]);
-    $gapVal = intval($container['settings']['columnGap'] ?? 20);
+    $gapVal = intval($container['settings']['columnGap'] ?? 0);
     
     if ($basisRaw === 'auto') {
         $flexBasis = 'auto';

@@ -118,6 +118,7 @@
                 image: [
                     { key: 'feature_image', label: 'Feature Image', icon: 'fa-image',       group: 'Post',   subFields: [] },
                     { key: 'author_avatar', label: 'Author Avatar', icon: 'fa-user-circle', group: 'Author', subFields: [] },
+                    { key: 'logo',          label: 'Site Logo',     icon: 'fa-star',         group: 'Site',   subFields: [] },
                 ],
             };
             const getDynSrcDef = (key) => {

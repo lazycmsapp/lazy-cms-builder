@@ -1,8 +1,8 @@
 @if(!function_exists('renderLazyMenuItemsResponsive'))
 @php
-function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, $isMobile, $elId, $settings) {
+function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, $isMobile, $elId, $settings, $megaMenuLayouts = []) {
     $currentUrl = request()->url();
-    
+
     // Resilient Settings Access
     $s = is_array($settings) ? $settings : (is_object($settings) ? (array)$settings : []);
     $arrowScope  = $s['arrowScopeObj'] ?? null;
@@ -26,7 +26,15 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
             $isActive = (rtrim($currentUrl, '/') == rtrim($item->url, '/'));
         }
 
-        echo '<li class="lazy-menu-item ' . ($hasChildren ? 'has-children' : '') . ($isActive ? ' active' : '') . '">';
+        // Mega menu: only for desktop top-level items
+        $hasMegaMenu = !$isMobile && !$isSubmenu
+            && !empty($item->mega_menu_id)
+            && isset($megaMenuLayouts[$item->mega_menu_id]);
+
+        $liClass = (($hasChildren || $hasMegaMenu) ? 'has-children' : '') . ($isActive ? ' active' : '');
+        $liExtra = $hasMegaMenu ? ' data-mega-trigger="' . e($item->id) . '"' : '';
+        echo '<li class="lazy-menu-item ' . $liClass . '"' . $liExtra . '>';
+
         $targetAttr = (!empty($item->target) && $item->target === '_blank') ? ' target="_blank" rel="noopener noreferrer"' : '';
         echo '<a href="' . ($item->url ?? '#') . '"' . $targetAttr . ' class="lazy-menu-link" style="' . $style . '">';
         // Optional icon + "show only icon" support (set via menu builder → Options).
@@ -46,7 +54,10 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
             echo '<span>' . $item->title . '</span>';
         }
 
-        if($hasChildren) {
+        if ($hasMegaMenu) {
+            // Always show a down-chevron for mega menu triggers
+            echo '<i class="fa fa-chevron-down lazy-menu-arrow"></i>';
+        } elseif($hasChildren) {
             $showArrow = false;
             if ($isMobile) {
                 $showArrow = ($s['mobileMenuMode'] ?? 'collapsed') !== 'expanded';
@@ -69,10 +80,12 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
             }
         }
         echo '</a>';
-        
-        if($hasChildren) {
+
+        // Desktop + mega menu: skip submenu (panel rendered separately)
+        // Mobile or no mega menu: always render standard submenu
+        if ($hasChildren && (!$hasMegaMenu || $isMobile)) {
             echo '<ul class="lazy-submenu ' . ($isMobile ? 'mobile-submenu' : '') . '">';
-            renderLazyMenuItemsResponsive($children, $grouped, $mainStyle, $subStyle, $isMobile, $elId, $settings);
+            renderLazyMenuItemsResponsive($children, $grouped, $mainStyle, $subStyle, $isMobile, $elId, $settings, $megaMenuLayouts);
             echo '</ul>';
         }
         echo '</li>';
@@ -87,6 +100,12 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
     $layout = $s['layout'] ?? 'horizontal';
     $transitionTime = $s['itemTransition'] ?? 0.3;
     $submenuSpace = $s['submenuSpace'] ?? 10;
+    $submenuTransition = $s['submenuTransition'] ?? 'fade';
+    $megaInitTranslate = match($submenuTransition) {
+        'slide-down' => 'translateY(-10px)',
+        'slide-up'   => 'translateY(10px)',
+        default      => 'translateY(0px)',
+    };
     $elId = $el['id'];
     
     // Visibility
@@ -143,6 +162,15 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
         $grouped = $allItems->groupBy('parent_id');
         $menuItems = $grouped->get(null, collect([]));
     }
+
+    // Mega Menu Layouts
+    $megaMenuLayouts = [];
+    try {
+        $__allMM = json_decode(get_cms_option('lazy_mega_menus', '[]'), true) ?: [];
+        foreach ($__allMM as $__mm) {
+            if (!empty($__mm['id'])) $megaMenuLayouts[$__mm['id']] = $__mm;
+        }
+    } catch (\Exception $e) {}
 
     // Styles for Desktop
     $wrapperStyle = 'width: 100%; position: relative;';
@@ -228,8 +256,33 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
         @endphp
         <nav class="lazy-desktop-nav" style="display: {{ $isMobileView ? 'none' : 'flex' }}; width: 100%; align-items: {{ $s['alignItems'] ?? 'center' }}; justify-content: {{ $s['justification'] ?? 'flex-start' }}; min-height: {{ ($s['minHeight'] ?? '') !== '' ? $s['minHeight'].'px' : '60px' }};">
             <ul class="lazy-menu-list" style="display: flex; width: 100%; flex-direction: {{ $layout === 'horizontal' ? 'row' : 'column' }}; align-items: {{ $s['alignItems'] ?? 'center' }}; justify-content: {{ $s['justification'] ?? 'flex-start' }}; gap: {{ $layout === 'horizontal' ? (in_array($s['justification'] ?? '', ['space-between', 'space-around', 'space-evenly']) ? '0' : ($s['itemSpacing'] ?? 25) . 'px') : ($s['itemSpacing'] ?? 10) . 'px' }};">
-                @php renderLazyMenuItemsResponsive($menuItems, $grouped, $mainLinkStyle, $subLinkStyle, false, $elId, $s); @endphp
+                @php renderLazyMenuItemsResponsive($menuItems, $grouped, $mainLinkStyle, $subLinkStyle, false, $elId, $s, $megaMenuLayouts); @endphp
             </ul>
+
+            {{-- Mega Panels --}}
+            @foreach($menuItems as $__topItem)
+                @php $__hasMM = !empty($__topItem->mega_menu_id) && isset($megaMenuLayouts[$__topItem->mega_menu_id]); @endphp
+                @if($__hasMM)
+                @php
+                    $__mmCfg         = $megaMenuLayouts[$__topItem->mega_menu_id]['config']['settings'] ?? [];
+                    $__mmWidthType   = $__mmCfg['width_type']   ?? 'site_width';
+                    $__mmCustomWidth = (int)($__mmCfg['custom_width'] ?? 1200);
+                    $__mmSiteWidth   = (int)get_cms_option('theme_site_width', '1240');
+                    // JS reads these data-attributes to set the outer panel width
+                    $__mmPxValue = $__mmWidthType === 'custom' ? $__mmCustomWidth : $__mmSiteWidth;
+                @endphp
+                {{-- JS uses data-width-type / data-width-px to set exact panel width & position --}}
+                <div class="lazy-mega-panel"
+                     data-mega-panel="{{ $__topItem->id }}"
+                     data-width-type="{{ $__mmWidthType }}"
+                     data-width-px="{{ $__mmPxValue }}"
+                     style="position:absolute;top:100%;left:0;z-index:9999;pointer-events:none;opacity:0;visibility:hidden;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.12);border-top:1px solid #e5e7eb;box-sizing:border-box;">
+                    <div style="width:100%;box-sizing:border-box;">
+                        @include('themes.lazy-theme.partials.mega-menu', ['megaMenuData' => $megaMenuLayouts[$__topItem->mega_menu_id]])
+                    </div>
+                </div>
+                @endif
+            @endforeach
         </nav>
 
         <!-- Mobile Nav -->
@@ -265,7 +318,7 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
                     </div>
                 @endif
                 <ul class="lazy-mobile-list">
-                    @php renderLazyMenuItemsResponsive($menuItems, $grouped, $mobileLinkStyle, $mobileLinkStyle, true, $elId, $s); @endphp
+                    @php renderLazyMenuItemsResponsive($menuItems, $grouped, $mobileLinkStyle, $mobileLinkStyle, true, $elId, $s, $megaMenuLayouts); @endphp
                 </ul>
             </nav>
             @if(($s['mobileMenuExpandMode'] ?? '') === 'sidebar')
@@ -281,7 +334,7 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
 
 <style>
     /* DESKTOP STYLES */
-    .menu-{{ $elId }} .lazy-desktop-nav { width: 100%; min-height: {{ ($s['minHeight'] ?? '') !== '' ? $s['minHeight'].'px' : '60px' }}; }
+    .menu-{{ $elId }} .lazy-desktop-nav { width: 100%; min-height: {{ ($s['minHeight'] ?? '') !== '' ? $s['minHeight'].'px' : '60px' }}; position:relative; overflow:visible; }
     .menu-{{ $elId }} .lazy-menu-list {
         list-style: none; padding: 0; margin: 0; display: flex; width: 100%;
         flex-direction: {{ $layout === 'horizontal' ? 'row' : 'column' }};
@@ -290,6 +343,11 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
         gap: {{ $layout === 'horizontal' ? (in_array($s['justification'] ?? '', ['space-between', 'space-around', 'space-evenly']) ? '0' : ($s['itemSpacing'] ?? 25) . 'px') : ($s['itemSpacing'] ?? 10) . 'px' }};
     }
     .menu-{{ $elId }} .lazy-menu-item { position: relative; }
+    .menu-{{ $elId }} .lazy-mega-panel {
+        top: calc(100% + {{ $submenuSpace }}px) !important;
+        transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+        transform: {{ $megaInitTranslate }};
+    }
     @php
         $bth = intval($s['itemBorderSizeTopHover']    ?? 0);
         $brh = intval($s['itemBorderSizeRightHover']  ?? 0);
@@ -336,7 +394,16 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
         $subHoverTransform = $subDir === 'center'
             ? 'translateX(-50%) translateY(' . $submenuSpace . 'px)'
             : 'translateY(' . $submenuSpace . 'px)';
-        $subInitTransform = $subDir === 'center' ? 'translateX(-50%)' : 'none';
+
+        // slide-down: starts 10px above resting pos → slides down; slide-up: starts 10px below → slides up; fade: no movement
+        $yInit = match($submenuTransition) {
+            'slide-up'   => $submenuSpace + 10,
+            'slide-down' => 0,                   // slides down by submenuSpace
+            default      => $submenuSpace,        // fade: no position change, only opacity
+        };
+        $subInitTransform = $subDir === 'center'
+            ? 'translateX(-50%) translateY(' . $yInit . 'px)'
+            : 'translateY(' . $yInit . 'px)';
 
         $subSubDir    = $s['subSubMenuDirection'] ?? 'right';
         $subSubOffset = intval($s['subSubMenuOffset'] ?? 5);
@@ -580,5 +647,101 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
                 });
             });
         @endif
+
+        // Mega Menu hover
+        (function() {
+            var menuEl = document.getElementById('{{ $customId }}');
+            if (!menuEl) return;
+            var megaTriggers = menuEl.querySelectorAll('[data-mega-trigger]');
+            if (!megaTriggers.length) return;
+
+            var allPanels = [];
+            var hideTimer = null;
+
+            function getHeaderEl() {
+                var el = menuEl.parentElement;
+                while (el && el !== document.body) {
+                    var pos = getComputedStyle(el).position;
+                    if (pos === 'sticky' || pos === 'fixed') return el;
+                    el = el.parentElement;
+                }
+                return document.body;
+            }
+
+            // Move each panel inside its trigger <li> so it positions relative to the trigger,
+            // exactly like a regular submenu. CSS top: calc(100% + submenuSpacepx) handles the gap.
+            megaTriggers.forEach(function(trigger) {
+                var itemId = trigger.getAttribute('data-mega-trigger');
+                var panel  = menuEl.querySelector('.lazy-mega-panel[data-mega-panel="' + itemId + '"]');
+                if (!panel) return;
+                trigger.appendChild(panel);
+                allPanels.push(panel);
+            });
+
+            // Only left + width need JS; top gap + transition are handled by CSS.
+            // Direction only applies to regular submenus, not mega panels.
+            function positionPanel(panel, triggerEl) {
+                var hdrRect  = getHeaderEl().getBoundingClientRect();
+                var trigRect = triggerEl.getBoundingClientRect();
+                var widthType = panel.dataset.widthType || 'site_width';
+                var widthPx   = parseInt(panel.dataset.widthPx) || 1200;
+                var vw        = document.documentElement.clientWidth; // excludes scrollbar — matches CSS centering
+
+                var panelW, panelLeft;
+                if (widthType === 'full_width') {
+                    // Span the full header
+                    panelW    = hdrRect.width;
+                    panelLeft = hdrRect.left - trigRect.left;
+                } else {
+                    panelW = Math.min(widthPx, vw);
+                    // site_width: align panel with the site template container (centered in viewport)
+                    // custom:     center the custom-width panel within that same container
+                    // Both cases reduce to: center the panel in the viewport.
+                    panelLeft = (vw - panelW) / 2 - trigRect.left;
+                }
+
+                panel.style.left  = panelLeft + 'px';
+                panel.style.width = panelW + 'px';
+            }
+
+            function showPanel(panel, triggerEl) {
+                clearTimeout(hideTimer);
+                positionPanel(panel, triggerEl);
+                allPanels.forEach(function(p) {
+                    if (p === panel) {
+                        p.style.opacity       = '1';
+                        p.style.visibility    = 'visible';
+                        p.style.pointerEvents = 'auto';
+                        p.style.transform     = 'translateY(0)';
+                    } else {
+                        p.style.opacity       = '0';
+                        p.style.visibility    = 'hidden';
+                        p.style.pointerEvents = 'none';
+                        p.style.transform     = ''; // fall back to CSS initial (hidden transform)
+                    }
+                });
+            }
+
+            function hideAll() {
+                allPanels.forEach(function(p) {
+                    p.style.opacity       = '0';
+                    p.style.visibility    = 'hidden';
+                    p.style.pointerEvents = 'none';
+                    p.style.transform     = ''; // fall back to CSS initial (hidden transform)
+                });
+            }
+
+            function scheduleHide() { hideTimer = setTimeout(hideAll, 150); }
+
+            megaTriggers.forEach(function(trigger) {
+                var panel = trigger.querySelector('.lazy-mega-panel');
+                if (!panel) return;
+
+                trigger.addEventListener('mouseenter', function() { showPanel(panel, this); });
+                trigger.addEventListener('mouseleave', scheduleHide);
+                panel.addEventListener('mouseenter',  function() { clearTimeout(hideTimer); });
+                panel.addEventListener('mouseleave',  scheduleHide);
+            });
+        })();
     })();
 </script>
