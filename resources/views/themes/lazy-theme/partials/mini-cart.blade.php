@@ -102,10 +102,27 @@ window.LazyCart = (function () {
             });
     }
 
+    let _toastTimer;
     function toast(message, icon) {
         if (window.Swal) {
             Swal.fire({ title: message, icon: icon || 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2500, timerProgressBar: true });
+            return;
         }
+        // Fallback: small bar at top of the mini-cart panel
+        let bar = document.getElementById('mc-toast-bar');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'mc-toast-bar';
+            bar.style.cssText = 'position:absolute;top:0;left:0;right:0;z-index:10;padding:10px 16px;font-size:13px;font-weight:600;text-align:center;transition:opacity .3s';
+            document.getElementById('mini-cart-panel').prepend(bar);
+        }
+        const isError = icon === 'error';
+        bar.style.background = isError ? '#fee2e2' : '#d1fae5';
+        bar.style.color      = isError ? '#b91c1c' : '#065f46';
+        bar.style.opacity    = '1';
+        bar.textContent      = message;
+        clearTimeout(_toastTimer);
+        _toastTimer = setTimeout(() => { bar.style.opacity = '0'; }, 2500);
     }
 
     function add(productId, quantity, variationId) {
@@ -130,13 +147,25 @@ window.LazyCart = (function () {
     }
 
     function remove(key) {
+        const itemsEl = document.getElementById('mini-cart-items');
+        if (itemsEl) {
+            itemsEl.innerHTML = '<div class="flex items-center justify-center py-20"><svg class="animate-spin w-7 h-7 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg></div>';
+        }
+
         const url = ROUTES.removeTpl.replace('__KEY__', encodeURIComponent(key));
         return fetch(url, {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
         })
-            .then(res => res.json())
-            .then(() => refresh());
+        .then(res => res.json())
+        .then(data => {
+            toast(data.message || 'Item removed from cart.', 'success');
+            return refresh();
+        })
+        .catch(() => {
+            toast('Could not remove item.', 'error');
+            return refresh();
+        });
     }
 
     // Close on ESC
