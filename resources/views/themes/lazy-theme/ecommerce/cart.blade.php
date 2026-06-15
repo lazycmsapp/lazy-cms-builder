@@ -364,6 +364,15 @@
         });
     };
 
+    // ── Mini-cart remove sync ──────────────────────────────────────
+    window.addEventListener('lazyCartItemRemoved', function (e) {
+        const { key, ...data } = e.detail;
+        const row = document.querySelector(`.cart-item-row[data-key="${CSS.escape(key)}"]`);
+        if (row) row.remove();
+        applyTotals(data);
+        if ((data.cart_count ?? 1) === 0) setTimeout(() => location.reload(), 500);
+    });
+
     // ── Shipping estimator ─────────────────────────────────────────
     window.updateShipping = function () {
         const country = document.getElementById('shipping_country').value;
