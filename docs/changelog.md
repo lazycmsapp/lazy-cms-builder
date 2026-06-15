@@ -5,7 +5,41 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — vers
 
 ---
 
-## v1.2.0 <Badge type="tip" text="Latest" /> {#v1-2-0}
+## v1.3.0 <Badge type="tip" text="Latest" /> {#v1-3-0}
+
+**Released: 2026-06-16**
+
+### Added
+
+#### Digital / Downloadable Products
+- **Downloadable product type** — New `is_downloadable` flag on product data; products can be marked as digital with optional download expiry days
+- **Product Downloads manager** — Admin UI to attach files from the media library to a product (name, download limit per file)
+- **Secure download tokens** — On order completion (COD and online payments), unique 48-character tokens are generated per file per order item; stored in `shop_order_downloads` with `expires_at`, `download_count`, `download_limit`
+- **Download route** — `GET /download/{token}` streams the file after validating expiry and count; throttled at 30 req/min
+- **Customer Downloads tab** — Account page now includes a Downloads tab listing all accessible files for completed orders
+
+#### Sale Price Scheduling
+- **`sale_ends_at` field** — Products can have a scheduled sale end date/time; `getSalePriceAttribute()` returns `null` after the deadline
+- **`lazy:expire-sales` command** — Artisan command to null out expired sale prices; runs daily via the scheduler
+
+#### Sales Reports
+- **ShopReportController** — New `admin/shop/reports` page with date range + period (daily/weekly/monthly) filter
+- **Revenue by period table** — Orders and revenue grouped by selected period
+- **Top Selling Products** — Top 20 products by units sold within the date range
+- **Customer Lifetime Value** — Top 20 customers by total spend (all time)
+- **Summary stat cards** — Total Revenue, Total Orders, Unique Customers for the selected period
+- **CSV export** — Separate exports for revenue, products, and customer LTV (`/admin/shop/reports/export?type=...`)
+
+### Changed
+- **Shop sidebar navigation** — Reports moved from Settings tabs to a dedicated sidebar menu item under Shop
+- **Settings tabs** — Now URL-aware: switching tabs updates the browser URL via `history.replaceState`; initial tab resolved from `?tab=` query string
+- **Shop menu** — Parent "Shop" link now navigates to Overview instead of Orders
+- **Sidebar collapse** — "Collapse Menu" button at the bottom of sidebar; state persisted in `localStorage`; `sidebar-collapsed` class applied via inline script before first paint to eliminate flash on page navigation
+- **Admin top bar** — Replaced non-functional WordPress globe icon with **LCB** branded logo linking to the dashboard
+
+---
+
+## v1.2.0 {#v1-2-0}
 
 **Released: 2026-06-15**
 
