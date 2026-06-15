@@ -41,7 +41,7 @@
         {{-- Tab Navigation --}}
         @php $tabBase = strtok(url()->current(), '?'); @endphp
         <div class="flex gap-1 border-b border-gray-200 mb-6">
-            @foreach([['orders','My Orders','package'],['profile','Profile','user'],['password','Password','lock']] as [$slug,$label,$icon])
+            @foreach([['orders','My Orders','package'],['downloads','Downloads','download'],['profile','Profile','user'],['password','Password','lock']] as [$slug,$label,$icon])
             <a href="{{ $tabBase }}?tab={{ $slug }}"
                class="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold border-b-2 transition
                       {{ $activeTab === $slug
@@ -127,6 +127,55 @@
                         {{ $orders->links('cms-dashboard::components.admin.pagination') }}
                     </div>
                 @endif
+            @endif
+        </div>
+
+        {{-- ── DOWNLOADS TAB ── --}}
+        @elseif($activeTab === 'downloads')
+        @php
+            $myDownloads = \Acme\CmsDashboard\Models\OrderDownload::with(['productDownload', 'order'])
+                ->whereHas('order', fn($q) => $q->where('customer_email', $user->email))
+                ->orderByDesc('created_at')
+                ->get();
+        @endphp
+        <div class="bg-white rounded-sm shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h2 class="text-sm font-black uppercase tracking-widest text-heading">My Downloads</h2>
+            </div>
+            @if($myDownloads->isEmpty())
+            <div class="flex flex-col items-center justify-center py-20 text-center px-6">
+                <i data-lucide="download" class="w-12 h-12 text-gray-200 mb-4"></i>
+                <p class="text-gray-400 text-sm">You have no downloadable purchases yet.</p>
+            </div>
+            @else
+            <div class="divide-y divide-gray-100">
+                @foreach($myDownloads as $dl)
+                @php
+                    $file = $dl->productDownload;
+                    $accessible = $dl->isAccessible();
+                @endphp
+                <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">{{ $file?->name ?? 'File' }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            Order #{{ $dl->order?->order_number }}
+                            @if($dl->expires_at) · Expires {{ $dl->expires_at->format('M d, Y') }} @endif
+                            @if($dl->download_limit) · {{ $dl->download_count }}/{{ $dl->download_limit }} downloads @endif
+                        </p>
+                    </div>
+                    @if($accessible)
+                    <a href="{{ route('shop.download', $dl->token) }}"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 rounded-sm text-sm font-bold bg-primary text-white hover:opacity-90 transition">
+                        <i data-lucide="download" class="w-4 h-4"></i> Download
+                    </a>
+                    @else
+                    <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-sm text-sm font-bold bg-gray-100 text-gray-400 cursor-not-allowed">
+                        @if($dl->isExpired()) Expired @else Limit reached @endif
+                    </span>
+                    @endif
+                </div>
+                @endforeach
+            </div>
             @endif
         </div>
 

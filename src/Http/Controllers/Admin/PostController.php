@@ -556,6 +556,9 @@ class PostController extends Controller
             $rules['product_type'] = 'required|string|in:simple,variable';
             $rules['price'] = 'required_if:product_type,simple|nullable|numeric|min:0';
             $rules['sale_price'] = 'nullable|numeric|min:0|lt:price';
+            $rules['sale_ends_at'] = 'nullable|date';
+            $rules['is_downloadable'] = 'nullable|boolean';
+            $rules['download_expiry_days'] = 'nullable|integer|min:1|max:3650';
             $rules['sku'] = 'nullable|string|max:100';
             $rules['stock_quantity'] = 'nullable|integer|min:0';
             $rules['stock_status'] = 'nullable|string|in:instock,outofstock,onbackorder';
@@ -577,7 +580,7 @@ class PostController extends Controller
             unset($postData['seo']);
         }
 
-        $productFieldKeys = ['price', 'sale_price', 'sku', 'stock_quantity', 'stock_status', 'manage_stock', 'short_description', 'attributes_data'];
+        $productFieldKeys = ['price', 'sale_price', 'sale_ends_at', 'is_downloadable', 'download_expiry_days', 'sku', 'stock_quantity', 'stock_status', 'manage_stock', 'short_description', 'attributes_data'];
         
         // Map product_type to type in database
         if (isset($postData['product_type'])) {
@@ -957,6 +960,9 @@ class PostController extends Controller
             $rules['product_type'] = 'required|string|in:simple,variable';
             $rules['price'] = 'required_if:product_type,simple|nullable|numeric|min:0';
             $rules['sale_price'] = 'nullable|numeric|min:0|lt:price';
+            $rules['sale_ends_at'] = 'nullable|date';
+            $rules['is_downloadable'] = 'nullable|boolean';
+            $rules['download_expiry_days'] = 'nullable|integer|min:1|max:3650';
             $rules['sku'] = 'nullable|string|max:100';
             $rules['stock_quantity'] = 'nullable|integer|min:0';
             $rules['stock_status'] = 'nullable|string|in:instock,outofstock,onbackorder';
@@ -978,7 +984,7 @@ class PostController extends Controller
             unset($postData['seo']);
         }
 
-        $productFieldKeys = ['price', 'sale_price', 'sku', 'stock_quantity', 'stock_status', 'manage_stock', 'short_description', 'attributes_data'];
+        $productFieldKeys = ['price', 'sale_price', 'sale_ends_at', 'is_downloadable', 'download_expiry_days', 'sku', 'stock_quantity', 'stock_status', 'manage_stock', 'short_description', 'attributes_data'];
 
         // Map product_type to type in database
         if (isset($postData['product_type'])) {

@@ -20,203 +20,221 @@
             'image' => $v->image
         ];
     }) : collect();
+    // Pre-load download files for Alpine (computed here to avoid complex expression inside @json directive)
+    $dlInitialFiles = $post->shopData
+        ? $post->shopData->downloads()->orderBy('sort_order')->get()->map(function($d) {
+            return [
+                'id'             => $d->id,
+                'name'           => $d->name,
+                'file_size'      => $d->file_size,
+                'download_limit' => $d->download_limit,
+                'delete_url'     => route('admin.shop.products.downloads.destroy', $d->id),
+            ];
+          })->values()->all()
+        : [];
 @endphp
-<div class="wp-metabox mt-6 mb-6" x-data="{ 
-    productType: '{{ $productType }}',
-    activeTab: 'general',
-    manageStock: {{ old('manage_stock', $post->shopData->manage_stock ?? false) ? 'true' : 'false' }},
-    attributes: {{ json_encode($attributesData) }},
-    variations: {{ json_encode($variations) }},
-    variationAction: '',
-    stockQuantity: {{ old('stock_quantity', $post->shopData->stock_quantity ?? 0) }},
-    stockStatus: '{{ old('stock_status', $post->shopData->stock_status ?? 'instock') }}',
+<script>
+(function () {
+    var _pdCfg = {
+        productType:   {!! json_encode($productType) !!},
+        manageStock:   {{ old('manage_stock', $post->shopData->manage_stock ?? false) ? 'true' : 'false' }},
+        attributes:    {!! json_encode($attributesData) !!},
+        variations:    {!! json_encode($variations) !!},
+        stockQuantity: {{ old('stock_quantity', $post->shopData->stock_quantity ?? 0) }},
+        stockStatus:   {!! json_encode(old('stock_status', $post->shopData->stock_status ?? 'instock')) !!},
+        downloadFiles: {!! json_encode($dlInitialFiles) !!},
+        ajaxSaveUrl:   {!! json_encode(route('admin.posts.variations.ajax-save', $post->id ?? 0)) !!},
+        csrf:          {!! json_encode(csrf_token()) !!},
+        dlUploadUrl:   {!! isset($post->shopData) ? json_encode(route('admin.shop.products.downloads.store', $post->shopData->id)) : 'null' !!}
+    };
 
-    init() {
-        this.activeTab = localStorage.getItem('lazy_product_active_tab') || 'general';
-        this.$watch('activeTab', value => localStorage.setItem('lazy_product_active_tab', value));
-        
+    function lazyProductData() {
+        return {
+            productType:     _pdCfg.productType,
+            activeTab:       'general',
+            showUploadModal: false,
+            dlFile: null, dlName: '', dlLimit: '', dlUploading: false, dlStatus: '', dlStatusType: '',
+            downloadFiles:   _pdCfg.downloadFiles,
+            manageStock:     _pdCfg.manageStock,
+            attributes:      _pdCfg.attributes,
+            variations:      _pdCfg.variations,
+            variationAction: '',
+            stockQuantity:   _pdCfg.stockQuantity,
+            stockStatus:     _pdCfg.stockStatus,
+            isSaving:        false,
 
-        // Auto-update variations stock status
-        this.$watch('variations', (value) => {
-            value.forEach(v => {
-                if (v.manage_stock) {
-                    v.stock_status = parseInt(v.stock_quantity) <= 0 ? 'outofstock' : 'instock';
+            init() {
+                this.activeTab = localStorage.getItem('lazy_product_active_tab') || 'general';
+                this.$watch('activeTab', val => localStorage.setItem('lazy_product_active_tab', val));
+
+                this.$watch('variations', function (value) {
+                    value.forEach(function (v) {
+                        if (v.manage_stock) {
+                            v.stock_status = parseInt(v.stock_quantity) <= 0 ? 'outofstock' : 'instock';
+                        }
+                    });
+                    if (this.productType === 'variable') {
+                        var anyInStock = value.some(function (v) { return v.stock_status === 'instock'; });
+                        this.stockStatus = anyInStock ? 'instock' : 'outofstock';
+                    }
+                }.bind(this), { deep: true });
+
+                this.$watch('stockQuantity', function (value) {
+                    if (this.manageStock) {
+                        this.stockStatus = parseInt(value) <= 0 ? 'outofstock' : 'instock';
+                    }
+                }.bind(this));
+
+                this.$watch('manageStock', function (value) {
+                    if (value) {
+                        this.stockStatus = parseInt(this.stockQuantity) <= 0 ? 'outofstock' : 'instock';
+                    }
+                }.bind(this));
+            },
+
+            async saveVariations() {
+                if (this.isSaving) return;
+                this.isSaving = true;
+                try {
+                    var resp = await fetch(_pdCfg.ajaxSaveUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': _pdCfg.csrf
+                        },
+                        body: JSON.stringify({ variations: this.variations, attributes_data: this.attributes })
+                    });
+                    var data = await resp.json();
+                    if (data.success) {
+                        window.showToast ? window.showToast('Variations saved successfully!', 'success') : alert('Variations saved successfully!');
+                    } else {
+                        window.showToast ? window.showToast('Error: ' + (data.message || 'Unknown error'), 'error') : alert('Error: ' + (data.message || 'Unknown error'));
+                    }
+                } catch (e) {
+                    console.error(e);
+                    window.showToast ? window.showToast('Failed to save variations.', 'error') : alert('Failed to save variations.');
+                } finally {
+                    this.isSaving = false;
                 }
-            });
-            
-            // Sync parent status if it's a variable product
-            if (this.productType === 'variable') {
-                const anyInStock = value.some(v => v.stock_status === 'instock');
-                this.stockStatus = anyInStock ? 'instock' : 'outofstock';
-            }
-        }, { deep: true });
+            },
 
-        // Auto-update parent stock status
-        this.$watch('stockQuantity', (value) => {
-            if (this.manageStock) {
-                this.stockStatus = parseInt(value) <= 0 ? 'outofstock' : 'instock';
-            }
-        });
-        this.$watch('manageStock', (value) => {
-            if (value) {
-                this.stockStatus = parseInt(this.stockQuantity) <= 0 ? 'outofstock' : 'instock';
-            }
-        });
-    },
+            addAttribute() {
+                this.attributes.push({ name: '', values: '', visible: true, variation: true });
+            },
 
-    isSaving: false,
-    async saveVariations() {
-        if (this.isSaving) return;
-        this.isSaving = true;
-        
-        try {
-            const response = await fetch('{{ route('admin.posts.variations.ajax-save', $post->id ?? 0) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    variations: this.variations,
-                    attributes_data: this.attributes
+            removeAttribute(index) {
+                this.attributes.splice(index, 1);
+            },
+
+            addVariation() {
+                var varAttrs = this.attributes.filter(function (a) { return a.variation && a.name && a.values; });
+                if (varAttrs.length === 0) { alert('Please add at least one attribute marked for variations.'); return; }
+                var combo = {};
+                varAttrs.forEach(function (attr) {
+                    var vals = attr.values.split('|').map(function (v) { return v.trim(); }).filter(Boolean);
+                    combo[attr.name] = vals[0] || '';
+                });
+                this.variations.push({ attributes_data: combo, price: '', sale_price: '', sku: '', weight: '', length: '', width: '', height: '', stock_quantity: 0, stock_status: 'instock', manage_stock: false, image: '' });
+                this.activeTab = 'variations';
+            },
+
+            generateVariations() {
+                var variationAttributes = this.attributes.filter(function (a) { return a.variation && a.name && a.values; });
+                if (variationAttributes.length === 0) { alert("Please add at least one attribute and check 'Used for variations'."); return; }
+                if (!confirm('This will generate all possible combinations. Existing variation data will be reset. Continue?')) return;
+                var combos = [{}];
+                variationAttributes.forEach(function (attr) {
+                    var vals = attr.values.split('|').map(function (v) { return v.trim(); }).filter(Boolean);
+                    if (!vals.length) return;
+                    var next = [];
+                    combos.forEach(function (combo) { vals.forEach(function (val) { var c = Object.assign({}, combo); c[attr.name] = val; next.push(c); }); });
+                    combos = next;
+                });
+                if (combos.length === 1 && Object.keys(combos[0]).length === 0) combos = [];
+                this.variations = [];
+                var self = this;
+                combos.forEach(function (combo) {
+                    if (!self.variations.some(function (v) { return JSON.stringify(v.attributes_data) === JSON.stringify(combo); })) {
+                        self.variations.push({ attributes_data: combo, price: '', sale_price: '', sku: '', weight: '', length: '', width: '', height: '', stock_quantity: 0, stock_status: 'instock', manage_stock: false, image: '' });
+                    }
+                });
+                this.activeTab = 'variations';
+            },
+
+            removeVariation(index) {
+                if (confirm('Are you sure you want to remove this variation?')) this.variations.splice(index, 1);
+            },
+
+            selectDownloadFile() {
+                var self = this;
+                if (typeof window.openMediaModal === 'function') {
+                    window.openMediaModal(function (media) {
+                        self.dlFile = media;
+                        if (!self.dlName) self.dlName = media.file_name || media.name || '';
+                    });
+                } else {
+                    alert('Media library not available.');
+                }
+            },
+
+            lazyUploadDownload() {
+                if (!this.dlFile) return;
+                this.dlUploading = true;
+                this.dlStatus = '';
+                var self = this;
+                fetch(_pdCfg.dlUploadUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _pdCfg.csrf, 'Accept': 'application/json' },
+                    body: JSON.stringify({ media_path: this.dlFile.path, name: this.dlName.trim(), download_limit: this.dlLimit || null }),
                 })
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                if (window.showToast) {
-                    window.showToast('Variations saved successfully!', 'success');
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.success) {
+                            self.downloadFiles.push(data.download);
+                            self.dlFile = null; self.dlName = ''; self.dlLimit = '';
+                            self.dlStatus = 'File added successfully!';
+                            self.dlStatusType = 'success';
+                            setTimeout(function () { self.showUploadModal = false; self.dlStatus = ''; }, 900);
+                        } else {
+                            self.dlStatus = data.message || 'Failed to add file.';
+                            self.dlStatusType = 'error';
+                        }
+                    })
+                    .catch(function () { self.dlStatus = 'An error occurred. Please try again.'; self.dlStatusType = 'error'; })
+                    .finally(function () { self.dlUploading = false; });
+            },
+
+            lazyDeleteDownload(index, url) {
+                if (!confirm('Delete this file?')) return;
+                var self = this;
+                var token = document.querySelector('meta[name="csrf-token"]');
+                fetch(url, { method: 'DELETE', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': token ? token.content : _pdCfg.csrf } })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) { if (data.success) self.downloadFiles.splice(index, 1); });
+            },
+
+            selectVariationImage(vIndex) {
+                var self = this;
+                if (typeof window.openMediaModal === 'function') {
+                    window.openMediaModal(function (media) { self.variations[vIndex].image = media.path; });
                 } else {
-                    alert('Variations saved successfully!');
-                }
-            } else {
-                if (window.showToast) {
-                    window.showToast('Error: ' + (data.message || 'Unknown error'), 'error');
-                } else {
-                    alert('Error: ' + (data.message || 'Unknown error'));
+                    alert('Media manager not found.');
                 }
             }
-        } catch (e) {
-            console.error(e);
-            if (window.showToast) {
-                window.showToast('Failed to save variations.', 'error');
-            } else {
-                alert('Failed to save variations.');
-            }
-        } finally {
-            this.isSaving = false;
-        }
-    },
-    
-    addAttribute() {
-        this.attributes.push({ name: '', values: '', visible: true, variation: true });
-    },
-    
-    removeAttribute(index) {
-        this.attributes.splice(index, 1);
-    },
-
-    addVariation() {
-        const varAttrs = this.attributes.filter(a => (a.variation == true) && a.name && a.values);
-        if (varAttrs.length === 0) {
-            alert('Please add at least one attribute marked for variations.');
-            return;
-        }
-
-        const combo = {};
-        varAttrs.forEach(attr => {
-            const vals = attr.values.split('|').map(v => v.trim()).filter(v => v);
-            combo[attr.name] = vals[0] || '';
-        });
-
-        this.variations.push({
-            attributes_data: combo,
-            price: '',
-            sale_price: '',
-            sku: '',
-            weight: '',
-            length: '',
-            width: '',
-            height: '',
-            stock_quantity: 0,
-            stock_status: 'instock',
-            manage_stock: false,
-            image: ''
-        });
-        this.activeTab = 'variations';
-    },
-    
-    generateVariations() {
-        const variationAttributes = this.attributes.filter(a => (a.variation == true) && a.name && a.values);
-        
-        if (variationAttributes.length === 0) {
-            alert('Please add at least one attribute and check \'Used for variations\'.');
-            return;
-        }
-        
-        if (!confirm('This will generate all possible combinations of your variations. Existing variation data will be reset. Continue?')) {
-            return;
-        }
-
-        let combos = [{}];
-        variationAttributes.forEach(attr => {
-            const vals = attr.values.split('|').map(v => v.trim()).filter(v => v);
-            if (vals.length === 0) return;
-            
-            let newCombos = [];
-            combos.forEach(combo => {
-                vals.forEach(val => {
-                    newCombos.push({ ...combo, [attr.name]: val });
-                });
-            });
-            combos = newCombos;
-        });
-        
-        if (combos.length === 1 && Object.keys(combos[0]).length === 0) {
-            combos = [];
-        }
-
-        this.variations = [];
-        combos.forEach(combo => {
-            const exists = this.variations.some(v => JSON.stringify(v.attributes_data) === JSON.stringify(combo));
-            if (!exists) {
-                this.variations.push({
-                    attributes_data: combo,
-                    price: '',
-                    sale_price: '',
-                    sku: '',
-                    weight: '',
-                    length: '',
-                    width: '',
-                    height: '',
-                    stock_quantity: 0,
-                    stock_status: 'instock',
-                    manage_stock: false,
-                    image: ''
-                });
-            }
-        });
-        
-        this.activeTab = 'variations';
-    },
-
-    removeVariation(index) {
-        if(confirm('Are you sure you want to remove this variation?')) {
-            this.variations.splice(index, 1);
-        }
-    },
-
-    selectVariationImage(vIndex) {
-        if (typeof window.openMediaModal === 'function') {
-            window.openMediaModal((media) => {
-                this.variations[vIndex].image = media.path;
-            });
-        } else {
-            alert('Media manager not found.');
-        }
+        };
     }
-}">
+
+    if (window.Alpine) {
+        window.Alpine.data('lazyProductData', lazyProductData);
+    } else {
+        document.addEventListener('alpine:init', function () {
+            window.Alpine.data('lazyProductData', lazyProductData);
+        });
+    }
+})();
+</script>
+<div class="wp-metabox mt-6 mb-6" x-data="lazyProductData()">
     <div class="wp-metabox-header flex justify-between items-center">
         <span>Product Data</span>
         <div class="flex items-center space-x-2 mr-4">
@@ -256,6 +274,12 @@
                         <span>Variations</span>
                     </button>
                 </li>
+                <li>
+                    <button type="button" @click="activeTab = 'downloads'" :class="activeTab === 'downloads' ? 'bg-white border-y border-[#f0f0f1] border-r-transparent -mr-[1px] text-[#2271b1] font-semibold' : 'text-[#2271b1] hover:bg-white'" class="w-full text-left px-4 py-2.5 transition-colors flex items-center space-x-2">
+                        <span class="material-symbols-outlined text-[18px]">download</span>
+                        <span>Downloads</span>
+                    </button>
+                </li>
             </ul>
         </div>
 
@@ -275,6 +299,13 @@
                         <div class="col-span-2">
                             <input type="number" name="sale_price" id="sale_price" step="0.01" value="{{ old('sale_price', $post->shopData->sale_price ?? '') }}" class="wp-input w-full max-w-[300px]">
                             <div id="price-error" class="hidden text-[#d63638] text-[11px] mt-1 italic">Sale price must be less than regular price.</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 items-center">
+                        <label class="text-[13px] font-semibold text-[#1d2327]">Sale End Date</label>
+                        <div class="col-span-2">
+                            <input type="datetime-local" name="sale_ends_at" value="{{ old('sale_ends_at', isset($post->shopData->sale_ends_at) ? \Carbon\Carbon::parse($post->shopData->sale_ends_at)->format('Y-m-d\TH:i') : '') }}" class="wp-input w-full max-w-[300px]">
+                            <p class="text-[11px] text-[#646970] mt-1">Leave blank for no expiry. Sale price is removed automatically when this date passes.</p>
                         </div>
                     </div>
                 </div>
@@ -509,7 +540,7 @@
                                              <input type="number" x-model="variation.stock_quantity" :name="'variations['+vIndex+'][stock_quantity]'" class="wp-input w-full h-8 text-[13px]">
                                          </div>
                                          <div>
-                                             <label class="block text-[11px] font-medium text-[#646970] mb-1 uppercase tracking-wider text-gray-400">Status (Auto)</label>
+                                             <label class="block text-[11px] font-medium text-[#646970] mb-1 uppercase tracking-wider">Status (Auto)</label>
                                              <div class="h-8 flex items-center px-3 bg-gray-50 border border-[#c3c4c7] rounded text-[11px] font-bold"
                                                   :class="variation.stock_status === 'instock' ? 'text-emerald-600' : 'text-rose-600'">
                                                  <span x-text="variation.stock_status === 'instock' ? 'IN STOCK' : 'OUT OF STOCK'"></span>
@@ -538,8 +569,178 @@
                     <p class="text-[14px] text-[#646970]">Generate variations after adding attributes to set unique prices, SKUs, and stock for each combination.</p>
                 </div>
             </div>
+
+            <!-- Downloads Tab -->
+            <div x-show="activeTab === 'downloads'" class="space-y-6">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-3 items-center">
+                        <label class="text-[13px] font-semibold text-[#1d2327]">Downloadable Product</label>
+                        <div class="col-span-2">
+                            <label class="inline-flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="is_downloadable" value="1" class="w-4 h-4 rounded border-[#c3c4c7] text-[#2271b1] focus:ring-[#2271b1]"
+                                    {{ old('is_downloadable', $post->shopData->is_downloadable ?? false) ? 'checked' : '' }}>
+                                <span class="text-[13px] text-[#1d2327]">This product has downloadable files</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 items-center">
+                        <label class="text-[13px] font-semibold text-[#1d2327]">Download Expiry (days)</label>
+                        <div class="col-span-2">
+                            <input type="number" name="download_expiry_days" min="1" max="3650"
+                                value="{{ old('download_expiry_days', $post->shopData->download_expiry_days ?? '') }}"
+                                class="wp-input w-full max-w-[200px]" placeholder="e.g. 365">
+                            <p class="text-[11px] text-[#646970] mt-1">Number of days the download link stays active after purchase. Leave blank for no expiry.</p>
+                        </div>
+                    </div>
+                </div>
+
+                @if(isset($post) && $post->exists && isset($post->shopData))
+                <div class="border-t border-[#f0f0f1] pt-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-[13px] font-semibold text-[#1d2327]">Downloadable Files</p>
+                        <button type="button"
+                            @click="showUploadModal = true; dlFile = null; dlName = ''; dlLimit = ''; dlStatus = ''; dlStatusType = ''"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2271b1] text-white text-[12px] font-semibold rounded hover:bg-[#135e96] transition">
+                            <span class="material-symbols-outlined text-[15px]">add</span> Add File
+                        </button>
+                    </div>
+
+                    {{-- File list driven by Alpine downloadFiles array --}}
+                    <div class="space-y-2">
+                        <template x-if="downloadFiles.length === 0">
+                            <div class="flex flex-col items-center justify-center py-10 border border-dashed border-[#c3c4c7] rounded-sm text-center">
+                                <span class="material-symbols-outlined text-[36px] text-[#dcdcde] mb-2">cloud_upload</span>
+                                <p class="text-[13px] text-[#646970]">No files added yet. Click <strong>Add File</strong> to upload.</p>
+                            </div>
+                        </template>
+                        <template x-for="(dl, idx) in downloadFiles" :key="dl.id">
+                            <div class="flex items-center gap-3 px-4 py-3 bg-[#f6f7f7] border border-[#f0f0f1] rounded-sm">
+                                <span class="material-symbols-outlined text-[#646970] text-[20px] flex-shrink-0">description</span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[13px] font-medium text-[#1d2327] truncate" x-text="dl.name"></p>
+                                    <p class="text-[11px] text-[#646970] mt-0.5"
+                                        x-text="(dl.file_size ? (dl.file_size/1024).toFixed(1)+' KB' : 'Unknown size') + ' · ' + (dl.download_limit ? 'Limit: '+dl.download_limit : 'Unlimited')">
+                                    </p>
+                                </div>
+                                <button type="button"
+                                    @click="lazyDeleteDownload(idx, dl.delete_url)"
+                                    class="p-1 text-[#646970] hover:text-[#d63638] transition flex-shrink-0" title="Delete">
+                                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                @else
+                <div class="border-t border-[#f0f0f1] pt-4">
+                    <div class="flex items-center gap-3 bg-[#f0f6fc] border-l-4 border-[#0A66C2] p-4 rounded-sm">
+                        <span class="material-symbols-outlined text-[#0A66C2]">info</span>
+                        <p class="text-[13px] text-[#1d2327]">Save the product first, then come back to upload downloadable files.</p>
+                    </div>
+                </div>
+                @endif
+            </div>
         </div>
     </div>
+
+    {{-- Upload Modal (inside x-data scope) --}}
+    @if(isset($post) && $post->exists && isset($post->shopData))
+    <div x-show="showUploadModal" x-cloak
+        class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+        x-transition:enter="transition ease-out duration-150"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-100"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        {{-- Backdrop --}}
+        <div class="absolute inset-0 bg-black/50" @click="showUploadModal = false"></div>
+
+        {{-- Modal card --}}
+        <div class="relative bg-white rounded-sm shadow-2xl w-full max-w-md z-10"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-5 py-4 border-b border-[#f0f0f1]">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#2271b1] text-[20px]">upload_file</span>
+                    <h3 class="text-[15px] font-semibold text-[#1d2327]">Add Downloadable File</h3>
+                </div>
+                <button type="button" @click="showUploadModal = false"
+                    class="text-[#646970] hover:text-[#1d2327] transition">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+
+            {{-- Body --}}
+            <div class="px-5 py-5 space-y-4">
+                {{-- File picker --}}
+                <div>
+                    <label class="block text-[12px] font-semibold text-[#1d2327] mb-1.5">File <span class="text-[#d63638]">*</span></label>
+                    <div @click="selectDownloadFile()"
+                        class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-sm cursor-pointer transition"
+                        :class="dlFile ? 'border-[#2271b1] bg-[#f0f6fc]' : 'border-[#c3c4c7] hover:border-[#2271b1] bg-[#f6f7f7]'">
+                        <template x-if="!dlFile">
+                            <div class="flex flex-col items-center text-center pointer-events-none">
+                                <span class="material-symbols-outlined text-[32px] text-[#c3c4c7] mb-1">perm_media</span>
+                                <p class="text-[12px] text-[#646970]">Click to select from media library</p>
+                            </div>
+                        </template>
+                        <template x-if="dlFile">
+                            <div class="flex flex-col items-center text-center pointer-events-none px-4">
+                                <span class="material-symbols-outlined text-[28px] text-[#2271b1] mb-1">description</span>
+                                <p class="text-[13px] font-medium text-[#1d2327] truncate max-w-full" x-text="dlFile.file_name || dlFile.name || dlFile.path"></p>
+                                <p class="text-[11px] text-[#646970] mt-0.5 truncate max-w-full" x-text="dlFile.path"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                {{-- Display name --}}
+                <div>
+                    <label class="block text-[12px] font-semibold text-[#1d2327] mb-1.5">Display Name <span class="text-[#9ca3af] font-normal">(optional)</span></label>
+                    <input type="text" x-model="dlName" placeholder="e.g. eBook PDF, Software v2.0"
+                        class="wp-input w-full h-9 text-[13px]">
+                    <p class="text-[11px] text-[#646970] mt-1">Customer sees this name on their downloads page.</p>
+                </div>
+
+                {{-- Download limit --}}
+                <div>
+                    <label class="block text-[12px] font-semibold text-[#1d2327] mb-1.5">Download Limit <span class="text-[#9ca3af] font-normal">(optional)</span></label>
+                    <input type="number" x-model="dlLimit" min="1" placeholder="Leave blank for unlimited"
+                        class="wp-input w-full h-9 text-[13px]">
+                </div>
+
+                {{-- Status --}}
+                <p x-show="dlStatus" x-text="dlStatus"
+                    :class="dlStatusType === 'error' ? 'text-[#d63638]' : 'text-emerald-600'"
+                    class="text-[12px]"></p>
+            </div>
+
+            {{-- Footer --}}
+            <div class="flex items-center justify-end gap-3 px-5 py-4 border-t border-[#f0f0f1] bg-[#f6f7f7]">
+                <button type="button" @click="showUploadModal = false"
+                    class="px-4 py-2 text-[13px] font-semibold text-[#50575e] border border-[#c3c4c7] rounded hover:border-[#999ba1] bg-white transition">
+                    Cancel
+                </button>
+                <button type="button"
+                    @click="lazyUploadDownload()"
+                    :disabled="dlUploading || !dlFile"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-[#2271b1] rounded hover:bg-[#135e96] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    <template x-if="!dlUploading">
+                        <span class="material-symbols-outlined text-[16px]">add</span>
+                    </template>
+                    <template x-if="dlUploading">
+                        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                    </template>
+                    <span x-text="dlUploading ? 'Adding…' : 'Add File'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 
 <!-- Short Description Card -->

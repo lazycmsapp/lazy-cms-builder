@@ -1,10 +1,11 @@
 <x-cms-dashboard::layouts.admin title="Shop Settings" active-menu="shop">
-    <div class="px-2" x-data="{ 
-        tab: localStorage.getItem('active_shop_tab') || '{{ session('active_shop_tab', 'general') }}', 
+    <div class="px-2" x-data="{
+        tab: '{{ request('tab', session('active_shop_tab', 'general')) }}',
         sellingLocations: '{{ get_shop_option('shop_selling_locations', 'all') }}',
         shippingLocations: '{{ get_shop_option('shop_shipping_locations', 'all') }}',
         manageStock: {{ get_shop_option('shop_manage_stock', '1') === '1' ? 'true' : 'false' }}
-    }" x-init="$watch('tab', val => localStorage.setItem('active_shop_tab', val))">
+    }" x-init="$watch('tab', val => { localStorage.setItem('active_shop_tab', val); })"
+    >
         <h1 class="text-[23px] font-normal text-[#1d2327] mb-4">Shop Settings</h1>
         
         @include('cms-dashboard::admin.shop.nav')

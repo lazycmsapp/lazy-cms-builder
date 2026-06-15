@@ -63,11 +63,13 @@ class CmsDashboardServiceProvider extends ServiceProvider
             \Acme\CmsDashboard\Console\Commands\SeedLazyCms::class,
             \Acme\CmsDashboard\Console\Commands\UpdateLazyCms::class,
             \Acme\CmsDashboard\Console\Commands\PublishScheduledPosts::class,
+            \Acme\CmsDashboard\Console\Commands\ExpireSalePrices::class,
         ]);
 
         // Register scheduled tasks from within the package
         $this->callAfterResolving(\Illuminate\Console\Scheduling\Schedule::class, function ($schedule) {
             $schedule->command('lazy:publish-scheduled')->everyMinute()->withoutOverlapping();
+            $schedule->command('lazy:expire-sales')->daily();
         });
 
         // Cron-independent fallback: many hosts (and local dev) never run `schedule:run`,

@@ -200,26 +200,41 @@
             @endif
         @endforeach
 
+        {{-- Collapse Menu button --}}
+        <li class="border-t border-[#2c3338] mt-2">
+            <button id="sidebar-toggle-btn"
+                class="w-full flex items-center px-3 py-[8px] text-[#a7aaad] hover:text-[#72aee6] hover:bg-[#2c3338] transition-colors">
+                <div class="w-6 h-6 mr-3 flex items-center justify-center flex-shrink-0 text-[#a7aaad]">
+                    <span class="material-symbols-outlined collapse-icon text-[20px] leading-none" style="font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;">keyboard_double_arrow_left</span>
+                </div>
+                <span class="collapse-text text-[13px]">Collapse Menu</span>
+            </button>
+        </li>
+
     </ul>
 </div>
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const btn = document.getElementById('collapse-sidebar');
+        const btn = document.getElementById('sidebar-toggle-btn');
         const body = document.body;
-        
-        // Initial state
+
         if (localStorage.getItem('sidebar-collapsed') === 'true') {
-            body.classList.add('sidebar-collapsed');
             document.querySelector('.collapse-icon').classList.add('rotate-180');
         }
+
+        // Remove no-transition class after first paint so animations work normally after that
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                body.classList.remove('sidebar-no-transition');
+            });
+        });
 
         btn?.addEventListener('click', function() {
             body.classList.toggle('sidebar-collapsed');
             const isCollapsed = body.classList.contains('sidebar-collapsed');
             localStorage.setItem('sidebar-collapsed', isCollapsed);
-            
             document.querySelector('.collapse-icon').classList.toggle('rotate-180', isCollapsed);
         });
     });

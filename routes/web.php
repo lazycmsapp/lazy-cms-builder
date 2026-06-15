@@ -336,6 +336,14 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
         Route::get('settings', [ShopController::class, 'settings'])->name('settings');
         Route::post('settings', [ShopController::class, 'saveSettings'])->name('settings.save');
 
+        // Sales Reports
+        Route::get('reports', [\Acme\CmsDashboard\Http\Controllers\Admin\ShopReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/export', [\Acme\CmsDashboard\Http\Controllers\Admin\ShopReportController::class, 'export'])->name('reports.export');
+
+        // Product download files (admin)
+        Route::post('products/{productDataId}/downloads', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductDownloadController::class, 'store'])->name('products.downloads.store');
+        Route::delete('products/downloads/{download}', [\Acme\CmsDashboard\Http\Controllers\Admin\ProductDownloadController::class, 'destroy'])->name('products.downloads.destroy');
+
         // Reviews
         Route::get('reviews', [\Acme\CmsDashboard\Http\Controllers\Admin\ReviewController::class, 'index'])->name('reviews.index');
         Route::post('reviews/{review}/toggle-approve', [\Acme\CmsDashboard\Http\Controllers\Admin\ReviewController::class, 'toggleApprove'])->name('reviews.toggle-approve');
@@ -420,6 +428,9 @@ Route::middleware(['web', \Acme\CmsDashboard\Http\Middleware\SecurityHeadersMidd
     Route::post('/account-logout', [ShopFrontendController::class, 'accountLogout'])->name('shop.account.logout');
     Route::post('/account-profile-update', [ShopFrontendController::class, 'updateProfile'])->name('shop.account.profile.update');
     Route::post('/account-password-update', [ShopFrontendController::class, 'updatePassword'])->name('shop.account.password.update');
+
+    // Digital downloads (token-based, no auth required)
+    Route::get('/download/{token}', [ShopFrontendController::class, 'downloadFile'])->name('shop.download')->middleware('throttle:30,1');
 
     // Magic login (passwordless)
     Route::post('/magic-login', [ShopFrontendController::class, 'requestMagicLink'])->name('shop.magic.request')->middleware('throttle:5,1');

@@ -834,9 +834,40 @@ class ShopFrontendController extends Controller
             }
         }
 
+        $this->generateDownloadTokens($order);
+
         Session::forget('lazy_cart');
         Session::forget('lazy_coupon');
         Session::forget('lazy_coupons');
+    }
+
+    private function generateDownloadTokens(\Acme\CmsDashboard\Models\Order $order): void
+    {
+        try {
+            $items = $order->items()->with(['product.shopData.downloads'])->get();
+            foreach ($items as $item) {
+                $shopData = $item->product?->shopData;
+                if (!$shopData || !$shopData->is_downloadable) continue;
+                $files = $shopData->downloads;
+                if ($files->isEmpty()) continue;
+
+                $expiryDays = $shopData->download_expiry_days;
+                $expiresAt  = $expiryDays ? now()->addDays($expiryDays) : null;
+
+                foreach ($files as $file) {
+                    \Acme\CmsDashboard\Models\OrderDownload::create([
+                        'order_id'            => $order->id,
+                        'order_item_id'       => $item->id,
+                        'product_download_id' => $file->id,
+                        'token'               => \Illuminate\Support\Str::random(48),
+                        'expires_at'          => $expiresAt,
+                        'download_limit'      => $file->download_limit,
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Download token generation failed for order #' . $order->id . ': ' . $e->getMessage());
+        }
     }
 
     /**
@@ -1219,6 +1250,40 @@ class ShopFrontendController extends Controller
         auth()->login($user, false);
 
         return redirect($accountUrl)->with('magic_login_success', 'You have been signed in successfully.');
+    }
+
+    /**
+     * Serve a digital download file via a secure one-time token.
+     */
+    public function downloadFile(Request $request, string $token)
+    {
+        $dl = \Acme\CmsDashboard\Models\OrderDownload::with('productDownload')
+            ->where('token', $token)
+            ->first();
+
+        if (!$dl) abort(404, 'Download link not found.');
+        if ($dl->isExpired()) abort(410, 'This download link has expired.');
+        if ($dl->isExhausted()) abort(410, 'Download limit reached for this file.');
+
+        $file = $dl->productDownload;
+        if (!$file) abort(404, 'File not found.');
+
+        // Files from media library live on the public disk; legacy uploads used local disk.
+        if (str_starts_with($file->file_path, 'downloads/')) {
+            $path = storage_path('app/' . $file->file_path);
+        } else {
+            $path = storage_path('app/public/' . $file->file_path);
+        }
+
+        if (!file_exists($path)) abort(404, 'File not found on server.');
+
+        $dl->increment('download_count');
+
+        $filename = $file->name ?: basename($file->file_path);
+        return response()->download($path, $filename, [
+            'Content-Type'        => mime_content_type($path) ?: 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="' . addslashes($filename) . '"',
+        ]);
     }
 
     /**

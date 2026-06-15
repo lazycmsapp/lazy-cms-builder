@@ -32,7 +32,10 @@ class Product extends Post
 
     public function getSalePriceAttribute()
     {
-        return $this->shopData?->sale_price;
+        $shopData = $this->shopData;
+        if (!$shopData || $shopData->sale_price === null) return null;
+        if ($shopData->sale_ends_at && \Carbon\Carbon::parse($shopData->sale_ends_at)->isPast()) return null;
+        return $shopData->sale_price;
     }
 
     public function getSkuAttribute()

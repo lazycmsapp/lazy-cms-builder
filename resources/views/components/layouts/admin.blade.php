@@ -30,21 +30,40 @@
         .wp-metabox-content { padding: 12px; }
         
         /* Sidebar Collapsed States */
-        body.sidebar-collapsed { padding-left: 36px; }
-        body.sidebar-collapsed #adminmenuwrap { width: 36px; overflow: visible; }
-        body.sidebar-collapsed .collapse-text, 
-        body.sidebar-collapsed .sidebar-item span,
+        body.sidebar-collapsed { padding-left: 48px !important; }
+        body.sidebar-collapsed #adminmenuwrap { width: 48px !important; overflow-x: hidden !important; }
+        body.sidebar-collapsed .collapse-text,
+        body.sidebar-collapsed .sidebar-item-link > span,
         body.sidebar-collapsed li[class*="uppercase"] { display: none !important; }
-        body.sidebar-collapsed .sidebar-item a,
-        body.sidebar-collapsed .sidebar-item-link { justify-content: center !important; padding-left: 0 !important; padding-right: 0 !important; }
+        body.sidebar-collapsed .sidebar-item-link {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
         body.sidebar-collapsed .sidebar-item div[class*="mr-3"],
         body.sidebar-collapsed .sidebar-item div[class*="mr-2"] { margin-right: 0 !important; }
-        body.sidebar-collapsed .sidebar-item div[class*="bg-[#2c3338]"] { display: none !important; }
-        body.sidebar-collapsed .sidebar-flyout { display: none !important; }
-        
+        body.sidebar-collapsed .sidebar-item div[class*="bg-[#2c3338]"],
+        body.sidebar-collapsed .sidebar-item .sidebar-flyout { display: none !important; }
+        body.sidebar-collapsed #sidebar-toggle-btn {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            width: 48px;
+        }
+        body.sidebar-collapsed #sidebar-toggle-btn > div { margin-right: 0 !important; }
+
         #adminmenuwrap { transition: width 0.2s; }
-        .collapse-icon svg { transition: transform 0.2s; }
+        .collapse-icon { transition: transform 0.2s; display: inline-block; }
         .rotate-180 { transform: rotate(180deg); }
+        .sidebar-no-transition #adminmenuwrap,
+        .sidebar-no-transition body { transition: none !important; }
+        #sidebar-toggle-btn { background: none; border: none; cursor: pointer; width: 100%; display: flex; align-items: center; }
         [x-cloak] { display: none !important; }
         
         /* Toast Notifications */
@@ -61,13 +80,21 @@
     {!! do_lazy_action('lazy_admin_head') !!}
 </head>
 <body class="text-[#1d2327] text-[13px] antialiased overflow-x-hidden pt-8">
+<script>
+    if(localStorage.getItem('sidebar-collapsed')==='true'){
+        document.body.classList.add('sidebar-collapsed','sidebar-no-transition');
+    }
+</script>
     
     <!-- WP Admin Bar (Top) -->
     <div id="wpadminbar" class="fixed top-0 left-0 right-0 h-8 bg-[#1d2327] z-50 flex items-center justify-between text-[#c3c4c7] px-2 text-[13px]">
         <div class="flex items-center space-x-4">
             @if(auth()->user()->hasPermission('access_dashboard'))
-                <a href="#" class="hover:text-[#72aee6] transition px-2 flex items-center hidden sm:flex">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.12 16.51C6.96 17.51 4.5 14.33 4.5 12c0-.52.06-1.03.17-1.52l4.81 12.33c-.56-.1-1.1-.21-1.6-.3zm2.24 0l-3.3-8.8 1.48-4.22c3.15-.31 5.92 1.34 7.21 3.96-1.1-2.02-3.1-3.62-5.46-3.8l1.35 3.86 3.1 8.25c-.9 1.15-2.06 2.06-3.38 2.75zm1.5-8.5c-.32 1.25-.97 2.36-1.8 3.25L10 6.64c2.8.52 5 2.68 5.6 5.48zL12 22v-6H8.5l6-16C19.83 4.96 23 8.31 23 12c0 2.87-1.22 5.45-3.17 7.28L14.62 10.01z"/></svg>
+                <a href="{{ route('admin.dashboard.index') }}" class="flex items-center px-2 gap-1.5 group no-underline">
+                    <span class="flex items-center justify-center w-6 h-6 rounded bg-[#2271b1] group-hover:bg-[#135e96] transition-colors flex-shrink-0">
+                        <span class="text-white font-extrabold text-[9px] tracking-widest leading-none">LCB</span>
+                    </span>
+                    <span class="text-white font-semibold text-[13px] hidden sm:inline hover:text-[#72aee6] transition-colors">Lazy CMS</span>
                 </a>
                 <a href="/" target="_blank" class="hover:text-[#72aee6] transition px-2 flex items-center space-x-1">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
