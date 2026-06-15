@@ -99,8 +99,8 @@ class MenuSeeder extends Seeder
             'order' => 40,
         ]);
         $appearanceMenu->children()->createMany([
-            ['title' => 'Customizer', 'route' => 'admin.customizer.index', 'order' => 1],
-            ['title' => 'Themes',     'route' => 'admin.themes.index',     'order' => 2],
+            ['title' => 'Themes',     'route' => 'admin.themes.index',     'order' => 1],
+            ['title' => 'Customizer', 'route' => 'admin.customizer.index', 'order' => 2],
             ['title' => 'Menus',      'route' => 'admin.menus.index',      'order' => 3],
             ['title' => 'Widgets',    'route' => 'admin.widgets.index',    'order' => 4],
         ]);
