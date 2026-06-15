@@ -95,8 +95,8 @@
                     
                     $menuData[$m->id] = $topLevel;
                 }
-                $menuDataJson = json_encode($menuData);
-                $menuNamesJson = json_encode($menuNames);
+                $menuDataJson = json_encode($menuData, JSON_HEX_TAG | JSON_UNESCAPED_UNICODE);
+                $menuNamesJson = json_encode($menuNames, JSON_HEX_TAG | JSON_UNESCAPED_UNICODE);
             } catch(\Exception $e) {
                 $menuDataJson = '{}';
                 $menuNamesJson = '{}';
@@ -107,7 +107,7 @@
         @php
             $builderPostCards = json_decode(get_cms_option('lazy_post_cards', '[]'), true) ?: [];
         @endphp
-        window.lazyPostCards = {!! json_encode($builderPostCards) !!};
+        window.lazyPostCards = {!! json_encode($builderPostCards, JSON_HEX_TAG) !!};
         @php
             try {
                 $__previewPosts = get_lazy_posts(['limit' => 6, 'order' => 'desc', 'orderby' => 'created_at']);
@@ -120,7 +120,7 @@
                 })->values()->toArray();
             } catch(\Exception $e) { $__previewPostsData = []; }
         @endphp
-        window.lazyRecentPosts = {!! json_encode($__previewPostsData) !!};
+        window.lazyRecentPosts = {!! json_encode($__previewPostsData, JSON_HEX_TAG) !!};
         @php
             // Built-ins are declared outside try so they survive any DB exception
             $__taxonomies   = [
@@ -139,8 +139,8 @@
                 }
             } catch (\Exception $e) { /* built-ins already set above */ }
         @endphp
-        window.lazyTaxonomies    = {!! json_encode($__taxonomies) !!};
-        window.lazyTaxonomyTerms = {!! json_encode($__taxonomyTerms) !!};
+        window.lazyTaxonomies    = {!! json_encode($__taxonomies, JSON_HEX_TAG) !!};
+        window.lazyTaxonomyTerms = {!! json_encode($__taxonomyTerms, JSON_HEX_TAG) !!};
         @php
             try {
                 $__cptList = \Acme\CmsDashboard\Models\PostType::where('is_builtin', false)
@@ -162,8 +162,8 @@
                 }
             } catch (\Exception $e) { $__cptList = []; $__cptTaxonomies = ['post' => ['category','tag']]; }
         @endphp
-        window.lazyCptList        = {!! json_encode($__cptList) !!};
-        window.lazyCptTaxonomies  = {!! json_encode($__cptTaxonomies) !!};
+        window.lazyCptList        = {!! json_encode($__cptList, JSON_HEX_TAG) !!};
+        window.lazyCptTaxonomies  = {!! json_encode($__cptTaxonomies, JSON_HEX_TAG) !!};
     </script>
 
     @include('cms-dashboard::admin.lazy-builder.partials.styles')
@@ -209,7 +209,8 @@
 
     <!-- Scripts (Corrected Paths) -->
     <script src="{{ asset('vendor/cms-dashboard/js/vue.global.js') }}"></script>
-    
+    <script src="{{ asset('vendor/cms-dashboard/js/purify.min.js') }}"></script>
+
     @include('cms-dashboard::admin.lazy-builder.partials.scripts')
 </body>
 </html>

@@ -55,10 +55,10 @@
                     backgroundClip: !el.settings.useLink && el.settings.useGradient ? 'text' : 'unset',
                     textAlign: getResponsiveVal(el.settings, 'textAlign', device) || 'center',
                     fontFamily: el.settings.fontFamily || 'inherit',
-                    fontSize: getUnitVal(getResponsiveVal(el.settings, 'fontSize', device) || 36, getResponsiveVal(el.settings, 'fontSizeUnit', device) || 'px'),
+                    fontSize: /[a-zA-Z%]/.test(String(getResponsiveVal(el.settings, 'fontSize', device) || '')) ? String(getResponsiveVal(el.settings, 'fontSize', device)) : getUnitVal(getResponsiveVal(el.settings, 'fontSize', device) || 36, getResponsiveVal(el.settings, 'fontSizeUnit', device) || 'px'),
                     fontWeight: el.settings.fontWeight || '800',
                     lineHeight: getResponsiveVal(el.settings, 'lineHeight', device) || '1.2',
-                    letterSpacing: getUnitVal(getResponsiveVal(el.settings, 'letterSpacing', device), 'px'),
+                    letterSpacing: /[a-zA-Z%]/.test(String(getResponsiveVal(el.settings, 'letterSpacing', device) || '')) ? String(getResponsiveVal(el.settings, 'letterSpacing', device)) : getUnitVal(getResponsiveVal(el.settings, 'letterSpacing', device), getResponsiveVal(el.settings, 'letterSpacingUnit', device) || 'px'),
                     textTransform: el.settings.textTransform || 'none',
                     textShadow: el.settings.textShadow
                         ? (el.settings.textShadowH || 0) + 'px '

@@ -606,7 +606,7 @@ class FrontendController extends Controller
     {
         $validated = $request->validate([
             'post_id' => 'required|exists:posts,id',
-            'comment' => 'required|string|min:3',
+            'comment' => 'required|string|min:3|max:3000',
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'parent_id' => 'nullable|exists:comments,id'

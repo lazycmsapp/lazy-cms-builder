@@ -9,7 +9,6 @@
 
     $bpSm  = (int) get_cms_option('theme_small_screen_breakpoint',  '800');
     $bpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
-    $bpSm1 = $bpSm + 1;
 
     $elemId = 'img-' . str_replace('.', '', uniqid('', true));
 
@@ -32,40 +31,14 @@
     $hoverType  = $s['hoverType'] ?? 'none';
     $hoverClass = ($hoverType !== 'none') ? 'hover-' . $hoverType : '';
 
-    $getRespVal = function(string $prop, string $dev) use ($s): ?string {
-        if ($dev === 'mobile') {
-            if (isset($s[$prop . '_mobile']) && $s[$prop . '_mobile'] !== '') return (string)$s[$prop . '_mobile'];
-            if (isset($s[$prop . '_tablet']) && $s[$prop . '_tablet'] !== '') return (string)$s[$prop . '_tablet'];
-        } elseif ($dev === 'tablet') {
-            if (isset($s[$prop . '_tablet']) && $s[$prop . '_tablet'] !== '') return (string)$s[$prop . '_tablet'];
-        }
-        return null;
-    };
-
-    // Responsive CSS
-    $respCss = '';
-    foreach ([
-        ['tablet', "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px)"],
-        ['mobile',  "@media(max-width:{$bpSm}px)"],
-    ] as [$rDev, $rMq]) {
-        $rules = [];
-        $rAlign = $getRespVal('textAlign', $rDev);
-        if ($rAlign !== null) {
-            $rules[] = "text-align:{$rAlign}!important";
-        }
-        foreach (['marginTop' => 'margin-top', 'marginRight' => 'margin-right', 'marginBottom' => 'margin-bottom', 'marginLeft' => 'margin-left'] as $mProp => $cssProp) {
-            $val = $getRespVal($mProp, $rDev);
-            if ($val !== null) {
-                $unit = $rDev === 'mobile'
-                    ? ($s[$mProp . 'Unit_mobile'] ?? $s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px')
-                    : ($s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px');
-                $rules[] = "{$cssProp}:{$val}{$unit}!important";
-            }
-        }
-        if (!empty($rules)) {
-            $respCss .= $rMq . '{.image-wrap-' . $elemId . '{' . implode(';', $rules) . '}}';
-        }
-    }
+    $iw = '.image-wrap-' . $elemId;
+    $respCss = lazy_elem_resp_css($s, $bpSm, $bpMed, [
+        ['prop' => 'textAlign',    'sel' => $iw],
+        ['prop' => 'marginTop',    'unitProp' => 'marginTopUnit',    'sel' => $iw],
+        ['prop' => 'marginRight',  'unitProp' => 'marginRightUnit',  'sel' => $iw],
+        ['prop' => 'marginBottom', 'unitProp' => 'marginBottomUnit', 'sel' => $iw],
+        ['prop' => 'marginLeft',   'unitProp' => 'marginLeftUnit',   'sel' => $iw],
+    ]);
 
     // Desktop wrapper style
     $align = $s['textAlign'] ?? $s['align'] ?? 'center';

@@ -89,7 +89,8 @@ class MediaController extends Controller
             // Block executable and server-side script extensions regardless of allowed list
             $blockedExtensions = ['php', 'php3', 'php4', 'php5', 'php7', 'phtml', 'phar',
                                    'asp', 'aspx', 'jsp', 'js', 'cgi', 'pl', 'py', 'rb',
-                                   'sh', 'bash', 'exe', 'bat', 'cmd', 'htaccess', 'htpasswd'];
+                                   'sh', 'bash', 'exe', 'bat', 'cmd', 'htaccess', 'htpasswd',
+                                   'svg', 'svgz', 'xml', 'xsl', 'xslt'];
             if (in_array($extension, $blockedExtensions)) {
                 return response()->json([
                     'success' => false,

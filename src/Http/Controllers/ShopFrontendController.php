@@ -694,6 +694,9 @@ class ShopFrontendController extends Controller
 
         $order = Order::create($orderData);
 
+        // Store order ID in session so the confirmation page can verify ownership for guests
+        $request->session()->put('last_order_id', $order->id);
+
         // Increment used_count for each applied coupon (total usage tracking)
         if (!empty($couponCodes)) {
             $allCoupons = json_decode(get_cms_option('shop_coupons', '[]'), true) ?: [];
@@ -940,6 +943,18 @@ class ShopFrontendController extends Controller
     public function paymentReturn(Request $request, $id)
     {
         $order = Order::findOrFail($id);
+
+        // Verify the returning user owns this order
+        if (auth()->check()) {
+            if ((int) $order->user_id !== auth()->id() && $order->customer_email !== auth()->user()->email) {
+                abort(403);
+            }
+        } else {
+            if ((int) session('last_order_id') !== (int) $id) {
+                abort(403);
+            }
+        }
+
         $gateway = $request->get('gateway');
 
         // Already finalized
@@ -1011,15 +1026,30 @@ class ShopFrontendController extends Controller
     }
 
     /**
-     * Log out from the customer account page and redirect back to it (not admin login).
+     * Returns a safe redirect URL, rejecting anything pointing to an external host.
+     * Allows relative paths and absolute URLs on the same host as the app only.
      */
+    private function safeRedirectUrl(string $url): string
+    {
+        // Protocol-relative (//evil.com) and external hosts are rejected
+        if (str_starts_with($url, '//')) {
+            return url('/');
+        }
+        $host = parse_url($url, PHP_URL_HOST);
+        if ($host && $host !== parse_url(config('app.url'), PHP_URL_HOST)) {
+            return url('/');
+        }
+        return $url;
+    }
+
     public function accountLogout(Request $request)
     {
         \Illuminate\Support\Facades\Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $redirect = $request->input('redirect_to') ?: url()->previous();
+        $raw      = $request->input('redirect_to') ?: url('/');
+        $redirect = $this->safeRedirectUrl($raw);
         return redirect($redirect);
     }
 
@@ -1045,7 +1075,8 @@ class ShopFrontendController extends Controller
 
         if (\Illuminate\Support\Facades\Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            $redirect = $request->input('redirect_to') ?: url()->previous();
+            $raw      = $request->input('redirect_to') ?: url('/');
+            $redirect = $this->safeRedirectUrl($raw);
             return redirect($redirect);
         }
 
@@ -1219,6 +1250,19 @@ class ShopFrontendController extends Controller
     public function confirmation($id)
     {
         $order = Order::with('items')->findOrFail($id);
+
+        if (auth()->check()) {
+            // Logged-in user must own the order (by user_id or matching email for orders placed while logged out)
+            if ((int) $order->user_id !== auth()->id() && $order->customer_email !== auth()->user()->email) {
+                abort(403);
+            }
+        } else {
+            // Guest: only allow if this is the order they just placed in this session
+            if ((int) session('last_order_id') !== (int) $id) {
+                abort(403);
+            }
+        }
+
         return view($this->resolveThemeView('confirmation'), compact('order'));
     }
 

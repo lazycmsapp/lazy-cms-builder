@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class NavigationMenuItem extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'navigation_menu_id', 'parent_id', 'title', 'url', 'type',
+        'object_id', 'target', 'classes', 'icon', 'show_only_icon',
+        'order', 'mega_menu_id',
+    ];
 
     public function menu()
     {

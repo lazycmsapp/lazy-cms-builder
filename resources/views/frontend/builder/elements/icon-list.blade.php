@@ -31,38 +31,11 @@
     $elemId = 'icon-list-' . str_replace('.', '', uniqid('', true));
     $bpSm   = (int) get_cms_option('theme_small_screen_breakpoint',  '800');
     $bpMed  = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
-    $bpSm1  = $bpSm + 1;
 
-    $getRespVal = function(string $prop, string $dev) use ($s) {
-        if ($dev === 'mobile') {
-            if (isset($s[$prop . '_mobile']) && $s[$prop . '_mobile'] !== '') return (string)$s[$prop . '_mobile'];
-            if (isset($s[$prop . '_tablet']) && $s[$prop . '_tablet'] !== '') return (string)$s[$prop . '_tablet'];
-        } elseif ($dev === 'tablet') {
-            if (isset($s[$prop . '_tablet']) && $s[$prop . '_tablet'] !== '') return (string)$s[$prop . '_tablet'];
-        }
-        return null;
-    };
-
-    $respCss = '';
-    foreach ([
-        ['tablet', "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px)"],
-        ['mobile', "@media(max-width:{$bpSm}px)"],
-    ] as [$rDev, $rMq]) {
-        $rules = [];
-        foreach (['marginTop', 'marginBottom'] as $mProp) {
-            $mVal = $getRespVal($mProp, $rDev);
-            if ($mVal !== null) {
-                $cssProp = strtolower(preg_replace('/([A-Z])/', '-$1', $mProp));
-                $unit = $rDev === 'mobile'
-                    ? ($s[$mProp . 'Unit_mobile'] ?? $s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px')
-                    : ($s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px');
-                $rules[] = "{$cssProp}:{$mVal}{$unit}!important";
-            }
-        }
-        if (!empty($rules)) {
-            $respCss .= "{$rMq}{.icon-list-{$elemId}{" . implode(';', $rules) . "}}";
-        }
-    }
+    $respCss = lazy_elem_resp_css($s, $bpSm, $bpMed, [
+        ['prop' => 'marginTop',    'unitProp' => 'marginTopUnit',    'sel' => ".icon-list-{$elemId}"],
+        ['prop' => 'marginBottom', 'unitProp' => 'marginBottomUnit', 'sel' => ".icon-list-{$elemId}"],
+    ]);
 @endphp
 
 @if($respCss){!! '<style>' . $respCss . '</style>' !!}@endif

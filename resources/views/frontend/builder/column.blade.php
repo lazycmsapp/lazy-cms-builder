@@ -522,7 +522,7 @@
         $colCss .= "@media(max-width:{$rBp}px){.lazy-column.{$colCid}{flex-basis:{$mobFb}!important;max-width:{$mobMw}!important;width:{$mobFb}!important}}";
     }
 
-    $htmlTag = $s['htmlTag'] ?? 'div';
+    $htmlTag = in_array($s['htmlTag'] ?? 'div', ['div','section','article','aside','main','header','footer','nav','span']) ? ($s['htmlTag'] ?? 'div') : 'div';
     $link = !empty($s['linkUrl']) ? $s['linkUrl'] : null;
 @endphp
 

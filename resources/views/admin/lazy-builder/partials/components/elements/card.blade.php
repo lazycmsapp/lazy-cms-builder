@@ -31,7 +31,7 @@
 
         {{-- Rendered frontend HTML preview --}}
         <div v-if="cardPreviewCache[el.id]?.html"
-             v-html="cardPreviewCache[el.id].html"
+             v-safe-html="cardPreviewCache[el.id].html"
              :data-card-preview-id="el.id"
              style="pointer-events:none;padding:4px 6px">
         </div>

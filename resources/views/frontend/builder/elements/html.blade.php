@@ -14,12 +14,21 @@
 
     $elemId = !empty($s['cssId']) ? $s['cssId'] : ('html-' . ($el['id'] ?? str_replace('.', '', uniqid('', true))));
     $outerStyle = "width:100%;margin-top:{$marginTop};margin-bottom:{$marginBottom};";
+
+    $bpSm  = (int) get_cms_option('theme_small_screen_breakpoint',  '800');
+    $bpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
+    $respId = 'lzr-html-' . ($el['id'] ?? str_replace('.', '', uniqid('', true)));
+    $respCss = lazy_elem_resp_css($s, $bpSm, $bpMed, [
+        ['prop' => 'marginTop',    'unitProp' => 'marginTopUnit',    'sel' => ".{$respId}"],
+        ['prop' => 'marginBottom', 'unitProp' => 'marginBottomUnit', 'sel' => ".{$respId}"],
+    ]);
 @endphp
+@if($respCss){!! '<style>' . $respCss . '</style>' !!}@endif
 
 @if($htmlContent)
 <div id="{{ $elemId }}"
-     class="lazy-html-block{{ $cssClass ? ' ' . $cssClass : '' }}{{ $visibilityClasses }}"
+     class="lazy-html-block {{ $respId }}{{ $cssClass ? ' ' . $cssClass : '' }}{{ $visibilityClasses }}"
      style="{{ $outerStyle }}">
-    {!! $htmlContent !!}
+    {!! lazy_sanitize_html($htmlContent) !!}
 </div>
 @endif

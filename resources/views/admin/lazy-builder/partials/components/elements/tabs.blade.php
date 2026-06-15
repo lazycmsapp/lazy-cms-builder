@@ -67,7 +67,7 @@
                      borderTop: (!el.settings.style || el.settings.style === 'underline') ? 'none' : ('1px solid ' + (el.settings.borderColor || '#e2e8f0')),
                      borderRadius: el.settings.style === 'pill' ? (el.settings.borderRadius ?? 4) + 'px' : '0 0 ' + (el.settings.borderRadius ?? 4) + 'px ' + (el.settings.borderRadius ?? 4) + 'px',
                  }"
-                 v-html="item.content || '<p style=\'color:#aaa;font-style:italic;\'>No content yet.</p>'">
+                 v-safe-html="item.content || '<p style=\'color:#aaa;font-style:italic;\'>No content yet.</p>'">
             </div>
         </template>
 

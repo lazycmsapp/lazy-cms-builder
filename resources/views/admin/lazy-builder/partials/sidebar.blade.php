@@ -1419,7 +1419,6 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-2">
                                         <label class="text-[12px] font-bold text-[#333]">Title</label>
-                                        <button type="button" @click.stop="openDynMenu(editingElement.settings, 'title', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
                                     </div>
                                     <input type="text" v-model="editingElement.settings.title"
                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
@@ -1429,7 +1428,6 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-2">
                                         <label class="text-[12px] font-bold text-[#333]">Description</label>
-                                        <button type="button" @click.stop="openDynMenu(editingElement.settings, 'description', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
                                     </div>
                                     <textarea v-model="editingElement.settings.description" rows="3"
                                               class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea] resize-y"></textarea>
@@ -1439,7 +1437,6 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-2">
                                         <label class="text-[12px] font-bold text-[#333]">Link URL</label>
-                                        <button type="button" @click.stop="openDynMenu(editingElement.settings, 'linkUrl', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
                                     </div>
                                     <input type="text" v-model="editingElement.settings.linkUrl"
                                            placeholder="https://"
@@ -1531,7 +1528,6 @@
                                                 <div>
                                                     <div class="flex justify-between items-center mb-1">
                                                         <label class="text-[9px] font-bold text-slate-400 uppercase">Title</label>
-                                                        <button type="button" @click.stop="openDynMenu(item, 'title', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
                                                     </div>
                                                     <input type="text" v-model="item.title"
                                                            class="w-full border border-slate-200 rounded px-2 py-1.5 text-[12px] focus:outline-none focus:border-[#0091ea]">
@@ -1728,7 +1724,6 @@
                                                 <div>
                                                     <div class="flex justify-between items-center mb-1">
                                                         <label class="text-[9px] font-bold text-slate-400 uppercase">Text</label>
-                                                        <button type="button" @click.stop="openDynMenu(item, 'text', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
                                                     </div>
                                                     <input type="text" v-model="item.text"
                                                            class="w-full border border-slate-200 rounded px-2 py-1.5 text-[12px] focus:outline-none focus:border-[#0091ea]">
@@ -1736,7 +1731,6 @@
                                                 <div>
                                                     <div class="flex justify-between items-center mb-1">
                                                         <label class="text-[9px] font-bold text-slate-400 uppercase">Link (optional)</label>
-                                                        <button type="button" @click.stop="openDynMenu(item, 'link', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
                                                     </div>
                                                     <input type="text" v-model="item.link" placeholder="https://..."
                                                            class="w-full border border-slate-200 rounded px-2 py-1.5 text-[12px] focus:outline-none focus:border-[#0091ea]">
@@ -1837,7 +1831,6 @@
                                                 <div>
                                                     <div class="flex justify-between items-center mb-1">
                                                         <label class="text-[9px] font-bold text-slate-400 uppercase">Label</label>
-                                                        <button type="button" @click.stop="openDynMenu(item, 'label', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
                                                     </div>
                                                     <input type="text" v-model="item.label"
                                                            class="w-full border border-slate-200 rounded px-2 py-1.5 text-[12px] focus:outline-none focus:border-[#0091ea]">
@@ -2238,7 +2231,6 @@
                                 <div v-if="(editingElement.settings.videoSource || 'youtube') === 'youtube'">
                                     <div class="flex justify-between items-center mb-2">
                                         <label class="text-[12px] font-bold text-[#333]">Video URL</label>
-                                        <button type="button" @click.stop="openDynMenu(editingElement.settings, 'url', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
                                     </div>
                                     <input type="text" v-model="editingElement.settings.url"
                                            placeholder="https://youtube.com/watch?v=... or vimeo.com/..."
@@ -2532,7 +2524,6 @@
                                 <div>
                                     <div class="flex justify-between items-center mb-2">
                                         <label class="text-[12px] font-bold text-[#333]">Label <span class="text-slate-400 font-normal">(optional)</span></label>
-                                        <button type="button" @click.stop="openDynMenu(editingElement.settings, 'label', $event)" class="lazy-dyn-btn" title="Insert Dynamic Value"><i class="fa fa-bolt text-[9px]"></i></button>
                                     </div>
                                     <input type="text" v-model="editingElement.settings.label" placeholder="e.g. Based on 127 reviews"
                                            class="w-full border border-slate-200 rounded px-3 py-2.5 text-[13px] text-slate-600 focus:outline-none focus:border-[#0091ea]">
@@ -4327,76 +4318,5 @@
             </div>
         </div>
     </template>
-
-    <!-- ══ Global Dynamic Value Picker Popover ══ -->
-    <template v-if="dynMenu.open">
-        <div class="fixed inset-0 z-[9998]" @click.stop="dynMenu.open = false"></div>
-        <div class="fixed z-[9999] bg-white border border-slate-200 rounded-xl shadow-2xl w-[272px]"
-             :style="{ top: dynMenu.y + 'px', left: dynMenu.x + 'px' }"
-             style="max-height:420px;overflow-y:auto;"
-             @click.stop>
-            <div class="px-3 py-2 border-b border-slate-100 flex items-center justify-between">
-                <div class="flex items-center gap-1.5">
-                    <i class="fa fa-bolt text-[#0091ea] text-[10px]"></i>
-                    <span class="text-[11px] font-bold text-slate-700">Dynamic Value</span>
-                </div>
-                <button @click="dynMenu.open = false" class="text-slate-300 hover:text-slate-500 w-5 h-5 flex items-center justify-center">
-                    <i class="fa fa-times text-[10px]"></i>
-                </button>
-            </div>
-            <div class="p-2.5 space-y-3">
-
-                <!-- Post / Page -->
-                <div>
-                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-1.5">Post / Page</div>
-                    <div class="grid grid-cols-2 gap-1">
-                        <button @click="insertDynToken('post_title')" class="dyn-token-btn">Post Title</button>
-                        <button @click="insertDynToken('post_excerpt')" class="dyn-token-btn">Excerpt</button>
-                        <button @click="insertDynToken('post_date')" class="dyn-token-btn">Post Date</button>
-                        <button @click="insertDynToken('post_id')" class="dyn-token-btn">Post ID</button>
-                        <button @click="insertDynToken('post_type')" class="dyn-token-btn">Post Type</button>
-                        <button @click="insertDynToken('post_permalink')" class="dyn-token-btn">Permalink</button>
-                        <button @click="insertDynToken('post_reading_time')" class="dyn-token-btn">Reading Time</button>
-                        <button @click="insertDynToken('author_name')" class="dyn-token-btn">Author Name</button>
-                    </div>
-                </div>
-
-                <!-- Site -->
-                <div>
-                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-1.5">Site</div>
-                    <div class="grid grid-cols-2 gap-1">
-                        <button @click="insertDynToken('site_title')" class="dyn-token-btn">Site Title</button>
-                        <button @click="insertDynToken('site_tagline')" class="dyn-token-btn">Tagline</button>
-                    </div>
-                </div>
-
-                <!-- Other -->
-                <div>
-                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-1.5">Other</div>
-                    <div class="grid grid-cols-2 gap-1">
-                        <button @click="insertDynToken('current_date')" class="dyn-token-btn">Current Date</button>
-                        <button @click="insertDynToken('current_year')" class="dyn-token-btn">Current Year</button>
-                        <button @click="insertDynToken('user_name')" class="dyn-token-btn">User Name</button>
-                    </div>
-                </div>
-
-                <!-- ACPT Custom Field -->
-                <div>
-                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-1.5">ACPT Custom Field</div>
-                    <div class="flex gap-1">
-                        <input type="text" v-model="dynAcptSlug" placeholder="Field slug…"
-                               class="flex-1 border border-slate-200 rounded px-2 py-1.5 text-[11px] focus:outline-none focus:border-[#0091ea]"
-                               @keydown.enter.prevent="insertDynAcpt()">
-                        <button @click="insertDynAcpt()"
-                                :disabled="!dynAcptSlug.trim()"
-                                class="px-2.5 py-1.5 bg-[#2271b1] text-white rounded text-[10px] font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#1a5a96] transition-colors">
-                            Insert
-                        </button>
-                    </div>
-                    <p class="text-[10px] text-slate-400 mt-1">Enter the ACPT field slug</p>
-                </div>
-
-            </div>
-        </div>
-    </template>
 </aside>
+

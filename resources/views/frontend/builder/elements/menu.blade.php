@@ -174,8 +174,8 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
 
     // Styles for Desktop
     $wrapperStyle = 'width: 100%; position: relative;';
-    if (isset($s['marginTop'])    && $s['marginTop']    !== '') $wrapperStyle .= ' margin-top: '    . $s['marginTop']    . 'px;';
-    if (isset($s['marginBottom']) && $s['marginBottom'] !== '') $wrapperStyle .= ' margin-bottom: ' . $s['marginBottom'] . 'px;';
+    if (isset($s['marginTop'])    && $s['marginTop']    !== '') $wrapperStyle .= ' margin-top: '    . $s['marginTop']    . ($s['marginTopUnit']    ?? 'px') . ';';
+    if (isset($s['marginBottom']) && $s['marginBottom'] !== '') $wrapperStyle .= ' margin-bottom: ' . $s['marginBottom'] . ($s['marginBottomUnit'] ?? 'px') . ';';
     
     // Link Styles (General)
     $getTypographyStyle = function($prefix, $defaultSize = '16px') use ($s) {
@@ -246,7 +246,15 @@ function renderLazyMenuItemsResponsive($items, $grouped, $mainStyle, $subStyle, 
     $triggerIconCollapse = $s['mobileMenuTriggerCollapseIcon'] ?? 'fa-times';
     $triggerFontSize     = $s['mobileMenuTriggerFontSize'] ?? '24px';
     $triggerAlign        = $s['mobileMenuTriggerHorizontalAlign'] ?? 'flex-start';
+
+    $menuBpSm  = (int) get_cms_option('theme_small_screen_breakpoint',  '800');
+    $menuBpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
+    $menuRespCss = lazy_elem_resp_css($s, $menuBpSm, $menuBpMed, [
+        ['prop' => 'marginTop',    'unitProp' => 'marginTopUnit',    'sel' => ".menu-{$elId}"],
+        ['prop' => 'marginBottom', 'unitProp' => 'marginBottomUnit', 'sel' => ".menu-{$elId}"],
+    ]);
 @endphp
+@if($menuRespCss){!! '<style>' . $menuRespCss . '</style>' !!}@endif
 
 <div id="{{ $customId }}" class="element-menu menu-{{ $elId }} {{ $visibilityClasses }} {{ $customClass }}" style="{{ $wrapperStyle }}">
     @if($menuId && count($menuItems) > 0)

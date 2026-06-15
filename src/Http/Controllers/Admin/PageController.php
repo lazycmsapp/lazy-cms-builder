@@ -144,7 +144,13 @@ class PageController extends Controller
         $validated['user_id'] = auth()->id();
 
         if ($request->hasFile('featured_image')) {
-            $validated['featured_image'] = $request->file('featured_image')->store('pages', 'public');
+            $file = $request->file('featured_image');
+            $allowedMimes = ['image/jpeg','image/png','image/gif','image/webp','image/avif'];
+            $allowedExts  = ['jpg','jpeg','png','gif','webp','avif'];
+            if (!in_array(strtolower($file->getClientOriginalExtension()), $allowedExts) || !in_array($file->getMimeType(), $allowedMimes)) {
+                return redirect()->back()->withErrors(['featured_image' => 'Featured image must be a valid image file (JPG, PNG, GIF, WebP, AVIF).'])->withInput();
+            }
+            $validated['featured_image'] = $file->store('pages', 'public');
         } elseif ($request->filled('featured_image')) {
             $validated['featured_image'] = $request->input('featured_image');
         }
@@ -340,10 +346,16 @@ class PageController extends Controller
         }
 
         if ($request->hasFile('featured_image')) {
+            $file = $request->file('featured_image');
+            $allowedMimes = ['image/jpeg','image/png','image/gif','image/webp','image/avif'];
+            $allowedExts  = ['jpg','jpeg','png','gif','webp','avif'];
+            if (!in_array(strtolower($file->getClientOriginalExtension()), $allowedExts) || !in_array($file->getMimeType(), $allowedMimes)) {
+                return redirect()->back()->withErrors(['featured_image' => 'Featured image must be a valid image file (JPG, PNG, GIF, WebP, AVIF).'])->withInput();
+            }
             if ($page->featured_image && !\Acme\CmsDashboard\Models\Media::where('path', $page->featured_image)->exists()) {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($page->featured_image);
             }
-            $validated['featured_image'] = $request->file('featured_image')->store('pages', 'public');
+            $validated['featured_image'] = $file->store('pages', 'public');
         } elseif ($request->input('remove_featured_image') === '1') {
             if ($page->featured_image && !\Acme\CmsDashboard\Models\Media::where('path', $page->featured_image)->exists()) {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($page->featured_image);

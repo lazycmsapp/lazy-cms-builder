@@ -48,8 +48,8 @@ class FormController extends Controller
     {
         $form = Form::findOrFail($id);
         $form->update([
-            'fields' => $request->input('fields'),
-            'settings' => $request->input('settings')
+            'fields'   => $request->input('fields'),
+            'settings' => $request->input('settings'),
         ]);
 
         return response()->json(['success' => true, 'message' => 'Form saved successfully.']);

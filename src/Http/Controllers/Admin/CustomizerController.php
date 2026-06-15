@@ -313,6 +313,13 @@ class CustomizerController extends \Illuminate\Routing\Controller
                         'default'     => '0px',
                         'placeholder' => '0px',
                     ],
+                    'theme_header_side_padding' => [
+                        'type'        => 'text',
+                        'label'       => 'Header Side Padding',
+                        'desc'        => 'Left/right inner padding in the header container. Use 0px to align with full-width page sections.',
+                        'default'     => '0px',
+                        'placeholder' => '0px',
+                    ],
                 ],
             ],
             'title_bar' => [
@@ -735,6 +742,20 @@ class CustomizerController extends \Illuminate\Routing\Controller
                 'title' => 'Performance',
                 'icon'  => 'speed',
                 'fields' => [
+                    'maintenance_mode' => [
+                        'type'    => 'toggle',
+                        'label'   => 'Maintenance Mode',
+                        'desc'    => 'When enabled, visitors see a maintenance page. Logged-in users can still browse the site normally.',
+                        'default' => '0',
+                    ],
+                    'maintenance_message' => [
+                        'type'        => 'textarea',
+                        'label'       => 'Maintenance Message',
+                        'desc'        => 'Custom message shown to visitors during maintenance.',
+                        'default'     => 'We are currently performing scheduled maintenance. We\'ll be back shortly!',
+                        'placeholder' => 'We\'ll be back soon!',
+                        'depends'     => 'maintenance_mode',
+                    ],
                     'performance_allowed_formats' => [
                         'type'    => 'multi_select',
                         'label'   => 'Allowed Upload Formats',

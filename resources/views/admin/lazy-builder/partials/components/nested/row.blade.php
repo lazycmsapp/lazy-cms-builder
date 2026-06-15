@@ -296,7 +296,7 @@
                                         </div>
                                         <p v-if="!it.rows.length" class="text-[10px] text-slate-300 italic">No rows</p>
                                     </div>
-                                    <div v-else-if="it.value" :style="it.style" :class="it.hoverClass" v-html="it.value"></div>
+                                    <div v-else-if="it.value" :style="it.style" :class="it.hoverClass" v-safe-html="it.value"></div>
                                 </template>
                                 <p v-if="!getCustomElementRender(el).items.length" class="text-[12px] font-semibold text-slate-400 text-center py-2"
                                    v-text="customElements[el.type]?.name || el.type"></p>

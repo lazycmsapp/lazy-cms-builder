@@ -18,7 +18,7 @@
          getCanvasVisibilityStyle(el.settings)
      ]">
     <div class="text-block-content"
-       v-html="el.settings.content || 'your content is here...'"
+       v-safe-html="el.settings.content || 'your content is here...'"
        @mouseenter="el.isHovered = true"
        @mouseleave="el.isHovered = false"
        style="margin: 0; width: 100%; transition: color 0.3s ease; display: block;">
@@ -31,7 +31,7 @@
             font-size: @{{ getUnitVal(el.settings.fontSize || 16, el.settings.fontSizeUnit || 'px') }} !important;
             font-weight: @{{ el.settings.fontWeight || '400' }} !important;
             line-height: @{{ el.settings.lineHeight || '1.5' }} !important;
-            letter-spacing: @{{ (el.settings.letterSpacing || 0) + 'px' }} !important;
+            letter-spacing: @{{ /[a-zA-Z%]/.test(String(el.settings.letterSpacing || '')) ? String(el.settings.letterSpacing) : ((el.settings.letterSpacing || 0) + (el.settings.letterSpacingUnit || 'px')) }} !important;
             text-transform: @{{ el.settings.textTransform || 'none' }} !important;
             margin: 0 !important;
         }

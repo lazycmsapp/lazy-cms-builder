@@ -51,44 +51,25 @@
         return null;
     };
 
-    $respCss = '';
+    $respCss = lazy_elem_resp_css($s, $bpSm, $bpMed, [
+        ['prop' => 'marginTop',     'unitProp' => 'marginTopUnit',     'sel' => ".button-container-{$elemId}"],
+        ['prop' => 'marginBottom',  'unitProp' => 'marginBottomUnit',  'sel' => ".button-container-{$elemId}"],
+        ['prop' => 'marginLeft',    'unitProp' => 'marginLeftUnit',    'sel' => "#{$appliedId}"],
+        ['prop' => 'marginRight',   'unitProp' => 'marginRightUnit',   'sel' => "#{$appliedId}"],
+        ['prop' => 'paddingTop',    'unitProp' => 'paddingTopUnit',    'sel' => "#{$appliedId}"],
+        ['prop' => 'paddingRight',  'unitProp' => 'paddingRightUnit',  'sel' => "#{$appliedId}"],
+        ['prop' => 'paddingBottom', 'unitProp' => 'paddingBottomUnit', 'sel' => "#{$appliedId}"],
+        ['prop' => 'paddingLeft',   'unitProp' => 'paddingLeftUnit',   'sel' => "#{$appliedId}"],
+    ]);
+    // textAlign → justify-content requires value transformation so handled separately
     foreach ([
         ['tablet', "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px)"],
         ['mobile', "@media(max-width:{$bpSm}px)"],
     ] as [$rDev, $rMq]) {
-        $wrapRules = [];
-        $btnRules  = [];
-
         $rAlign = $getRespVal('textAlign', $rDev);
         if ($rAlign !== null) {
             $jc = $rAlign === 'left' ? 'flex-start' : ($rAlign === 'right' ? 'flex-end' : 'center');
-            $wrapRules[] = "justify-content:{$jc}!important";
-        }
-        foreach (['marginTop', 'marginBottom'] as $mProp) {
-            $mVal = $getRespVal($mProp, $rDev);
-            if ($mVal !== null) {
-                $cssProp = strtolower(preg_replace('/([A-Z])/', '-$1', $mProp));
-                $unit = $rDev === 'mobile'
-                    ? ($s[$mProp . 'Unit_mobile'] ?? $s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px')
-                    : ($s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px');
-                $wrapRules[] = "{$cssProp}:{$mVal}{$unit}!important";
-            }
-        }
-        foreach (['marginLeft', 'marginRight', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'] as $bProp) {
-            $bVal = $getRespVal($bProp, $rDev);
-            if ($bVal !== null) {
-                $cssProp = strtolower(preg_replace('/([A-Z])/', '-$1', $bProp));
-                $unit = $rDev === 'mobile'
-                    ? ($s[$bProp . 'Unit_mobile'] ?? $s[$bProp . 'Unit_tablet'] ?? $s[$bProp . 'Unit'] ?? 'px')
-                    : ($s[$bProp . 'Unit_tablet'] ?? $s[$bProp . 'Unit'] ?? 'px');
-                $btnRules[] = "{$cssProp}:{$bVal}{$unit}!important";
-            }
-        }
-        if (!empty($wrapRules)) {
-            $respCss .= "{$rMq}{.button-container-{$elemId}{" . implode(';', $wrapRules) . "}}";
-        }
-        if (!empty($btnRules)) {
-            $respCss .= "{$rMq}{#{$appliedId}{" . implode(';', $btnRules) . "}}";
+            $respCss .= "{$rMq}{.button-container-{$elemId}{justify-content:{$jc}!important}}";
         }
     }
 
@@ -124,10 +105,10 @@
         'border-style' => 'solid',
         'border-color' => $hexToRgba($s['borderColor'] ?? '#000000', $s['borderColorOpacity'] ?? null),
         'font-family' => $s['fontFamily'] ?? 'inherit',
-        'font-size' => getUnitVal($s['fontSize'] ?? 16, 'px'),
+        'font-size' => preg_match('/[a-zA-Z%]/', (string)($s['fontSize'] ?? '')) ? (string)($s['fontSize'] ?? '16px') : (($s['fontSize'] ?? 16) . ($s['fontSizeUnit'] ?? 'px')),
         'font-weight' => $s['fontWeight'] ?? '600',
         'line-height' => $s['lineHeight'] ?? 'normal',
-        'letter-spacing' => getUnitVal($s['letterSpacing'] ?? 0, 'px'),
+        'letter-spacing' => getUnitVal($s['letterSpacing'] ?? 0, $s['letterSpacingUnit'] ?? 'px'),
         'text-transform' => $s['textTransform'] ?? 'none',
         'text-decoration' => 'none',
         'transition' => 'all 0.3s ease',

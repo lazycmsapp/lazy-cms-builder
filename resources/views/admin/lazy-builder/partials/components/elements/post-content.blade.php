@@ -16,7 +16,7 @@
             fontSize:      getUnitVal(el.settings.fontSize || 13, el.settings.fontSizeUnit || 'px'),
             fontWeight:    el.settings.fontWeight || '400',
             lineHeight:    el.settings.lineHeight || '1.6',
-            letterSpacing: (el.settings.letterSpacing ?? 0) + 'px',
+            letterSpacing: /[a-zA-Z%]/.test(String(el.settings.letterSpacing ?? '')) ? String(el.settings.letterSpacing) : ((el.settings.letterSpacing ?? 0) + (el.settings.letterSpacingUnit || 'px')),
             color:         el.settings.color || '#6b7280',
             textTransform: el.settings.textTransform || 'none',
             margin:        '0 0 5px',

@@ -50,7 +50,17 @@ class CustomOptionsController extends Controller
                 $data[$key] = $request->has($key) ? '1' : '0';
             } elseif ($field['type'] === 'image' && $request->hasFile($key)) {
                 $file = $request->file($key);
-                $filename = Str::slug($key) . '-' . time() . '.' . $file->getClientOriginalExtension();
+
+                $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'];
+                $allowedExts  = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
+                $ext  = strtolower($file->getClientOriginalExtension());
+                $mime = $file->getMimeType();
+
+                if (!in_array($ext, $allowedExts) || !in_array($mime, $allowedMimes)) {
+                    return redirect()->back()->withErrors([$key => 'Only image files (JPG, PNG, GIF, WebP, AVIF) are allowed.']);
+                }
+
+                $filename = Str::slug($key) . '-' . time() . '.' . $ext;
                 $file->move(public_path('uploads/settings'), $filename);
                 $data[$key] = 'uploads/settings/' . $filename;
             }

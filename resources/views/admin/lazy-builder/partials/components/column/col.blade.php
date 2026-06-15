@@ -149,7 +149,7 @@
                 dragTarget === 'element-' + ci + '-' + coli + '-' + eli + '-null-null' && dragPosition === 'top' ? 'border-t-2 border-t-blue-500' : '',
                 dragTarget === 'element-' + ci + '-' + coli + '-' + eli + '-null-null' && dragPosition === 'bottom' ? 'border-b-2 border-b-blue-500' : ''
              ]"
-             :style="el.type === 'row' ? { width: '100%', maxWidth: '100%' } : (el.type === 'spacer' ? { flexGrow: el.settings.flexGrow || 0 } : { display: 'flex', flexDirection: 'column', fontSize: '0', lineHeight: '0' })"
+             :style="el.type === 'row' ? { width: '100%', maxWidth: '100%' } : (el.type === 'spacer' ? { flexGrow: el.settings.flexGrow || 0 } : { display: 'flex', flexDirection: 'column', fontSize: '1rem', lineHeight: '0' })"
              @dragover="onDragOver($event, 'element', ci, coli, eli)"
              @drop="onDrop($event, 'element', ci, coli, eli)">
             
@@ -206,7 +206,7 @@
                         <p v-if="!it.rows.length" class="text-[11px] text-slate-300 italic">No rows</p>
                     </div>
                     {{-- text / textarea / wysiwyg --}}
-                    <div v-else-if="it.value" :style="it.style" :class="it.hoverClass" v-html="it.value"></div>
+                    <div v-else-if="it.value" :style="it.style" :class="it.hoverClass" v-safe-html="it.value"></div>
                 </template>
                 {{-- fallback when nothing to show --}}
                 <p v-if="!getCustomElementRender(el).items.length" class="text-[13px] font-semibold text-slate-400 text-center py-3"

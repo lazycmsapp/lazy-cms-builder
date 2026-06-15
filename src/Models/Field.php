@@ -8,7 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Field extends Model
 {
     protected $table = 'custom_fields';
-    protected $guarded = [];
+    protected $fillable = [
+        'field_group_id', 'label', 'name', 'type',
+        'instructions', 'required', 'params', 'order',
+    ];
 
     protected $casts = [
         'params' => 'array',

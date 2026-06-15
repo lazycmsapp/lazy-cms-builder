@@ -9,42 +9,17 @@
 
     $bpSm  = (int) get_cms_option('theme_small_screen_breakpoint',  '800');
     $bpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
-    $bpSm1 = $bpSm + 1;
 
     $elemId = 'pc-' . str_replace('.', '', uniqid('', true));
 
-    $getRespVal = function(string $prop, string $dev) use ($s): ?string {
-        if ($dev === 'mobile') {
-            if (isset($s[$prop . '_mobile']) && $s[$prop . '_mobile'] !== '') return (string)$s[$prop . '_mobile'];
-            if (isset($s[$prop . '_tablet']) && $s[$prop . '_tablet'] !== '') return (string)$s[$prop . '_tablet'];
-        } elseif ($dev === 'tablet') {
-            if (isset($s[$prop . '_tablet']) && $s[$prop . '_tablet'] !== '') return (string)$s[$prop . '_tablet'];
-        }
-        return null;
-    };
-
-    // Responsive CSS — single braces, text-align targets both wrapper and inner text
-    $respCss = '';
-    foreach ([
-        ['tablet', "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px)"],
-        ['mobile',  "@media(max-width:{$bpSm}px)"],
-    ] as [$rDev, $rMq]) {
-        $rules = [];
-        $rAlign = $getRespVal('textAlign', $rDev);
-        if ($rAlign !== null) $rules[] = "text-align:{$rAlign}!important";
-        foreach (['marginTop' => 'margin-top', 'marginRight' => 'margin-right', 'marginBottom' => 'margin-bottom', 'marginLeft' => 'margin-left'] as $mProp => $cssProp) {
-            $val = $getRespVal($mProp, $rDev);
-            if ($val !== null) {
-                $unit = $rDev === 'mobile'
-                    ? ($s[$mProp . 'Unit_mobile'] ?? $s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px')
-                    : ($s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px');
-                $rules[] = "{$cssProp}:{$val}{$unit}!important";
-            }
-        }
-        if (!empty($rules)) {
-            $respCss .= "{$rMq}{.{$elemId}{" . implode(';', $rules) . "}}";
-        }
-    }
+    $pc = ".{$elemId}";
+    $respCss = lazy_elem_resp_css($s, $bpSm, $bpMed, [
+        ['prop' => 'textAlign',     'sel' => $pc],
+        ['prop' => 'marginTop',     'unitProp' => 'marginTopUnit',     'sel' => $pc],
+        ['prop' => 'marginRight',   'unitProp' => 'marginRightUnit',   'sel' => $pc],
+        ['prop' => 'marginBottom',  'unitProp' => 'marginBottomUnit',  'sel' => $pc],
+        ['prop' => 'marginLeft',    'unitProp' => 'marginLeftUnit',    'sel' => $pc],
+    ]);
 
     // Desktop base styles — width:100% and align-self:stretch so it fills column width
     $wrapStyle  = "width:100%;align-self:stretch;";
@@ -59,7 +34,7 @@
     $typoStyle .= "font-size:"      . ($s['fontSize']      ?? 13) . ($s['fontSizeUnit'] ?? 'px') . ";";
     $typoStyle .= "font-weight:"    . ($s['fontWeight']    ?? '400') . ";";
     $typoStyle .= "line-height:"    . ($s['lineHeight']    ?? '1.6') . ";";
-    $typoStyle .= "letter-spacing:" . ($s['letterSpacing'] ?? 0) . "px;";
+    $typoStyle .= "letter-spacing:" . ($s['letterSpacing'] ?? 0) . ($s['letterSpacingUnit'] ?? 'px') . ";";
     $typoStyle .= "text-transform:" . ($s['textTransform'] ?? 'none') . ";";
     $typoStyle .= "color:"          . ($s['color']          ?? '#6b7280') . ";";
     $typoStyle .= "text-align:inherit;margin:0;";
@@ -93,7 +68,7 @@
      @if($cssId) id="{{ $cssId }}" @endif
      style="{{ $wrapStyle }}">
     @if($contentDisplay === 'full' && !$stripHtml)
-        <div style="{{ $typoStyle }}">{!! $output !!}</div>
+        <div style="{{ $typoStyle }}">{!! lazy_sanitize_html($output) !!}</div>
     @else
         <p style="{{ $typoStyle }}">{{ $output }}</p>
     @endif

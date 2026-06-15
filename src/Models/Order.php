@@ -10,7 +10,21 @@ class Order extends Model
     use SoftDeletes;
 
     protected $table = 'shop_orders';
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id', 'order_number', 'status',
+        'subtotal', 'shipping_total', 'tax_total', 'discount_total', 'coupon_code', 'total',
+        'customer_email', 'customer_phone', 'first_name', 'last_name',
+        'address_line_1', 'address_line_2', 'city', 'state', 'postcode', 'country',
+        'shipping_first_name', 'shipping_last_name',
+        'shipping_address_line_1', 'shipping_address_line_2',
+        'shipping_city', 'shipping_state', 'shipping_postcode', 'shipping_country',
+        'payment_method', 'transaction_id', 'paid_at', 'customer_note', 'meta',
+        'currency', 'currency_symbol', 'currency_position',
+        'thousand_separator', 'decimal_separator', 'decimals',
+        'refunded_amount', 'refund_log',
+        'shipping_method', 'tracking_number', 'tracking_carrier', 'tracking_url',
+        'is_read',
+    ];
 
     protected $casts = [
         'paid_at'          => 'datetime',

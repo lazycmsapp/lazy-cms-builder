@@ -118,11 +118,15 @@
             <div class="grid grid-cols-3 gap-3">
                 <div>
                     <label class="text-[8px] font-bold text-slate-400 uppercase mb-1 block">Font Size</label>
-                    <div class="flex border border-slate-200 rounded overflow-hidden">
-                        <input type="number" :value="getResponsiveVal(editingElement.settings, 'fontSize', device)" @input="setResponsiveVal(editingElement.settings, 'fontSize', device, $event.target.value)"
-                               :placeholder="getResponsiveVal(editingElement.settings, 'fontSize', 'desktop') || 36"
-                               class="w-full border-none px-1 py-2 text-[11px] text-center focus:ring-0">
-                        <select :value="getResponsiveVal(editingElement.settings, 'fontSizeUnit', device) || 'px'" @change="setResponsiveVal(editingElement.settings, 'fontSizeUnit', device, $event.target.value)" class="bg-slate-50 border-l border-slate-200 text-[9px] px-0.5 border-none outline-none cursor-pointer text-center"><option value="px">px</option><option value="rem">rem</option><option value="em">em</option><option value="vw">vw</option></select>
+                    <input type="text" v-model="editingElement.settings.fontSize"
+                           placeholder="36px / 2rem / calc()"
+                           class="w-full border border-slate-200 rounded px-2 py-2 text-[12px] text-center">
+                    <div class="flex gap-0.5 mt-1">
+                        <button v-for="u in ['px','rem','em','%','vw','vh']" :key="u"
+                                @click="editingElement.settings.fontSize = (parseFloat(editingElement.settings.fontSize) || 36) + u"
+                                class="flex-1 text-[9px] py-0.5 border border-slate-200 rounded text-slate-400 hover:bg-[#2271b1] hover:text-white hover:border-[#2271b1] transition-all">
+                            @{{ u }}
+                        </button>
                     </div>
                 </div>
                 <div>

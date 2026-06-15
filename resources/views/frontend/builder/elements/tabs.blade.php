@@ -58,10 +58,19 @@
     } else {
         $panelStyle = "padding:{$contentPadding};font-size:{$contentFontSize};{$panelTypography}color:{$contentColor};background-color:{$contentBgColor};border:1px solid {$borderColor};border-top:none;border-radius:0 0 {$borderRadius}px {$borderRadius}px;";
     }
+
+    $bpSm  = (int) get_cms_option('theme_small_screen_breakpoint',  '800');
+    $bpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
+    $respId = 'lzr-tab-' . ($el['id'] ?? str_replace('.', '', uniqid('', true)));
+    $respCss = lazy_elem_resp_css($s, $bpSm, $bpMed, [
+        ['prop' => 'marginTop',    'unitProp' => 'marginTopUnit',    'sel' => ".{$respId}"],
+        ['prop' => 'marginBottom', 'unitProp' => 'marginBottomUnit', 'sel' => ".{$respId}"],
+    ]);
 @endphp
+@if($respCss){!! '<style>' . $respCss . '</style>' !!}@endif
 
 <div id="{{ $elemId }}"
-     class="lazy-tabs{{ $cssClass ? ' '.$cssClass : '' }}{{ $visibilityClasses }}"
+     class="lazy-tabs {{ $respId }}{{ $cssClass ? ' '.$cssClass : '' }}{{ $visibilityClasses }}"
      style="{{ $outerStyle }}">
 
     {{-- Tab Nav --}}
@@ -100,7 +109,7 @@
     <div id="{{ $elemId }}-panel-{{ $idx }}"
          class="lazy-tab-panel"
          style="{{ $panelStyle }}{{ !$isActive ? 'display:none;' : '' }}">
-        {!! $item['content'] ?? '' !!}
+        {!! lazy_sanitize_html($item['content'] ?? '') !!}
     </div>
     @endforeach
 

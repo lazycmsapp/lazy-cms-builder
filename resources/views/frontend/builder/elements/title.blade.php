@@ -31,63 +31,47 @@
 
     $titleRespId = 'lte-' . ($el['id'] ?? str_replace('.', '', uniqid('', true)));
 
-    $getRespVal = function(string $prop, string $dev) use ($s): ?string {
-        if ($dev === 'mobile') {
-            if (isset($s[$prop . '_mobile']) && $s[$prop . '_mobile'] !== '') return (string)$s[$prop . '_mobile'];
-            if (isset($s[$prop . '_tablet']) && $s[$prop . '_tablet'] !== '') return (string)$s[$prop . '_tablet'];
-        } elseif ($dev === 'tablet') {
-            if (isset($s[$prop . '_tablet']) && $s[$prop . '_tablet'] !== '') return (string)$s[$prop . '_tablet'];
-        }
-        return null;
-    };
-
-    $respCss = '';
-    foreach ([
-        ['tablet', "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px)"],
-        ['mobile', "@media(max-width:{$bpSm}px)"],
-    ] as [$rDev, $rMq]) {
-        $rWrapperRules = [];
-        $rHeadingRules = [];
-        $rAlign = $getRespVal('textAlign', $rDev);
-        if ($rAlign !== null) {
-            $rWrapperRules[] = "text-align:{$rAlign}!important";
-            $rHeadingRules[] = "text-align:{$rAlign}!important";
-        }
-        foreach (['marginTop', 'marginRight', 'marginBottom', 'marginLeft'] as $mProp) {
-            $mVal = $getRespVal($mProp, $rDev);
-            if ($mVal !== null) {
-                $cssProp = strtolower(preg_replace('/([A-Z])/', '-$1', $mProp));
-                $unit = $rDev === 'mobile'
-                    ? ($s[$mProp . 'Unit_mobile'] ?? $s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px')
-                    : ($s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px');
-                $rWrapperRules[] = "{$cssProp}:{$mVal}{$unit}!important";
-            }
-        }
-        if (!empty($rWrapperRules)) {
-            $respCss .= "{$rMq}{.{$titleRespId}{" . implode(';', $rWrapperRules) . "}}";
-        }
-        if (!empty($rHeadingRules)) {
-            $respCss .= "{$rMq}{.{$titleRespId} .main-title{" . implode(';', $rHeadingRules) . "}}";
-        }
-    }
+    $w = ".{$titleRespId}";
+    $h = ".{$titleRespId} .main-title";
+    $respCss = lazy_elem_resp_css($s, $bpSm, $bpMed, [
+        ['prop' => 'textAlign',     'sel' => $w],
+        ['prop' => 'marginTop',     'unitProp' => 'marginTopUnit',     'sel' => $w],
+        ['prop' => 'marginRight',   'unitProp' => 'marginRightUnit',   'sel' => $w],
+        ['prop' => 'marginBottom',  'unitProp' => 'marginBottomUnit',  'sel' => $w],
+        ['prop' => 'marginLeft',    'unitProp' => 'marginLeftUnit',    'sel' => $w],
+        ['prop' => 'paddingTop',    'unitProp' => 'paddingTopUnit',    'sel' => $w],
+        ['prop' => 'paddingRight',  'unitProp' => 'paddingRightUnit',  'sel' => $w],
+        ['prop' => 'paddingBottom', 'unitProp' => 'paddingBottomUnit', 'sel' => $w],
+        ['prop' => 'paddingLeft',   'unitProp' => 'paddingLeftUnit',   'sel' => $w],
+        ['prop' => 'textAlign',     'sel' => $h],
+        ['prop' => 'fontSize',      'unitProp' => 'fontSizeUnit',      'sel' => $h],
+        ['prop' => 'lineHeight',    'sel' => $h],
+        ['prop' => 'letterSpacing', 'unitProp' => 'letterSpacingUnit', 'sel' => $h],
+        ['prop' => 'fontWeight',    'sel' => $h],
+    ]);
 
     $wrapperStyles = [
         'align-self: stretch',
         'text-align: ' . ($s['textAlign'] ?? 'center'),
-        'padding-top: ' . ($s['paddingTop'] ?? 20) . 'px',
-        'padding-bottom: ' . ($s['paddingBottom'] ?? 20) . 'px',
+        'padding-top: ' . ($s['paddingTop'] ?? 20) . ($s['paddingTopUnit'] ?? 'px'),
+        'padding-right: ' . ($s['paddingRight'] ?? 0) . ($s['paddingRightUnit'] ?? 'px'),
+        'padding-bottom: ' . ($s['paddingBottom'] ?? 20) . ($s['paddingBottomUnit'] ?? 'px'),
+        'padding-left: ' . ($s['paddingLeft'] ?? 0) . ($s['paddingLeftUnit'] ?? 'px'),
         'margin-top: ' . ($s['marginTop'] ?? 0) . ($s['marginTopUnit'] ?? 'px'),
         'margin-right: ' . ($s['marginRight'] ?? 0) . ($s['marginRightUnit'] ?? 'px'),
         'margin-bottom: ' . ($s['marginBottom'] ?? 0) . ($s['marginBottomUnit'] ?? 'px'),
         'margin-left: ' . ($s['marginLeft'] ?? 0) . ($s['marginLeftUnit'] ?? 'px'),
     ];
 
+    $fsRaw = $s['fontSize'] ?? 36;
+    $fsCSS = preg_match('/[a-zA-Z%]/', (string)$fsRaw) ? (string)$fsRaw : ($fsRaw . ($s['fontSizeUnit'] ?? 'px'));
+
     $titleStyles = [
         'font-family: ' . ($s['fontFamily'] ?? 'inherit'),
-        'font-size: ' . ($s['fontSize'] ?? 36) . ($s['fontSizeUnit'] ?? 'px'),
+        'font-size: ' . $fsCSS,
         'font-weight: ' . ($s['fontWeight'] ?? '800'),
         'line-height: ' . ($s['lineHeight'] ?? '1.2'),
-        'letter-spacing: ' . ($s['letterSpacing'] ?? 0) . 'px',
+        'letter-spacing: ' . ($s['letterSpacing'] ?? 0) . ($s['letterSpacingUnit'] ?? 'px'),
         'text-transform: ' . ($s['textTransform'] ?? 'none'),
         'text-align: ' . ($s['textAlign'] ?? 'center'),
         'margin: 0',
@@ -156,7 +140,7 @@
         }
     }
 
-    $htmlTag = $s['htmlTag'] ?? 'h2';
+    $htmlTag = in_array($s['htmlTag'] ?? 'h2', ['h1','h2','h3','h4','h5','h6','div','p','span']) ? ($s['htmlTag'] ?? 'h2') : 'h2';
 
     // Auto-prefix link URL
     $linkUrl = $resolvedLinkUrl;

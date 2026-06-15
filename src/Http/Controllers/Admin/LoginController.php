@@ -212,10 +212,11 @@ class LoginController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        // Check if user exists
+        $genericMessage = 'If that email is registered, you will receive a reset link shortly. Please check your inbox (and spam folder).';
+
         $user = \App\Models\User::where('email', $request->email)->first();
         if (!$user) {
-            return back()->withErrors(['email' => 'We could not find a user with that email address.']);
+            return back()->with('status', $genericMessage);
         }
 
         // Generate token and store (expires in 5 minutes — checked on reset)
@@ -238,7 +239,7 @@ class LoginController extends Controller
             \Illuminate\Support\Facades\Log::info("Password reset link (mail failed) for {$request->email}: {$resetUrl}");
         }
 
-        return back()->with('status', 'We have emailed your password reset link. Please check your inbox (and spam folder).');
+        return back()->with('status', $genericMessage);
     }
 
     public function showResetForm(Request $request, $token)

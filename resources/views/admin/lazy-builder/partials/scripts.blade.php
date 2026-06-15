@@ -3798,5 +3798,18 @@
             if (el._tomselect) { el._tomselect.destroy(); el._tomselect = null; }
             el._tsCfg = null;
         }
+    }).directive('safe-html', {
+        mounted(el, binding) {
+            el.innerHTML = typeof DOMPurify !== 'undefined'
+                ? DOMPurify.sanitize(binding.value ?? '', { FORCE_BODY: false })
+                : (binding.value ?? '');
+        },
+        updated(el, binding) {
+            if (el._lastSafeHtml === binding.value) return;
+            el._lastSafeHtml = binding.value;
+            el.innerHTML = typeof DOMPurify !== 'undefined'
+                ? DOMPurify.sanitize(binding.value ?? '', { FORCE_BODY: false })
+                : (binding.value ?? '');
+        }
     }).mount('#lazy-builder-app');
 </script>

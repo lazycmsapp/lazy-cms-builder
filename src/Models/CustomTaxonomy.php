@@ -11,7 +11,10 @@ class CustomTaxonomy extends Model
 
     protected $table = 'custom_taxonomies';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name', 'singular_name', 'slug', 'description',
+        'post_types', 'hierarchical', 'is_active',
+    ];
 
     protected $casts = [
         'post_types' => 'array',

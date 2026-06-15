@@ -609,7 +609,13 @@ class PostController extends Controller
         $postData['user_id'] = auth()->id();
 
         if ($request->hasFile('featured_image')) {
-            $postData['featured_image'] = $request->file('featured_image')->store('posts', 'public');
+            $file = $request->file('featured_image');
+            $allowedMimes = ['image/jpeg','image/png','image/gif','image/webp','image/avif'];
+            $allowedExts  = ['jpg','jpeg','png','gif','webp','avif'];
+            if (!in_array(strtolower($file->getClientOriginalExtension()), $allowedExts) || !in_array($file->getMimeType(), $allowedMimes)) {
+                return redirect()->back()->withErrors(['featured_image' => 'Featured image must be a valid image file (JPG, PNG, GIF, WebP, AVIF).'])->withInput();
+            }
+            $postData['featured_image'] = $file->store('posts', 'public');
         } elseif ($request->filled('featured_image')) {
             $postData['featured_image'] = $request->input('featured_image');
         }
@@ -997,7 +1003,13 @@ class PostController extends Controller
         if (empty($postData['title'])) $postData['title'] = '(no title)';
 
         if ($request->hasFile('featured_image')) {
-            $postData['featured_image'] = $request->file('featured_image')->store('posts', 'public');
+            $file = $request->file('featured_image');
+            $allowedMimes = ['image/jpeg','image/png','image/gif','image/webp','image/avif'];
+            $allowedExts  = ['jpg','jpeg','png','gif','webp','avif'];
+            if (!in_array(strtolower($file->getClientOriginalExtension()), $allowedExts) || !in_array($file->getMimeType(), $allowedMimes)) {
+                return redirect()->back()->withErrors(['featured_image' => 'Featured image must be a valid image file (JPG, PNG, GIF, WebP, AVIF).'])->withInput();
+            }
+            $postData['featured_image'] = $file->store('posts', 'public');
         } elseif ($request->input('remove_featured_image') === '1') {
             $postData['featured_image'] = null;
         } elseif ($request->filled('featured_image')) {

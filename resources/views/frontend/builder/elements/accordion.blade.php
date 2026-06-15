@@ -47,10 +47,19 @@
     // Icon classes
     $iconOpen   = $iconType === 'chevron' ? 'fas fa-chevron-up'  : 'fas fa-minus';
     $iconClosed = $iconType === 'chevron' ? 'fas fa-chevron-down' : 'fas fa-plus';
+
+    $bpSm  = (int) get_cms_option('theme_small_screen_breakpoint',  '800');
+    $bpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
+    $respId = 'lzr-acc-' . ($el['id'] ?? str_replace('.', '', uniqid('', true)));
+    $respCss = lazy_elem_resp_css($s, $bpSm, $bpMed, [
+        ['prop' => 'marginTop',    'unitProp' => 'marginTopUnit',    'sel' => ".{$respId}"],
+        ['prop' => 'marginBottom', 'unitProp' => 'marginBottomUnit', 'sel' => ".{$respId}"],
+    ]);
 @endphp
+@if($respCss){!! '<style>' . $respCss . '</style>' !!}@endif
 
 <div id="{{ $elemId }}"
-     class="lazy-accordion{{ $cssClass ? ' '.$cssClass : '' }}{{ $visibilityClasses }}"
+     class="lazy-accordion {{ $respId }}{{ $cssClass ? ' '.$cssClass : '' }}{{ $visibilityClasses }}"
      style="{{ $outerStyle }}">
 
     @foreach($items as $idx => $item)
@@ -80,7 +89,7 @@
             @endif
         </div>
         <div class="lazy-accordion-content" style="{{ $contentStyle }}{{ !$isOpen ? 'display:none;' : '' }}">
-            {!! $item['content'] ?? '' !!}
+            {!! lazy_sanitize_html($item['content'] ?? '') !!}
         </div>
     </div>
     @endforeach

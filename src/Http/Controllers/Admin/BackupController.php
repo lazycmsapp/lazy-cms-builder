@@ -135,6 +135,7 @@ class BackupController extends Controller
             abort(403);
         }
 
+        $filename = basename($filename);
         $path = storage_path('app/backups/' . $filename);
         if (!file_exists($path)) {
             return redirect()->back()->with('error', 'Backup file not found.');
@@ -261,6 +262,7 @@ class BackupController extends Controller
             abort(403);
         }
 
+        $filename = basename($filename);
         $path = storage_path('app/backups/' . $filename);
         if (!file_exists($path)) {
             abort(404);
@@ -326,6 +328,7 @@ class BackupController extends Controller
             abort(403);
         }
 
+        $filename = basename($filename);
         $path = storage_path('app/backups/' . $filename);
         if (file_exists($path)) {
             unlink($path);

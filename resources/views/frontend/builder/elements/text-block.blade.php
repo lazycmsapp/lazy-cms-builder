@@ -30,51 +30,18 @@
     $appliedId = !empty($s['cssId']) ? $s['cssId'] : $elemId;
     $hoverColor = $s['hoverColor'] ?? null;
 
-    // Responsive helper — cascades tablet → desktop, mobile → tablet → desktop
-    $getRespVal = function(string $prop, string $dev) use ($s) {
-        if ($dev === 'mobile') {
-            if (isset($s[$prop . '_mobile']) && $s[$prop . '_mobile'] !== '') return (string)$s[$prop . '_mobile'];
-            if (isset($s[$prop . '_tablet']) && $s[$prop . '_tablet'] !== '') return (string)$s[$prop . '_tablet'];
-        } elseif ($dev === 'tablet') {
-            if (isset($s[$prop . '_tablet']) && $s[$prop . '_tablet'] !== '') return (string)$s[$prop . '_tablet'];
-        }
-        return null;
-    };
-
-    // Build responsive CSS for tablet and mobile breakpoints
-    $respCss = '';
-    foreach ([
-        ['tablet', "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px)"],
-        ['mobile', "@media(max-width:{$bpSm}px)"],
-    ] as [$rDev, $rMq]) {
-        $rules = [];
-        $rAlign = $getRespVal('textAlign', $rDev);
-        if ($rAlign !== null) $rules[] = "text-align:{$rAlign}!important";
-
-        foreach (['marginTop','marginRight','marginBottom','marginLeft'] as $mProp) {
-            $mVal = $getRespVal($mProp, $rDev);
-            if ($mVal !== null) {
-                $cssProp = strtolower(preg_replace('/([A-Z])/', '-$1', $mProp));
-                $unit = $rDev === 'mobile'
-                    ? ($s[$mProp . 'Unit_mobile'] ?? $s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px')
-                    : ($s[$mProp . 'Unit_tablet'] ?? $s[$mProp . 'Unit'] ?? 'px');
-                $rules[] = "{$cssProp}:{$mVal}{$unit}!important";
-            }
-        }
-        foreach (['paddingTop','paddingRight','paddingBottom','paddingLeft'] as $pProp) {
-            $pVal = $getRespVal($pProp, $rDev);
-            if ($pVal !== null) {
-                $cssProp = strtolower(preg_replace('/([A-Z])/', '-$1', $pProp));
-                $unit = $rDev === 'mobile'
-                    ? ($s[$pProp . 'Unit_mobile'] ?? $s[$pProp . 'Unit_tablet'] ?? $s[$pProp . 'Unit'] ?? 'px')
-                    : ($s[$pProp . 'Unit_tablet'] ?? $s[$pProp . 'Unit'] ?? 'px');
-                $rules[] = "{$cssProp}:{$pVal}{$unit}!important";
-            }
-        }
-        if (!empty($rules)) {
-            $respCss .= "{$rMq}{#{$appliedId}{" . implode(';', $rules) . "}}";
-        }
-    }
+    $tb = "#{$appliedId}";
+    $respCss = lazy_elem_resp_css($s, $bpSm, $bpMed, [
+        ['prop' => 'textAlign',     'sel' => $tb],
+        ['prop' => 'marginTop',     'unitProp' => 'marginTopUnit',     'sel' => $tb],
+        ['prop' => 'marginRight',   'unitProp' => 'marginRightUnit',   'sel' => $tb],
+        ['prop' => 'marginBottom',  'unitProp' => 'marginBottomUnit',  'sel' => $tb],
+        ['prop' => 'marginLeft',    'unitProp' => 'marginLeftUnit',    'sel' => $tb],
+        ['prop' => 'paddingTop',    'unitProp' => 'paddingTopUnit',    'sel' => $tb],
+        ['prop' => 'paddingRight',  'unitProp' => 'paddingRightUnit',  'sel' => $tb],
+        ['prop' => 'paddingBottom', 'unitProp' => 'paddingBottomUnit', 'sel' => $tb],
+        ['prop' => 'paddingLeft',   'unitProp' => 'paddingLeftUnit',   'sel' => $tb],
+    ]);
 
     $wrapperStyles = [
         'width: 100%',
@@ -93,7 +60,7 @@
         'font-size: ' . ($s['fontSize'] ?? 16) . ($s['fontSizeUnit'] ?? 'px'),
         'font-weight: ' . ($s['fontWeight'] ?? '400'),
         'line-height: ' . ($s['lineHeight'] ?? '1.5'),
-        'letter-spacing: ' . ($s['letterSpacing'] ?? 0) . 'px',
+        'letter-spacing: ' . ($s['letterSpacing'] ?? 0) . ($s['letterSpacingUnit'] ?? 'px'),
         'text-transform: ' . ($s['textTransform'] ?? 'none'),
     ];
 
@@ -135,6 +102,6 @@
      id="{{ $appliedId }}"
      style="{{ implode('; ', $wrapperStyles) }}">
     <div class="text-block-content" style="{{ implode('; ', $contentStyles) }}">
-        {!! $s['content'] ?? '' !!}
+        {!! lazy_sanitize_html($s['content'] ?? '') !!}
     </div>
 </div>

@@ -24,21 +24,21 @@ use Acme\CmsDashboard\Http\Controllers\FrontendController;
 $login_slug = get_cms_option('login_url', 'super-lazy-admin');
 $register_slug = get_cms_option('register_url', 'super-lazy-register');
 
-Route::middleware(['web'])->group(function() use ($login_slug, $register_slug) {
+Route::middleware(['web', \Acme\CmsDashboard\Http\Middleware\SecurityHeadersMiddleware::class])->group(function() use ($login_slug, $register_slug) {
     Route::get($login_slug, [LoginController::class, 'showLoginForm'])->name('admin.login');
-    Route::post($login_slug, [LoginController::class, 'login']);
-    
+    Route::post($login_slug, [LoginController::class, 'login'])->middleware('throttle:10,1');
+
     Route::get($register_slug, [RegisterController::class, 'showRegistrationForm'])->name('admin.register');
-    Route::post($register_slug, [RegisterController::class, 'register']);
+    Route::post($register_slug, [RegisterController::class, 'register'])->middleware('throttle:10,1');
 
     // Password Recovery
     Route::get('forgot-password', [LoginController::class, 'showForgotPasswordForm'])->name('admin.password.request');
-    Route::post('forgot-password', [LoginController::class, 'sendResetLinkEmail'])->name('admin.password.email');
+    Route::post('forgot-password', [LoginController::class, 'sendResetLinkEmail'])->name('admin.password.email')->middleware('throttle:5,1');
     Route::get('reset-password/{token}', [LoginController::class, 'showResetForm'])->name('admin.password.reset');
-    Route::post('reset-password', [LoginController::class, 'resetPassword'])->name('admin.password.update');
+    Route::post('reset-password', [LoginController::class, 'resetPassword'])->name('admin.password.update')->middleware('throttle:5,1');
 
     // Admin magic login (passwordless)
-    Route::post('admin-magic-login', [LoginController::class, 'requestAdminMagicLink'])->name('admin.magic.request');
+    Route::post('admin-magic-login', [LoginController::class, 'requestAdminMagicLink'])->name('admin.magic.request')->middleware('throttle:5,1');
     Route::get('admin-magic-login/verify/{token}', [LoginController::class, 'verifyAdminMagicLink'])->name('admin.magic.verify');
 
     // Frontend magic email check (AJAX, rate-limited)
@@ -50,7 +50,7 @@ Route::middleware(['web'])->group(function() use ($login_slug, $register_slug) {
 });
 
 // 2. Authenticated Admin Routes
-Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Http\Middleware\AdminMiddleware::class])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Http\Middleware\SecurityHeadersMiddleware::class, \Acme\CmsDashboard\Http\Middleware\AdminMiddleware::class])->group(function () {
     // Media and posts
     Route::post('media/bulk-delete', [MediaController::class, 'bulkDestroy'])->name('media.bulk-delete');
     Route::get('media', [MediaController::class, 'index'])->name('media.index');
@@ -346,7 +346,7 @@ Route::prefix('admin')->name('admin.')->middleware(['web', \Acme\CmsDashboard\Ht
 });
  
 // 3. Frontend Routes (Catch-all for posts/pages) - Outside Admin Group
-Route::middleware(['web', \Acme\CmsDashboard\Http\Middleware\PageCacheMiddleware::class])->group(function() {
+Route::middleware(['web', \Acme\CmsDashboard\Http\Middleware\SecurityHeadersMiddleware::class, \Acme\CmsDashboard\Http\Middleware\MaintenanceModeMiddleware::class, \Acme\CmsDashboard\Http\Middleware\PageCacheMiddleware::class])->group(function() {
     Route::get('/', [FrontendController::class, 'index'])->name('frontend.index');
     Route::get('lang/{locale}', [FrontendController::class, 'setLocale'])->name('frontend.set-locale');
     
@@ -393,8 +393,8 @@ Route::middleware(['web', \Acme\CmsDashboard\Http\Middleware\PageCacheMiddleware
     Route::get('/author/{id}', [FrontendController::class, 'authorArchive'])->name('frontend.author')->where('id', '[0-9]+');
     Route::get('/search', [FrontendController::class, 'search'])->name('frontend.search');
     Route::get('/search/live', [FrontendController::class, 'liveSearch'])->name('frontend.search.live');
-    Route::post('/comment', [FrontendController::class, 'storeComment'])->name('frontend.comment.store');
-    Route::post('/form-submit', [FrontendController::class, 'submitForm'])->name('frontend.form.submit');
+    Route::post('/comment', [FrontendController::class, 'storeComment'])->name('frontend.comment.store')->middleware('throttle:10,1');
+    Route::post('/form-submit', [FrontendController::class, 'submitForm'])->name('frontend.form.submit')->middleware('throttle:5,1');
 
     // Shop Frontend
     Route::prefix('cart')->name('shop.')->group(function() {
@@ -422,7 +422,7 @@ Route::middleware(['web', \Acme\CmsDashboard\Http\Middleware\PageCacheMiddleware
     Route::post('/account-password-update', [ShopFrontendController::class, 'updatePassword'])->name('shop.account.password.update');
 
     // Magic login (passwordless)
-    Route::post('/magic-login', [ShopFrontendController::class, 'requestMagicLink'])->name('shop.magic.request');
+    Route::post('/magic-login', [ShopFrontendController::class, 'requestMagicLink'])->name('shop.magic.request')->middleware('throttle:5,1');
     Route::get('/magic-login/{token}', [ShopFrontendController::class, 'verifyMagicLink'])->name('shop.magic.verify');
 
     // Wishlist

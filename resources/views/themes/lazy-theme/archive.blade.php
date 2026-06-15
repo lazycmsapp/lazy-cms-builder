@@ -6,6 +6,19 @@
 @php
     $isProductArchive = ($archivePostType ?? 'post') === 'product';
     $primaryColor     = get_cms_option('theme_primary_color', '#0091ea');
+    $searchTerm       = request()->query('s');
+    $highlight = function($text, $term) {
+        if (!$term) return e($text);
+        $parts = preg_split('/(' . preg_quote($term, '/') . ')/iu', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if ($parts === false || count($parts) <= 1) return e($text);
+        $out = '';
+        foreach ($parts as $i => $part) {
+            $out .= ($i % 2 === 1)
+                ? '<mark style="background:#fef08a;color:inherit;padding:0 2px;border-radius:2px;">' . e($part) . '</mark>'
+                : e($part);
+        }
+        return $out;
+    };
 @endphp
 
 <div class="bg-white py-12 min-h-screen font-sans">
@@ -167,10 +180,10 @@
                     </div>
                     @endif
                     <h2 class="text-[17px] font-bold text-heading leading-snug mb-2">
-                        <a href="{{ $permalink }}" class="hover:text-primary transition-colors">{{ $postItem->title }}</a>
+                        <a href="{{ $permalink }}" class="hover:text-primary transition-colors">{!! $highlight($postItem->title, $searchTerm) !!}</a>
                     </h2>
                     @if($excerpt)
-                    <p class="text-[14px] text-gray-500 leading-relaxed mb-4 flex-grow">{{ $excerpt }}</p>
+                    <p class="text-[14px] text-gray-500 leading-relaxed mb-4 flex-grow">{!! $highlight($excerpt, $searchTerm) !!}</p>
                     @endif
                     <div class="mt-auto pt-3 border-t border-gray-100 flex items-center gap-3 text-[13px] text-gray-400">
                         @if($authorName)

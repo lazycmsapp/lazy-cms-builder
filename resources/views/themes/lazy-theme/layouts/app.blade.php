@@ -160,6 +160,22 @@
             @endif
         }
 
+        /* Header/footer side padding — defaults to 0 to match builder sections */
+        @php $headerSidePad = get_cms_option('theme_header_side_padding', '0px'); @endphp
+        .main-header .container-custom,
+        .main-footer .container-custom {
+            padding-left: {{ $headerSidePad }} !important;
+            padding-right: {{ $headerSidePad }} !important;
+        }
+        /* Always keep at least 16px breathing room on small screens */
+        @media (max-width: 640px) {
+            .main-header .container-custom,
+            .main-footer .container-custom {
+                padding-left: max(16px, {{ $headerSidePad }}) !important;
+                padding-right: max(16px, {{ $headerSidePad }}) !important;
+            }
+        }
+
         main {
             padding-top: {{ get_cms_option('theme_page_padding_top', '60px') }};
             padding-bottom: {{ get_cms_option('theme_page_padding_bottom', '60px') }};

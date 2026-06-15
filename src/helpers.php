@@ -3,7 +3,129 @@
 use Illuminate\Support\Facades\DB;
 
 if (!defined('LAZY_CMS_VERSION')) {
-    define('LAZY_CMS_VERSION', '1.0.9');
+    define('LAZY_CMS_VERSION', '1.1.0');
+}
+
+if (!function_exists('lazy_elem_resp_css')) {
+    /**
+     * Generate responsive @media CSS for a builder element.
+     *
+     * @param array  $s        Element settings (the raw array from $el['settings'])
+     * @param int    $bpSm     "Small" breakpoint (mobile max-width)
+     * @param int    $bpMed    "Medium" breakpoint (tablet max-width)
+     * @param array  $props    Property definitions, each:
+     *   [ 'prop' => 'fontSize', 'sel' => '.my-class',
+     *     'unitProp' => 'fontSizeUnit',  // optional – key for the unit setting
+     *     'css'      => 'font-size',     // optional – defaults to camelCase→kebab
+     *   ]
+     * @return string Raw CSS (no <style> tags).  Empty string when nothing changed.
+     */
+    function lazy_elem_resp_css(array $s, int $bpSm, int $bpMed, array $props): string
+    {
+        $bpSm1 = $bpSm + 1;
+        $css   = '';
+
+        foreach ([
+            ['tablet', "@media(min-width:{$bpSm1}px) and (max-width:{$bpMed}px)"],
+            ['mobile', "@media(max-width:{$bpSm}px)"],
+        ] as [$dev, $mq]) {
+            $bySel = [];
+
+            foreach ($props as $p) {
+                $prop     = $p['prop'];
+                $sel      = $p['sel'];
+                $unitProp = $p['unitProp'] ?? null;
+                $cssProp  = $p['css']      ?? strtolower(preg_replace('/([A-Z])/', '-$1', $prop));
+
+                // Resolve responsive value (mobile cascades through tablet)
+                $val = null;
+                if ($dev === 'mobile') {
+                    if (isset($s[$prop . '_mobile']) && (string)$s[$prop . '_mobile'] !== '') {
+                        $val = (string)$s[$prop . '_mobile'];
+                    } elseif (isset($s[$prop . '_tablet']) && (string)$s[$prop . '_tablet'] !== '') {
+                        $val = (string)$s[$prop . '_tablet'];
+                    }
+                } else {
+                    if (isset($s[$prop . '_tablet']) && (string)$s[$prop . '_tablet'] !== '') {
+                        $val = (string)$s[$prop . '_tablet'];
+                    }
+                }
+                if ($val === null) continue;
+
+                // Append unit when value is numeric and a unit property is declared
+                if ($unitProp !== null && !preg_match('/[a-zA-Z%]/', $val)) {
+                    $unit = $dev === 'mobile'
+                        ? ($s[$unitProp . '_mobile'] ?? $s[$unitProp . '_tablet'] ?? $s[$unitProp] ?? 'px')
+                        : ($s[$unitProp . '_tablet'] ?? $s[$unitProp] ?? 'px');
+                    // Units must be safe CSS unit tokens only
+                    $unit = preg_replace('/[^a-zA-Z%]/', '', (string)($unit ?: 'px')) ?: 'px';
+                    $val .= $unit;
+                }
+
+                // Strip characters that could break out of a CSS/style-tag context
+                $val = preg_replace('/[<>"\']/', '', $val);
+                $bySel[$sel][] = "{$cssProp}:{$val}!important";
+            }
+
+            // Build @media block
+            $block = '';
+            foreach ($bySel as $sel => $rules) {
+                $block .= "{$sel}{" . implode(';', $rules) . "}";
+            }
+            if ($block !== '') {
+                $css .= "{$mq}{{$block}}";
+            }
+        }
+
+        return $css;
+    }
+}
+
+if (!function_exists('lazy_sanitize_html')) {
+    /**
+     * Strip dangerous HTML from user-supplied rich-text content.
+     * Removes <script> blocks, on* event handlers, and javascript: URLs.
+     * Safe structural HTML (<a>, <img>, <iframe>, etc.) is preserved.
+     */
+    function lazy_sanitize_html(string $html): string {
+        if ($html === '') return '';
+
+        // Remove <script> blocks entirely (opening tag + content + closing tag)
+        $html = preg_replace('/<script\b[^>]*>[\s\S]*?<\/script>/i', '', $html);
+
+        // Strip on* event handler attributes from every HTML tag.
+        // [\s\/]+ allows both whitespace and / as attribute separator (e.g. <img/onerror=...>).
+        $html = preg_replace_callback('/<[a-z][^>]*>/i', static function (array $m): string {
+            return preg_replace('/[\s\/]+on[a-z][a-z0-9]*\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>\/]+)/i', '', $m[0]);
+        }, $html);
+
+        // Replace javascript: protocol in href/src/action/formaction with safe #
+        $html = preg_replace(
+            '/(\b(?:href|src|action|formaction)\s*=\s*["\'])\s*javascript:[^"\']*(["\'])/i',
+            '$1#$2',
+            $html
+        );
+
+        return $html;
+    }
+}
+
+if (!function_exists('lazy_sanitize_builder_json')) {
+    /**
+     * Recursively walks every node of a decoded builder layout array and applies
+     * lazy_sanitize_html() to every string value. Numbers, booleans, and null are
+     * passed through unchanged. Call this on the decoded `layout` array before
+     * json_encode-ing it to the database.
+     */
+    function lazy_sanitize_builder_json(mixed $node): mixed {
+        if (is_array($node)) {
+            return array_map('lazy_sanitize_builder_json', $node);
+        }
+        if (is_string($node)) {
+            return lazy_sanitize_html($node);
+        }
+        return $node;
+    }
 }
 
 if (!function_exists('lazy_cms_installed_version')) {
@@ -2067,20 +2189,20 @@ if (!function_exists('do_lazy_shortcode')) {
     function do_lazy_shortcode($content) {
         if (empty($content)) return $content;
 
-        // Decode HTML entities so [lazy_form slug=&quot;x&quot;] becomes [lazy_form slug="x"]
-        $decoded = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-
-        // Handle [lazy_form slug="..."] or [lazy_form slug='...']
-        $decoded = preg_replace_callback('/\[lazy_form\s+slug=["\']([^"\']+)["\']\s*\]/', function($matches) {
-            return render_lazy_form($matches[1]);
-        }, $decoded);
+        // Match [lazy_form slug="..."] — also accept &quot; (entity-encoded quotes from WYSIWYG editors)
+        // Do NOT html_entity_decode the entire string: that would undo Blade's {{ }} escaping and open XSS.
+        $content = preg_replace_callback(
+            '/\[lazy_form\s+slug=(?:&quot;|["\'])([^"\'&\[\]]+)(?:&quot;|["\'])\s*\]/',
+            function ($matches) { return render_lazy_form($matches[1]); },
+            $content
+        );
 
         $shortcodes = [
             '[lazy_search]'        => lazy_search_form(),
             '[lazy_lang_dropdown]' => lazy_lang_dropdown(),
         ];
 
-        return str_replace(array_keys($shortcodes), array_values($shortcodes), $decoded);
+        return str_replace(array_keys($shortcodes), array_values($shortcodes), $content);
     }
 }
 

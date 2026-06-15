@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class NavigationMenu extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'name', 'slug', 'location', 'lang_code', 'is_header', 'is_footer',
+    ];
 
     public function items()
     {

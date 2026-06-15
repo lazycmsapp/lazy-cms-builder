@@ -40,7 +40,15 @@
     $marginBottom = isset($s['marginBottom']) && $s['marginBottom'] !== '' ? $s['marginBottom'] . ($s['marginBottomUnit'] ?? 'px') : '0px';
 
     $wrapperStyle = "width:100%;max-width:100%;text-align:{$textAlign};margin-top:{$marginTop};margin-bottom:{$marginBottom};";
+
+    $bpSm  = (int) get_cms_option('theme_small_screen_breakpoint',  '800');
+    $bpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
+    $respCss = lazy_elem_resp_css($s, $bpSm, $bpMed, [
+        ['prop' => 'marginTop',    'unitProp' => 'marginTopUnit',    'sel' => ".{$counterId}"],
+        ['prop' => 'marginBottom', 'unitProp' => 'marginBottomUnit', 'sel' => ".{$counterId}"],
+    ]);
 @endphp
+@if($respCss){!! '<style>' . $respCss . '</style>' !!}@endif
 
 <div class="lz-counter-wrapper {{ $counterId }} {{ $s['cssClass'] ?? '' }} {{ $visibilityClasses }}"
      @if(!empty($s['cssId'])) id="{{ $s['cssId'] }}" @endif

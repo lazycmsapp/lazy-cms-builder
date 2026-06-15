@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class FieldGroup extends Model
 {
     protected $table = 'custom_field_groups';
-    protected $guarded = [];
+    protected $fillable = [
+        'title', 'description', 'rules', 'order', 'is_active',
+    ];
 
     protected $casts = [
         'rules' => 'array',

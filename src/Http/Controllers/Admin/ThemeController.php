@@ -173,7 +173,15 @@ class ThemeController extends Controller
         $zip = new \ZipArchive();
         
         if ($zip->open($zipFile->getRealPath()) === TRUE) {
-            // We want to extract to a temporary directory first to validate
+            // Reject ZIP containing path traversal entries
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entry = $zip->getNameIndex($i);
+                if (str_contains($entry, '..') || str_starts_with($entry, '/') || str_starts_with($entry, '\\')) {
+                    $zip->close();
+                    return redirect()->back()->with('error', 'Invalid ZIP file: contains unsafe file paths.');
+                }
+            }
+
             $tempPath = storage_path('app/temp_theme_' . time());
             File::makeDirectory($tempPath);
             $zip->extractTo($tempPath);

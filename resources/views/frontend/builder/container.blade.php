@@ -112,7 +112,7 @@
     $contentWidth = $s['contentWidth'] ?? 'site';
     $innerClass = ($contentWidth === 'site' && !$isNestedRow) ? 'container-custom mx-auto' : 'w-full';
     
-    $htmlTag = $s['htmlTag'] ?? 'div';
+    $htmlTag = in_array($s['htmlTag'] ?? 'div', ['div','section','article','aside','main','header','footer','nav']) ? ($s['htmlTag'] ?? 'div') : 'div';
     $status = $s['status'] ?? 'published';
 
     // Device Visibility

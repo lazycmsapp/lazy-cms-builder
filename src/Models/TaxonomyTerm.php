@@ -8,7 +8,10 @@ use Illuminate\Support\Str;
 class TaxonomyTerm extends Model
 {
     protected $table = 'taxonomy_terms';
-    protected $guarded = [];
+    protected $fillable = [
+        'taxonomy_slug', 'cpt_slug', 'parent_id', 'name', 'slug',
+        'lang_code', 'origin_id', 'description', 'order',
+    ];
 
     public function parent()
     {

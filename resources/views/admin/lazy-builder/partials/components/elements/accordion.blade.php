@@ -62,7 +62,7 @@
                          borderTop: 'none',
                          borderRadius: '0 0 ' + (el.settings.borderRadius ?? 8) + 'px ' + (el.settings.borderRadius ?? 8) + 'px',
                      }"
-                     v-html="item.content || '<p style=\'color:#aaa;font-style:italic;\'>No content yet.</p>'">
+                     v-safe-html="item.content || '<p style=\'color:#aaa;font-style:italic;\'>No content yet.</p>'">
                 </div>
 
             </div>

@@ -8,7 +8,7 @@
                 <p class="text-gray-500 mt-1">Master Lazy CMS and build stunning websites with freedom.</p>
             </div>
             <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-bold border border-blue-100">
-                v4.0.0 Stable
+                v1.1.0 Stable
             </div>
         </div>
 
@@ -34,6 +34,8 @@
                     <a href="#rest-api" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200">REST API & Headless</a>
                     <a href="#multilingual" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200">Multilingual & Localization</a>
                     <a href="#rbac" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200">Roles & Permissions (RBAC)</a>
+                    <a href="#security" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200">Security Hardening</a>
+                    <a href="#maintenance-mode" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200 pl-7">↳ Maintenance Mode</a>
                     <a href="#theme-isolation" class="nav-link block px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md transition-all duration-200">Theme Isolation & Sync</a>
                 </nav>
             </div>
@@ -1720,7 +1722,7 @@ curl -X DELETE "{{ url('/api/v1/posts/123') }}" \
                 {{-- Section: RBAC --}}
                 <section id="rbac">
                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Roles & Permissions (RBAC)</h2>
-                    <p class="text-gray-700 mb-6">Version 4.0.0 introduces a powerful granular permission system. Access is controlled via Roles that are linked to specific Permissions.</p>
+                    <p class="text-gray-700 mb-6">Lazy CMS includes a powerful granular permission system. Access is controlled via Roles that are linked to specific Permissions.</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                         <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
@@ -1740,6 +1742,159 @@ curl -X DELETE "{{ url('/api/v1/posts/123') }}" \
                             <code class="block bg-gray-50 p-2 mt-2 text-[10px]">php artisan lazy:update</code>
                         </div>
                     </div>
+                </section>
+
+                {{-- Section: Security Hardening --}}
+                <section id="security">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">Security Hardening</h2>
+                    <p class="text-gray-700 mb-6">Lazy CMS ships with multiple security layers enabled by default. This section documents what is active out of the box and what can be tuned.</p>
+
+                    {{-- Security Headers --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">1. HTTP Security Headers</h3>
+                        <p class="text-sm text-gray-600 mb-4">The <code>SecurityHeadersMiddleware</code> is applied globally and injects the following headers on every response:</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-left border border-gray-100 rounded-lg overflow-hidden">
+                                <thead class="bg-gray-50 text-gray-500 uppercase">
+                                    <tr><th class="px-3 py-2">Header</th><th class="px-3 py-2">Value</th><th class="px-3 py-2">Purpose</th></tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    <tr><td class="px-3 py-2 font-mono text-blue-600 whitespace-nowrap">X-Content-Type-Options</td><td class="px-3 py-2 font-mono">nosniff</td><td class="px-3 py-2">Prevents MIME-type sniffing</td></tr>
+                                    <tr><td class="px-3 py-2 font-mono text-blue-600 whitespace-nowrap">X-Frame-Options</td><td class="px-3 py-2 font-mono">SAMEORIGIN</td><td class="px-3 py-2">Blocks clickjacking via iframes</td></tr>
+                                    <tr><td class="px-3 py-2 font-mono text-blue-600 whitespace-nowrap">X-XSS-Protection</td><td class="px-3 py-2 font-mono">1; mode=block</td><td class="px-3 py-2">Legacy XSS filter (IE/Edge)</td></tr>
+                                    <tr><td class="px-3 py-2 font-mono text-blue-600 whitespace-nowrap">Referrer-Policy</td><td class="px-3 py-2 font-mono">strict-origin-when-cross-origin</td><td class="px-3 py-2">Controls referrer leakage</td></tr>
+                                    <tr><td class="px-3 py-2 font-mono text-blue-600 whitespace-nowrap">Permissions-Policy</td><td class="px-3 py-2 font-mono">camera=(), microphone=(), geolocation=()</td><td class="px-3 py-2">Restricts browser feature access</td></tr>
+                                    <tr><td class="px-3 py-2 font-mono text-blue-600 whitespace-nowrap">Content-Security-Policy</td><td class="px-3 py-2 font-mono">default-src 'self'; …</td><td class="px-3 py-2">Restricts content origins (XSS mitigation)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- Rate Limiting --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">2. Rate Limiting</h3>
+                        <p class="text-sm text-gray-600 mb-4">Throttle limits are applied at the route level to prevent brute-force and scraping attacks:</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-left border border-gray-100 rounded-lg overflow-hidden">
+                                <thead class="bg-gray-50 text-gray-500 uppercase">
+                                    <tr><th class="px-3 py-2">Route Group</th><th class="px-3 py-2">Limit</th><th class="px-3 py-2">Scope</th></tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    <tr><td class="px-3 py-2">Login, forgot-password</td><td class="px-3 py-2 font-mono">5 / min</td><td class="px-3 py-2">Per IP</td></tr>
+                                    <tr><td class="px-3 py-2">Comment submission</td><td class="px-3 py-2 font-mono">3 / min</td><td class="px-3 py-2">Per IP</td></tr>
+                                    <tr><td class="px-3 py-2">REST API</td><td class="px-3 py-2 font-mono">60 / min</td><td class="px-3 py-2">Per IP</td></tr>
+                                    <tr><td class="px-3 py-2">General frontend</td><td class="px-3 py-2 font-mono">120 / min</td><td class="px-3 py-2">Per IP</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4 bg-blue-50 border-l-4 border-blue-400 p-3 text-xs text-blue-700">
+                            The admin login form additionally tracks failed attempts per user account and per IP (see Brute-Force Protection below). Exceeding 5 failed attempts blocks the account for 30 minutes and may permanently block the IP.
+                        </div>
+                    </div>
+
+                    {{-- Brute-Force / Login Protection --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">3. Brute-Force & Login Protection</h3>
+                        <ul class="text-sm text-gray-700 space-y-2 list-disc list-inside mb-4">
+                            <li><b>Account lockout:</b> 5 wrong passwords → account blocked for 30 minutes. Super admins get their oldest session kicked instead.</li>
+                            <li><b>IP blocking:</b> 5 attempts with non-existent emails → IP permanently blocked (stored in <code>blocked_ips</code> table). Admin can unblock from the dashboard.</li>
+                            <li><b>Multi-device limit:</b> Configurable per site (<b>Settings → Security</b>). Exceeding the limit prevents new logins for non-super-admins.</li>
+                            <li><b>Magic link login:</b> Optional passwordless login with a 10-minute token; used link is marked <code>used_at</code> immediately.</li>
+                        </ul>
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-3 text-xs text-amber-800">
+                            Failed-login counters reset automatically on a successful login. Permanent IP blocks require manual admin review.
+                        </div>
+                    </div>
+
+                    {{-- User Enumeration Prevention --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">4. User Enumeration Prevention</h3>
+                        <p class="text-sm text-gray-600 mb-4">The forgot-password endpoint returns an identical generic message regardless of whether the email is registered. This prevents attackers from probing which accounts exist:</p>
+                        <div class="bg-gray-900 rounded-lg p-4 text-gray-300 font-mono text-xs">
+                            <pre><code>// Both "found" and "not found" paths return:
+"If that email is registered, you will receive a reset link shortly.
+ Please check your inbox (and spam folder)."</code></pre>
+                        </div>
+                    </div>
+
+                    {{-- File Upload Security --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">5. File Upload Security</h3>
+                        <ul class="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                            <li><b>MIME validation:</b> Post/page featured images are validated against an explicit allowlist (<code>image/jpeg</code>, <code>image/png</code>, <code>image/gif</code>, <code>image/webp</code>, <code>image/svg+xml</code>). Mismatched MIME types are rejected.</li>
+                            <li><b>ZIP path traversal (theme upload):</b> All entries inside an uploaded theme ZIP are checked via <code>basename()</code> before extraction. Any entry with a path component outside the target directory is skipped.</li>
+                            <li><b>Extension filtering:</b> The media library enforces an allowlist of safe extensions server-side (not just client-side).</li>
+                        </ul>
+                    </div>
+
+                    {{-- Input Validation --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-8">
+                        <h3 class="text-lg font-bold text-blue-600 mb-3">6. Input Validation Hardening</h3>
+                        <ul class="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                            <li><b>Comment length:</b> Frontend comment body is capped at <b>3,000 characters</b> server-side (<code>max:3000</code>) to prevent large payload abuse.</li>
+                            <li><b>Password on user update:</b> The password field is <b>optional</b> when editing an existing user — the current password is preserved if left blank, preventing accidental lockouts.</li>
+                            <li><b>Builder permission checks:</b> <code>LazyBuilderController</code> enforces <code>manage_pages</code> or <code>manage_posts</code> permissions before any save/clone/delete operation.</li>
+                        </ul>
+                    </div>
+
+                    {{-- Maintenance Mode sub-section --}}
+                    <section id="maintenance-mode">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 mt-2">Maintenance Mode</h3>
+                        <p class="text-gray-700 mb-6">Put the public frontend into maintenance mode without touching code. Logged-in admins always bypass the maintenance page automatically.</p>
+
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-6">
+                            <h4 class="text-lg font-bold text-blue-600 mb-3">Enabling / Configuring</h4>
+                            <ol class="text-sm text-gray-700 list-decimal list-inside space-y-2">
+                                <li>Go to <b>Appearance → Customizer → Performance</b>.</li>
+                                <li>Toggle <b>Enable Maintenance Mode</b>.</li>
+                                <li>Optionally set a custom <b>Maintenance Message</b> and a <b>Coming Soon date</b> for a countdown timer.</li>
+                                <li>Save — the public site immediately shows the maintenance page.</li>
+                            </ol>
+                        </div>
+
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-6">
+                            <h4 class="text-lg font-bold text-blue-600 mb-3">Bypass</h4>
+                            <ul class="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                                <li><b>Logged-in admins</b> always see the real site (bypass is automatic).</li>
+                                <li><b>Preview bypass</b> — append <code>?bypass_maintenance=true</code> to any URL while logged in as admin to force the real page.</li>
+                                <li>The admin panel (<code>/admin/*</code>) is never affected by maintenance mode.</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-6">
+                            <h4 class="text-lg font-bold text-blue-600 mb-3">Customizer Options</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs text-left border border-gray-100 rounded-lg overflow-hidden">
+                                    <thead class="bg-gray-50 text-gray-500 uppercase">
+                                        <tr><th class="px-3 py-2">Option Key</th><th class="px-3 py-2">Default</th><th class="px-3 py-2">Description</th></tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        <tr><td class="px-3 py-2 font-mono text-blue-600">maintenance_mode</td><td class="px-3 py-2">0</td><td class="px-3 py-2">Toggle — <code>1</code> = maintenance mode on</td></tr>
+                                        <tr><td class="px-3 py-2 font-mono text-blue-600">maintenance_message</td><td class="px-3 py-2"><em>We'll be back soon…</em></td><td class="px-3 py-2">Message shown on the maintenance page</td></tr>
+                                        <tr><td class="px-3 py-2 font-mono text-blue-600">maintenance_coming_soon_date</td><td class="px-3 py-2">—</td><td class="px-3 py-2">ISO date/time — enables a countdown timer</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                            <h4 class="text-lg font-bold text-blue-600 mb-3">Header Side Padding (Customizer → Header)</h4>
+                            <p class="text-sm text-gray-600 mb-4">The <b>Header Side Padding</b> option (<code>theme_header_side_padding</code>) controls the left/right inner padding of the <code>.main-header</code> and <code>.main-footer</code> containers. It defaults to <code>0px</code> so both containers align perfectly with full-width builder sections.</p>
+                            <div class="overflow-x-auto mb-4">
+                                <table class="w-full text-xs text-left border border-gray-100 rounded-lg overflow-hidden">
+                                    <thead class="bg-gray-50 text-gray-500 uppercase">
+                                        <tr><th class="px-3 py-2">Option Key</th><th class="px-3 py-2">Default</th><th class="px-3 py-2">Description</th></tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        <tr><td class="px-3 py-2 font-mono text-blue-600">theme_header_side_padding</td><td class="px-3 py-2">0px</td><td class="px-3 py-2">Left/right padding applied to <code>.main-header .container-custom</code> and <code>.main-footer .container-custom</code></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="bg-blue-50 border-l-4 border-blue-400 p-3 text-xs text-blue-700">
+                                On screens narrower than 640 px, a <code>max(16px, setting)</code> rule ensures at least 16 px of breathing room even when the setting is <code>0px</code>, preventing the logo from touching the viewport edge.
+                            </div>
+                        </div>
+                    </section>
                 </section>
 
                 {{-- Section: Theme Isolation --}}

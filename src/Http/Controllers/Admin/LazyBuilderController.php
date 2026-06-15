@@ -23,6 +23,10 @@ class LazyBuilderController extends Controller
 
     public function editHeader()
     {
+        if (!auth()->user()->hasPermission('manage_settings')) {
+            abort(403);
+        }
+
         $header = Post::where('type', 'lazy_header')->first();
         if (!$header) {
             $header = Post::create([
@@ -40,6 +44,10 @@ class LazyBuilderController extends Controller
 
     public function editFooter()
     {
+        if (!auth()->user()->hasPermission('manage_settings')) {
+            abort(403);
+        }
+
         $footer = Post::where('type', 'lazy_footer')->first();
         if (!$footer) {
             $footer = Post::create([
@@ -57,6 +65,10 @@ class LazyBuilderController extends Controller
 
     public function toggleStatus($id)
     {
+        if (!auth()->user()->hasPermission('manage_settings')) {
+            abort(403);
+        }
+
         $post = Post::findOrFail($id);
         $newStatus = ($post->status === 'published') ? 'draft' : 'published';
         $post->update(['status' => $newStatus]);

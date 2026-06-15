@@ -133,7 +133,7 @@ class UserController extends Controller
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'nullable|string|min:8|confirmed',
         ];
         if ($canManageRoles) {
             $rules['roles'] = 'required|array|min:1';
@@ -141,7 +141,11 @@ class UserController extends Controller
         }
         $validated = $request->validate($rules);
 
-        $validated['password'] = Hash::make($validated['password']);
+        if (!empty($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
+        } else {
+            unset($validated['password']);
+        }
 
         // Protection: Only super-admin can edit other super-admins
         if ($user->hasRole('super-admin') && !auth()->user()->hasRole('super-admin')) {

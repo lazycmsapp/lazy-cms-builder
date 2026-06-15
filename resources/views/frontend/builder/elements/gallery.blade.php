@@ -34,6 +34,10 @@
     $mtM = (isset($s['marginTop_mobile'])    && $s['marginTop_mobile']    !== '' && $s['marginTop_mobile']    !== null) ? $s['marginTop_mobile']    . ($s['marginTopUnit_mobile']    ?? $s['marginTopUnit']    ?? 'px') : $mtT;
     $mbM = (isset($s['marginBottom_mobile']) && $s['marginBottom_mobile'] !== '' && $s['marginBottom_mobile'] !== null) ? $s['marginBottom_mobile'] . ($s['marginBottomUnit_mobile'] ?? $s['marginBottomUnit'] ?? 'px') : $mbT;
 
+    $bpSm  = (int) get_cms_option('theme_small_screen_breakpoint',  '800');
+    $bpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
+    $bpSm1 = $bpSm + 1;
+
     $imgBorderW = max(0, (int)($s['imgBorderWidth'] ?? 0));
     $imgBorderS = $s['imgBorderStyle'] ?? 'solid';
     $imgBorderC = $s['imgBorderColor'] ?? '#e2e8f0';
@@ -50,8 +54,8 @@
 @if(!empty($images))
 <style>
 .{{ $galleryId }}{display:grid;grid-template-columns:repeat({{ $colsD }},1fr);gap:{{ $gap }}px;}
-@media(min-width:769px) and (max-width:1024px){.{{ $galleryId }}{grid-template-columns:repeat({{ $colsT }},1fr);}.{{ $galleryId }}-wrap{margin-top:{{ $mtT }};margin-bottom:{{ $mbT }};}}
-@media(max-width:768px){.{{ $galleryId }}{grid-template-columns:repeat({{ $colsM }},1fr);}.{{ $galleryId }}-wrap{margin-top:{{ $mtM }};margin-bottom:{{ $mbM }};}}
+@media(min-width:{{ $bpSm1 }}px) and (max-width:{{ $bpMed }}px){.{{ $galleryId }}{grid-template-columns:repeat({{ $colsT }},1fr);}.{{ $galleryId }}-wrap{margin-top:{{ $mtT }};margin-bottom:{{ $mbT }};}}
+@media(max-width:{{ $bpSm }}px){.{{ $galleryId }}{grid-template-columns:repeat({{ $colsM }},1fr);}.{{ $galleryId }}-wrap{margin-top:{{ $mtM }};margin-bottom:{{ $mbM }};}}
 .{{ $galleryId }}-img{overflow:hidden;border-radius:{{ $radius }}px;position:relative;{{ $imgBorderCss }}}
 @if($ratio !== 'auto')
 .{{ $galleryId }}-img-inner{position:relative;padding-top:{{ $ratioPad }};overflow:hidden;}

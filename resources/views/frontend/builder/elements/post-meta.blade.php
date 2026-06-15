@@ -50,6 +50,9 @@
     $mbT = (isset($s['marginBottom_tablet']) && $s['marginBottom_tablet'] !== '' && $s['marginBottom_tablet'] !== null) ? $s['marginBottom_tablet'] . ($s['marginBottomUnit_tablet'] ?? $s['marginBottomUnit'] ?? 'px') : $mb;
     $mtM = (isset($s['marginTop_mobile'])    && $s['marginTop_mobile']    !== '' && $s['marginTop_mobile']    !== null) ? $s['marginTop_mobile']    . ($s['marginTopUnit_mobile']    ?? $s['marginTopUnit']    ?? 'px') : $mtT;
     $mbM = (isset($s['marginBottom_mobile']) && $s['marginBottom_mobile'] !== '' && $s['marginBottom_mobile'] !== null) ? $s['marginBottom_mobile'] . ($s['marginBottomUnit_mobile'] ?? $s['marginBottomUnit'] ?? 'px') : $mbT;
+    $bpSm  = (int) get_cms_option('theme_small_screen_breakpoint',  '800');
+    $bpMed = (int) get_cms_option('theme_medium_screen_breakpoint', '1100');
+    $bpSm1 = $bpSm + 1;
     $pmUid    = 'pm-' . ($el['id'] ?? uniqid());
     $cssClass = $s['cssClass'] ?? '';
     $cssId    = $s['cssId']    ?? '';
@@ -232,7 +235,7 @@
 
 @if(!empty($metaItems))
 {{-- Margin + link colors in scoped class so media-query and hover rules win over inline styles --}}
-<style>.{{ $pmUid }}{margin-top:{{ $mt }};margin-bottom:{{ $mb }};}@media(min-width:769px) and (max-width:1024px){.{{ $pmUid }}{margin-top:{{ $mtT }};margin-bottom:{{ $mbT }};}}@media(max-width:768px){.{{ $pmUid }}{margin-top:{{ $mtM }};margin-bottom:{{ $mbM }};}} .{{ $pmUid }} .lazy-meta-link{color:{{ $color }};text-decoration:none;transition:color .15s;} .{{ $pmUid }} .lazy-meta-item:has(.lazy-meta-link):hover .lazy-meta-link,.{{ $pmUid }} .lazy-meta-item:has(.lazy-meta-link):hover i{color:{{ $linkColor }};transition:color .15s;}</style>
+<style>.{{ $pmUid }}{margin-top:{{ $mt }};margin-bottom:{{ $mb }};}@media(min-width:{{ $bpSm1 }}px) and (max-width:{{ $bpMed }}px){.{{ $pmUid }}{margin-top:{{ $mtT }};margin-bottom:{{ $mbT }};}}@media(max-width:{{ $bpSm }}px){.{{ $pmUid }}{margin-top:{{ $mtM }};margin-bottom:{{ $mbM }};}} .{{ $pmUid }} .lazy-meta-link{color:{{ $color }};text-decoration:none;transition:color .15s;} .{{ $pmUid }} .lazy-meta-item:has(.lazy-meta-link):hover .lazy-meta-link,.{{ $pmUid }} .lazy-meta-item:has(.lazy-meta-link):hover i{color:{{ $linkColor }};transition:color .15s;}</style>
 <div class="element-post-meta {{ $pmUid }} {{ $cssClass }} {{ $visibilityClasses }}"
      @if($cssId) id="{{ $cssId }}" @endif
      style="{{ $wrapStyle }}">

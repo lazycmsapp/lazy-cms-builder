@@ -8,7 +8,7 @@
      class="w-full">
 
     <div v-if="el.settings.htmlContent && el.settings.htmlContent.trim()"
-         v-html="el.settings.htmlContent"
+         v-safe-html="el.settings.htmlContent"
          class="lazy-html-block w-full">
     </div>
 
