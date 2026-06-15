@@ -139,7 +139,7 @@ window.LazyCart = (function () {
     // Close on ESC
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 
-    return { open, close, refresh, add, remove };
+    return { open, close, refresh, add, remove, setBadges, toast };
 })();
 
 // Global helper used by product cards across the theme.

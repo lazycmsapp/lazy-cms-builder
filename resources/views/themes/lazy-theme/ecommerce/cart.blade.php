@@ -32,7 +32,14 @@
         @else
             <form id="cart-form" action="{{ route('shop.cart.update') }}" method="POST">
                 @csrf
-                <div class="overflow-x-auto mb-10">
+                <div class="overflow-x-auto mb-10 relative" id="cart-table-wrap">
+                    {{-- loading overlay --}}
+                    <div id="cart-loader" style="display:none" class="absolute inset-0 bg-white/70 z-10 items-center justify-center">
+                        <svg class="animate-spin w-9 h-9 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                    </div>
                     <table class="w-full text-left border-collapse border border-gray-100">
                         <thead>
                             <tr class="bg-gray-50 text-[14px] font-bold text-gray-700 uppercase tracking-wider">
@@ -98,7 +105,7 @@
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </div>{{-- /#cart-table-wrap --}}
             </form>
 
             <div class="flex flex-col md:flex-row justify-end">
@@ -188,177 +195,201 @@
 
 @push('scripts')
 <script>
-const CSRF = '{{ csrf_token() }}';
-const HEADERS = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'X-Requested-With': 'XMLHttpRequest',
-    'X-CSRF-TOKEN': CSRF,
-};
+(function () {
+    const CSRF = '{{ csrf_token() }}';
+    const HEADERS = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': CSRF,
+    };
 
-// ── Toast ──────────────────────────────────────────────────────────
-let toastTimer;
-function showCartToast(msg, isError) {
-    const toast = document.getElementById('cart-toast');
-    const icon  = toast.querySelector('[data-lucide]');
-    document.getElementById('cart-toast-msg').textContent = msg;
-    icon.setAttribute('data-lucide', isError ? 'alert-circle' : 'check-circle');
-    icon.className = 'w-4 h-4 shrink-0 ' + (isError ? 'text-rose-500' : 'text-emerald-500');
-    if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [icon] });
-    toast.style.display = 'flex';
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { toast.style.display = 'none'; }, 3000);
-}
+    // ── Loader ─────────────────────────────────────────────────────
+    function loaderShow() { document.getElementById('cart-loader').style.display = 'flex'; }
+    function loaderHide() { document.getElementById('cart-loader').style.display = 'none'; }
 
-// ── Shared totals updater ──────────────────────────────────────────
-function applyTotals(data) {
-    document.getElementById('cart-subtotal').innerHTML = data.subtotal;
-    document.getElementById('cart-shipping').innerHTML = data.shipping;
-    const taxEl = document.getElementById('cart-tax');
-    if (taxEl) taxEl.innerHTML = data.tax;
-    document.getElementById('cart-total').innerHTML = data.total;
-
-    if (data.discount_html !== undefined) {
-        const tbody = document.getElementById('cart-totals-body');
-        tbody.querySelectorAll('.coupon-row').forEach(r => r.remove());
-        tbody.lastElementChild.insertAdjacentHTML('beforebegin', data.discount_html);
+    // ── Toast ──────────────────────────────────────────────────────
+    let toastTimer;
+    function showCartToast(msg, isError) {
+        // Use SweetAlert2 via LazyCart if available
+        if (window.LazyCart && typeof LazyCart.toast === 'function') {
+            LazyCart.toast(msg, isError ? 'error' : 'success');
+            return;
+        }
+        const toast = document.getElementById('cart-toast');
+        const icon  = toast.querySelector('[data-lucide]');
+        document.getElementById('cart-toast-msg').textContent = msg;
+        icon.setAttribute('data-lucide', isError ? 'alert-circle' : 'check-circle');
+        icon.className = 'w-4 h-4 shrink-0 ' + (isError ? 'text-rose-500' : 'text-emerald-500');
+        if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [icon] });
+        toast.style.display = 'flex';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { toast.style.display = 'none'; }, 3000);
     }
 
-    // header cart count (if theme has one)
-    const countEls = document.querySelectorAll('[data-cart-count]');
-    countEls.forEach(el => { el.textContent = data.cart_count ?? ''; });
-}
-
-// ── +/- stepper ───────────────────────────────────────────────────
-function stepQty(btn, delta) {
-    const input = delta === -1 ? btn.nextElementSibling : btn.previousElementSibling;
-    input.value = Math.max(1, parseInt(input.value) + delta);
-}
-
-// ── Update cart (AJAX) ────────────────────────────────────────────
-function updateCartAjax() {
-    const btn = document.getElementById('update-cart-btn');
-    const quantities = {};
-    document.querySelectorAll('#cart-items-body input[name^="quantity["]').forEach(input => {
-        const key = input.name.slice(9, -1);
-        quantities[key] = input.value;
-    });
-
-    btn.textContent = 'Updating...';
-    btn.disabled = true;
-
-    fetch('{{ route('shop.cart.update') }}', {
-        method: 'POST',
-        headers: HEADERS,
-        body: JSON.stringify({ quantity: quantities }),
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            // update per-row subtotals
-            if (data.item_subtotals) {
-                Object.entries(data.item_subtotals).forEach(([key, subtotal]) => {
-                    const row = document.querySelector(`.cart-item-row[data-key="${key}"]`);
-                    if (row) row.querySelector('.item-subtotal').innerHTML = subtotal;
-                });
-            }
-            applyTotals(data);
-            showCartToast(data.message || 'Cart updated!', false);
+    // ── Sync mini-cart badge + drawer ──────────────────────────────
+    function syncMiniCart(count) {
+        if (window.LazyCart) {
+            LazyCart.setBadges(count);
+            // Refresh drawer content silently (doesn't open it)
+            LazyCart.refresh();
         }
-    })
-    .catch(() => showCartToast('Could not update cart.', true))
-    .finally(() => {
-        btn.textContent = 'Update cart';
-        btn.disabled = false;
-    });
-}
+    }
 
-// ── Remove item (AJAX) ────────────────────────────────────────────
-function removeCartItem(key, btn) {
-    const row = btn.closest('.cart-item-row');
-    row.style.opacity = '0.4';
-    row.style.pointerEvents = 'none';
+    // ── Shared totals updater ──────────────────────────────────────
+    function applyTotals(data) {
+        document.getElementById('cart-subtotal').innerHTML = data.subtotal;
+        document.getElementById('cart-shipping').innerHTML = data.shipping;
+        const taxEl = document.getElementById('cart-tax');
+        if (taxEl) taxEl.innerHTML = data.tax ?? '';
+        document.getElementById('cart-total').innerHTML = data.total;
 
-    fetch('{{ url(route('shop.cart.remove', '__KEY__')) }}'.replace('__KEY__', key), {
-        headers: HEADERS,
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            row.remove();
-            applyTotals(data);
-            showCartToast(data.message || 'Item removed.', false);
-            if ((data.cart_count ?? 1) === 0) {
-                setTimeout(() => location.reload(), 600);
-            }
+        if (data.discount_html !== undefined) {
+            const tbody = document.getElementById('cart-totals-body');
+            tbody.querySelectorAll('.coupon-row').forEach(r => r.remove());
+            tbody.lastElementChild.insertAdjacentHTML('beforebegin', data.discount_html);
         }
-    })
-    .catch(() => {
-        row.style.opacity = '';
-        row.style.pointerEvents = '';
-        showCartToast('Could not remove item.', true);
-    });
-}
 
-// ── Apply coupon ──────────────────────────────────────────────────
-function applyCoupon() {
-    const code   = document.getElementById('coupon_code_input').value;
-    const msgDiv = document.getElementById('coupon-message');
-    if (!code) return;
+        syncMiniCart(data.cart_count ?? 0);
+    }
 
-    msgDiv.innerHTML  = 'Applying...';
-    msgDiv.className  = 'mt-2 text-xs text-blue-600';
+    // ── +/- stepper ────────────────────────────────────────────────
+    window.stepQty = function (btn, delta) {
+        const input = delta === -1 ? btn.nextElementSibling : btn.previousElementSibling;
+        input.value = Math.max(1, parseInt(input.value) + delta);
+    };
 
-    fetch('{{ route('shop.cart.coupon') }}', {
-        method: 'POST',
-        headers: HEADERS,
-        body: JSON.stringify({ coupon_code: code }),
-    })
-    .then(r => r.ok ? r.json() : r.json().then(d => Promise.reject(d)))
-    .then(data => {
-        if (data.success) {
-            document.getElementById('coupon_code_input').value = '';
-            msgDiv.innerHTML = data.message;
-            msgDiv.className = 'mt-2 text-xs text-emerald-600';
-            applyTotals(data);
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        } else {
-            msgDiv.innerHTML = data.message || 'Error applying coupon.';
+    // ── Update cart ────────────────────────────────────────────────
+    window.updateCartAjax = function () {
+        const btn = document.getElementById('update-cart-btn');
+        const quantities = {};
+        document.querySelectorAll('#cart-items-body input[name^="quantity["]').forEach(input => {
+            quantities[input.name.slice(9, -1)] = parseInt(input.value, 10);
+        });
+
+        loaderShow();
+        btn.textContent = 'Updating…';
+        btn.disabled    = true;
+
+        fetch('{{ route('shop.cart.update') }}', {
+            method: 'POST',
+            headers: HEADERS,
+            body: JSON.stringify({ quantity: quantities }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                if (data.item_subtotals) {
+                    Object.entries(data.item_subtotals).forEach(([key, sub]) => {
+                        const row = document.querySelector(`.cart-item-row[data-key="${CSS.escape(key)}"]`);
+                        if (row) row.querySelector('.item-subtotal').innerHTML = sub;
+                    });
+                }
+                applyTotals(data);
+                showCartToast(data.message || 'Cart updated!', false);
+            } else {
+                showCartToast(data.message || 'Could not update cart.', true);
+            }
+        })
+        .catch(() => showCartToast('Could not update cart.', true))
+        .finally(() => {
+            loaderHide();
+            btn.textContent = 'Update cart';
+            btn.disabled    = false;
+        });
+    };
+
+    // ── Remove item ────────────────────────────────────────────────
+    window.removeCartItem = function (key, btn) {
+        const row = btn.closest('.cart-item-row');
+        loaderShow();
+        row.style.opacity      = '0.4';
+        row.style.pointerEvents = 'none';
+
+        fetch('{{ route('shop.cart.remove', '__KEY__') }}'.replace('__KEY__', encodeURIComponent(key)), {
+            method: 'POST',
+            headers: HEADERS,
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                row.remove();
+                applyTotals(data);
+                showCartToast(data.message || 'Item removed.', false);
+                if ((data.cart_count ?? 1) === 0) setTimeout(() => location.reload(), 700);
+            } else {
+                showCartToast(data.message || 'Could not remove item.', true);
+                row.style.opacity = '';
+                row.style.pointerEvents = '';
+            }
+        })
+        .catch(() => {
+            row.style.opacity = '';
+            row.style.pointerEvents = '';
+            showCartToast('Could not remove item.', true);
+        })
+        .finally(() => loaderHide());
+    };
+
+    // ── Apply coupon ───────────────────────────────────────────────
+    window.applyCoupon = function () {
+        const code   = document.getElementById('coupon_code_input').value.trim();
+        const msgDiv = document.getElementById('coupon-message');
+        if (!code) return;
+
+        msgDiv.innerHTML = 'Applying…';
+        msgDiv.className = 'mt-2 text-xs text-blue-600';
+
+        fetch('{{ route('shop.cart.coupon') }}', {
+            method: 'POST',
+            headers: HEADERS,
+            body: JSON.stringify({ coupon_code: code }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('coupon_code_input').value = '';
+                msgDiv.innerHTML = data.message;
+                msgDiv.className = 'mt-2 text-xs text-emerald-600';
+                applyTotals(data);
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } else {
+                msgDiv.innerHTML = data.message || 'Error applying coupon.';
+                msgDiv.className = 'mt-2 text-xs text-rose-600';
+            }
+        })
+        .catch(() => {
+            msgDiv.innerHTML = 'Error applying coupon.';
             msgDiv.className = 'mt-2 text-xs text-rose-600';
-        }
-    })
-    .catch(err => {
-        msgDiv.innerHTML = (err && err.message) ? err.message.substring(0, 100) : 'Error applying coupon.';
-        msgDiv.className = 'mt-2 text-xs text-rose-600';
-    });
-}
+        });
+    };
 
-// ── Shipping estimator ────────────────────────────────────────────
-function updateShipping() {
-    const country = document.getElementById('shipping_country').value;
-    if (!country) return;
+    // ── Shipping estimator ─────────────────────────────────────────
+    window.updateShipping = function () {
+        const country = document.getElementById('shipping_country').value;
+        if (!country) return;
+        const btn = event.target;
+        btn.textContent = 'Updating…';
+        btn.disabled    = true;
 
-    const btn = event.target;
-    btn.textContent = 'Updating...';
-    btn.disabled = true;
-
-    fetch('{{ route('shop.cart.shipping.update') }}', {
-        method: 'POST',
-        headers: HEADERS,
-        body: JSON.stringify({ country }),
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('cart-shipping').innerHTML = data.shipping;
-            document.getElementById('cart-total').innerHTML   = data.total;
-        }
-    })
-    .catch(() => {})
-    .finally(() => {
-        btn.textContent = 'Update totals';
-        btn.disabled = false;
-    });
-}
+        fetch('{{ route('shop.cart.shipping.update') }}', {
+            method: 'POST',
+            headers: HEADERS,
+            body: JSON.stringify({ country }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('cart-shipping').innerHTML = data.shipping;
+                document.getElementById('cart-total').innerHTML   = data.total;
+            }
+        })
+        .catch(() => {})
+        .finally(() => {
+            btn.textContent = 'Update totals';
+            btn.disabled    = false;
+        });
+    };
+}());
 </script>
 @endpush

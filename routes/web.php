@@ -398,15 +398,15 @@ Route::middleware(['web', \Acme\CmsDashboard\Http\Middleware\SecurityHeadersMidd
 
     // Shop Frontend
     Route::prefix('cart')->name('shop.')->group(function() {
-        Route::get('/', [ShopFrontendController::class, 'cart'])->name('cart');
+        Route::get('/',         [ShopFrontendController::class, 'cart'])->name('cart');
         Route::get('/fragment', [ShopFrontendController::class, 'miniCart'])->name('cart.fragment');
-        Route::post('/add', [ShopFrontendController::class, 'addToCart'])->name('cart.add');
-        Route::post('/update', [ShopFrontendController::class, 'updateCart'])->name('cart.update');
-        Route::get('/remove/{key}', [ShopFrontendController::class, 'removeFromCart'])->name('cart.remove');
-        Route::post('/apply-coupon', [ShopFrontendController::class, 'applyCoupon'])->name('cart.coupon');
-        Route::get('/remove-coupon', [ShopFrontendController::class, 'removeCoupon'])->name('cart.coupon.remove');
-        Route::post('/update-shipping', [ShopFrontendController::class, 'updateShipping'])->name('cart.shipping.update');
-        Route::post('/review', [ShopFrontendController::class, 'storeReview'])->name('review.store');
+        Route::post('/add',             [ShopFrontendController::class, 'addToCart'])->name('cart.add')->middleware('throttle:30,1');
+        Route::post('/update',          [ShopFrontendController::class, 'updateCart'])->name('cart.update')->middleware('throttle:30,1');
+        Route::post('/remove/{key}',    [ShopFrontendController::class, 'removeFromCart'])->name('cart.remove')->middleware('throttle:30,1');
+        Route::post('/apply-coupon',    [ShopFrontendController::class, 'applyCoupon'])->name('cart.coupon')->middleware('throttle:10,1');
+        Route::get('/remove-coupon',    [ShopFrontendController::class, 'removeCoupon'])->name('cart.coupon.remove');
+        Route::post('/update-shipping', [ShopFrontendController::class, 'updateShipping'])->name('cart.shipping.update')->middleware('throttle:20,1');
+        Route::post('/review',          [ShopFrontendController::class, 'storeReview'])->name('review.store')->middleware('throttle:5,1');
     });
     Route::get('/checkout', [ShopFrontendController::class, 'checkout'])->name('shop.checkout');
     Route::post('/checkout', [ShopFrontendController::class, 'placeOrder'])->name('shop.place-order');

@@ -147,17 +147,18 @@ class ShopFrontendController extends Controller
 
     public function updateCart(Request $request)
     {
+        $request->validate([
+            'quantity'   => ['required', 'array', 'max:100'],
+            'quantity.*' => ['required', 'integer', 'min:1', 'max:9999'],
+        ]);
+
         $cart = Session::get('lazy_cart', []);
         $quantities = $request->input('quantity', []);
 
         foreach ($quantities as $key => $qty) {
-            if (isset($cart[$key])) {
-                if ($qty <= 0) {
-                    unset($cart[$key]);
-                } else {
-                    $cart[$key]['quantity'] = (int)$qty;
-                }
-            }
+            // Only process keys that genuinely exist in the session cart
+            if (!isset($cart[$key])) continue;
+            $cart[$key]['quantity'] = (int)$qty;
         }
 
         Session::put('lazy_cart', $cart);
@@ -380,6 +381,12 @@ class ShopFrontendController extends Controller
 
     public function removeFromCart(Request $request, $key)
     {
+        // Reject keys that don't look like our session keys (alphanumeric + dash/underscore, max 128 chars)
+        if (!preg_match('/^[a-zA-Z0-9_\-]{1,128}$/', $key)) {
+            if ($request->ajax()) return response()->json(['success' => false, 'message' => 'Invalid request.'], 422);
+            return redirect()->route('shop.cart');
+        }
+
         $cart = Session::get('lazy_cart', []);
         if (isset($cart[$key])) {
             unset($cart[$key]);
